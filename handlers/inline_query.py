@@ -16,6 +16,7 @@ thumbs = [
     "https://img.elcomercio.pe/files/ec_article_videogalleria/uploads/2018/06/18/5b27a6c5c9c49.jpeg",
     "https://fotos.perfil.com/2016/10/26/1026claudiominnicellig.jpg",
     "https://www.ecestaticos.com/imagestatic/clipping/7f5/900/7f59009441d3cf042f374f50756f3c5b/tu-cunado-ese-que-dice-que-escribe.jpg?mtime=1456847457",
+    "https://s4.eestatic.com/2017/05/05/reportajes/entrevistas/VOX-Santiago_Abascal-Entrevistas_213740088_33819883_1024x576.jpg",
 ]
 
 
@@ -32,7 +33,6 @@ def handle_inline_query(bot: Bot, update: Update):
     phrases = Phrase.get_phrases()
     random.shuffle(phrases)
     combinations = itertools.combinations(phrases, size if size <= len(phrases) else len(phrases))
-    print("Tengo las combinations")
 
     results = [InlineQueryResultArticle(
                 id=uuid4(),
@@ -43,17 +43,8 @@ def handle_inline_query(bot: Bot, update: Update):
                 thumb_url=get_thumb()
             ) for combination in combinations]
 
-    print("Tengo los results")
-
-    if len(results) > 50:
-        print("HAY MAZO RESULTS")
-        print(results)
-        results = results[:50]
-        print(results)
-
     random.shuffle(results)
-
-    print("He devuelto los results")
-    print(results)
+    if len(results) > 50:
+        results = results[:50]
 
     update.inline_query.answer(results, cache_time=1)

@@ -8,6 +8,8 @@ verify_ssl = true
 [packages]
 python-telegram-bot = "*"
 google-cloud-datastore = "*"
+flask = "*"
+webapp2 = "*"
 
 [requires]
 python_version = "3.7"
