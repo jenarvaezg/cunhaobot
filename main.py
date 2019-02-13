@@ -39,13 +39,14 @@ def main():
     # updater.idle()
 
 
+# Not pretty, but I needed some sort of http server to work in appengine standard
 class MainPage(webapp2.RequestHandler):
     def get(self):
         self.response.headers['Content-Type'] = 'text/plain'
-        self.response.write('Hello, World!')
+        self.response.write('I am alive')
 
 
 main()
 app = webapp2.WSGIApplication([
     ('/', MainPage),
-], debug=True)
+])
