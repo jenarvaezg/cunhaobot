@@ -1,3 +1,6 @@
+import random
+from typing import List
+
 from google.cloud import datastore
 
 
@@ -19,7 +22,7 @@ class Phrase:
         phrase_entity['text'] = phrase.text
 
         datastore_client.put(phrase_entity)
-        cls.phrases_cache.append(phrase)
+        cls.phrases_cache.append(phrase.text)
 
     @classmethod
     def from_entity(cls, entity):
@@ -28,13 +31,18 @@ class Phrase:
         )
 
     @classmethod
-    def get_phrases(cls):
+    def get_phrases(cls) -> List[str]:
         if len(cls.phrases_cache) == 0:
             datastore_client = datastore.Client()
             query = datastore_client.query(kind=cls.kind)
-            cls.phrases_cache = [cls.from_entity(entity) for entity in query.fetch()]
+            cls.phrases_cache = [cls.from_entity(entity).text for entity in query.fetch()]
 
         return cls.phrases_cache
+
+    @classmethod
+    def get_random_phrase(cls) -> str:
+        return random.choice(cls.get_phrases())
+
 
 
 

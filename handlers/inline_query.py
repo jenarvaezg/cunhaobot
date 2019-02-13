@@ -1,5 +1,6 @@
 import itertools
 import random
+import logging
 from uuid import uuid4
 
 from telegram import InlineQueryResultArticle, InputTextMessageContent
@@ -17,34 +18,54 @@ thumbs = [
     "https://fotos.perfil.com/2016/10/26/1026claudiominnicellig.jpg",
     "https://www.ecestaticos.com/imagestatic/clipping/7f5/900/7f59009441d3cf042f374f50756f3c5b/tu-cunado-ese-que-dice-que-escribe.jpg?mtime=1456847457",
     "https://s4.eestatic.com/2017/05/05/reportajes/entrevistas/VOX-Santiago_Abascal-Entrevistas_213740088_33819883_1024x576.jpg",
+    "https://i.ytimg.com/vi/NyOwsYAPzTE/hqdefault.jpg",
+    "https://pbs.twimg.com/media/DFRYYkRXgAIGOjI.jpg",
+    "http://www.eluniversalqueretaro.mx/sites/default/files/styles/f03-651x400/public/2018/04/06/q8-20.jpg.jpg?itok=G2zZUM1c",
+    "https://static3.elcomercio.es/www/pre2017/multimedia/noticias/201703/26/media/22940314.jpg",
 ]
+
+
+logger = logging.getLogger('cunhaobot')
 
 
 def get_thumb():
     return random.choice(thumbs)
 
 
+def random_combination(iterable, r):
+    "Random selection from itertools.combinations(iterable, r)"
+    pool = tuple(iterable)
+    n = len(pool)
+    indices = sorted(random.sample(range(n), r))
+    return tuple(pool[i] for i in indices)
+
+
 def handle_inline_query(bot: Bot, update: Update):
     """Handle the inline query."""
     query = update.inline_query.query or '1'
+    logger.info(f"Got the query {query}")
     size = int(query)
     base_template = '¿Que pasa, {}?'
 
     phrases = Phrase.get_phrases()
     random.shuffle(phrases)
-    combinations = itertools.combinations(phrases, size if size <= len(phrases) else len(phrases))
+    size = size if size <= len(phrases) else len(phrases)
+    combinations = set()
+
+    for i in range(10):
+        combination = random_combination(phrases, size)
+        random.shuffle(phrases)
+        combinations.add(combination)
 
     results = [InlineQueryResultArticle(
                 id=uuid4(),
-                title=', '.join([phrase.text for phrase in combination]),
+                title=', '.join(combination),
                 input_message_content=InputTextMessageContent(
-                    base_template.format(', '.join([phrase.text for phrase in combination]))
+                    base_template.format(', '.join(combination))
                 ),
                 thumb_url=get_thumb()
-            ) for combination in combinations]
+              ) for combination in combinations]
 
     random.shuffle(results)
-    if len(results) > 50:
-        results = results[:50]
 
     update.inline_query.answer(results, cache_time=1)
