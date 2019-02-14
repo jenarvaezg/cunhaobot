@@ -1,0 +1,16 @@
+runtime: python37
+
+env_variables:
+  TG_TOKEN: $TG_TOKEN
+  MOD_CHAT_ID: $MOD_CHAT_ID
+
+liveness_check:
+  path: "/"
+  check_interval_sec: 30
+  timeout_sec: 4
+  failure_threshold: 2
+  success_threshold: 2
+
+automatic_scaling:
+  max_instances: 1
+  min_instances: 1

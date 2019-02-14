@@ -33,6 +33,7 @@ def main():
     updater.start_polling()
 
     logger.info("STARTED POLLING")
+    updater.idle()
 
 
 # Not pretty, but I needed some sort of http server to work in appengine standard
