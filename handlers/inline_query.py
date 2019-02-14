@@ -41,7 +41,7 @@ def handle_inline_query(bot: Bot, update: Update):
     """Handle the inline query."""
     query = update.inline_query.query or '1'
     query_words = query.split(' ')
-    size, finisher = int(query_words[0]), tuple(query_words[1:])
+    size, finisher = int(query_words[0]), ' '.join(query_words[1:])
 
     phrases = Phrase.get_phrases()
     random.shuffle(phrases)
@@ -51,7 +51,7 @@ def handle_inline_query(bot: Bot, update: Update):
     for i in range(10):
         combination = random_combination(phrases, size)
         random.shuffle(phrases)
-        combinations.add(combination if not finisher else combination + finisher)
+        combinations.add(combination if not finisher else combination + (finisher, ))
 
     results = [InlineQueryResultArticle(
         id=uuid4(),
