@@ -14,6 +14,6 @@ def user_from_update(update: Update) -> str:
     to_ret = f"{first_name} {last_name}".rstrip()
 
     if username:
-        to_ret += f" con nombre de usuario {username}"
+        to_ret += f" con nombre de usuario @{username}"
 
     return to_ret

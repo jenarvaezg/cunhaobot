@@ -22,7 +22,7 @@ def handle_callback_query(bot: Bot, update: Update):
 
     if update.callback_query.from_user.id in proposal.voted_by:
         # Ignore users who already voted
-        update.callback_query.answer("Tu ya has votado maquina")
+        update.callback_query.answer(f"Tu ya has votado {Phrase.get_random_phrase()}")
         return
 
     proposal.add_vote(vote == LIKE, update.callback_query.from_user.id)
@@ -34,7 +34,7 @@ def handle_callback_query(bot: Bot, update: Update):
             f"La propuesta '{proposal.text}' queda formalmente aprobada y añadida a la lista"
         )
         bot.send_message(
-            proposal.from_chat_id, f"Tu propuesta '{proposal.text}' ha sido aprobada, felicidades, máquina",
+            proposal.from_chat_id, f"Tu propuesta '{proposal.text}' ha sido aprobada, felicidades, {Phrase.get_random_phrase()}",
             reply_to_message_id=proposal.from_message_id
         )
         Phrase.upload_from_proposal(proposal)
@@ -42,7 +42,7 @@ def handle_callback_query(bot: Bot, update: Update):
         update.callback_query.edit_message_text(
             f"La propuesta '{proposal.text}' queda formalmente rechazada")
         bot.send_message(
-            proposal.from_chat_id, f"Tu propuesta '{proposal.text}' ha sido rechazada, lo siento figura",
+            proposal.from_chat_id, f"Tu propuesta '{proposal.text}' ha sido rechazada, lo siento {Phrase.get_random_phrase()}",
             reply_to_message_id=proposal.from_message_id
         )
     else:

@@ -31,7 +31,7 @@ def handle_submit(bot: Bot, update: Update):
         return update.message.reply_text(f'Tienes que decirme una frase, por ejemplo: "/submit {Phrase.get_random_phrase()}"')
 
     if proposal.text in Phrase.get_phrases():
-        return update.message.reply_text('Esa ya la tengo, mastodonte, maestro.')
+        return update.message.reply_text(f'Esa ya la tengo, {Phrase.get_random_phrase()}, {Phrase.get_random_phrase()}.')
 
     proposal.save()
 
@@ -39,4 +39,4 @@ def handle_submit(bot: Bot, update: Update):
     curators_message_text = f"{submitted_by} dice que deberiamos añadir la siguiente frase a la lista:\n'<b>{proposal.text}</b>'"
     bot.send_message(curators_chat_id, curators_message_text, reply_markup=curators_reply_markup, parse_mode=ParseMode.HTML)
     update.message.reply_text(
-        "Tu aportación será valorada por un consejo de cuñaos expertos y te avisaré una vez haya sido evaluada.")
+        f"Tu aportación será valorada por un consejo de cuñaos expertos y te avisaré una vez haya sido evaluada, {Phrase.get_random_phrase()}")
