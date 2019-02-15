@@ -7,7 +7,7 @@ from models.phrase import Phrase
 from models.proposal import Proposal
 from utils.user import user_from_update
 
-curators_chat_id = os.environ["MOD_CHAT_ID"]
+curators_chat_id = os.environ.get("MOD_CHAT_ID", "")
 
 BLACKLIST = [
     'Luis con nombre de usuario Luis0r',
