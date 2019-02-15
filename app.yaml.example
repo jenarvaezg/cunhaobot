@@ -3,6 +3,8 @@ runtime: python37
 env_variables:
   TG_TOKEN: $TG_TOKEN
   MOD_CHAT_ID: $MOD_CHAT_ID
+  AWS_ACCESS_KEY: $AWS_ACCESS_KEY
+  AWS_SECRET_KEY: $AWS_SECRET_KEY
 
 liveness_check:
   path: "/"

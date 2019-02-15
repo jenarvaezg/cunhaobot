@@ -7,7 +7,7 @@ from markup.keyboards import build_vote_keyboard
 from models.phrase import Phrase
 from models.proposal import Proposal
 
-curators_chat_id = int(os.environ["MOD_CHAT_ID"])
+curators_chat_id = int(os.environ.get("MOD_CHAT_ID", '-1'))
 
 
 def handle_callback_query(bot: Bot, update: Update):

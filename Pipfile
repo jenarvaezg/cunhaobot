@@ -9,7 +9,13 @@ verify_ssl = true
 python-telegram-bot = "*"
 google-cloud-datastore = "*"
 flask = "*"
-webapp2 = "*"
+webapp2 = "==3.0.0b1"
+boto = "*"
+boto3 = "*"
+google-cloud-storage = "*"
 
 [requires]
 python_version = "3.7"
+
+[pipenv]
+allow_prereleases = true
