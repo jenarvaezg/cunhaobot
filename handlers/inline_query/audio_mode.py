@@ -6,6 +6,7 @@ import boto3
 from telegram import InlineQueryResultVoice, InlineQueryResultArticle
 
 from handlers.inline_query.short_mode import get_short_mode_results
+from handlers.inline_query.long_mode import  get_long_mode_results
 from utils.gcp import upload_audio, get_audio_url
 
 AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY', '')
@@ -44,9 +45,28 @@ def short_result_to_audio_result(result: InlineQueryResultArticle) -> InlineQuer
     )
 
 
+def long_result_to_audio_result(result: InlineQueryResultArticle) -> InlineQueryResultVoice:
+    title = result.title
+    audio_url = get_audio_url(title)
+    if not audio_url:
+        text = result.input_message_content.message_text
+        speech = polly_client.synthesize_speech(VoiceId='Enrique',
+                                                OutputFormat='ogg_vorbis',
+                                                Text=text,)
+        audio_url = upload_audio(speech['AudioStream'].read(), title)
+
+    return InlineQueryResultVoice(
+        uuid4(),
+        audio_url,
+        title,
+    )
+
+
 def get_audio_mode_results(input: str) -> List:
-    short_results = get_short_mode_results(input)[:1]
+    short_results = get_short_mode_results(input)[:2]
+    long_results = get_long_mode_results(input)[:2]
 
-    audio_results = [short_result_to_audio_result(short_result) for short_result in short_results]
+    short_audio_results = [short_result_to_audio_result(short_result) for short_result in short_results]
+    long_audio_results = [long_result_to_audio_result(long_result) for long_result in long_results]
 
-    return audio_results
+    return short_audio_results + long_audio_results
