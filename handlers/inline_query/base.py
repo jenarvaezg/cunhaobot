@@ -7,6 +7,7 @@ from telegram import Update, Bot
 
 from handlers.inline_query.short_mode import get_short_mode_results
 from handlers.inline_query.audio_mode import get_audio_mode_results
+from handlers.inline_query.long_mode import get_long_mode_results
 from utils import get_thumb
 from models.phrase import Phrase
 
@@ -22,7 +23,8 @@ AUDIO_MODE = 'AUDIO'
 
 MODE_HANDLERS = {
     SHORT_MODE: get_short_mode_results,
-    AUDIO_MODE: get_audio_mode_results
+    LONG_MODE: get_long_mode_results,
+    AUDIO_MODE: get_audio_mode_results,
 }
 
 

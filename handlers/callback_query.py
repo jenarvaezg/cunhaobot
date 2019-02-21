@@ -2,19 +2,20 @@ import os
 
 from telegram import Update, Bot, InlineKeyboardMarkup
 
-from constants import LIKE, DISLIKE
+from constants import LIKE
 from markup.keyboards import build_vote_keyboard
 from models.phrase import Phrase
-from models.proposal import Proposal
+from models.proposal import get_proposal_class_by_kind
 
 curators_chat_id = int(os.environ.get("MOD_CHAT_ID", '-1'))
 
 
 def handle_callback_query(bot: Bot, update: Update):
     data = update.callback_query.data
-    vote, proposal_id = data.split(":")
+    vote, proposal_id, kind = data.split(":")
+    proposal_class = get_proposal_class_by_kind(kind)
 
-    proposal = Proposal.load(proposal_id)
+    proposal = proposal_class.load(proposal_id)
     if proposal is None:
         # replying to a message that is not a proposal anymore, most likely erased proposal
         update.callback_query.answer("Esa propuesta ha muerto")
@@ -37,7 +38,7 @@ def handle_callback_query(bot: Bot, update: Update):
             proposal.from_chat_id, f"Tu propuesta '{proposal.text}' ha sido aprobada, felicidades, {Phrase.get_random_phrase()}",
             reply_to_message_id=proposal.from_message_id
         )
-        Phrase.upload_from_proposal(proposal)
+        proposal.phrase_class.upload_from_proposal(proposal)
     elif proposal.dislikes >= 2:
         update.callback_query.edit_message_text(
             f"La propuesta '{proposal.text}' queda formalmente rechazada")
@@ -48,7 +49,7 @@ def handle_callback_query(bot: Bot, update: Update):
     else:
         text = update.callback_query.message.text
         user = update.callback_query.from_user.username or update.callback_query.first_name
-        reply_markup = InlineKeyboardMarkup(build_vote_keyboard(proposal.id))
+        reply_markup = InlineKeyboardMarkup(build_vote_keyboard(proposal.id, proposal.kind))
         update.callback_query.edit_message_text(f"{text}\n{user}: {vote}", reply_markup=reply_markup)
 
 
