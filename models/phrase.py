@@ -6,6 +6,7 @@ from google.cloud import datastore
 
 class Phrase:
     kind = 'Phrase'
+    name = 'palabra poderosa / frase corta'
 
     phrases_cache = []
 
@@ -14,7 +15,7 @@ class Phrase:
 
     @classmethod
     def upload_from_proposal(cls, proposal):
-        phrase = Phrase(proposal.text)
+        phrase = cls(proposal.text)
         datastore_client = datastore.Client()
         key = datastore_client.key(cls.kind, phrase.text)
         phrase_entity = datastore.Entity(key=key)
@@ -43,6 +44,12 @@ class Phrase:
     def get_random_phrase(cls) -> str:
         return random.choice(cls.get_phrases())
 
+
+class LongPhrase(Phrase):
+    kind = 'LongPhrase'
+    name = 'frase larga / dicho cuñadíl'
+
+    phrases_cache = []
 
 
 

@@ -1,8 +1,11 @@
 from google.cloud import datastore
 
+from models.phrase import Phrase, LongPhrase
+
 
 class Proposal:
     kind = 'Proposal'
+    phrase_class = Phrase
 
     @staticmethod
     def proposal_text_from_update(update):
@@ -62,3 +65,15 @@ class Proposal:
             self.dislikes += 1
 
         self.voted_by.append(voter_id)
+
+
+class LongProposal(Proposal):
+    kind = 'LongProposal'
+    phrase_class = LongPhrase
+
+
+def get_proposal_class_by_kind(kind: str) -> Proposal:
+    if kind == LongProposal.kind:
+        return LongProposal
+
+    return Proposal
