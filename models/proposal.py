@@ -58,6 +58,11 @@ class Proposal:
 
         datastore_client.put(proposal_entity)
 
+    def delete(self):
+        datastore_client = datastore.Client()
+        key = datastore_client.key(self.kind, self.id)
+        datastore_client.delete(key)
+
     def add_vote(self, positive, voter_id):
         if positive:
             self.likes += 1

@@ -23,14 +23,11 @@ def submit_handling(bot: Bot, update: Update, proposal_class: type, phrase_class
         bot.send_message(curators_chat_id, f"Le he jodido la vida a '{submitted_by}'")
         return
 
-    if update.message.chat.type != 'private':
-        return update.message.reply_text(f'No me invoques por grupos {Phrase.get_random_phrase()}')
-
     proposal = proposal_class.from_update(update)
     if proposal.text == '':
         return update.message.reply_text(
             f'Tienes que decirme una frase, por ejemplo: "/submit {Phrase.get_random_phrase()}"'
-            f'o /submitlong {LongPhrase.get_random_phrase()}'
+            f' o "/submitlong {LongPhrase.get_random_phrase()}"'
         )
 
     if proposal.text in phrase_class.get_phrases():

@@ -10,6 +10,12 @@ from models.proposal import get_proposal_class_by_kind
 curators_chat_id = int(os.environ.get("MOD_CHAT_ID", '-1'))
 
 
+def get_required_votes(bot):
+    count = bot.get_chat_members_count(curators_chat_id)
+    count -= 1  # ignore bot
+    return count // 2 + 1
+
+
 def handle_callback_query(bot: Bot, update: Update):
     data = update.callback_query.data
     vote, proposal_id, kind = data.split(":")
@@ -21,6 +27,8 @@ def handle_callback_query(bot: Bot, update: Update):
         update.callback_query.answer("Esa propuesta ha muerto")
         return
 
+    get_required_votes(bot)
+
     if update.callback_query.from_user.id in proposal.voted_by:
         # Ignore users who already voted
         update.callback_query.answer(f"Tu ya has votado {Phrase.get_random_phrase()}")
@@ -30,29 +38,28 @@ def handle_callback_query(bot: Bot, update: Update):
     proposal.save()
     update.callback_query.answer(f"Tu voto: {vote} ha sido añadido")
 
-    if proposal.likes >= 2:
+    if proposal.likes >= get_required_votes(bot):
         update.callback_query.edit_message_text(
             f"La propuesta '{proposal.text}' queda formalmente aprobada y añadida a la lista"
         )
         bot.send_message(
-            proposal.from_chat_id, f"Tu propuesta '{proposal.text}' ha sido aprobada, felicidades, {Phrase.get_random_phrase()}",
+            proposal.from_chat_id,
+            f"Tu propuesta '{proposal.text}' ha sido aprobada, felicidades, {Phrase.get_random_phrase()}",
             reply_to_message_id=proposal.from_message_id
         )
         proposal.phrase_class.upload_from_proposal(proposal)
-    elif proposal.dislikes >= 2:
+        proposal.delete()
+    elif proposal.dislikes >= get_required_votes(bot):
         update.callback_query.edit_message_text(
             f"La propuesta '{proposal.text}' queda formalmente rechazada")
         bot.send_message(
-            proposal.from_chat_id, f"Tu propuesta '{proposal.text}' ha sido rechazada, lo siento {Phrase.get_random_phrase()}",
+            proposal.from_chat_id,
+            f"Tu propuesta '{proposal.text}' ha sido rechazada, lo siento {Phrase.get_random_phrase()}",
             reply_to_message_id=proposal.from_message_id
         )
+        proposal.delete()
     else:
         text = update.callback_query.message.text
         user = update.callback_query.from_user.username or update.callback_query.first_name
         reply_markup = InlineKeyboardMarkup(build_vote_keyboard(proposal.id, proposal.kind))
         update.callback_query.edit_message_text(f"{text}\n{user}: {vote}", reply_markup=reply_markup)
-
-
-
-
-
