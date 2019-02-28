@@ -63,8 +63,8 @@ def long_result_to_audio_result(result: InlineQueryResultArticle) -> InlineQuery
 
 
 def get_audio_mode_results(input: str) -> List:
-    short_results = get_short_mode_results(input)[:2]
-    long_results = get_long_mode_results(input)[:2]
+    short_results = get_short_mode_results(input)[:4]
+    long_results = get_long_mode_results(input)[:6]
 
     short_audio_results = [short_result_to_audio_result(short_result) for short_result in short_results]
     long_audio_results = [long_result_to_audio_result(long_result) for long_result in long_results]
