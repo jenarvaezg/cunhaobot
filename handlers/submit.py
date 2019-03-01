@@ -15,7 +15,6 @@ BLACKLIST = [
 ]
 
 
-@log_update
 def submit_handling(bot: Bot, update: Update, proposal_class: type, phrase_class: type):
     submitted_by = user_from_update(update)
 
@@ -46,9 +45,11 @@ def submit_handling(bot: Bot, update: Update, proposal_class: type, phrase_class
         f"Tu aportación será valorada por un consejo de cuñaos expertos y te avisaré una vez haya sido evaluada, {Phrase.get_random_phrase()}")
 
 
+@log_update
 def handle_submit(bot: Bot, update: Update):
     submit_handling(bot, update, Proposal, Phrase)
 
 
+@log_update
 def handle_submit_long(bot: Bot, update: Update):
     submit_handling(bot, update, LongProposal, LongPhrase)

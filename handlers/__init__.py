@@ -1,13 +1,21 @@
 from telegram.ext import InlineQueryHandler, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
 
-from .start import handle_start
+from utils.decorators import log_update
+from .about import handle_about
+from .callback_query import handle_callback_query
+from .error import error_handler
 from .help import handle_help
 from .inline_query import handle_inline_query
-from .error import error_handler
+from .start import handle_start
 from .submit import handle_submit, handle_submit_long
-from .callback_query import handle_callback_query
 from .text_message import handle_message
-from .about import handle_about
+
+
+@log_update
+def handle_fallback_message(bot, update):
+    """This is here to handle the rest of messages"""
+    pass
+
 
 handlers = [
     CommandHandler("start", handle_start),
@@ -18,4 +26,5 @@ handlers = [
     MessageHandler(Filters.text, handle_message),
     InlineQueryHandler(handle_inline_query),
     CallbackQueryHandler(handle_callback_query),
+    MessageHandler(None, handle_fallback_message),
 ]
