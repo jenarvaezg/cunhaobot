@@ -6,6 +6,7 @@ from constants import LIKE
 from markup.keyboards import build_vote_keyboard
 from models.phrase import Phrase
 from models.proposal import get_proposal_class_by_kind
+from utils.decorators import log_update
 
 curators_chat_id = int(os.environ.get("MOD_CHAT_ID", '-1'))
 
@@ -16,6 +17,7 @@ def get_required_votes(bot):
     return count // 2 + 1
 
 
+@log_update
 def handle_callback_query(bot: Bot, update: Update):
     data = update.callback_query.data
     vote, proposal_id, kind = data.split(":")

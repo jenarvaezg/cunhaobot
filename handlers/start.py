@@ -1,7 +1,10 @@
 from telegram import Update, Bot
 
 from models.phrase import Phrase
+from utils.decorators import log_update
 
+
+@log_update
 def handle_start(bot: Bot, update: Update):
     """Send a message when the command /start is issued."""
     update.message.reply_text(

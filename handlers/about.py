@@ -1,6 +1,9 @@
 from telegram import Update, Bot
 
+from utils.decorators import log_update
 
+
+@log_update
 def handle_about(bot: Bot, update: Update):
     """Send a message when the command /help is issued."""
     update.message.reply_text(

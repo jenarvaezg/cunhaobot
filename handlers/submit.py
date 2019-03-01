@@ -5,6 +5,7 @@ from telegram import Update, Bot, InlineKeyboardMarkup, ParseMode
 from markup.keyboards import build_vote_keyboard
 from models.phrase import Phrase, LongPhrase
 from models.proposal import Proposal, LongProposal
+from utils.decorators import log_update
 from utils.user import user_from_update
 
 curators_chat_id = os.environ.get("MOD_CHAT_ID", "")
@@ -14,6 +15,7 @@ BLACKLIST = [
 ]
 
 
+@log_update
 def submit_handling(bot: Bot, update: Update, proposal_class: type, phrase_class: type):
     submitted_by = user_from_update(update)
 
