@@ -10,7 +10,7 @@ from handlers.inline_query.audio_mode import get_audio_mode_results
 from handlers.inline_query.long_mode import get_long_mode_results
 from utils import get_thumb
 from models.phrase import Phrase
-
+from utils.decorators import log_update
 
 logger = logging.getLogger('cunhaobot')
 SHORT_MODE_WORDS = ['short', 'corto', 'corta', 'saludo']
@@ -46,6 +46,7 @@ def get_query_mode(query: str) -> Tuple[str, str]:
     return '', ''
 
 
+@log_update
 def handle_inline_query(bot: Bot, update: Update):
     """Handle the inline query."""
     mode, rest = get_query_mode(update.inline_query.query)
@@ -54,7 +55,7 @@ def handle_inline_query(bot: Bot, update: Update):
     if not results_func:
         update.inline_query.answer([
             InlineQueryResultArticle(
-                id=uuid4(),
+                id='Dont know how to use',
                 title='No sabes usarme :(, hablame por privado y escribe /help',
                 input_message_content=InputTextMessageContent(
                     f'Soy un {Phrase.get_random_phrase()} y no se usar el CuñaoBot'

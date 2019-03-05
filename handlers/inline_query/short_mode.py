@@ -28,7 +28,7 @@ def get_short_mode_results(input: str) -> List[InlineQueryResultArticle]:
         combinations.add(combination if not finisher else combination + (finisher,))
 
     results = [InlineQueryResultArticle(
-        id=uuid4(),
+        id=f"short-{', '.join(combination)}" if len(', '.join(combination)) < 55 else f"short-{', '.join(combination)[:55]}",
         title=', '.join(combination),
         input_message_content=InputTextMessageContent(
             BASE_TEMPLATE.format(', '.join(combination))

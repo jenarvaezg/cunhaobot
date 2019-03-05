@@ -1,6 +1,5 @@
 import os
 from typing import List
-from uuid import uuid4
 
 import boto3
 from telegram import InlineQueryResultVoice, InlineQueryResultArticle
@@ -39,7 +38,7 @@ def short_result_to_audio_result(result: InlineQueryResultArticle) -> InlineQuer
         audio_url = upload_audio(speech['AudioStream'].read(), clean_title)
 
     return InlineQueryResultVoice(
-        uuid4(),
+        f'audio-{result.id}',
         audio_url,
         title,
     )
@@ -56,7 +55,7 @@ def long_result_to_audio_result(result: InlineQueryResultArticle) -> InlineQuery
         audio_url = upload_audio(speech['AudioStream'].read(), title)
 
     return InlineQueryResultVoice(
-        uuid4(),
+        f'audio-{result.id}',
         audio_url,
         title,
     )

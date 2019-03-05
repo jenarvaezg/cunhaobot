@@ -1,5 +1,6 @@
 import random
 from typing import Tuple
+from copy import deepcopy
 
 thumbs = [
     "https://cdn.20m.es/img2/recortes/2018/02/06/632781-600-338.jpg",
@@ -25,3 +26,13 @@ def random_combination(iterable: str, r: int) -> Tuple[str]:
     n = len(pool)
     indices = sorted(random.sample(range(n), r))
     return tuple(pool[i] for i in indices)
+
+
+def remove_empty_from_dict(di):
+    d = deepcopy(di)
+    if type(d) is dict:
+        return dict((k, remove_empty_from_dict(v)) for k, v in d.items() if v and remove_empty_from_dict(v))
+    elif type(d) is list:
+        return [remove_empty_from_dict(v) for v in d if v and remove_empty_from_dict(v)]
+    else:
+        return d

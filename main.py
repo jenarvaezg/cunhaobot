@@ -7,7 +7,7 @@ from telegram.ext import Updater
 from handlers import error_handler, handlers
 
 # Enable logging
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+logging.basicConfig(format='%(message)s',
                     level=logging.INFO)
 
 logger = logging.getLogger('cunhaobot')

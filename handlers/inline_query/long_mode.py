@@ -14,7 +14,7 @@ def get_long_mode_results(input: str) -> List[InlineQueryResultArticle]:
     results_number = max_results_number if max_results_number <= len(phrases) else len(phrases)
 
     results = [InlineQueryResultArticle(
-        id=uuid4(),
+        id=f"long-{phrase}" if len(phrase) < 50 else f"long-{phrase[:50]}",
         title=phrase,
         input_message_content=InputTextMessageContent(phrase),
         thumb_url=get_thumb()
