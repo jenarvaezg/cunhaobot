@@ -5,6 +5,7 @@ env_variables:
   MOD_CHAT_ID: $MOD_CHAT_ID
   AWS_ACCESS_KEY: $AWS_ACCESS_KEY
   AWS_SECRET_KEY: $AWS_SECRET_KEY
+  BASE_URL: $BASE_URL
 
 liveness_check:
   path: "/"

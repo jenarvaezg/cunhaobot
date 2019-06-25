@@ -1,8 +1,10 @@
 import logging
 import os
+import json
 
-import webapp2
-from telegram.ext import Updater
+from flask import Flask
+from telegram import Update
+from telegram.ext import Updater, Dispatcher
 
 from handlers import error_handler, handlers
 
@@ -12,9 +14,11 @@ logging.basicConfig(format='%(message)s',
 
 logger = logging.getLogger('cunhaobot')
 TG_TOKEN = os.environ["TG_TOKEN"]
+BASE_URL = os.environ["BASE_URL"]
+PORT = os.environ["PORT"]
 
 
-def main():
+def tg_dispatcher() -> Dispatcher:
     logger.info("STARTING MAIN")
     # Create the Updater and pass it your bot's token.
     updater = Updater(TG_TOKEN)
@@ -29,19 +33,31 @@ def main():
     dp.add_error_handler(error_handler)
 
     # Start the Bot
-    logger.info("STARTING POLLING")
-    updater.start_polling()
-    logger.info("STARTED POLLING")
+    # updater.bot.set_webhook(f'{BASE_URL}:{PORT}/{TG_TOKEN}')
+    print(f'{BASE_URL}/{TG_TOKEN}')
 
+    return dp
+
+
+app = Flask(__name__)
 
 # Not pretty, but I needed some sort of http server to work in appengine standard
-class MainPage(webapp2.RequestHandler):
-    def get(self):
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.write('I am alive')
+@app.route('/')
+def ping(self):
+    return "I am alive"
+
+#class TelegramHandler(webapp2.RequestHandler):
+#    def post(self):
+#        dispatcher = tg_dispatcher()
+#        update = Update.de_json(json.loads(self.request.body), dispatcher.bot)
+#        dispatcher.process_update(update)
 
 
-main()
-app = webapp2.WSGIApplication([
-    ('/', MainPage),
-])
+print("SETTING APP")
+
+
+if __name__ == '__main__':
+    # This is used when running locally only. When deploying to Google App
+    # Engine, a webserver process such as Gunicorn will serve the app. This
+    # can be configured by adding an `entrypoint` to app.yaml.
+    app.run(host='0.0.0.0', port=8080, debug=True)
