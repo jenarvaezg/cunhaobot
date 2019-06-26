@@ -1,5 +1,4 @@
 import random
-from uuid import uuid4
 from typing import List
 from telegram import InlineQueryResultArticle, InputTextMessageContent
 

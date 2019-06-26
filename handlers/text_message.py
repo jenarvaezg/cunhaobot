@@ -4,6 +4,7 @@ import string
 from telegram import Update, Bot
 
 from models.phrase import Phrase
+from models.user import User
 from utils.decorators import log_update
 
 
@@ -27,6 +28,9 @@ def normalize(word):
 
 @log_update
 def handle_message(bot: Bot, update: Update):
+    if not update.message:
+        return
+    User.from_update(update).save()
     used_triggers = []
     message = update.message.text
     words = map(normalize, message.split(' '))

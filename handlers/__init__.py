@@ -11,6 +11,7 @@ from .start import handle_start
 from .submit import handle_submit, handle_submit_long
 from .chosen_inine_result import handle_chosen_inline_result
 from .text_message import handle_message
+from .stop import handle_stop
 
 
 @log_update
@@ -27,6 +28,7 @@ handlers = [
     CommandHandler('submitlong', handle_submit_long),
     CommandHandler('proponerfrase', handle_submit_long),
     CommandHandler('about', handle_about),
+    CommandHandler('stop', handle_stop),
     MessageHandler(Filters.text, handle_message),
     InlineQueryHandler(handle_inline_query),
     CallbackQueryHandler(handle_callback_query),
