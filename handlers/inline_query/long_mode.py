@@ -8,8 +8,12 @@ from utils import get_thumb
 
 
 def get_long_mode_results(input: str) -> List[InlineQueryResultArticle]:
+    search = ''
+    if input.startswith('search'):
+        search = " ".join(input.split(" ")[1:])
+
     max_results_number = 10
-    phrases = LongPhrase.get_phrases()
+    phrases = LongPhrase.get_phrases(search=search)
     random.shuffle(phrases)
     results_number = max_results_number if max_results_number <= len(phrases) else len(phrases)
 

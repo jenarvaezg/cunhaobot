@@ -23,6 +23,7 @@ class Phrase:
         phrase_entity['text'] = phrase.text
 
         datastore_client.put(phrase_entity)
+        cls.refresh_cache()
         cls.phrases_cache.append(phrase.text)
 
     @classmethod
@@ -32,13 +33,17 @@ class Phrase:
         )
 
     @classmethod
-    def get_phrases(cls) -> List[str]:
-        if len(cls.phrases_cache) == 0:
-            datastore_client = datastore.Client()
-            query = datastore_client.query(kind=cls.kind)
-            cls.phrases_cache = [cls.from_entity(entity).text for entity in query.fetch()]
+    def refresh_cache(cls):
+        datastore_client = datastore.Client()
+        query = datastore_client.query(kind=cls.kind)
+        cls.phrases_cache = [cls.from_entity(entity).text for entity in query.fetch()]
 
-        return cls.phrases_cache
+    @classmethod
+    def get_phrases(cls, search='') -> List[str]:
+        if len(cls.phrases_cache) == 0:
+            cls.refresh_cache()
+
+        return [phrase for phrase in cls.phrases_cache if search.lower() in phrase.lower()]
 
     @classmethod
     def get_random_phrase(cls) -> str:

@@ -1,6 +1,5 @@
 import logging
 from typing import Tuple
-from uuid import uuid4
 
 from telegram import InlineQueryResultArticle, InputTextMessageContent
 from telegram import Update, Bot
