@@ -13,6 +13,7 @@ webapp2 = "==3.0.0b1"
 boto = "*"
 boto3 = "*"
 google-cloud-storage = "*"
+pytz = "*"
 
 [requires]
 python_version = "3.7"
