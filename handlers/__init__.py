@@ -12,6 +12,7 @@ from .submit import handle_submit, handle_submit_long
 from .chosen_inine_result import handle_chosen_inline_result
 from .text_message import handle_message
 from .stop import handle_stop
+from .ping import handle_ping
 
 
 @log_update

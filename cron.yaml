@@ -1,4 +1,0 @@
-cron:
-- description: "Ping / keepalive"
-  url: /
-  schedule: every 60 mins

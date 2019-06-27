@@ -6,7 +6,7 @@ from flask import Flask, request
 from telegram import Update
 from telegram.ext import Updater, Dispatcher
 
-from handlers import error_handler, handlers
+from handlers import error_handler, handlers, handle_ping as handle_telegram_ping
 
 # Enable logging
 logging.basicConfig(format='%(message)s',
@@ -48,6 +48,13 @@ def telegram_handler():
     update = Update.de_json(request.json, dispatcher.bot)
     dispatcher.process_update(update)
     return "Handled"
+
+
+@app.route(f'/{TG_TOKEN}/ping', methods=['GET'])
+def telegram_ping_handler():
+    dispatcher = tg_dispatcher()
+    handle_telegram_ping(dispatcher.bot)
+    return "OK"
 
 
 if __name__ == '__main__':

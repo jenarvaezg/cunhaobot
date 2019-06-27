@@ -10,19 +10,9 @@ from utils.user import user_from_update
 
 curators_chat_id = os.environ.get("MOD_CHAT_ID", "")
 
-BLACKLIST = [
-    'Luis con nombre de usuario Luis0r',
-]
-
 
 def submit_handling(bot: Bot, update: Update, proposal_class: type, phrase_class: type):
     submitted_by = user_from_update(update)
-
-    if submitted_by in BLACKLIST:
-        for i in range(100):
-            update.message.reply_text(f'Me cago en tu puta madre, {Phrase.get_random_phrase()}')
-        bot.send_message(curators_chat_id, f"Le he jodido la vida a '{submitted_by}'")
-        return
 
     proposal = proposal_class.from_update(update)
     if proposal.text == '':

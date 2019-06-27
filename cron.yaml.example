@@ -1,0 +1,4 @@
+cron:
+- description: "Telegram ping for schedules"
+  url: /$TG_TOKEN/ping
+  schedule: every 60 mins

@@ -2,6 +2,5 @@ gcp_credentials.json
 .env
 .idea
 app.yaml
+cron.yaml
 __pycache__
-cert.pem
-private.key
