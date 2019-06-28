@@ -1,14 +1,17 @@
 # [START gae_python37_app]
 import logging
 import os
+import requests
 
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from telegram import Update
 from telegram.ext import Updater, Dispatcher
 
 from handlers import error_handler, handlers, handle_ping as handle_telegram_ping
 
 # Enable logging
+from models.phrase import LongPhrase
+
 logging.basicConfig(format='%(message)s',
                     level=logging.INFO)
 
@@ -55,6 +58,19 @@ def telegram_ping_handler():
     dispatcher = tg_dispatcher()
     handle_telegram_ping(dispatcher.bot)
     return "OK"
+
+
+@app.route(f'/slack/frase', methods=['POST'])
+def slack_phrase_handler():
+    data = request.form
+    text = data['text']
+    response_url = data['response_url']
+    requests.post(response_url, json={
+        'text':LongPhrase.get_random_phrase(search=text),
+        'response_type':'in_channel',
+    })
+
+    return ""
 
 
 if __name__ == '__main__':

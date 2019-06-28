@@ -46,8 +46,9 @@ class Phrase:
         return [phrase for phrase in cls.phrases_cache if search.lower() in phrase.lower()]
 
     @classmethod
-    def get_random_phrase(cls) -> str:
-        return random.choice(cls.get_phrases())
+    def get_random_phrase(cls, search='') -> str:
+        phrase = cls.get_phrases(search=search) or cls.get_phrases()
+        return random.choice(phrase)
 
 
 class LongPhrase(Phrase):
