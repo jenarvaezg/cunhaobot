@@ -61,7 +61,7 @@ def handle_inline_query(bot: Bot, update: Update):
                 ),
                 thumb_url=get_thumb()
             )
-        ])
+        ], switch_pm_text='PULSA AQUI PARA RECIBIR AYUDA', switch_pm_parameter='dont_know_how_to_use')
         return
 
     results = results_func(rest)

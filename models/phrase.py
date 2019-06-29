@@ -22,8 +22,8 @@ class Phrase:
 
         phrase_entity['text'] = phrase.text
 
-        datastore_client.put(phrase_entity)
         cls.refresh_cache()
+        datastore_client.put(phrase_entity)
         cls.phrases_cache.append(phrase.text)
 
     @classmethod

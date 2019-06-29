@@ -3,7 +3,7 @@ import logging
 import os
 import requests
 
-from flask import Flask, request, jsonify
+from flask import Flask, request
 from telegram import Update
 from telegram.ext import Updater, Dispatcher
 
@@ -14,6 +14,12 @@ from models.phrase import LongPhrase
 
 logging.basicConfig(format='%(message)s',
                     level=logging.INFO)
+
+try:
+  import googleclouddebugger
+  googleclouddebugger.enable()
+except ImportError:
+  pass
 
 logger = logging.getLogger('cunhaobot')
 TG_TOKEN = os.environ["TG_TOKEN"]
