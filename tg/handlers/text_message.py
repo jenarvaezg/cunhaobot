@@ -5,7 +5,7 @@ from telegram import Update, Bot
 
 from models.phrase import Phrase
 from models.user import User
-from utils.decorators import log_update
+from tg.utils.decorators import log_update
 
 
 def reply_cunhao(bot: Bot, update: Update):

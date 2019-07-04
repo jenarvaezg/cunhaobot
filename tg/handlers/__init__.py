@@ -1,7 +1,7 @@
 from telegram.ext import InlineQueryHandler, CommandHandler, CallbackQueryHandler, MessageHandler, Filters, \
     ChosenInlineResultHandler
 
-from utils.decorators import log_update
+from tg.utils.decorators import log_update
 from .about import handle_about
 from .callback_query import handle_callback_query
 from .error import error_handler
@@ -13,6 +13,7 @@ from .chosen_inine_result import handle_chosen_inline_result
 from .text_message import handle_message
 from .stop import handle_stop
 from .ping import handle_ping
+from .chapa import handle_create_chapa, handle_delete_chapa, handle_list_chapas
 
 
 @log_update
@@ -30,6 +31,10 @@ handlers = [
     CommandHandler('proponerfrase', handle_submit_long),
     CommandHandler('about', handle_about),
     CommandHandler('stop', handle_stop),
+    CommandHandler('chapa', handle_create_chapa),
+    CommandHandler('chapas', handle_list_chapas),
+    CommandHandler('borrarchapa', handle_delete_chapa),
+    CommandHandler('borrarchapas', handle_delete_chapa),
     MessageHandler(Filters.text, handle_message),
     InlineQueryHandler(handle_inline_query),
     CallbackQueryHandler(handle_callback_query),

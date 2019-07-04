@@ -4,17 +4,18 @@ from typing import Tuple
 from telegram import InlineQueryResultArticle, InputTextMessageContent
 from telegram import Update, Bot
 
-from handlers.inline_query.short_mode import get_short_mode_results
-from handlers.inline_query.audio_mode import get_audio_mode_results
-from handlers.inline_query.long_mode import get_long_mode_results
 from utils import get_thumb
 from models.phrase import Phrase
-from utils.decorators import log_update
+from tg.utils.decorators import log_update
+
+from .short_mode import get_short_mode_results
+from .audio_mode import get_audio_mode_results
+from .long_mode import get_long_mode_results
 
 logger = logging.getLogger('cunhaobot')
 SHORT_MODE_WORDS = ['short', 'corto', 'corta', 'saludo']
 LONG_MODE_WORDS = ['long', 'largo', 'larga', 'frase']
-AUDIO_MODE_WORDS = ['audio', 'sonido', 'sound', 'mp3', 'ogg']
+AUDIO_MODE_WORDS = ['audio', 'sonido', 'sound']
 SHORT_MODE = 'SHORT'
 LONG_MODE = 'LONG'
 AUDIO_MODE = 'AUDIO'

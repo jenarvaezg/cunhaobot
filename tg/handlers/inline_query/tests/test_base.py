@@ -1,6 +1,6 @@
 import unittest
 
-from handlers.inline_query.base import get_query_mode, SHORT_MODE, SHORT_MODE_WORDS, LONG_MODE_WORDS, LONG_MODE, \
+from tg.handlers.inline_query.base import get_query_mode, SHORT_MODE, SHORT_MODE_WORDS, LONG_MODE_WORDS, LONG_MODE, \
     AUDIO_MODE_WORDS, AUDIO_MODE
 
 

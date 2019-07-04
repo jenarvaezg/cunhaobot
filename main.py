@@ -5,9 +5,9 @@ import requests
 
 from flask import Flask, request
 from telegram import Update
-from telegram.ext import Updater, Dispatcher
 
-from handlers import error_handler, handlers, handle_ping as handle_telegram_ping
+from tg import tg_dispatcher
+from tg.handlers import handle_ping as handle_telegram_ping
 
 # Enable logging
 from models.phrase import LongPhrase
@@ -25,23 +25,6 @@ logger = logging.getLogger('cunhaobot')
 TG_TOKEN = os.environ["TG_TOKEN"]
 BASE_URL = os.environ["BASE_URL"]
 PORT = os.environ.get("PORT")
-
-
-def tg_dispatcher() -> Dispatcher:
-    # Create the Updater and pass it your bot's token.
-    updater = Updater(TG_TOKEN)
-
-    # Get the dispatcher to register handlers
-    dp = updater.dispatcher
-
-    for handler in handlers:
-        dp.add_handler(handler)
-
-    # log all errors
-    dp.add_error_handler(error_handler)
-
-    return dp
-
 
 app = Flask(__name__)
 

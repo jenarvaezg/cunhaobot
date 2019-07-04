@@ -4,9 +4,9 @@ from typing import List
 import boto3
 from telegram import InlineQueryResultVoice, InlineQueryResultArticle
 
-from handlers.inline_query.short_mode import get_short_mode_results
-from handlers.inline_query.long_mode import  get_long_mode_results
 from utils.gcp import upload_audio, get_audio_url
+from .short_mode import get_short_mode_results
+from .long_mode import  get_long_mode_results
 
 AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY', '')
 AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY', '')

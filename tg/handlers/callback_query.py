@@ -3,10 +3,10 @@ import os
 from telegram import Update, Bot, InlineKeyboardMarkup
 
 from constants import LIKE
-from markup.keyboards import build_vote_keyboard
 from models.phrase import Phrase
 from models.proposal import get_proposal_class_by_kind
-from utils.decorators import log_update
+from tg.markup.keyboards import build_vote_keyboard
+from tg.utils.decorators import log_update
 
 curators_chat_id = int(os.environ.get("MOD_CHAT_ID", '-1'))
 
@@ -29,7 +29,7 @@ def handle_callback_query(bot: Bot, update: Update):
         update.callback_query.answer("Esa propuesta ha muerto")
         return
 
-    get_required_votes(bot)
+    required_votes = get_required_votes(bot)
 
     if update.callback_query.from_user.id in proposal.voted_by:
         # Ignore users who already voted
@@ -40,7 +40,7 @@ def handle_callback_query(bot: Bot, update: Update):
     proposal.save()
     update.callback_query.answer(f"Tu voto: {vote} ha sido añadido")
 
-    if proposal.likes >= get_required_votes(bot):
+    if proposal.likes >= required_votes:
         update.callback_query.edit_message_text(
             f"La propuesta '{proposal.text}' queda formalmente aprobada y añadida a la lista"
         )
@@ -51,7 +51,7 @@ def handle_callback_query(bot: Bot, update: Update):
         )
         proposal.phrase_class.upload_from_proposal(proposal)
         proposal.delete()
-    elif proposal.dislikes >= get_required_votes(bot):
+    elif proposal.dislikes >= required_votes:
         update.callback_query.edit_message_text(
             f"La propuesta '{proposal.text}' queda formalmente rechazada")
         bot.send_message(

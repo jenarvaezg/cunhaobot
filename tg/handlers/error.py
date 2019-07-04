@@ -7,4 +7,4 @@ logger = logging.getLogger('cunhaobot')
 
 def error_handler(bot: Bot, update: Update, error: TelegramError):
     """Log Errors caused by Updates."""
-    logger.warning('Update "%s" caused error "%s"', update, error)
+    logger.error(f'Update "{update}" caused error "{error}')
