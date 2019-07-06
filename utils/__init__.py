@@ -1,4 +1,5 @@
 import random
+import unicodedata
 from typing import Tuple
 from copy import deepcopy
 
@@ -36,3 +37,9 @@ def remove_empty_from_dict(di):
         return [remove_empty_from_dict(v) for v in d if v and remove_empty_from_dict(v)]
     else:
         return d
+
+
+def normalize_str(s):
+    """Returns a version of s without accents or specials characters such as ñ and lower-cased"""
+    without_accents = ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')
+    return without_accents.lower()

@@ -3,6 +3,8 @@ from typing import List
 
 from google.cloud import datastore
 
+from utils import normalize_str
+
 
 class Phrase:
     kind = 'Phrase'
@@ -43,7 +45,7 @@ class Phrase:
         if len(cls.phrases_cache) == 0:
             cls.refresh_cache()
 
-        return [phrase for phrase in cls.phrases_cache if search.lower() in phrase.lower()]
+        return [phrase for phrase in cls.phrases_cache if normalize_str(search) in normalize_str(phrase)]
 
     @classmethod
     def get_random_phrase(cls, search='') -> str:
