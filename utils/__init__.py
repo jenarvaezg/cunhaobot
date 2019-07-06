@@ -43,3 +43,16 @@ def normalize_str(s):
     """Returns a version of s without accents or specials characters such as ñ and lower-cased"""
     without_accents = ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')
     return without_accents.lower()
+
+
+def improve_punctuation(s):
+    """Returns a version of s capitalized if the first character is a letter and a trailling dot if neccesary"""
+    if s[0].isalpha():
+        s = s.capitalize()
+    else:
+        s = s[0] + s[1:].capitalize()
+
+    if s[-1].isalpha():
+        s += "."
+
+    return s

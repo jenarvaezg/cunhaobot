@@ -3,7 +3,7 @@ from typing import List
 
 from google.cloud import datastore
 
-from utils import normalize_str
+from utils import normalize_str, improve_punctuation
 
 
 class Phrase:
@@ -22,7 +22,7 @@ class Phrase:
         key = datastore_client.key(cls.kind, phrase.text)
         phrase_entity = datastore.Entity(key=key)
 
-        phrase_entity['text'] = phrase.text
+        phrase_entity['text'] = improve_punctuation(phrase.text)
 
         cls.refresh_cache()
         datastore_client.put(phrase_entity)
