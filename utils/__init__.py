@@ -48,9 +48,9 @@ def normalize_str(s):
 def improve_punctuation(s):
     """Returns a version of s capitalized if the first character is a letter and a trailling dot if neccesary"""
     if s[0].isalpha():
-        s = s.capitalize()
+        s = s[0].upper() + s[1:]
     else:
-        s = s[0] + s[1:].capitalize()
+        s = s[0] + s[1].upper() + s[2:]
 
     if s[-1].isalpha():
         s += "."

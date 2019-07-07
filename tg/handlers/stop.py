@@ -9,5 +9,5 @@ def handle_stop(bot: Bot, update: Update):
     """Send a message when the command /start is issued."""
     User.from_update(update).delete()
     update.message.reply_text(
-        'Has sido borrado de las listas de notificaciones, si vuelves a hablarme de volvere a añadir!'
+        'Has sido borrado de las listas de notificaciones. ¡Si vuelves a hablarme te volveré a añadir!'
     )

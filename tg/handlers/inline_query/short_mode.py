@@ -7,7 +7,7 @@ from models.phrase import Phrase
 from utils import get_thumb, random_combination
 
 
-BASE_TEMPLATE = '¿Que pasa, {}?'
+BASE_TEMPLATE = '¿Qué pasa, {}?'
 
 
 def get_short_mode_results(input: str) -> List[InlineQueryResultArticle]:

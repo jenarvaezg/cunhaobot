@@ -2,7 +2,7 @@ from google.cloud import datastore
 
 
 datastore_client = datastore.Client()
-kind = "Phrase"
+kind = "LongPhrase"
 query = datastore_client.query(kind=kind)
 changes = []
 for entity in query.fetch():

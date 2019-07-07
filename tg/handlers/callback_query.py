@@ -1,6 +1,6 @@
 import os
 
-from telegram import Update, Bot, InlineKeyboardMarkup
+from telegram import Update, Bot, InlineKeyboardMarkup, ParseMode, Message
 
 from constants import LIKE
 from models.phrase import Phrase
@@ -15,6 +15,15 @@ def get_required_votes(bot):
     count = bot.get_chat_members_count(curators_chat_id)
     count -= 1  # ignore bot
     return count // 2 + 1
+
+
+def text_with_bold(message: Message) -> str:
+    text = message.text
+    bold = next(iter([e for e in message.entities if e['type'] == 'bold']), None)
+    if not bold:
+        return text
+    offset, length = bold['offset'], bold['length']
+    return text[:offset] + "<b>" + text[offset:offset + length] + '</b>' + text[offset + length:]
 
 
 @log_update
@@ -33,12 +42,12 @@ def handle_callback_query(bot: Bot, update: Update):
 
     if update.callback_query.from_user.id in proposal.voted_by:
         # Ignore users who already voted
-        update.callback_query.answer(f"Tu ya has votado {Phrase.get_random_phrase()}")
+        update.callback_query.answer(f"Tu ya has votado {Phrase.get_random_phrase()}.")
         return
 
     proposal.add_vote(vote == LIKE, update.callback_query.from_user.id)
     proposal.save()
-    update.callback_query.answer(f"Tu voto: {vote} ha sido añadido")
+    update.callback_query.answer(f"Tu voto: {vote} ha sido añadido.")
 
     if proposal.likes >= required_votes:
         update.callback_query.edit_message_text(
@@ -61,7 +70,11 @@ def handle_callback_query(bot: Bot, update: Update):
         )
         proposal.delete()
     else:
-        text = update.callback_query.message.text
+        text = text_with_bold(update.callback_query.message)
         user = update.callback_query.from_user.username or update.callback_query.first_name
         reply_markup = InlineKeyboardMarkup(build_vote_keyboard(proposal.id, proposal.kind))
-        update.callback_query.edit_message_text(f"{text}\n{user}: {vote}", reply_markup=reply_markup)
+        update.callback_query.edit_message_text(
+            f"{text}\n{user}: {vote}",
+            reply_markup=reply_markup,
+            parse_mode=ParseMode.HTML
+        )

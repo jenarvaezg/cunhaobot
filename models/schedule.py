@@ -6,24 +6,26 @@ from google.cloud import datastore
 class ScheduledTask:
     kind = 'ScheduledTask'
 
-    def __init__(self, chat_id, hour, query, service):
+    def __init__(self, chat_id, hour, minute, query, service):
         self.chat_id = chat_id
         self.hour = hour
+        self.minute = minute
         self.query = query
         self.service = service
 
     def __str__(self):
-        return f"Chapa a las {self.hour} con parametros '{self.query}'"
+        return f"Chapa a las {self.hour}:{self.minute:02} con parametros '{self.query}'"
 
     @property
     def datastore_id(self) -> str:
-        return f"{self.chat_id}-{self.hour}-{self.query}"
+        return f"{self.chat_id}-{self.hour}:{self.minute}-{self.query}"
 
     @classmethod
     def from_entity(cls, entity) -> 'ScheduledTask':
         return cls(
             entity['chat_id'],
             entity['hour'],
+            entity['minute'],
             entity['query'],
             entity['service'],
         )
@@ -35,6 +37,7 @@ class ScheduledTask:
 
         entity['chat_id'] = self.chat_id
         entity['hour'] = self.hour
+        entity['minute'] = self.minute
         entity['query'] = self.query
         entity['service'] = self.service
 

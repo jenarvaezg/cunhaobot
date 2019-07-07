@@ -16,7 +16,7 @@ logger = logging.getLogger('cunhaobot')
 def handle_ping(bot: Bot):
     madrid_timezone = pytz.timezone('Europe/Madrid')
     now = datetime.now().astimezone(madrid_timezone)
-    scheduled_tasks = ScheduledTask.get_tasks(hour=now.hour, service="telegram")
+    scheduled_tasks = ScheduledTask.get_tasks(hour=now.hour, minute=now.minute, service="telegram")
     errors = []
     for task in scheduled_tasks:
         try:
@@ -27,7 +27,7 @@ def handle_ping(bot: Bot):
                 bot.send_message(
                     task.chat_id,
                     f"No he encontrado nada con los parametros '{task.query}', así que "
-                    f"aqui tienes algo parecido, {Phrase.get_random_phrase()}"
+                    f"aqui tienes algo parecido, {Phrase.get_random_phrase()}."
                 )
                 bot.send_message(task.chat_id, LongPhrase.get_random_phrase())
                 continue
@@ -42,5 +42,5 @@ def handle_ping(bot: Bot):
     if errors:
         bot.send_message(
             curators_chat_id,
-            f"{Phrase.get_random_phrase()}s, mandando chapas he tenido estos errores: {errors}")
+            f"{Phrase.get_random_phrase()}s, mandando chapas he tenido estos errores: {errors}.")
 

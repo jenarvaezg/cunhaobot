@@ -19,10 +19,12 @@ class Phrase:
     def upload_from_proposal(cls, proposal):
         phrase = cls(proposal.text)
         datastore_client = datastore.Client()
-        key = datastore_client.key(cls.kind, phrase.text)
+
+        text = improve_punctuation(phrase.text)
+        key = datastore_client.key(cls.kind, text)
         phrase_entity = datastore.Entity(key=key)
 
-        phrase_entity['text'] = improve_punctuation(phrase.text)
+        phrase_entity['text'] = text
 
         cls.refresh_cache()
         datastore_client.put(phrase_entity)

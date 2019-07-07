@@ -11,7 +11,7 @@ def usage(update: Update) -> Message:
     return update.message.reply_text(
         f"Para borrar chapas, {Phrase.get_random_phrase()}, tienes que escribir /borrachapa X, donde X es el numero de "
         f"la chapa que quieras borrar, {Phrase.get_random_phrase()}\n"
-        "Tambien puedes usar /borrarchapas y me lo cargo todo",
+        "Tambien puedes usar /borrarchapas y me lo cargo todo.",
         quote=True
     )
 
@@ -19,7 +19,10 @@ def usage(update: Update) -> Message:
 def delete_all_chapas(tasks: List[ScheduledTask], update: Update):
     for task in tasks:
         task.delete()
-    update.message.reply_text(f"Ya no te daré más {len(tasks)} chapas, {Phrase.get_random_phrase()}", quote=True)
+    update.message.reply_text(
+        f"Ya no te daré más chapas, ({len(tasks)} borradas) {Phrase.get_random_phrase()}.",
+        quote=True,
+    )
 
 
 def delete_one_chapa(tasks: List[ScheduledTask], chapa_id: int, update: Update):
@@ -27,9 +30,9 @@ def delete_one_chapa(tasks: List[ScheduledTask], chapa_id: int, update: Update):
         task = tasks[chapa_id]
         task.delete()
     except IndexError as e:
-        update.message.reply_text(f"Te has pasado con el número, {Phrase.get_random_phrase()}", quote=True)
+        update.message.reply_text(f"Te has pasado con el número, {Phrase.get_random_phrase()}.", quote=True)
     else:
-        update.message.reply_text(f"Ya no te daré esa chapa, {Phrase.get_random_phrase()}", quote=True)
+        update.message.reply_text(f"Ya no te daré esa chapa, {Phrase.get_random_phrase()}.", quote=True)
 
 
 @log_update
