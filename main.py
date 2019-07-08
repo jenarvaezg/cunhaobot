@@ -15,12 +15,6 @@ from models.phrase import LongPhrase
 logging.basicConfig(format='%(message)s',
                     level=logging.INFO)
 
-try:
-  import googleclouddebugger
-  googleclouddebugger.enable()
-except ImportError:
-  pass
-
 logger = logging.getLogger('cunhaobot')
 TG_TOKEN = os.environ["TG_TOKEN"]
 BASE_URL = os.environ["BASE_URL"]

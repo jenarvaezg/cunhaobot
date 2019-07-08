@@ -43,8 +43,12 @@ def split_time(time_s: str) -> Tuple[int, int]:
 
 @log_update
 def handle_create_chapa(bot: Bot, update: Update):
+    text = ' '.join(update.message.text.split())
+
     try:
-        tokens = update.message.text.split(" ")
+        tokens = text.split(" ")
+        if len(tokens) == 1:
+            return usage(update)
         time, query = tokens[1], " ".join(tokens[2:])
     except (KeyError, ValueError, IndexError) as e:
         update.message.reply_text(str(e), quote=True)

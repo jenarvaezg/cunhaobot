@@ -63,7 +63,7 @@ class User:
         datastore_client = datastore.Client()
         query = datastore_client.query(kind=cls.kind)
         if not ignore_gdpr:
-            query.add_filter('gdpr' '=', False)
+            query.add_filter('gdpr', '=', False)
         return [cls.from_entity(entity) for entity in query.fetch()]
 
     def delete(self, hard=False):
