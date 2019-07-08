@@ -19,7 +19,7 @@ def log_update(f):
 
         try:
             if update.message.left_chat_member.username == 'cunhaobot':
-                User.load(chat_id=update.message.chat_id).delete(hard=True)
+                User.load(chat_id=update.message.chat_id).delete()
         except:
             pass
         update_dict = remove_empty_from_dict(update.to_dict())
