@@ -66,4 +66,8 @@ def handle_inline_query(bot: Bot, update: Update):
         return
 
     results = results_func(rest)
-    update.inline_query.answer(results, cache_time=1)
+    extra_params = {}
+    if update.inline_query.query == '':
+        extra_params.update(switch_pm_text='PULSA AQUÍ PARA RECIBIR AYUDA', switch_pm_parameter='no_params')
+
+    update.inline_query.answer(results, cache_time=1, **extra_params)

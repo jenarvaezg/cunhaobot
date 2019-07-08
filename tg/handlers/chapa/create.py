@@ -57,7 +57,7 @@ def handle_create_chapa(bot: Bot, update: Update):
         update.message.reply_text(str(e), quote=True)
         return usage(update)
 
-    ScheduledTask(update.effective_chat.id, hour, minute, query, service='telegram').save()
+    ScheduledTask(update.effective_chat.id, hour, minute, query, service='telegram', task_type='chapa').save()
 
     update.message.reply_text(
         f"Configurada chapa a las {hour:02}:{minute:02}. Puedes eliminarla en cualquier momento usando /borrarchapa.",

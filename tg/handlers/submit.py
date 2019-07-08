@@ -33,7 +33,7 @@ def submit_handling(bot: Bot, update: Update, proposal_class: proposal_t, phrase
 
     curators_reply_markup = InlineKeyboardMarkup(build_vote_keyboard(proposal.id, proposal.kind))
     curators_message_text = f"{submitted_by} dice que deberiamos añadir la siguiente {phrase_class.name} a la lista:" \
-                            f"\n<b>{proposal.text}</b>'"
+                            f"\n'<b>{proposal.text}</b>'"
     bot.send_message(curators_chat_id, curators_message_text, reply_markup=curators_reply_markup,
                      parse_mode=ParseMode.HTML)
     update.message.reply_text(
