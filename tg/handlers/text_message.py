@@ -24,7 +24,7 @@ MESSAGE_TRIGGERS = {
 def handle_message(bot: Bot, update: Update):
     if not update.message:
         return
-    User.from_update(update).save()
+
     used_triggers = []
     message = update.message.text
     for trigger_words, trigger_fn in MESSAGE_TRIGGERS.items():

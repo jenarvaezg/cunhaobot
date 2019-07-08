@@ -38,7 +38,7 @@ def _send_chapas(bot: Bot, tasks: Iterable[ScheduledTask]) -> None:
                 bot.send_message(task.chat_id, result.input_message_content.message_text)
         except Exception as e:
             logger.exception("Error sending chapa")
-            errors.append((task.datastore_id, e))
+            errors.append((task.datastore_id, str(e)))
 
     if errors:
         bot.send_message(

@@ -14,5 +14,5 @@ def handle_help(bot: Bot, update: Update):
         f'Ejemplo: "{LongPhrase.get_random_phrase()}"\n'
         'Tambien puedes invocarme en cualquier chat escribiendo "@cunhaobot" (como el bot de gifs)'
         'para recibir frases de cuñao.\nPuedes pasarme argumentos como el numero de palabras que encadenar.\n'
-        'Como mi creador es un figura, tambien te puedo dar audios si escribes: "@cunhaobot audio"\n',
+        'Como mi creador es un figura, tambien te puedo dar audios si escribes: "@cunhaobot audio"\n'
         'Por ultimo, tengo un servicio de chapas maravilloso, para mas informacion escribe /chapa.')

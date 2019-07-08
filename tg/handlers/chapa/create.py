@@ -11,9 +11,9 @@ from models.phrase import Phrase
 def usage(update: Update) -> Message:
     return update.message.reply_text(
         "Para usar el servicio de chapas, tienes que decirme la hora a la que quieres la chapa y, opcionalmente, "
-        "puedes añadir parámetros. Ejemplos:\n/chapa 1100 <- Saludo aleatorio a las 11 como "
-        f"¿Qué pasa, {Phrase.get_random_phrase()}?\n/chapa 2030 frase <- Frase aleatoria a las 20:30 (8:30PM)\n"
-        f"/chapa 1515 frase mujer <- Frase aleatoria que incluya 'mujer' a las 15:15 (3:15PM).",
+        "puedes añadir parámetros. Ejemplos:\n'/chapa 1100' <- Saludo aleatorio a las 11 como "
+        f"¿Qué pasa, {Phrase.get_random_phrase()}?\n'/chapa 2030 frase' <- Frase aleatoria a las 20:30 (8:30PM)\n"
+        f"'/chapa 1515 frase mujer' <- Frase aleatoria que incluya 'mujer' a las 15:15 (3:15PM).",
         quote=True,
     )
 

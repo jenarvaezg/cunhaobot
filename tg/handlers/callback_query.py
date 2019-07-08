@@ -59,7 +59,6 @@ def handle_callback_query(bot: Bot, update: Update):
             reply_to_message_id=proposal.from_message_id
         )
         proposal.phrase_class.upload_from_proposal(proposal)
-        proposal.delete()
     elif proposal.dislikes >= required_votes:
         update.callback_query.edit_message_text(
             f"La propuesta '{proposal.text}' queda formalmente rechazada")
