@@ -3,6 +3,7 @@ from functools import wraps
 
 from telegram import Update, Bot
 
+from models.schedule import ScheduledTask
 from models.user import User
 from utils import remove_empty_from_dict
 
@@ -18,8 +19,9 @@ def log_update(f):
             pass
 
         try:
-            if update.message.left_chat_member.username == 'cunhaobot':
-                User.load(chat_id=update.message.chat_id).delete()
+            if update.effective_message.left_chat_member.username == 'cunhaobot':  # Kicked
+                User.load(chat_id=update.effective_message.chat_id).delete()
+                [task.delete() for task in ScheduledTask.get_tasks(chat_id=update.effective_message.chat_id)]
         except:
             pass
         update_dict = remove_empty_from_dict(update.to_dict())

@@ -20,13 +20,13 @@ def submit_handling(bot: Bot, update: Update, proposal_class: proposal_t, phrase
 
     proposal = proposal_class.from_update(update)
     if proposal.text == '':
-        return update.message.reply_text(
+        return update.effective_message.reply_text(
             f'Tienes que decirme una frase, por ejemplo: "/submit {Phrase.get_random_phrase()}"'
             f' o "/submitlong {LongPhrase.get_random_phrase()}".'
         )
 
     if proposal.text in phrase_class.get_phrases():
-        return update.message.reply_text(
+        return update.effective_message.reply_text(
             f'Esa ya la tengo, {Phrase.get_random_phrase()}, {Phrase.get_random_phrase()}.')
 
     proposal.save()
@@ -36,7 +36,7 @@ def submit_handling(bot: Bot, update: Update, proposal_class: proposal_t, phrase
                             f"\n'<b>{proposal.text}</b>'"
     bot.send_message(curators_chat_id, curators_message_text, reply_markup=curators_reply_markup,
                      parse_mode=ParseMode.HTML)
-    update.message.reply_text(
+    update.effective_message.reply_text(
         f"Tu aportación será valorada por un consejo de cuñaos expertos y te avisaré una vez haya sido evaluada, "
         f"{Phrase.get_random_phrase()}.",
         quote=True,

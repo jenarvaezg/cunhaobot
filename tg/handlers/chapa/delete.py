@@ -8,7 +8,7 @@ from models.phrase import Phrase
 
 
 def usage(update: Update) -> Message:
-    return update.message.reply_text(
+    return update.effective_message.reply_text(
         f"Para borrar chapas, {Phrase.get_random_phrase()}, tienes que escribir /borrachapa X, donde X es el numero de "
         f"la chapa que quieras borrar, {Phrase.get_random_phrase()}\n"
         "Tambien puedes usar /borrarchapas y me lo cargo todo.",
@@ -19,7 +19,7 @@ def usage(update: Update) -> Message:
 def delete_all_chapas(tasks: List[ScheduledTask], update: Update):
     for task in tasks:
         task.delete()
-    update.message.reply_text(
+    update.effective_message.reply_text(
         f"Ya no te daré más chapas, ({len(tasks)} borradas) {Phrase.get_random_phrase()}.",
         quote=True,
     )
@@ -30,17 +30,18 @@ def delete_one_chapa(tasks: List[ScheduledTask], chapa_id: int, update: Update):
         task = tasks[chapa_id]
         task.delete()
     except IndexError as e:
-        update.message.reply_text(f"Te has pasado con el número, {Phrase.get_random_phrase()}.", quote=True)
+        update.effective_message.reply_text(f"Te has pasado con el número, {Phrase.get_random_phrase()}.", quote=True)
     else:
-        update.message.reply_text(f"Ya no te daré esa chapa, {Phrase.get_random_phrase()}.", quote=True)
+        update.effective_message.reply_text(f"Ya no te daré esa chapa, {Phrase.get_random_phrase()}.", quote=True)
 
 
 @log_update
 def handle_delete_chapa(bot: Bot, update: Update):
-    tokens = update.message.text.split(" ")
+    tokens = update.effective_message.text.split(" ")
     try:
+        breakpoint()
         cmd = tokens[0]
-        if cmd.endswith('s'):
+        if 'borrarchapas' in cmd:
             chapa_id = None
         else:
             chapa_id = int(tokens[1]) - 1
@@ -49,7 +50,7 @@ def handle_delete_chapa(bot: Bot, update: Update):
 
     tasks = ScheduledTask.get_tasks(chat_id=update.effective_chat.id)
     if len(tasks) == 0:
-        return update.message.reply_text(f"¡Pero si no te estoy dando la chapa, {Phrase.get_random_phrase()}!")
+        return update.effective_message.reply_text(f"¡Pero si no te estoy dando la chapa, {Phrase.get_random_phrase()}!")
     if chapa_id is None:
         delete_all_chapas(tasks, update)
     else:

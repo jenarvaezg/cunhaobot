@@ -12,7 +12,7 @@ def reply_cunhao(bot: Bot, update: Update):
     n_words = random.choice([3, 4, 5])
     words = ", ".join([Phrase.get_random_phrase() for _ in range(n_words)])
     msg = "Aquí me tienes, {}.".format(words)
-    update.message.reply_text(msg)
+    update.effective_message.reply_text(msg)
 
 
 MESSAGE_TRIGGERS = {
@@ -22,11 +22,11 @@ MESSAGE_TRIGGERS = {
 
 @log_update
 def handle_message(bot: Bot, update: Update):
-    if not update.message:
+    if not update.effective_message:
         return
 
     used_triggers = []
-    message = update.message.text
+    message = update.effective_message.text
     for trigger_words, trigger_fn in MESSAGE_TRIGGERS.items():
         if any(word in message for word in trigger_words) and trigger_fn not in used_triggers:
             trigger_fn(bot, update)

@@ -1,6 +1,6 @@
 from google.cloud import storage
 
-from constants import GCP_BUCKET
+GCP_BUCKET = 'cunhaobot.appspot.com'
 
 storage_client = storage.Client()
 bucket = storage_client.get_bucket(GCP_BUCKET)

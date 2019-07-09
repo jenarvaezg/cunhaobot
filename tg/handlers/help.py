@@ -7,7 +7,7 @@ from models.phrase import Phrase, LongPhrase
 @log_update
 def handle_help(bot: Bot, update: Update):
     """Send a message when the command /help is issued."""
-    update.message.reply_text(
+    update.effective_message.reply_text(
         'Puedes usar /proponer <palabra o frase> para proponer tu palabreja de cuñado favorita. '
         f'Ejemplo: "{Phrase.get_random_phrase()}"\n'
         'Puedes usar /submitlong <frase> para proponer tu frase de cuñado favorita. '

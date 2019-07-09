@@ -9,7 +9,7 @@ from models.phrase import Phrase
 
 
 def usage(update: Update) -> Message:
-    return update.message.reply_text(
+    return update.effective_message.reply_text(
         "Para usar el servicio de chapas, tienes que decirme la hora a la que quieres la chapa y, opcionalmente, "
         "puedes añadir parámetros. Ejemplos:\n'/chapa 1100' <- Saludo aleatorio a las 11 como "
         f"¿Qué pasa, {Phrase.get_random_phrase()}?\n'/chapa 2030 frase' <- Frase aleatoria a las 20:30 (8:30PM)\n"
@@ -43,7 +43,7 @@ def split_time(time_s: str) -> Tuple[int, int]:
 
 @log_update
 def handle_create_chapa(bot: Bot, update: Update):
-    text = ' '.join(update.message.text.split())
+    text = ' '.join(update.effective_message.text.split())
 
     try:
         tokens = text.split(" ")
@@ -51,19 +51,19 @@ def handle_create_chapa(bot: Bot, update: Update):
             return usage(update)
         time, query = tokens[1], " ".join(tokens[2:])
     except (KeyError, ValueError, IndexError) as e:
-        update.message.reply_text(str(e), quote=True)
+        update.effective_message.reply_text(str(e), quote=True)
         return usage(update)
 
     try:
         require_valid_query(query)
         hour, minute = split_time(time)
     except (KeyError, ValueError) as e:
-        update.message.reply_text(str(e), quote=True)
+        update.effective_message.reply_text(str(e), quote=True)
         return usage(update)
 
     ScheduledTask(update.effective_chat.id, hour, minute, query, service='telegram', task_type='chapa').save()
 
-    update.message.reply_text(
+    update.effective_message.reply_text(
         f"Configurada chapa a las {hour:02}:{minute:02}. Puedes eliminarla en cualquier momento usando /borrarchapa.",
         quote=True,
     )

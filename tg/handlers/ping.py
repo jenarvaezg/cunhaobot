@@ -5,7 +5,7 @@ from typing import Iterable
 
 import pytz
 
-from telegram import Bot
+from telegram import Bot, ParseMode
 
 from models.report import Report
 from models.schedule import ScheduledTask
@@ -71,13 +71,14 @@ def _send_report(bot: Bot, now: datetime.date) -> None:
 
     bot.send_message(
         curators_chat_id,
-        f"Resumen del {yesterday.strftime('%Y/%m/%d')}:\n"
+        f"<b>Resumen del {yesterday.strftime('%Y/%m/%d')}</b>:\n"
         f"Frases largas: {longs} ({fmt_delta(longs_delta)})\n"
         f"Palabras poderosas: {shorts} ({fmt_delta(shorts_delta)})\n"
         f"Usuarios: {users} ({fmt_delta(user_delta)})\n"
         f"Grupos: {groups} ({fmt_delta(groups_delta)})\n"
         f"Chapas: {chapas} ({fmt_delta(chapas_delta)})\n"
-        f"GDPRs: {gdprs} ({fmt_delta(gdprs_delta)})"
+        f"GDPRs: {gdprs} ({fmt_delta(gdprs_delta)})",
+        parse_mode=ParseMode.HTML,
     )
 
 

@@ -2,7 +2,7 @@ import os
 
 from telegram import Update, Bot, InlineKeyboardMarkup, ParseMode, Message
 
-from constants import LIKE
+from tg.constants import LIKE
 from models.phrase import Phrase
 from models.proposal import get_proposal_class_by_kind
 from tg.markup.keyboards import build_vote_keyboard
@@ -70,7 +70,7 @@ def handle_callback_query(bot: Bot, update: Update):
         proposal.delete()
     else:
         text = text_with_bold(update.callback_query.message)
-        user = update.callback_query.from_user.username or update.callback_query.first_name
+        user = update.effective_user.name
         reply_markup = InlineKeyboardMarkup(build_vote_keyboard(proposal.id, proposal.kind))
         update.callback_query.edit_message_text(
             f"{text}\n{user}: {vote}",

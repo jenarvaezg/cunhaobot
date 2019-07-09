@@ -9,7 +9,7 @@ class Proposal:
 
     @staticmethod
     def proposal_text_from_update(update):
-        return " ".join(update.message.text.split(" ")[1:]).strip()
+        return " ".join(update.effective_message.text.split(" ")[1:]).strip()
 
     def __init__(self, id, from_chat_id, from_message_id, text, likes=0, dislikes=0, voted_by=[]):
         self.id = id
@@ -22,8 +22,8 @@ class Proposal:
 
     @classmethod
     def from_update(cls, update):
-        id = str(update.message.chat.id + update.message.message_id)
-        return cls(id, update.message.chat.id, update.message.message_id, cls.proposal_text_from_update(update))
+        id = str(update.effective_message.chat.id + update.effective_message.message_id)
+        return cls(id, update.effective_message.chat.id, update.effective_message.message_id, cls.proposal_text_from_update(update))
 
     @classmethod
     def load(cls, id):

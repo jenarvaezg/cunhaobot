@@ -21,7 +21,7 @@ class User:
 
     @classmethod
     def from_update(cls, update) -> 'User':
-        msg = update.message
+        msg = update.effective_message
         chat_id = msg.chat.id
         name, is_group = cls._get_name_from_message(msg)
         return cls(chat_id, name, is_group)
