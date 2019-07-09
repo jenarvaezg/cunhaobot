@@ -1,6 +1,6 @@
 from telegram import Bot, Update
 
-from tg.utils.decorators import log_update
+from tg.decorators import log_update
 
 
 @log_update

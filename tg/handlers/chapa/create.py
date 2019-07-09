@@ -4,7 +4,7 @@ from telegram import Update, Bot, Message
 
 from models.schedule import ScheduledTask
 from tg.handlers.inline_query.base import get_query_mode, MODE_HANDLERS
-from tg.utils.decorators import log_update
+from tg.decorators import log_update, only_admins
 from models.phrase import Phrase
 
 
@@ -41,6 +41,7 @@ def split_time(time_s: str) -> Tuple[int, int]:
     return hour % 24, minute
 
 
+@only_admins
 @log_update
 def handle_create_chapa(bot: Bot, update: Update):
     text = ' '.join(update.effective_message.text.split())

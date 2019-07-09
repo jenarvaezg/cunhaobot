@@ -1,7 +1,6 @@
 from telegram.ext import InlineQueryHandler, CommandHandler, CallbackQueryHandler, MessageHandler, Filters, \
     ChosenInlineResultHandler
 
-from tg.utils.decorators import log_update
 from .about import handle_about
 from .callback_query import handle_callback_query
 from .error import error_handler
@@ -13,13 +12,8 @@ from .chosen_inine_result import handle_chosen_inline_result
 from .text_message import handle_message
 from .stop import handle_stop
 from .ping import handle_ping
-from .chapa import handle_create_chapa, handle_delete_chapa, handle_list_chapas
-
-
-@log_update
-def handle_fallback_message(bot, update):
-    """This is here to handle the rest of messages"""
-    pass
+from .chapa import handle_create_chapa, handle_delete_chapa, handle_delete_chapas, handle_list_chapas
+from .fallback import handle_fallback_message
 
 
 handlers = [
@@ -34,7 +28,7 @@ handlers = [
     CommandHandler('chapa', handle_create_chapa),
     CommandHandler('chapas', handle_list_chapas),
     CommandHandler('borrarchapa', handle_delete_chapa),
-    CommandHandler('borrarchapas', handle_delete_chapa),
+    CommandHandler('borrarchapas', handle_delete_chapas),
     MessageHandler(Filters.text, handle_message),
     InlineQueryHandler(handle_inline_query),
     CallbackQueryHandler(handle_callback_query),

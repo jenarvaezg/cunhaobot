@@ -6,7 +6,7 @@ from tg.constants import LIKE
 from models.phrase import Phrase
 from models.proposal import get_proposal_class_by_kind
 from tg.markup.keyboards import build_vote_keyboard
-from tg.utils.decorators import log_update
+from tg.decorators import log_update
 
 curators_chat_id = int(os.environ.get("MOD_CHAT_ID", '-1'))
 

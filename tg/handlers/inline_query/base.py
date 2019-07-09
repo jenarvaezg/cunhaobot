@@ -6,7 +6,7 @@ from telegram import Update, Bot
 
 from utils import get_thumb
 from models.phrase import Phrase
-from tg.utils.decorators import log_update
+from tg.decorators import log_update
 
 from .short_mode import get_short_mode_results
 from .audio_mode import get_audio_mode_results

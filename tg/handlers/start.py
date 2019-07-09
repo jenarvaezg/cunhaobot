@@ -1,7 +1,7 @@
 from telegram import Update, Bot
 
 from models.phrase import Phrase, LongPhrase
-from tg.utils.decorators import log_update
+from tg.decorators import log_update
 
 
 @log_update
