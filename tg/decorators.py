@@ -14,7 +14,7 @@ def only_admins(f):
     @wraps(f)
     def wrapper(bot: Bot, update: Update, *args, **kwargs):
         chat: Chat = update.effective_chat
-        if chat.type != chat.GROUP:
+        if chat.type == chat.PRIVATE:
             return f(bot, update, *args, **kwargs)
         if chat.all_members_are_administrators:
             return f(bot, update, *args, **kwargs)
