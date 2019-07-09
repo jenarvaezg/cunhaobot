@@ -6,7 +6,7 @@ from telegram import Update, Bot, InlineKeyboardMarkup, ParseMode
 from tg.markup.keyboards import build_vote_keyboard
 from models.phrase import Phrase, LongPhrase
 from models.proposal import Proposal, LongProposal
-from tg.utils.decorators import log_update
+from tg.decorators import log_update
 from tg.utils.user import user_from_update
 
 curators_chat_id = os.environ.get("MOD_CHAT_ID", "")

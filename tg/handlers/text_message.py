@@ -1,11 +1,11 @@
 import random
-import string
 
-from telegram import Update, Bot
+from telegram import Update, Bot, Message
 
 from models.phrase import Phrase
+from models.schedule import ScheduledTask
 from models.user import User
-from tg.utils.decorators import log_update
+from tg.decorators import log_update
 
 
 def reply_cunhao(bot: Bot, update: Update):
@@ -17,6 +17,7 @@ def reply_cunhao(bot: Bot, update: Update):
 
 MESSAGE_TRIGGERS = {
     ('cuñao', 'cuñado', 'cunhao', 'cunhaobot'): reply_cunhao,
+
 }
 
 
@@ -26,8 +27,8 @@ def handle_message(bot: Bot, update: Update):
         return
 
     used_triggers = []
-    message = update.effective_message.text
+    msg_text = update.effective_message.text
     for trigger_words, trigger_fn in MESSAGE_TRIGGERS.items():
-        if any(word in message for word in trigger_words) and trigger_fn not in used_triggers:
+        if any(word in msg_text for word in trigger_words) and trigger_fn not in used_triggers:
             trigger_fn(bot, update)
             used_triggers.append(trigger_fn)
