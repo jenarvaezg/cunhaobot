@@ -20,7 +20,7 @@ class Phrase:
         phrase = cls(proposal.text)
         datastore_client = datastore.Client()
 
-        text = improve_punctuation(phrase.text)
+        text = phrase.text
         key = datastore_client.key(cls.kind, text)
         phrase_entity = datastore.Entity(key=key)
 
@@ -61,5 +61,7 @@ class LongPhrase(Phrase):
 
     phrases_cache = []
 
+    def __init__(self, text):
+        self.text = improve_punctuation(text)
 
 

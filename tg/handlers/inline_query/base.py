@@ -37,11 +37,11 @@ def get_query_mode(query: str) -> Tuple[str, str]:
     if query_words[0].isnumeric():
         return SHORT_MODE, ' '.join(query_words)
 
-    if query_words[0] in LONG_MODE_WORDS:
-        return LONG_MODE, ' '.join(query_words[1:])
-
     if query_words[0] in AUDIO_MODE_WORDS:
         return AUDIO_MODE, ' '.join(query_words[1:])
+
+    if query_words[0].isalpha():
+        return LONG_MODE, ' '.join(query_words[1:])
 
     return '', ''
 
