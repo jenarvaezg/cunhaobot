@@ -62,6 +62,7 @@ class LongPhrase(Phrase):
     phrases_cache = []
 
     def __init__(self, text):
+        super().__init__(text)
         self.text = improve_punctuation(text)
 
 
