@@ -74,7 +74,7 @@ class Report:
         entity['users'] = self.users
         entity['groups'] = self.groups
         entity['inline_users'] = self.inline_users
-        entity['inline_usages'] = self.inline_users
+        entity['inline_usages'] = self.inline_usages
         entity['gdprs'] = self.gdprs
         entity['chapas'] = self.chapas
         entity['day'] = self.day
