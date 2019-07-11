@@ -79,4 +79,4 @@ def handle_inline_query(bot: Bot, update: Update):
         switch_pm_parameter=f'{mode}-{rest.replace(" ", "-")}'
     )
 
-    InlineUser.get_or_create_from_update(update)
+    InlineUser.update_or_create_from_update(update)

@@ -32,7 +32,7 @@ def log_update(f):
     @wraps(f)
     def wrapper(bot: Bot, update: Update, *args, **kwargs):
         try:
-            User.from_update(update).save()
+            User.update_or_create_from_update(update).save()
         except:
             pass
 

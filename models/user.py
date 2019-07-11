@@ -1,7 +1,7 @@
-from typing import List, Tuple, Optional
+from typing import List, Optional
 
 from google.cloud import datastore
-from telegram import Update
+from telegram import Update, Message
 
 
 class InlineUser:
@@ -17,13 +17,14 @@ class InlineUser:
         return datastore.Client().key(self.kind, self.user_id)
 
     @classmethod
-    def get_or_create_from_update(cls, update: Update) -> 'InlineUser':
+    def update_or_create_from_update(cls, update: Update) -> 'InlineUser':
         datastore_client = datastore.Client()
         update_user = update.effective_user
         user = cls(update_user.id, update_user.name)
 
-        user_from_entity = cls.from_entity(datastore_client.get(user.datastore_key))
-        if user_from_entity:
+        entity = datastore_client.get(user.datastore_key)
+        if entity:
+            user_from_entity = cls.from_entity(entity)
             if user_from_entity.name != update_user.name:
                 user_from_entity.name = update_user.name
                 user.save()
@@ -71,18 +72,23 @@ class User:
         self.gdpr = gdpr
 
     @staticmethod
-    def _get_name_from_message(msg) -> Tuple[str, bool]:
-        if msg.chat.type == 'private':
-            return msg.from_user.name, False
-        else:
-            return msg.chat.title, True
+    def _get_name_from_message(msg: Message) -> str:
+        return msg.from_user.name if msg.chat.type == msg.chat.PRIVATE else msg.chat.title
 
     @classmethod
-    def from_update(cls, update) -> 'User':
-        msg = update.effective_message
-        chat_id = msg.chat.id
-        name, is_group = cls._get_name_from_message(msg)
-        return cls(chat_id, name, is_group)
+    def update_or_create_from_update(cls, update) -> 'User':
+        message: Message = update.effective_message
+        chat_id = message.chat_id
+        name, is_group = cls._get_name_from_message(message)
+        user = cls(chat_id, name, message.chat.type != message.chat.PRIVATE)
+
+        user_from_entity = cls.load(chat_id)
+        if user_from_entity:
+            user_from_entity.gdpr = False
+            user_from_entity.name = name
+            user.save()
+
+        return user
 
     @classmethod
     def from_entity(cls, entity) -> 'User':
@@ -111,10 +117,8 @@ class User:
         key = datastore_client.key(cls.kind, chat_id)
 
         entity = datastore_client.get(key)
-        if entity is None:
-            return entity
 
-        return cls.from_entity(entity)
+        return cls.from_entity(entity) if entity else None
 
     @classmethod
     def load_all(cls, ignore_gdpr=False) -> List['User']:
