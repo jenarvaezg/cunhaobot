@@ -7,9 +7,9 @@ verify_ssl = true
 pytest = "*"
 
 [packages]
+python-telegram-bot = "*"
 google-cloud-datastore = "*"
 flask = "*"
-boto = "*"
 boto3 = "*"
 google-cloud-storage = "*"
 pytz = "*"

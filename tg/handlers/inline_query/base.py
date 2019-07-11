@@ -6,7 +6,7 @@ from telegram import Update
 from telegram.ext import CallbackContext
 
 from models.user import InlineUser
-from utils import get_thumb
+from utils import get_thumb, normalize_str
 from models.phrase import Phrase
 from tg.decorators import log_update
 
@@ -77,7 +77,7 @@ def handle_inline_query(update: Update, context: CallbackContext):
         results,
         cache_time=1,
         switch_pm_text='PULSA AQUÍ PARA RECIBIR AYUDA',
-        switch_pm_parameter=f'{mode}-{rest.replace(" ", "-")}'
+        switch_pm_parameter=f'{mode}-{normalize_str(rest.replace(" ", "-"))}'
     )
 
     InlineUser.update_or_create_from_update(update)
