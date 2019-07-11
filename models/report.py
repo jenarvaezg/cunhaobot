@@ -3,17 +3,18 @@ from typing import List
 
 from google.cloud import datastore
 
-from models.user import User
+from models.user import User, InlineUser
 
 
 class Report:
     kind = 'Report'
 
-    def __init__(self, longs, shorts, users, groups, gdprs, chapas, day, month, year):
+    def __init__(self, longs, shorts, users, groups, inline_users, gdprs, chapas, day, month, year):
         self.longs = longs
         self.shorts = shorts
         self.users = users
         self.groups = groups
+        self.inline_users = inline_users
         self.gdprs = gdprs
         self.chapas = chapas
         self.day = day
@@ -22,13 +23,15 @@ class Report:
 
     @classmethod
     def generate(
-            cls, long_phrases: List, short_phrases: List, users: List[User], chapas: List, date: datetime.date
+            cls, long_phrases: List, short_phrases: List, users: List[User], inline_users: List[InlineUser],
+            chapas: List, date: datetime.date
     ) -> 'Report':
         report = cls(
             len(long_phrases),
             len(short_phrases),
             len([u for u in users if not u.is_group]),
             len([u for u in users if u.is_group]),
+            len(inline_users),
             len([u for u in users if u.gdpr]),
             len(chapas),
             date.day,
@@ -50,6 +53,7 @@ class Report:
             entity['shorts'],
             entity['users'],
             entity['groups'],
+            entity['inline_users'],
             entity['gdprs'],
             entity['chapas'],
             entity['day'],
@@ -66,6 +70,7 @@ class Report:
         entity['shorts'] = self.shorts
         entity['users'] = self.users
         entity['groups'] = self.groups
+        entity['inline_users'] = self.inline_users
         entity['gdprs'] = self.gdprs
         entity['chapas'] = self.chapas
         entity['day'] = self.day

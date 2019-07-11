@@ -10,7 +10,7 @@ from telegram import Bot, ParseMode
 from models.report import Report
 from models.schedule import ScheduledTask
 from models.phrase import Phrase, LongPhrase
-from models.user import User
+from models.user import User, InlineUser
 from tg.handlers.inline_query.base import get_query_mode, MODE_HANDLERS, AUDIO_MODE
 
 curators_chat_id = os.environ.get("MOD_CHAT_ID", "")
@@ -51,7 +51,8 @@ def _generate_report(now: datetime.date) -> None:
     short_phrases = Phrase.get_phrases()
     users = User.load_all(ignore_gdpr=True)
     chapas = ScheduledTask.get_tasks(type='chapa')
-    Report.generate(long_phrases, short_phrases, users, chapas, now)
+    inline_users = InlineUser.get_all()
+    Report.generate(long_phrases, short_phrases, users, inline_users, chapas, now)
 
 
 def _send_report(bot: Bot, now: datetime.date) -> None:
@@ -63,6 +64,7 @@ def _send_report(bot: Bot, now: datetime.date) -> None:
     shorts, shorts_delta = today_report.shorts, today_report.shorts - yesterday_report.shorts
     users, user_delta = today_report.users, today_report.users - yesterday_report.users
     groups, groups_delta = today_report.groups, today_report.groups - yesterday_report.groups
+    in_users, in_users_delta = today_report.inline_users, today_report.inline_users - yesterday_report.inline_users
     gdprs, gdprs_delta = today_report.gdprs, today_report.gdprs - yesterday_report.gdprs
     chapas, chapas_delta = today_report.chapas, today_report.chapas - yesterday_report.chapas
 
@@ -76,6 +78,7 @@ def _send_report(bot: Bot, now: datetime.date) -> None:
         f"Palabras poderosas: {shorts} ({fmt_delta(shorts_delta)})\n"
         f"Usuarios: {users} ({fmt_delta(user_delta)})\n"
         f"Grupos: {groups} ({fmt_delta(groups_delta)})\n"
+        f"Usuarios inline: {in_users} ({fmt_delta(in_users_delta)}\n"
         f"Chapas: {chapas} ({fmt_delta(chapas_delta)})\n"
         f"GDPRs: {gdprs} ({fmt_delta(gdprs_delta)})",
         parse_mode=ParseMode.HTML,

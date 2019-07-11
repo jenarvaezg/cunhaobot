@@ -37,6 +37,12 @@ class InlineUser:
             entity['usages'],
         )
 
+    @classmethod
+    def get_all(cls) -> List['InlineUser']:
+        datastore_client = datastore.Client()
+        query = datastore_client.query(kind=cls.kind)
+        return [cls.from_entity(entity) for entity in query.fetch()]
+
     def add_usage(self) -> None:
         self.usages += 1
         self.save()
