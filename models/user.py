@@ -22,9 +22,12 @@ class InlineUser:
         update_user = update.effective_user
         user = cls(update_user.id, update_user.name)
 
-        user_entity = datastore_client.get(user.datastore_key)
-        if user_entity:
-            return cls.from_entity(user_entity)
+        user_from_entity = cls.from_entity(datastore_client.get(user.datastore_key))
+        if user_from_entity:
+            if user_from_entity.name != update_user.name:
+                user_from_entity.name = update_user.name
+                user.save()
+            return user_from_entity
 
         user.save()
         return user

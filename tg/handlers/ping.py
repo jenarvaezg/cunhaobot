@@ -65,6 +65,7 @@ def _send_report(bot: Bot, now: datetime.date) -> None:
     users, user_delta = today_report.users, today_report.users - yesterday_report.users
     groups, groups_delta = today_report.groups, today_report.groups - yesterday_report.groups
     in_users, in_users_delta = today_report.inline_users, today_report.inline_users - yesterday_report.inline_users
+    in_uses, in_uses = today_report.inline_usages, today_report.inline_usages - yesterday_report.inline_usages
     gdprs, gdprs_delta = today_report.gdprs, today_report.gdprs - yesterday_report.gdprs
     chapas, chapas_delta = today_report.chapas, today_report.chapas - yesterday_report.chapas
 
@@ -79,6 +80,7 @@ def _send_report(bot: Bot, now: datetime.date) -> None:
         f"Usuarios: {users} ({fmt_delta(user_delta)})\n"
         f"Grupos: {groups} ({fmt_delta(groups_delta)})\n"
         f"Usuarios inline: {in_users} ({fmt_delta(in_users_delta)}\n"
+        f"Usos inline: {in_uses} ({fmt_delta(in_users_delta)}\n"
         f"Chapas: {chapas} ({fmt_delta(chapas_delta)})\n"
         f"GDPRs: {gdprs} ({fmt_delta(gdprs_delta)})",
         parse_mode=ParseMode.HTML,

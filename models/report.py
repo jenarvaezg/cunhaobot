@@ -9,12 +9,13 @@ from models.user import User, InlineUser
 class Report:
     kind = 'Report'
 
-    def __init__(self, longs, shorts, users, groups, inline_users, gdprs, chapas, day, month, year):
+    def __init__(self, longs, shorts, users, groups, inline_users, inline_usages, gdprs, chapas, day, month, year):
         self.longs = longs
         self.shorts = shorts
         self.users = users
         self.groups = groups
         self.inline_users = inline_users
+        self.inline_usages = inline_usages
         self.gdprs = gdprs
         self.chapas = chapas
         self.day = day
@@ -32,6 +33,7 @@ class Report:
             len([u for u in users if not u.is_group]),
             len([u for u in users if u.is_group]),
             len(inline_users),
+            sum(u.usages for u in inline_users),
             len([u for u in users if u.gdpr]),
             len(chapas),
             date.day,
@@ -54,6 +56,7 @@ class Report:
             entity['users'],
             entity['groups'],
             entity['inline_users'],
+            entity['inline_usages'],
             entity['gdprs'],
             entity['chapas'],
             entity['day'],
@@ -71,6 +74,7 @@ class Report:
         entity['users'] = self.users
         entity['groups'] = self.groups
         entity['inline_users'] = self.inline_users
+        entity['inline_usages'] = self.inline_users
         entity['gdprs'] = self.gdprs
         entity['chapas'] = self.chapas
         entity['day'] = self.day
