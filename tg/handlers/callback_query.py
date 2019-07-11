@@ -1,6 +1,7 @@
 import os
 
 from telegram import Update, Bot, InlineKeyboardMarkup, ParseMode, Message
+from telegram.ext import CallbackContext
 
 from tg.constants import LIKE
 from models.phrase import Phrase
@@ -27,7 +28,8 @@ def text_with_bold(message: Message) -> str:
 
 
 @log_update
-def handle_callback_query(bot: Bot, update: Update):
+def handle_callback_query(update: Update, context: CallbackContext):
+    bot: Bot = context.bot
     data = update.callback_query.data
     vote, proposal_id, kind = data.split(":")
     proposal_class = get_proposal_class_by_kind(kind)

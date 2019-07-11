@@ -1,4 +1,5 @@
-from telegram import Update, Bot, Message, Chat
+from telegram import Update, Message, Chat
+from telegram.ext import CallbackContext
 
 from models.schedule import ScheduledTask
 from tg.decorators import log_update, only_admins
@@ -16,7 +17,7 @@ def usage(update: Update) -> Message:
 
 @only_admins
 @log_update
-def handle_delete_chapas(bot: Bot, update: Update):
+def handle_delete_chapas(update: Update, context: CallbackContext):
     chat: Chat = update.effective_chat
 
     tasks = ScheduledTask.get_tasks(chat_id=chat.id)
@@ -37,10 +38,9 @@ def handle_delete_chapas(bot: Bot, update: Update):
 
 @only_admins
 @log_update
-def handle_delete_chapa(bot: Bot, update: Update):
+def handle_delete_chapa(update: Update, context: CallbackContext):
     tokens = update.effective_message.text.split(" ")
     try:
-        cmd = tokens[0]
         chapa_id = int(tokens[1]) - 1
     except (IndexError, ValueError) as e:
         return usage(update)

@@ -1,10 +1,11 @@
 import logging
 
-from telegram import Update, TelegramError, Bot
+from telegram import Update
+from telegram.ext import CallbackContext
 
 logger = logging.getLogger('cunhaobot')
 
 
-def error_handler(bot: Bot, update: Update, error: TelegramError):
+def error_handler(update: Update, context: CallbackContext):
     """Log Errors caused by Updates."""
-    logger.error(f'Update "{update}" caused error "{error}')
+    logger.error(f'Update "{update}" caused error "{context.error}')

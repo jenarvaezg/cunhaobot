@@ -1,4 +1,5 @@
-from telegram import Update, Bot
+from telegram import Update
+from telegram.ext import CallbackContext
 
 from models.schedule import ScheduledTask
 from models.user import User
@@ -6,7 +7,7 @@ from tg.decorators import log_update
 
 
 @log_update
-def handle_stop(bot: Bot, update: Update):
+def handle_stop(update: Update, context: CallbackContext):
     """Send a message when the command /start is issued."""
     User.update_or_create_from_update().delete()
     n_chapas = [task.delete() for task in ScheduledTask.get_tasks(chat_id=update.effective_chat.id)]

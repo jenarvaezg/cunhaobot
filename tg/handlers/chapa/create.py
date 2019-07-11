@@ -1,6 +1,7 @@
 from typing import Tuple
 
-from telegram import Update, Bot, Message
+from telegram import Update, Message
+from telegram.ext import CallbackContext
 
 from models.schedule import ScheduledTask
 from tg.handlers.inline_query.base import get_query_mode, MODE_HANDLERS
@@ -43,7 +44,7 @@ def split_time(time_s: str) -> Tuple[int, int]:
 
 @only_admins
 @log_update
-def handle_create_chapa(bot: Bot, update: Update):
+def handle_create_chapa(update: Update, context: CallbackContext):
     text = ' '.join(update.effective_message.text.split())
 
     try:

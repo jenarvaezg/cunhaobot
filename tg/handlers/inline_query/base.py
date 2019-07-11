@@ -2,7 +2,8 @@ import logging
 from typing import Tuple
 
 from telegram import InlineQueryResultArticle, InputTextMessageContent
-from telegram import Update, Bot
+from telegram import Update
+from telegram.ext import CallbackContext
 
 from models.user import InlineUser
 from utils import get_thumb
@@ -52,7 +53,7 @@ def get_query_mode(query: str) -> Tuple[str, str]:
 
 
 @log_update
-def handle_inline_query(bot: Bot, update: Update):
+def handle_inline_query(update: Update, context: CallbackContext):
     """Handle the inline query."""
     mode, rest = get_query_mode(update.inline_query.query)
 

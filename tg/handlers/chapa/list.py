@@ -1,4 +1,5 @@
-from telegram import Update, Bot
+from telegram import Update
+from telegram.ext import CallbackContext
 
 from models.schedule import ScheduledTask
 from tg.decorators import log_update
@@ -6,7 +7,7 @@ from models.phrase import Phrase
 
 
 @log_update
-def handle_list_chapas(bot: Bot, update: Update):
+def handle_list_chapas(update: Update, context: CallbackContext):
     tasks = ScheduledTask.get_tasks(chat_id=update.effective_chat.id)
     if len(tasks) == 0:
         return update.effective_message.reply_text(

@@ -1,6 +1,7 @@
 import random
 
 from telegram import Bot, Update, Message
+from telegram.ext import CallbackContext
 
 from tg.decorators import log_update
 
@@ -53,9 +54,10 @@ def _on_migrate(from_chat_id: int, to_chat_id: int) -> None:
 
 
 @log_update
-def handle_fallback_message(bot: Bot, update: Update):
+def handle_fallback_message(update: Update, context: CallbackContext):
     """This is here to handle the rest of messages, mainly service messages"""
     message: Message = update.effective_message
+    bot: Bot = context.bot
 
     my_username = bot.get_me().username
     if message.left_chat_member:

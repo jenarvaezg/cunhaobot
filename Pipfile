@@ -4,12 +4,11 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+pytest = "*"
 
 [packages]
-python-telegram-bot = "*"
 google-cloud-datastore = "*"
 flask = "*"
-webapp2 = "==3.0.0b1"
 boto = "*"
 boto3 = "*"
 google-cloud-storage = "*"

@@ -2,6 +2,7 @@ import os
 from typing import Union, Type
 
 from telegram import Update, Bot, InlineKeyboardMarkup, ParseMode
+from telegram.ext import CallbackContext
 
 from tg.markup.keyboards import build_vote_keyboard
 from models.phrase import Phrase, LongPhrase
@@ -21,7 +22,7 @@ def submit_handling(bot: Bot, update: Update, proposal_class: proposal_t, phrase
     proposal = proposal_class.from_update(update)
     if proposal.text == '':
         return update.effective_message.reply_text(
-            f'Tienes que decirme una frase, por ejemplo: "/submit {Phrase.get_random_phrase()}"'
+            f'Tienes que decirme que quieres proponer, por ejemplo: "/submit {Phrase.get_random_phrase()}"'
             f' o "/submitlong {LongPhrase.get_random_phrase()}".'
         )
 
@@ -44,16 +45,16 @@ def submit_handling(bot: Bot, update: Update, proposal_class: proposal_t, phrase
 
 
 @log_update
-def handle_submit(bot: Bot, update: Update):
+def handle_submit(update: Update, context: CallbackContext):
     if len(update.effective_message.text.split(" ")) > 5:
         return update.effective_message.reply_text(
             f'¿Estás seguro de que esto es una frase corta, {Phrase.get_random_phrase()}?\n'
             f'Mejor prueba con /submitlong {Phrase.get_random_phrase()}.',
             quote=True
         )
-    submit_handling(bot, update, Proposal, Phrase)
+    submit_handling(context.bot, update, Proposal, Phrase)
 
 
 @log_update
-def handle_submit_long(bot: Bot, update: Update):
-    submit_handling(bot, update, LongProposal, LongPhrase)
+def handle_submit_long(update: Update, context: CallbackContext):
+    submit_handling(context.bot, update, LongProposal, LongPhrase)

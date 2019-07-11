@@ -61,10 +61,19 @@ class TestGetQueryMode(unittest.TestCase):
 
         self.assertEqual(expected, actual)
 
-    def test_gibberish(self):
-        query = 'dhnjdka'
+    def test_text(self):
+        query = 'something'
+        expected = LONG_MODE, query
+
+        actual = get_query_mode(query)
+
+        self.assertEqual(expected, actual)
+
+    def test_special_characters(self):
+        query = 'wtf!!'
         expected = '', ''
 
         actual = get_query_mode(query)
 
         self.assertEqual(expected, actual)
+
