@@ -39,6 +39,19 @@ def _on_other_joined(bot: Bot, user: User, chat_id: int) -> None:
     )
 
 
+def _on_migrate(from_chat_id: int, to_chat_id: int) -> None:
+    tasks = ScheduledTask.get_tasks(chat_id=from_chat_id)
+    for task in tasks:
+        task.delete()
+        task.chat_id = to_chat_id
+        task.save()
+
+    user = User.load(from_chat_id)
+    user.delete(hard=True)
+    user.chat_id = to_chat_id
+    user.save()
+
+
 @log_update
 def handle_fallback_message(bot: Bot, update: Update):
     """This is here to handle the rest of messages, mainly service messages"""
@@ -47,9 +60,9 @@ def handle_fallback_message(bot: Bot, update: Update):
     my_username = bot.get_me().username
     if message.left_chat_member:
         if message.left_chat_member.username == my_username:
-            return _on_kick(message.chat_id)
+            _on_kick(message.chat_id)
         else:
-            return _on_other_kicked(bot, message.left_chat_member, message.chat_id)
+            _on_other_kicked(bot, message.left_chat_member, message.chat_id)
 
     if message.new_chat_members:
         for user in message.new_chat_members:
@@ -57,3 +70,6 @@ def handle_fallback_message(bot: Bot, update: Update):
                 _on_join(bot, message.chat_id)
             else:
                 _on_other_joined(bot, user, message.chat_id)
+
+    if message.migrate_from_chat_id:
+        _on_migrate(message.migrate_from_chat_id, message.chat_id)

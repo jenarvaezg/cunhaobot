@@ -1,6 +1,6 @@
 import random
 import unicodedata
-from typing import Tuple
+from typing import Tuple, List
 from copy import deepcopy
 
 thumbs = [
@@ -15,6 +15,11 @@ thumbs = [
     "https://pbs.twimg.com/media/DFRYYkRXgAIGOjI.jpg",
     "http://www.eluniversalqueretaro.mx/sites/default/files/styles/f03-651x400/public/2018/04/06/q8-20.jpg.jpg?itok=G2zZUM1c",
     "https://static3.elcomercio.es/www/pre2017/multimedia/noticias/201703/26/media/22940314.jpg",
+    'https://www.elplural.com/uploads/s1/62/50/39/el-lider-de-vox-santiago-abascal-sin-barba_6_585x329.png',
+    'https://pbs.twimg.com/media/DwA6mRuW0AAj8FX.jpg',
+    'https://s2.eestatic.com/2018/12/03/actualidad/Actualidad_357976969_108513450_1024x576.jpg',
+    'http://www.elboletin.com/imagenes/portada/santiago-abascal-p.jpg',
+    'https://amenzing.com/wp-content/uploads/2018/12/santiago-abascal.jpg',
 ]
 
 
@@ -23,9 +28,9 @@ def get_thumb():
 
 
 def random_combination(iterable: str, r: int) -> Tuple[str]:
-    pool = tuple(iterable)
+    pool: Tuple[str] = tuple(iterable)
     n = len(pool)
-    indices = sorted(random.sample(range(n), r))
+    indices: List[int] = sorted(random.sample(range(n), r))
     return tuple(pool[i] for i in indices)
 
 

@@ -48,7 +48,7 @@ def handle_submit(bot: Bot, update: Update):
     if len(update.effective_message.text.split(" ")) > 5:
         return update.effective_message.reply_text(
             f'¿Estás seguro de que esto es una frase corta, {Phrase.get_random_phrase()}?\n'
-            f'Mejor prueba con /submitlong {Phrase.get_random_phrase()}',
+            f'Mejor prueba con /submitlong {Phrase.get_random_phrase()}.',
             quote=True
         )
     submit_handling(bot, update, Proposal, Phrase)

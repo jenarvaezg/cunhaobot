@@ -40,9 +40,13 @@ def get_query_mode(query: str) -> Tuple[str, str]:
     if query_words[0] in AUDIO_MODE_WORDS:
         return AUDIO_MODE, ' '.join(query_words[1:])
 
-    if query_words[0].isalpha():
+    if query_words[0] in LONG_MODE_WORDS:
         return LONG_MODE, ' '.join(query_words[1:])
 
+    if query_words[0].isalpha():
+        return LONG_MODE, ' '.join(query_words[0:])
+
+    logging.error(f"Somehow user reached this point, dont know how to use: {query}")
     return '', ''
 
 
@@ -66,8 +70,10 @@ def handle_inline_query(bot: Bot, update: Update):
         return
 
     results = results_func(rest)
-    extra_params = {}
-    if update.inline_query.query == '':
-        extra_params.update(switch_pm_text='PULSA AQUÍ PARA RECIBIR AYUDA', switch_pm_parameter='no_params')
 
-    update.inline_query.answer(results, cache_time=1, **extra_params)
+    update.inline_query.answer(
+        results,
+        cache_time=1,
+        switch_pm_text='PULSA AQUÍ PARA RECIBIR AYUDA',
+        switch_pm_parameter=f'{mode}-{rest.replace(" ", "-")}'
+    )
