@@ -4,6 +4,7 @@ from typing import Tuple
 from telegram import InlineQueryResultArticle, InputTextMessageContent
 from telegram import Update, Bot
 
+from models.user import InlineUser
 from utils import get_thumb
 from models.phrase import Phrase
 from tg.decorators import log_update
@@ -77,3 +78,5 @@ def handle_inline_query(bot: Bot, update: Update):
         switch_pm_text='PULSA AQUÍ PARA RECIBIR AYUDA',
         switch_pm_parameter=f'{mode}-{rest.replace(" ", "-")}'
     )
+
+    InlineUser.get_or_create_from_update(update)
