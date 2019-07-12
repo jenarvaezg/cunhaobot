@@ -65,7 +65,7 @@ def _send_report(bot: Bot, now: datetime.date) -> None:
     users, user_delta = today_report.users, today_report.users - yesterday_report.users
     groups, groups_delta = today_report.groups, today_report.groups - yesterday_report.groups
     in_users, in_users_delta = today_report.inline_users, today_report.inline_users - yesterday_report.inline_users
-    in_uses, in_uses = today_report.inline_usages, today_report.inline_usages - yesterday_report.inline_usages
+    in_uses, in_uses_delta = today_report.inline_usages, today_report.inline_usages - yesterday_report.inline_usages
     gdprs, gdprs_delta = today_report.gdprs, today_report.gdprs - yesterday_report.gdprs
     chapas, chapas_delta = today_report.chapas, today_report.chapas - yesterday_report.chapas
 
@@ -79,8 +79,8 @@ def _send_report(bot: Bot, now: datetime.date) -> None:
         f"Palabras poderosas: {shorts} ({fmt_delta(shorts_delta)})\n"
         f"Usuarios: {users} ({fmt_delta(user_delta)})\n"
         f"Grupos: {groups} ({fmt_delta(groups_delta)})\n"
-        f"Usuarios inline: {in_users} ({fmt_delta(in_users_delta)}\n"
-        f"Usos inline: {in_uses} ({fmt_delta(in_users_delta)}\n"
+        f"Usuarios inline: {in_users} ({fmt_delta(in_users_delta)})\n"
+        f"Usos inline: {in_uses} ({fmt_delta(in_uses_delta)})\n"
         f"Chapas: {chapas} ({fmt_delta(chapas_delta)})\n"
         f"GDPRs: {gdprs} ({fmt_delta(gdprs_delta)})",
         parse_mode=ParseMode.HTML,
@@ -92,8 +92,8 @@ def handle_ping(bot: Bot):
     now = datetime.now().astimezone(madrid_timezone)
 
     _send_chapas(bot, ScheduledTask.get_tasks(hour=now.hour, minute=now.minute, service='telegram', type='chapa'))
-    if now.hour == 23 and now.minute == 59:
-        _generate_report(now.date())
+    if now.hour == 0 and now.minute == 0:
+        _generate_report(now.date() - timedelta(minutes=1))
     elif now.hour == 7 and now.minute == 0:
         _send_report(bot, now.date())
 
