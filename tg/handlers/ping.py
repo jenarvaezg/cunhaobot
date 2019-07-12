@@ -49,8 +49,8 @@ def _send_chapas(bot: Bot, tasks: Iterable[ScheduledTask]) -> None:
 
 def _generate_report(now: datetime.date) -> None:
     # Shuffle so in case of draw for usage of the day it's not always the same
-    long_phrases: List[LongPhrase] = random.shuffle(LongPhrase.refresh_cache())
-    short_phrases: List[Phrase] = random.shuffle(Phrase.refresh_cache())
+    long_phrases: List[LongPhrase] = random.sample(LongPhrase.refresh_cache(), len(LongPhrase.get_phrases()))
+    short_phrases: List[Phrase] = random.sample(Phrase.refresh_cache(), len(Phrase.get_phrases()))
     users = User.load_all(ignore_gdpr=True)
     chapas = ScheduledTask.get_tasks(type='chapa')
     inline_users = InlineUser.get_all()
@@ -87,8 +87,8 @@ def _send_report(bot: Bot, now: datetime.date) -> None:
         f"Usuarios inline: {in_users} ({fmt_delta(in_users_delta)})\n"
         f"Usos inline: {in_uses} ({fmt_delta(in_uses_delta)})\n"
         f"Chapas: {chapas} ({fmt_delta(chapas_delta)})\n"
-        f"GDPRs: {gdprs} ({fmt_delta(gdprs_delta)})\n\n",
-        f"La frase más usada de ayer fue:\n<bold>{top_long}</bold>\n",
+        f"GDPRs: {gdprs} ({fmt_delta(gdprs_delta)})\n\n"
+        f"La frase más usada de ayer fue:\n<bold>{top_long}</bold>\n"
         f"El apelativo más usado ayer fue:\n<bold>{top_short}</bold>\n",
         parse_mode=ParseMode.HTML,
     )

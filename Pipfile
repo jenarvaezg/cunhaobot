@@ -13,6 +13,7 @@ flask = "*"
 boto3 = "*"
 google-cloud-storage = "*"
 pytz = "*"
+pillow = "*"
 
 [requires]
 python_version = "3.7"
