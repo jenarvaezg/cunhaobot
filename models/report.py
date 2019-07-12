@@ -3,13 +3,17 @@ from typing import List
 
 from google.cloud import datastore
 
+from models.phrase import LongPhrase, Phrase
 from models.user import User, InlineUser
 
 
 class Report:
     kind = 'Report'
 
-    def __init__(self, longs, shorts, users, groups, inline_users, inline_usages, gdprs, chapas, day, month, year):
+    def __init__(
+            self, longs, shorts, users, groups, inline_users, inline_usages, gdprs, chapas,
+            top_short, top_long, day, month, year
+    ):
         self.longs = longs
         self.shorts = shorts
         self.users = users
@@ -18,14 +22,16 @@ class Report:
         self.inline_usages = inline_usages
         self.gdprs = gdprs
         self.chapas = chapas
+        self.top_short = top_short
+        self.top_long = top_long
         self.day = day
         self.month = month
         self.year = year
 
     @classmethod
     def generate(
-            cls, long_phrases: List, short_phrases: List, users: List[User], inline_users: List[InlineUser],
-            chapas: List, date: datetime.date
+            cls, long_phrases: List[LongPhrase], short_phrases: List[Phrase], users: List[User],
+            inline_users: List[InlineUser], chapas: List, date: datetime.date
     ) -> 'Report':
         report = cls(
             len(long_phrases),
@@ -36,6 +42,8 @@ class Report:
             sum(u.usages for u in inline_users),
             len([u for u in users if u.gdpr]),
             len(chapas),
+            max(long_phrases, key=lambda p: p.daily_usages + p.audio_daily_usages).text,
+            max(short_phrases, key=lambda p: p.daily_usages + p.audio_daily_usages).text,
             date.day,
             date.month,
             date.year,
@@ -59,6 +67,8 @@ class Report:
             entity['inline_usages'],
             entity['gdprs'],
             entity['chapas'],
+            entity['top_long'],
+            entity['top_short'],
             entity['day'],
             entity['month'],
             entity['year'],
@@ -77,6 +87,8 @@ class Report:
         entity['inline_usages'] = self.inline_usages
         entity['gdprs'] = self.gdprs
         entity['chapas'] = self.chapas
+        entity['top_long'] = self.top_long
+        entity['top_short'] = self.top_short
         entity['day'] = self.day
         entity['month'] = self.month
         entity['year'] = self.year

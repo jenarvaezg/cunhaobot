@@ -7,6 +7,7 @@ from utils import normalize_str, improve_punctuation
 
 datastore_client = datastore.Client()
 
+
 class Phrase:
     kind = 'Phrase'
     name = 'palabra poderosa / frase corta'

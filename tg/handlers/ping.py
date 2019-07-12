@@ -1,7 +1,8 @@
 import logging
 import os
+import random
 from datetime import datetime, timedelta
-from typing import Iterable
+from typing import Iterable, List
 
 import pytz
 
@@ -47,14 +48,15 @@ def _send_chapas(bot: Bot, tasks: Iterable[ScheduledTask]) -> None:
 
 
 def _generate_report(now: datetime.date) -> None:
-    long_phrases = LongPhrase.refresh_cache()
-    short_phrases = Phrase.refresh_cache()
+    # Shuffle so in case of draw for usage of the day it's not always the same
+    long_phrases: List[LongPhrase] = random.shuffle(LongPhrase.refresh_cache())
+    short_phrases: List[Phrase] = random.shuffle(Phrase.refresh_cache())
     users = User.load_all(ignore_gdpr=True)
     chapas = ScheduledTask.get_tasks(type='chapa')
     inline_users = InlineUser.get_all()
     Report.generate(long_phrases, short_phrases, users, inline_users, chapas, now)
     Phrase.remove_daily_usages()
-    Long.remove_daily_usages()
+    LongPhrase.remove_daily_usages()
 
 
 def _send_report(bot: Bot, now: datetime.date) -> None:
@@ -70,6 +72,7 @@ def _send_report(bot: Bot, now: datetime.date) -> None:
     in_uses, in_uses_delta = today_report.inline_usages, today_report.inline_usages - yesterday_report.inline_usages
     gdprs, gdprs_delta = today_report.gdprs, today_report.gdprs - yesterday_report.gdprs
     chapas, chapas_delta = today_report.chapas, today_report.chapas - yesterday_report.chapas
+    top_long, top_short = today_report.top_long, today_report.top_short
 
     def fmt_delta(delta: int) -> str:
         return f'+{delta}' if delta >= 0 else str(delta)
@@ -84,7 +87,9 @@ def _send_report(bot: Bot, now: datetime.date) -> None:
         f"Usuarios inline: {in_users} ({fmt_delta(in_users_delta)})\n"
         f"Usos inline: {in_uses} ({fmt_delta(in_uses_delta)})\n"
         f"Chapas: {chapas} ({fmt_delta(chapas_delta)})\n"
-        f"GDPRs: {gdprs} ({fmt_delta(gdprs_delta)})",
+        f"GDPRs: {gdprs} ({fmt_delta(gdprs_delta)})\n\n",
+        f"La frase más usada de ayer fue:\n<bold>{top_long}</bold>\n",
+        f"El apelativo más usado ayer fue:\n<bold>{top_short}</bold>\n",
         parse_mode=ParseMode.HTML,
     )
 
