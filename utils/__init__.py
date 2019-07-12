@@ -1,6 +1,6 @@
 import random
 import unicodedata
-from typing import Tuple, List
+from typing import Tuple, List, Iterable
 from copy import deepcopy
 
 thumbs = [
@@ -27,7 +27,7 @@ def get_thumb():
     return random.choice(thumbs)
 
 
-def random_combination(iterable: str, r: int) -> Tuple[str]:
+def random_combination(iterable: Iterable[str], r: int) -> Tuple[str]:
     pool: Tuple[str] = tuple(iterable)
     n = len(pool)
     indices: List[int] = sorted(random.sample(range(n), r))

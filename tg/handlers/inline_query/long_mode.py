@@ -13,16 +13,17 @@ def get_long_mode_results(input: str) -> List[InlineQueryResultArticle]:
     results_number = min(len(phrases), max_results_number)
 
     results = [InlineQueryResultArticle(
-        id=f"long-{normalize_str(phrase)[:50]}",
+        id=f"long-{normalize_str(phrase)[:58]}",
         title=phrase,
         input_message_content=InputTextMessageContent(phrase),
         thumb_url=get_thumb()
     ) for phrase in random.sample(phrases, results_number)]
 
     if not results:
+        result_id = f'long-bad-search-{normalize_str(input)}'
         results = [InlineQueryResultArticle(
-            id=f'long-bad-search-{normalize_str(input)[:40]}',
-            title='No hay resultados con esa busqueda, toma frase al azar',
+            id=result_id[:63],
+            title='No hay resultados con esa busqueda, toma una frase al azar',
             input_message_content=InputTextMessageContent(LongPhrase.get_random_phrase()),
             thumb_url=get_thumb()
         )]

@@ -73,11 +73,12 @@ def handle_inline_query(update: Update, context: CallbackContext):
 
     results = results_func(rest)
 
+    switch_pm_param = f'{mode}-{normalize_str(rest.replace(" ", "-"))}'
     update.inline_query.answer(
         results,
         cache_time=1,
         switch_pm_text='PULSA AQUÍ PARA RECIBIR AYUDA',
-        switch_pm_parameter=f'{mode}-{normalize_str(rest.replace(" ", "-"))}'
+        switch_pm_parameter=switch_pm_param[:63]
     )
 
     InlineUser.update_or_create_from_update(update)

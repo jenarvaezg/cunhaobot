@@ -47,12 +47,14 @@ def _send_chapas(bot: Bot, tasks: Iterable[ScheduledTask]) -> None:
 
 
 def _generate_report(now: datetime.date) -> None:
-    long_phrases = LongPhrase.get_phrases()
-    short_phrases = Phrase.get_phrases()
+    long_phrases = LongPhrase.refresh_cache()
+    short_phrases = Phrase.refresh_cache()
     users = User.load_all(ignore_gdpr=True)
     chapas = ScheduledTask.get_tasks(type='chapa')
     inline_users = InlineUser.get_all()
     Report.generate(long_phrases, short_phrases, users, inline_users, chapas, now)
+    Phrase.remove_daily_usages()
+    Long.remove_daily_usages()
 
 
 def _send_report(bot: Bot, now: datetime.date) -> None:

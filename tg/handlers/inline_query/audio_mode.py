@@ -37,8 +37,9 @@ def short_result_to_audio_result(result: InlineQueryResultArticle) -> InlineQuer
                                                 TextType='ssml')
         audio_url = upload_audio(speech['AudioStream'].read(), clean_title)
 
+    result_id = f"audio-{result.id}"
     return InlineQueryResultVoice(
-        f'audio-{result.id}',
+        result_id[:63],
         audio_url,
         title,
     )
@@ -54,8 +55,9 @@ def long_result_to_audio_result(result: InlineQueryResultArticle) -> InlineQuery
                                                 Text=text,)
         audio_url = upload_audio(speech['AudioStream'].read(), title)
 
+    result_id = f"audio-{result.id}"
     return InlineQueryResultVoice(
-        f'audio-{result.id}',
+        result_id[:63],
         audio_url,
         title,
     )
