@@ -88,8 +88,8 @@ def _send_report(bot: Bot, now: datetime.date) -> None:
         f"Usos inline: {in_uses} ({fmt_delta(in_uses_delta)})\n"
         f"Chapas: {chapas} ({fmt_delta(chapas_delta)})\n"
         f"GDPRs: {gdprs} ({fmt_delta(gdprs_delta)})\n\n"
-        f"La frase más usada de ayer fue:\n<bold>{top_long}</bold>\n"
-        f"El apelativo más usado ayer fue:\n<bold>{top_short}</bold>\n",
+        f"La frase más usada de ayer fue:\n<b>{top_long}</b>\n"
+        f"El apelativo más usado ayer fue:\n<b>{top_short}</b>\n",
         parse_mode=ParseMode.HTML,
     )
 
