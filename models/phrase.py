@@ -1,6 +1,7 @@
 import random
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
+from fuzzywuzzy import fuzz
 from google.cloud import datastore
 
 from utils import normalize_str, improve_punctuation
@@ -88,6 +89,16 @@ class Phrase:
             updates.append(entity)
 
         datastore_client.put_multi(updates)
+
+    @classmethod
+    def get_most_similar(cls, text: str) -> Tuple[str, int]:
+        phrases = cls.get_phrases()
+        normalized_input_text = normalize_str(text)
+
+        return max(
+            ((phrase, fuzz.ratio(normalized_input_text, normalize_str(phrase))) for phrase in phrases),
+            key=lambda x: x[1],
+        )
 
     def save(self) -> None:
         key = datastore_client.key(self.kind, self.text)

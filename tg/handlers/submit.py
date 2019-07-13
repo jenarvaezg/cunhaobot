@@ -3,24 +3,21 @@ from typing import Union, Type
 
 from telegram import Update, Bot, InlineKeyboardMarkup, ParseMode
 from telegram.ext import CallbackContext
-from fuzzywuzzy import fuzz
 
 from tg.markup.keyboards import build_vote_keyboard
 from models.phrase import Phrase, LongPhrase
 from models.proposal import Proposal, LongProposal
 from tg.decorators import log_update
-from tg.utils.user import user_from_update
 
 curators_chat_id = os.environ.get("MOD_CHAT_ID", "")
 SIMILARITY_DISCARD_THRESHOLD = int(os.getenv("PHRASE_DISMISSAL_SIMILARITY_THRESHOLD", 90))
-SIMILARITY_WARNING_THRESHOLD = int(os.getenv("PHRASE_WARNING_SIMILARITY_THRESHOLD", 50))
 
 proposal_t = Union[Type[Proposal], Type[LongProposal]]
 phrase_t = Union[Type[Phrase], Type[LongPhrase]]
 
 
 def submit_handling(bot: Bot, update: Update, proposal_class: proposal_t, phrase_class: phrase_t):
-    submitted_by = user_from_update(update)
+    submitted_by = update.effective_user.name
 
     proposal = proposal_class.from_update(update)
     if proposal.text == '':
@@ -30,28 +27,21 @@ def submit_handling(bot: Bot, update: Update, proposal_class: proposal_t, phrase
         )
 
     # Fuzzy search. If we have one similar, discard.
-    phrases = phrase_class.get_phrases()
-    lowercase_proposal = proposal.text.lower()
-    warning_phrase = None
-    for phrase in phrases:
-        similarity_ratio = fuzz.ratio(lowercase_proposal, phrase.lower())
-        if SIMILARITY_DISCARD_THRESHOLD < similarity_ratio:
-            return update.effective_message.reply_text(
-                f'Esa ya la tengo, {Phrase.get_random_phrase()}, {Phrase.get_random_phrase()}. '
-                f'Se parece demasiado a "<b>{phrase}</b>", {Phrase.get_random_phrase()}.',
-                parse_mode=ParseMode.HTML,
-            )
-        if SIMILARITY_WARNING_THRESHOLD < similarity_ratio:
-            if warning_phrase is None or warning_phrase[0] < similarity_ratio:
-                warning_phrase = (similarity_ratio, phrase)
+    most_similar, similarity_ratio = phrase_class.get_most_similar(proposal.text)
+    if SIMILARITY_DISCARD_THRESHOLD < similarity_ratio:
+        return update.effective_message.reply_text(
+            f'Esa ya la tengo, {Phrase.get_random_phrase()}, {Phrase.get_random_phrase()}. '
+            f'Se parece demasiado a "<b>{most_similar}</b>", {Phrase.get_random_phrase()}.',
+            parse_mode=ParseMode.HTML,
+        )
 
     proposal.save()
 
     curators_reply_markup = InlineKeyboardMarkup(build_vote_keyboard(proposal.id, proposal.kind))
     curators_message_text = f"{submitted_by} dice que deberiamos añadir la siguiente {phrase_class.name} a la lista:" \
                             f"\n'<b>{proposal.text}</b>'"
-    if warning_phrase is not None:
-        curators_message_text +=f"\nSe parece a '<b>{warning_phrase[1]}</b>' ({warning_phrase[0]}%)"
+
+    curators_message_text += f"\nLa mas parecida es: '<b>{most_similar}</b>' ({similarity_ratio}%)"
 
     bot.send_message(curators_chat_id, curators_message_text, reply_markup=curators_reply_markup,
                      parse_mode=ParseMode.HTML)
