@@ -11,7 +11,7 @@ def handle_help(update: Update, context: CallbackContext):
     update.effective_message.reply_text(
         'Puedes usar /proponer <palabra o apelativo> para proponer tu palabreja de cuñado favorita. '
         f'Ejemplo: "{Phrase.get_random_phrase()}"\n'
-        'Puedes usar /submitlong <frase> para proponer tu frase de cuñado favorita. '
+        'Puedes usar /proponerfrase <frase> para proponer tu frase de cuñado favorita. '
         f'Ejemplo: "{LongPhrase.get_random_phrase()}"\n'
         'Tambien puedes invocarme en cualquier chat escribiendo "@cunhaobot" (como el bot de gifs)'
         'para recibir frases de cuñao.\nPuedes pasarme argumentos como el numero de palabras que encadenar.\n'

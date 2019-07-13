@@ -11,7 +11,7 @@ datastore_client = datastore.Client()
 
 class Phrase:
     kind = 'Phrase'
-    name = 'palabra poderosa / frase corta'
+    name = 'palabra poderosa / apelativo'
 
     phrases_cache = []
 
@@ -115,7 +115,7 @@ class Phrase:
 
 class LongPhrase(Phrase):
     kind = 'LongPhrase'
-    name = 'frase larga / dicho cuñadíl'
+    name = 'frase / dicho cuñadíl'
 
     phrases_cache = []
 

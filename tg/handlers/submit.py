@@ -22,26 +22,24 @@ def submit_handling(bot: Bot, update: Update, proposal_class: proposal_t, phrase
     proposal = proposal_class.from_update(update)
     if proposal.text == '':
         return update.effective_message.reply_text(
-            f'Tienes que decirme que quieres proponer, por ejemplo: "/submit {Phrase.get_random_phrase()}"'
-            f' o "/submitlong {LongPhrase.get_random_phrase()}".'
+            f'Tienes que decirme que quieres proponer, por ejemplo: "/proponer {Phrase.get_random_phrase()}"'
+            f' o "/proponerfrase {LongPhrase.get_random_phrase()}".'
         )
 
     # Fuzzy search. If we have one similar, discard.
     most_similar, similarity_ratio = phrase_class.get_most_similar(proposal.text)
     if SIMILARITY_DISCARD_THRESHOLD < similarity_ratio:
-        return update.effective_message.reply_text(
-            f'Esa ya la tengo, {Phrase.get_random_phrase()}, {Phrase.get_random_phrase()}. '
-            f'Se parece demasiado a "<b>{most_similar}</b>", {Phrase.get_random_phrase()}.',
-            parse_mode=ParseMode.HTML,
-        )
+        text = f'Esa ya la tengo, {Phrase.get_random_phrase()}, {Phrase.get_random_phrase()}.'
+        if similarity_ratio != 100:
+            text += f'\nSe parece demasiado a "<b>{most_similar}</b>", {Phrase.get_random_phrase()}.'
+        return update.effective_message.reply_text(text, parse_mode=ParseMode.HTML)
 
     proposal.save()
 
     curators_reply_markup = InlineKeyboardMarkup(build_vote_keyboard(proposal.id, proposal.kind))
     curators_message_text = f"{submitted_by} dice que deberiamos añadir la siguiente {phrase_class.name} a la lista:" \
-                            f"\n'<b>{proposal.text}</b>'"
-
-    curators_message_text += f"\nLa mas parecida es: '<b>{most_similar}</b>' ({similarity_ratio}%)"
+                            f"\n'<b>{proposal.text}</b>'" \
+                            f"\nLa mas parecida es: '<b>{most_similar}</b>' ({similarity_ratio}%)"
 
     bot.send_message(curators_chat_id, curators_message_text, reply_markup=curators_reply_markup,
                      parse_mode=ParseMode.HTML)
@@ -57,7 +55,7 @@ def handle_submit(update: Update, context: CallbackContext):
     if len(update.effective_message.text.split(" ")) > 5:
         return update.effective_message.reply_text(
             f'¿Estás seguro de que esto es una frase corta, {Phrase.get_random_phrase()}?\n'
-            f'Mejor prueba con /submitlong {Phrase.get_random_phrase()}.',
+            f'Mejor prueba con /proponerfrase {Phrase.get_random_phrase()}.',
             quote=True
         )
     submit_handling(context.bot, update, Proposal, Phrase)
