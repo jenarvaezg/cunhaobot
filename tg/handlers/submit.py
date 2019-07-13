@@ -39,7 +39,8 @@ def submit_handling(bot: Bot, update: Update, proposal_class: proposal_t, phrase
             return update.effective_message.reply_text(
                 f'Esa ya la tengo, {Phrase.get_random_phrase()}, {Phrase.get_random_phrase()}. Se parece a {phrase}, {Phrase.get_random_phrase()}')
         if SIMILARITY_WARNING_THRESHOLD < similarity_ratio:
-            warning_phrase = (similarity_ratio, phrase)
+            if warning_phrase is None or warning_phrase[0] < similarity_ratio:
+                warning_phrase = (similarity_ratio, phrase)
 
 
     proposal.save()
