@@ -3,6 +3,7 @@ from typing import Union, Type
 
 from telegram import Update, Bot, InlineKeyboardMarkup, ParseMode
 from telegram.ext import CallbackContext
+from fuzzywuzzy import fuzz
 
 from tg.markup.keyboards import build_vote_keyboard
 from models.phrase import Phrase, LongPhrase
@@ -11,6 +12,7 @@ from tg.decorators import log_update
 from tg.utils.user import user_from_update
 
 curators_chat_id = os.environ.get("MOD_CHAT_ID", "")
+SIMILARITY_THRESHOLD = int(os.getenv("PHRASE_DISMISSAL_SIMILARITY_THRESHOLD", 90))
 
 proposal_t = Union[Type[Proposal], Type[LongProposal]]
 phrase_t = Union[Type[Phrase], Type[LongPhrase]]
@@ -26,7 +28,10 @@ def submit_handling(bot: Bot, update: Update, proposal_class: proposal_t, phrase
             f' o "/submitlong {LongPhrase.get_random_phrase()}".'
         )
 
-    if proposal.text in phrase_class.get_phrases():
+    # Fuzzy search. If we have one similar, discard.
+    phrases = phrase_class.get_phrases()
+    lowercase_proposal = proposal.text.lower()
+    if any(fuzz.ratio(lowercase_proposal, phrase.lower()) > SIMILARITY_THRESHOLD for phrase in phrases):
         return update.effective_message.reply_text(
             f'Esa ya la tengo, {Phrase.get_random_phrase()}, {Phrase.get_random_phrase()}.')
 
