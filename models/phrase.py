@@ -103,7 +103,7 @@ class Phrase:
         normalized_input_text = normalize_str(text)
 
         return max(
-            ((phrase, fuzz.ratio(normalized_input_text, normalize_str(phrase))) for phrase in phrases),
+            [(phrase, fuzz.WRatio(normalized_input_text, normalize_str(phrase))) for phrase in phrases],
             key=lambda x: x[1],
         )
 
