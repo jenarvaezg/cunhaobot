@@ -56,7 +56,7 @@ def long_result_to_audio_result(result: InlineQueryResultArticle) -> InlineQuery
                                                 Text=text,)
         audio_url = upload_audio(speech['AudioStream'].read(), title)
 
-    result_id = f"audio-{result.id}"
+    result_id = normalize_str(f"audio-{result.id}")
     return InlineQueryResultVoice(
         result_id[:63],
         audio_url,
