@@ -63,12 +63,12 @@ class Phrase:
     @classmethod
     def add_usage_by_result_id(cls, result_id: str) -> None:
         is_audio = result_id.startswith('audio-')
-        result_id = result_id[len('audio-short-'):] if is_audio else result_id[len('short-'):]
+        result_id = normalize_str(result_id[len('audio-short-'):] if is_audio else result_id[len('short-'):])
         words = result_id.split(", ")
         phrases = cls.refresh_cache()
 
         for word in words:
-            phrase: Optional['Phrase'] = next(iter(p for p in phrases if p.text == word), None)
+            phrase: Optional['Phrase'] = next(iter(p for p in phrases if normalize_str(p.text) == word), None)
             if phrase:
                 if is_audio:
                     phrase.audio_daily_usages += 1

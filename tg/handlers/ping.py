@@ -100,7 +100,7 @@ def handle_ping(bot: Bot):
 
     _send_chapas(bot, ScheduledTask.get_tasks(hour=now.hour, minute=now.minute, service='telegram', type='chapa'))
     if now.hour == 0 and now.minute == 0:
-        _generate_report(now.date() - timedelta(minutes=1))
+        _generate_report(now.date() - timedelta(minutes=10))
     elif now.hour == 7 and now.minute == 0:
         _send_report(bot, now.date())
 
