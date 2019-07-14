@@ -88,13 +88,15 @@ def generate_png(text: str) -> BinaryIO:
 def upload_sticker(
         bot: telegram.Bot, sticker_png: BinaryIO, stickerset_template: str, stickerset_title_template: str
 ) -> str:
-    sticker_file_id = bot.upload_sticker_file(owner_id, sticker_png).file_id
+    file_id = bot.upload_sticker_file(owner_id, sticker_png).file_id
     offset = 0
+    stickers_before = set()
     while True:
         offset += 1
         stickerset_name = stickerset_template.format(offset)
         try:
-            bot.add_sticker_to_set(owner_id, stickerset_name, sticker_file_id, STICKER_EMOJIS)
+            stickers_before = {s.file_id for s in bot.get_sticker_set(stickerset_name).stickers}
+            bot.add_sticker_to_set(owner_id, stickerset_name, file_id, STICKER_EMOJIS)
             break
         except telegram.error.BadRequest as e:
             if e.message in ['Stickerpack_stickers_too_much', 'Stickers_too_much']:
@@ -103,14 +105,16 @@ def upload_sticker(
                 # No stickerset, create it!
                 stickerset_title = stickerset_title_template.format(offset)
                 bot.create_new_sticker_set(
-                    owner_id, stickerset_name, stickerset_title, sticker_file_id, STICKER_EMOJIS
+                    owner_id, stickerset_name, stickerset_title, file_id, STICKER_EMOJIS
                 )
                 bot.send_message(curators_chat_id, f"Nuevo paquete de stickers: t.me/addstickers/{stickerset_name}")
                 break
             else:
                 raise
 
-    return sticker_file_id
+    stickers_now = {s.file_id for s in bot.get_sticker_set(stickerset_name).stickers}
+
+    return (stickers_now - stickers_before).pop()
 
 
 def delete_sticker(bot: telegram.Bot, sticker_file_id: str) -> None:
