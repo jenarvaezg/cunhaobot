@@ -1,7 +1,7 @@
 -i https://pypi.org/simple
 asn1crypto==0.24.0
-boto3==1.9.187
-botocore==1.12.187
+boto3==1.9.188
+botocore==1.12.188
 cachetools==3.1.1
 certifi==2019.6.16
 cffi==1.12.3
@@ -11,6 +11,7 @@ cryptography==2.7
 docutils==0.14
 flask==1.1.1
 future==0.17.1
+fuzzywuzzy==0.17.0
 google-api-core[grpc]==1.13.0
 google-auth==1.6.3
 google-cloud-core==1.0.2
@@ -24,11 +25,13 @@ itsdangerous==1.1.0
 jinja2==2.10.1
 jmespath==0.9.4
 markupsafe==1.1.1
-protobuf==3.9.0rc1
+pillow==6.1.0
+protobuf==3.9.0
 pyasn1-modules==0.2.5
 pyasn1==0.4.5
 pycparser==2.19
 python-dateutil==2.8.0 ; python_version >= '2.7'
+python-levenshtein==0.12.0
 python-telegram-bot==12.0.0b1
 pytz==2019.1
 requests==2.22.0

@@ -34,10 +34,9 @@ def only_admins(f):
 def log_update(f):
     @wraps(f)
     def wrapper(update: Update, *args, **kwargs):
-        try:
-            User.update_or_create_from_update(update).save()
-        except:
-            pass
+        u = User.update_or_create_from_update(update)
+        if u:
+            u.save()
 
         update_dict = remove_empty_from_dict(update.to_dict())
         update_dict['method'] = f.__name__

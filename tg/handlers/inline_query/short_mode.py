@@ -1,12 +1,16 @@
 import random
-from typing import List
+from typing import Tuple, List
 from telegram import InlineQueryResultArticle, InputTextMessageContent
 
 from models.phrase import Phrase
-from utils import get_thumb, random_combination
+from utils import get_thumb, random_combination, normalize_str
 
 
 BASE_TEMPLATE = '¿Qué pasa, {}?'
+
+
+def _result_id_for_combination(combination: Tuple[str]) -> str:
+    return f"short-{normalize_str(', '.join(combination))}"[:63]
 
 
 def get_short_mode_results(input: str) -> List[InlineQueryResultArticle]:
@@ -27,7 +31,7 @@ def get_short_mode_results(input: str) -> List[InlineQueryResultArticle]:
         combinations.add(combination if not finisher else combination + (finisher,))
 
     results = [InlineQueryResultArticle(
-        id=f"short-{', '.join(combination)}" if len(', '.join(combination)) < 57 else f"short-{', '.join(combination)[:57]}",
+        id=_result_id_for_combination(combination),
         title=', '.join(combination),
         input_message_content=InputTextMessageContent(
             BASE_TEMPLATE.format(', '.join(combination))
