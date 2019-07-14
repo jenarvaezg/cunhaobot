@@ -18,15 +18,18 @@ logger = logging.getLogger('cunhaobot')
 SHORT_MODE_WORDS = ['short', 'corto', 'corta', 'saludo']
 LONG_MODE_WORDS = ['long', 'largo', 'larga', 'frase']
 AUDIO_MODE_WORDS = ['audio', 'sonido', 'sound']
+STICKER_MODE_WORDS = ['stickers', 'stickers', ]
 SHORT_MODE = 'SHORT'
 LONG_MODE = 'LONG'
 AUDIO_MODE = 'AUDIO'
+STICKER_MODE = 'STICKER'
 
 
 MODE_HANDLERS = {
     SHORT_MODE: get_short_mode_results,
     LONG_MODE: get_long_mode_results,
     AUDIO_MODE: get_audio_mode_results,
+    STICKER_MODE: None, # TODO
 }
 
 
@@ -41,6 +44,9 @@ def get_query_mode(query: str) -> Tuple[str, str]:
 
     if query_words[0] in AUDIO_MODE_WORDS:
         return AUDIO_MODE, ' '.join(query_words[1:])
+
+    if query_words[0] in STICKER_MODE_WORDS:
+        return STICKER_MODE, ' '.join(query_words[1:])
 
     if query_words[0] in LONG_MODE_WORDS:
         return LONG_MODE, ' '.join(query_words[1:])

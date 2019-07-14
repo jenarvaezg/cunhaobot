@@ -1,7 +1,7 @@
 import unittest
 
 from tg.handlers.inline_query.base import get_query_mode, SHORT_MODE, SHORT_MODE_WORDS, LONG_MODE_WORDS, LONG_MODE, \
-    AUDIO_MODE_WORDS, AUDIO_MODE
+    AUDIO_MODE_WORDS, AUDIO_MODE, STICKER_MODE_WORDS, STICKER_MODE
 
 
 class TestGetQueryMode(unittest.TestCase):
@@ -64,6 +64,14 @@ class TestGetQueryMode(unittest.TestCase):
     def test_text(self):
         query = 'something'
         expected = LONG_MODE, query
+
+        actual = get_query_mode(query)
+
+        self.assertEqual(expected, actual)
+
+    def test_sticker(self):
+        query = f'{STICKER_MODE_WORDS[0]} whatever this is not defined yet'
+        expected = STICKER_MODE, 'whatever this is not defined yet'
 
         actual = get_query_mode(query)
 
