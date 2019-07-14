@@ -6,8 +6,9 @@ from telegram import InlineQueryResultVoice, InlineQueryResultArticle
 
 from utils import normalize_str
 from utils.gcp import upload_audio, get_audio_url
+from tg.text_router import get_query_mode, SHORT_MODE, LONG_MODE
 from .short_mode import get_short_mode_results
-from .long_mode import  get_long_mode_results
+from .long_mode import get_long_mode_results
 
 AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY', '')
 AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY', '')
@@ -65,14 +66,12 @@ def long_result_to_audio_result(result: InlineQueryResultArticle) -> InlineQuery
 
 
 def get_audio_mode_results(input: str) -> List:
-    if input.isdecimal():
-        short_results = get_short_mode_results(input)[:5]
-        long_results = [] #get_long_mode_results(input)[:6]
-    else:
-        short_results = []
-        long_results = get_long_mode_results(input)[:10]
+    mode, rest = get_query_mode(input)
 
-    short_audio_results = [short_result_to_audio_result(short_result) for short_result in short_results]
-    long_audio_results = [long_result_to_audio_result(long_result) for long_result in long_results]
+    results = []
+    if mode == SHORT_MODE:
+        results = [short_result_to_audio_result(result) for result in get_short_mode_results(rest)[:5] if result.title]
+    elif mode == LONG_MODE:
+        results = [long_result_to_audio_result(result) for result in get_long_mode_results(rest)]
 
-    return short_audio_results + long_audio_results
+    return results

@@ -24,7 +24,7 @@ def text_with_bold(message: Message) -> str:
     for bold in [e for e in message.entities if e['type'] == 'bold']:
         offset, length = bold['offset'] + accumulated_length, bold['length']
         text = text[:offset] + "<b>" + text[offset:offset + length] + '</b>' + text[offset + length:]
-        accumulated_length += length
+        accumulated_length += len("<b></b>")
 
     return text
 
