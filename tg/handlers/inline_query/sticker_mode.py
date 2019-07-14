@@ -1,3 +1,4 @@
+import random
 from typing import List, Union, Type
 
 from telegram import InlineQueryResultCachedSticker
@@ -21,11 +22,13 @@ def get_sticker_mode_results(input: str) -> List[InlineQueryResultCachedSticker]
     mode, rest = get_query_mode(input)
 
     result_type = ''
+    phrases = []
     if mode == SHORT_MODE:
-        phrases = Phrase.refresh_cache()[:10]
+        phrases = Phrase.refresh_cache()
     elif mode == LONG_MODE:
         # TODO CHANGE ONCE WE GET_PHRASES RETURNS INSTANCES NOT STR
         phrases = LongPhrase.refresh_cache()
-        phrases = [phrase for phrase in phrases if normalize_str(rest) in normalize_str(phrase.text)][:10]
+        phrases = [phrase for phrase in phrases if normalize_str(rest) in normalize_str(phrase.text)]
 
-    return [_phrase_to_inline_sticker(p, result_type) for p in phrases]
+    random.shuffle(phrases)
+    return [_phrase_to_inline_sticker(p, result_type) for p in phrases[:10]]
