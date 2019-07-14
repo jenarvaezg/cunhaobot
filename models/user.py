@@ -78,8 +78,10 @@ class User:
     @classmethod
     def update_or_create_from_update(cls, update) -> 'User':
         message: Message = update.effective_message
+        if not message:
+            return None
         chat_id = message.chat_id
-        name, is_group = cls._get_name_from_message(message)
+        name = cls._get_name_from_message(message)
         user = cls(chat_id, name, message.chat.type != message.chat.PRIVATE)
 
         user_from_entity = cls.load(chat_id)

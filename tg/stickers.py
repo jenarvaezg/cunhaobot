@@ -113,5 +113,5 @@ def upload_sticker(
     return sticker_file_id
 
 
-def delete_sticker(bot: telegram.Bot, sticker_file_id: int) -> None:
+def delete_sticker(bot: telegram.Bot, sticker_file_id: str) -> None:
     bot.delete_sticker_from_set(sticker_file_id)
