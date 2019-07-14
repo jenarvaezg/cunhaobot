@@ -24,9 +24,11 @@ def get_sticker_mode_results(input: str) -> List[InlineQueryResultCachedSticker]
     result_type = ''
     phrases = []
     if mode == SHORT_MODE:
+        result_type = 'short'
         phrases = Phrase.refresh_cache()
     elif mode == LONG_MODE:
         # TODO CHANGE ONCE WE GET_PHRASES RETURNS INSTANCES NOT STR
+        result_type = 'long'
         phrases = LongPhrase.refresh_cache()
         phrases = [phrase for phrase in phrases if normalize_str(rest) in normalize_str(phrase.text)]
 

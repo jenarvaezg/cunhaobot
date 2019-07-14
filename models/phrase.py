@@ -26,7 +26,7 @@ class Phrase:
         self.audio_usages = audio_usages
         self.daily_usages = daily_usages
         self.audio_daily_usages = audio_daily_usages
-        self.sticker_usages = usages
+        self.sticker_usages = sticker_usages
         self.sticker_daily_usages = sticker_daily_usages
         self.sticker_file_id = sticker_file_id
 

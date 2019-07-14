@@ -23,7 +23,6 @@ def get_query_mode(query: str) -> Tuple[str, str]:
         return AUDIO_MODE, ' '.join(query_words[1:])
 
     if query_words[0] in STICKER_MODE_WORDS:
-        print("RETURNING STICKER MODE")
         return STICKER_MODE, ' '.join(query_words[1:])
 
     if query_words[0] in LONG_MODE_WORDS:
