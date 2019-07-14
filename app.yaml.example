@@ -6,6 +6,7 @@ env_variables:
   AWS_ACCESS_KEY: $AWS_ACCESS_KEY
   AWS_SECRET_KEY: $AWS_SECRET_KEY
   BASE_URL: $BASE_URL
+  OWNER_ID: $OWNER_ID
 
 liveness_check:
   path: "/"
