@@ -12,7 +12,7 @@ class Report:
 
     def __init__(
             self, longs, shorts, users, groups, inline_users, inline_usages, gdprs, chapas,
-            top_short, top_long, day, month, year
+            top_long, top_short, day, month, year
     ):
         self.longs = longs
         self.shorts = shorts
