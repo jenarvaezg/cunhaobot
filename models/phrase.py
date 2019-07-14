@@ -18,12 +18,16 @@ class Phrase:
     stickerset_title_template = 'Saludos cuñadiles {} by @cunhaobot'
     phrases_cache = []
 
-    def __init__(self, text, sticker_file_id='', usages=0, audio_usages=0, daily_usages=0, audio_daily_usages=0):
+    def __init__(
+            self, text, sticker_file_id='', usages=0, audio_usages=0, daily_usages=0, audio_daily_usages=0,
+            sticker_daily_usages=0, sticker_usages=0):
         self.text = text
         self.usages = usages
         self.audio_usages = audio_usages
         self.daily_usages = daily_usages
         self.audio_daily_usages = audio_daily_usages
+        self.sticker_usages = usages
+        self.sticker_daily_usages = sticker_daily_usages
         self.sticker_file_id = sticker_file_id
 
     @classmethod
@@ -43,8 +47,10 @@ class Phrase:
             sticker_file_id=entity.get('sticker_file_id', 0),
             usages=entity.get('usages', 0),
             audio_usages=entity.get('audio_usages', 0),
+            sticker_usages=entity.get('sticker_usages', 0),
             daily_usages=entity.get('daily_usages', 0),
             audio_daily_usages=entity.get('audio_daily_usages', 0),
+            sticker_daily_usages=entity.get('sticker_daily_usages', 0),
         )
 
     @classmethod
@@ -70,7 +76,16 @@ class Phrase:
     @classmethod
     def add_usage_by_result_id(cls, result_id: str) -> None:
         is_audio = result_id.startswith('audio-')
-        result_id = normalize_str(result_id[len('audio-short-'):] if is_audio else result_id[len('short-'):])
+        is_sticker = result_id.startswith('sticker-')
+
+        if is_audio:
+            result_id = result_id[len('audio-short-'):]
+        elif is_sticker:
+            result_id = result_id[len('sticker-short-'):]
+        else:
+            result_id = result_id[len('short-'):]
+
+        result_id = normalize_str(result_id)
         words = result_id.split(", ")
         phrases = cls.refresh_cache()
 
@@ -80,6 +95,9 @@ class Phrase:
                 if is_audio:
                     phrase.audio_daily_usages += 1
                     phrase.audio_usages += 1
+                elif is_sticker:
+                    phrase.sticker_daily_usages += 1
+                    phrase.sticker_usages += 1
                 else:
                     phrase.daily_usages += 1
                     phrase.usages += 1
@@ -121,8 +139,10 @@ class Phrase:
         phrase_entity['sticker_file_id'] = self.sticker_file_id
         phrase_entity['usages'] = self.usages
         phrase_entity['audio_usages'] = self.audio_usages
+        phrase_entity['sticker_usages'] = self.sticker_usages
         phrase_entity['daily_usages'] = self.daily_usages
         phrase_entity['audio_daily_usages'] = self.audio_daily_usages
+        phrase_entity['sticker_daily_usages'] = self.sticker_daily_usages
 
         datastore_client.put(phrase_entity)
 
@@ -155,8 +175,17 @@ class LongPhrase(Phrase):
         if 'long-bad-search-' in result_id:
             return
 
+        is_sticker = result_id.startswith('sticker-')
         is_audio = result_id.startswith('audio-')
-        result_id = result_id[len('audio-long-'):] if is_audio else result_id[len('long-'):]
+
+        if is_audio:
+            result_id = result_id[len('audio-long-'):]
+        elif is_sticker:
+            result_id = result_id[len('sticker-long-'):]
+        else:
+            result_id = result_id[len('short-'):]
+
+        result_id = normalize_str(result_id)
         phrases = cls.refresh_cache()
 
         phrase: Optional['Phrase'] = next(iter(
@@ -167,6 +196,9 @@ class LongPhrase(Phrase):
             if is_audio:
                 phrase.audio_daily_usages += 1
                 phrase.audio_usages += 1
+            elif is_sticker:
+                phrase.sticker_daily_usages += 1
+                phrase.sticker_usages += 1
             else:
                 phrase.daily_usages += 1
                 phrase.usages += 1

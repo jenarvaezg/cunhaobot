@@ -34,19 +34,19 @@ class Report:
             inline_users: List[InlineUser], chapas: List, date: datetime.date
     ) -> 'Report':
         report = cls(
-            len(long_phrases),
-            len(short_phrases),
-            len([u for u in users if not u.is_group]),
-            len([u for u in users if u.is_group]),
-            len(inline_users),
-            sum(u.usages for u in inline_users),
-            len([u for u in users if u.gdpr]),
-            len(chapas),
-            max(long_phrases, key=lambda p: p.daily_usages + p.audio_daily_usages).text,
-            max(short_phrases, key=lambda p: p.daily_usages + p.audio_daily_usages).text,
-            date.day,
-            date.month,
-            date.year,
+            longs=len(long_phrases),
+            shorts=len(short_phrases),
+            users=len([u for u in users if not u.is_group]),
+            groups=len([u for u in users if u.is_group]),
+            inline_users=len(inline_users),
+            inline_usages=sum(u.usages for u in inline_users),
+            gdprs=len([u for u in users if u.gdpr]),
+            chapas=len(chapas),
+            top_long=max(long_phrases, key=lambda p: p.daily_usages + p.audio_daily_usages + p.sticker_daily_usages).text,
+            top_short=max(short_phrases, key=lambda p: p.daily_usages + p.audio_daily_usages + p.sticker_daily_usages).text,
+            day=date.day,
+            month=date.month,
+            year=date.year,
         )
         report.save()
         return report

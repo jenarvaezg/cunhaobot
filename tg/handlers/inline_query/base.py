@@ -6,6 +6,7 @@ from telegram import Update
 from telegram.ext import CallbackContext
 
 from models.user import InlineUser
+from tg.handlers.inline_query.sticker_mode import get_sticker_mode_results
 from utils import get_thumb, normalize_str
 from models.phrase import Phrase
 from tg.decorators import log_update
@@ -21,7 +22,7 @@ MODE_HANDLERS = {
     SHORT_MODE: get_short_mode_results,
     LONG_MODE: get_long_mode_results,
     AUDIO_MODE: get_audio_mode_results,
-    STICKER_MODE: None, # TODO
+    STICKER_MODE: get_sticker_mode_results,
 }
 
 @log_update
