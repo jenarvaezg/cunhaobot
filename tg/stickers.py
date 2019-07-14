@@ -95,19 +95,18 @@ def upload_sticker(
         stickerset_name = stickerset_template.format(offset)
         try:
             bot.add_sticker_to_set(owner_id, stickerset_name, sticker_file_id, STICKER_EMOJIS)
+            break
         except telegram.error.BadRequest as e:
-            if e.message == 'Stickers_too_much':
+            if e.message in ['Stickerpack_stickers_too_much', 'Stickers_too_much']:
                 continue  # Try to find next stickerset, maybe it has room for you :)
             elif e.message == 'Stickerset_invalid':
                 # No stickerset, create it!
-                offset += 1
-                stickerset_name = stickerset_template.format(offset)
                 stickerset_title = stickerset_title_template.format(offset)
                 bot.create_new_sticker_set(
                     owner_id, stickerset_name, stickerset_title, sticker_file_id, STICKER_EMOJIS
                 )
-                bot.send_message(curators_chat_id, f"Nuevo paquete de stickers: {stickerset_title}")
-                bot.send_sticker(curators_chat_id, sticker_file_id)
+                bot.send_message(curators_chat_id, f"Nuevo paquete de stickers: t.me/addstickers/{stickerset_name}")
+                break
             else:
                 raise
 

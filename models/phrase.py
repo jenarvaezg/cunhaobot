@@ -5,7 +5,6 @@ import telegram
 from fuzzywuzzy import fuzz
 from google.cloud import datastore
 
-from models.proposal import Proposal
 from tg.stickers import generate_png, upload_sticker, delete_sticker
 from utils import normalize_str, improve_punctuation
 
@@ -28,7 +27,7 @@ class Phrase:
         self.sticker_file_id = sticker_file_id
 
     @classmethod
-    def upload_from_proposal(cls, proposal: Proposal, bot: telegram.Bot):
+    def upload_from_proposal(cls, proposal, bot: telegram.Bot):
         phrase = cls(proposal.text)
         phrase.generate_sticker(bot)
 
@@ -110,7 +109,9 @@ class Phrase:
 
     def generate_sticker(self, bot: telegram.Bot) -> None:
         sticker_text = f"¿Qué pasa, {self.text}?"
-        self.sticker_file_id = upload_sticker(bot, generate_png(sticker_text), self.stickerset_template)
+        self.sticker_file_id = upload_sticker(
+                bot, generate_png(sticker_text), self.stickerset_template, self.stickerset_title_template
+        )
 
     def save(self) -> None:
         key = datastore_client.key(self.kind, self.text)
@@ -125,10 +126,17 @@ class Phrase:
 
         datastore_client.put(phrase_entity)
 
-    def delete(self) -> None:
+    def edit_text(self, new_text: str, bot: telegram.Bot):
+        self.delete(bot)
+
+        self.text = new_text
+        self.generate_sticker(bot)
+        self.save()
+
+    def delete(self, bot: telegram.Bot) -> None:
+        delete_sticker(bot, self.sticker_file_id)
         key = datastore_client.key(self.kind, self.text)
         datastore_client.delete(key)
-        delete_sticker(self.sticker_file_id)
 
 
 class LongPhrase(Phrase):
@@ -166,4 +174,6 @@ class LongPhrase(Phrase):
 
     def generate_sticker(self, bot: telegram.Bot) -> None:
         sticker_text = self.text
-        self.sticker_file_id = upload_sticker(bot, generate_png(sticker_text), self.stickerset_template)
+        self.sticker_file_id = upload_sticker(
+            bot, generate_png(sticker_text), self.stickerset_template, self.stickerset_title_template
+        )
