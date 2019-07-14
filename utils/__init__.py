@@ -47,8 +47,7 @@ def remove_empty_from_dict(di):
 def normalize_str(s):
     """Returns a version of s without accents or specials characters such as ñ and lower-cased"""
     without_accents = ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')
-    without_puntuations = without_accents.replace('?', '').replace('¿', '').replace('!', '').replace('¡', '') \
-        .replace('.', '').replace(',', '')
+    without_puntuations = ''.join([i for i in without_accents if i.isalpha()])
     return without_puntuations.lower()
 
 
