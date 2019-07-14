@@ -20,11 +20,13 @@ def get_required_votes(bot):
 
 def text_with_bold(message: Message) -> str:
     text = message.text
-    bold = next(iter([e for e in message.entities if e['type'] == 'bold']), None)
-    if not bold:
-        return text
-    offset, length = bold['offset'], bold['length']
-    return text[:offset] + "<b>" + text[offset:offset + length] + '</b>' + text[offset + length:]
+    accumulated_length = 0
+    for bold in [e for e in message.entities if e['type'] == 'bold']:
+        offset, length = bold['offset'] + accumulated_length, bold['length']
+        text = text[:offset] + "<b>" + text[offset:offset + length] + '</b>' + text[offset + length:]
+        accumulated_length += length
+
+    return text
 
 
 @log_update
