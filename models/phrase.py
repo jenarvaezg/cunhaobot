@@ -30,6 +30,9 @@ class Phrase:
         self.sticker_daily_usages = sticker_daily_usages
         self.sticker_file_id = sticker_file_id
 
+    def __str__(self) -> str:
+        return self.text
+
     @classmethod
     def upload_from_proposal(cls, proposal, bot: telegram.Bot):
         phrase = cls(proposal.text)
@@ -38,7 +41,7 @@ class Phrase:
         phrase.save()
 
         cls.refresh_cache()
-        cls.phrases_cache.append(phrase.text)
+        cls.phrases_cache.append(phrase)
 
     @classmethod
     def from_entity(cls, entity):
@@ -62,14 +65,14 @@ class Phrase:
         return instances
 
     @classmethod
-    def get_phrases(cls, search='') -> List[str]:
+    def get_phrases(cls, search='') -> List['Phrase']:
         if len(cls.phrases_cache) == 0:
             cls.refresh_cache()
 
         return [phrase for phrase in cls.phrases_cache if normalize_str(search) in normalize_str(phrase)]
 
     @classmethod
-    def get_random_phrase(cls, search='') -> str:
+    def get_random_phrase(cls, search='') -> 'Phrase':
         phrase = cls.get_phrases(search=search) or cls.get_phrases()
         return random.choice(phrase)
 
@@ -116,7 +119,7 @@ class Phrase:
         datastore_client.put_multi(updates)
 
     @classmethod
-    def get_most_similar(cls, text: str) -> Tuple[str, int]:
+    def get_most_similar(cls, text: str) -> Tuple['Phrase', int]:
         phrases = cls.get_phrases()
         normalized_input_text = normalize_str(text)
 

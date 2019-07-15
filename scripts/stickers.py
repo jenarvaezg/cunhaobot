@@ -7,5 +7,5 @@ bot.get_chat(owner_id)
 for phrase in Phrase.refresh_cache():
     phrase.generate_sticker(bot)
     phrase.save()
-    print(phrase.text)
+    print(phrase)
     print(phrase.sticker_file_id)

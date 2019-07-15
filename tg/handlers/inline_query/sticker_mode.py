@@ -25,12 +25,10 @@ def get_sticker_mode_results(input: str) -> List[InlineQueryResultCachedSticker]
     phrases = []
     if mode == SHORT_MODE:
         result_type = 'short'
-        phrases = Phrase.refresh_cache()
+        phrases = Phrase.get_phrases()
     elif mode == LONG_MODE:
-        # TODO CHANGE ONCE WE GET_PHRASES RETURNS INSTANCES NOT STR
         result_type = 'long'
-        phrases = LongPhrase.refresh_cache()
-        phrases = [phrase for phrase in phrases if normalize_str(rest) in normalize_str(phrase.text)]
+        phrases = LongPhrase.get_phrases(normalize_str(rest))
 
     random.shuffle(phrases)
     return [_phrase_to_inline_sticker(p, result_type) for p in phrases[:10]]
