@@ -19,17 +19,24 @@ def usage(update: Update) -> Message:
 @log_update
 def handle_delete_chapas(update: Update, context: CallbackContext):
     chat: Chat = update.effective_chat
+    message: Message = update.effective_message
+    if len(message.text.split(' ')) > 1:
+        return message.reply_text(
+            f"Creo que lo que quieres hacer es /borrarchapa, {Phrase.get_random_phrase()}.",
+            quote=True,
+        )
 
     tasks = ScheduledTask.get_tasks(chat_id=chat.id)
     if len(tasks) == 0:
-        return update.effective_message.reply_text(
-            f"¡Pero si no te estoy dando la chapa, {Phrase.get_random_phrase()}!"
+        return message.reply_text(
+            f"¡Pero si no te estoy dando la chapa, {Phrase.get_random_phrase()}!",
+            quote=True,
         )
 
     for task in tasks:
         task.delete()
 
-    update.effective_message.reply_text(
+    message.reply_text(
         f"Ya no te daré más chapas, ({len(tasks)} borradas) {Phrase.get_random_phrase()}.",
         quote=True,
     )

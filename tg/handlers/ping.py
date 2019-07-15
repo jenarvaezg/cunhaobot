@@ -12,7 +12,8 @@ from models.report import Report
 from models.schedule import ScheduledTask
 from models.phrase import Phrase, LongPhrase
 from models.user import User, InlineUser
-from tg.handlers.inline_query.base import get_query_mode, MODE_HANDLERS, AUDIO_MODE
+from tg.text_router import get_query_mode, AUDIO_MODE, STICKER_MODE
+from tg.handlers.inline_query.base import MODE_HANDLERS
 
 curators_chat_id = os.environ.get("MOD_CHAT_ID", "")
 logger = logging.getLogger('cunhaobot')
@@ -35,6 +36,8 @@ def _send_chapas(bot: Bot, tasks: Iterable[ScheduledTask]) -> None:
                 continue
             if query_mode == AUDIO_MODE:
                 bot.send_voice(task.chat_id, result.voice_url)
+            elif query_mode == STICKER_MODE:
+                bot.send_sticker(task.chat_id, result.sticker_file_id)
             else:
                 bot.send_message(task.chat_id, result.input_message_content.message_text)
         except Exception as e:
@@ -99,8 +102,8 @@ def handle_ping(bot: Bot):
     now = datetime.now().astimezone(madrid_timezone)
 
     _send_chapas(bot, ScheduledTask.get_tasks(hour=now.hour, minute=now.minute, service='telegram', type='chapa'))
-    if now.hour == 0 and now.minute == 0:
-        _generate_report(now.date() - timedelta(minutes=10))
+    if now.hour == 23 and now.minute == 59:
+        _generate_report(now.date())
     elif now.hour == 7 and now.minute == 0:
         _send_report(bot, now.date())
 
