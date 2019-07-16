@@ -5,7 +5,6 @@ import telegram
 from fuzzywuzzy import fuzz
 from google.cloud import datastore
 
-from tg.stickers import generate_png, upload_sticker, delete_sticker
 from utils import normalize_str, improve_punctuation
 
 datastore_client = datastore.Client()
@@ -74,9 +73,8 @@ class Phrase:
         return [phrase for phrase in cls.phrases_cache if normalize_str(search) in normalize_str(phrase.text)]
 
     @classmethod
-    def get_random_phrase(cls, search='') -> 'Phrase':
-        phrase = cls.get_phrases(search=search) or cls.get_phrases()
-        return random.choice(phrase)
+    def get_random_phrase(cls) -> 'Phrase':
+        return random.choice(cls.get_phrases())
 
     @classmethod
     def add_usage_by_result_id(cls, result_id: str) -> None:
@@ -131,6 +129,7 @@ class Phrase:
         )
 
     def generate_sticker(self, bot: telegram.Bot) -> None:
+        from tg.stickers import generate_png, upload_sticker
         sticker_text = f"¿Qué pasa, {self.text}?"
         self.sticker_file_id = upload_sticker(
                 bot, generate_png(sticker_text), self.stickerset_template, self.stickerset_title_template
@@ -159,6 +158,7 @@ class Phrase:
         self.save()
 
     def delete(self, bot: telegram.Bot) -> None:
+        from tg.stickers import delete_sticker
         delete_sticker(bot, self.sticker_file_id)
         key = datastore_client.key(self.kind, self.text)
         datastore_client.delete(key)
@@ -210,6 +210,7 @@ class LongPhrase(Phrase):
             phrase.save()
 
     def generate_sticker(self, bot: telegram.Bot) -> None:
+        from tg.stickers import generate_png, upload_sticker
         sticker_text = self.text
         self.sticker_file_id = upload_sticker(
             bot, generate_png(sticker_text), self.stickerset_template, self.stickerset_title_template

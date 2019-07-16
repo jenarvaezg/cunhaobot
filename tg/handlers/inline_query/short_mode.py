@@ -39,7 +39,6 @@ def get_short_mode_results(input: str) -> List[InlineQueryResultArticle]:
         thumb_url=get_thumb()
     ) for combination in combinations]
 
-    print([result.id for result in results])
     random.shuffle(results)
 
     return results

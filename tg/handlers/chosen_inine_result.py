@@ -14,7 +14,6 @@ def handle_chosen_inline_result(update: Update, context: CallbackContext):
         Phrase.add_usage_by_result_id(result.result_id)
     elif 'long-' in result.result_id:
         LongPhrase.add_usage_by_result_id(result.result_id)
-    else:
-        print("TODO")
+
 
 

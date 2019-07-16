@@ -1,7 +1,7 @@
 import logging
 from functools import wraps
 
-from telegram import Update, Bot, Chat
+from telegram import Update, Chat
 
 from models.user import User
 from models.phrase import Phrase

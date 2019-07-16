@@ -2,20 +2,19 @@
 import logging
 import os
 import requests
+import json
 
 from flask import Flask, request
 from telegram import Update
 
+from slack.handlers import handle_slack
 from tg import tg_dispatcher
 from tg.handlers import handle_ping as handle_telegram_ping
 
 # Enable logging
-from models.phrase import LongPhrase
-
 logging.basicConfig(format='%(message)s',
                     level=logging.INFO)
 
-logger = logging.getLogger('cunhaobot')
 TG_TOKEN = os.environ["TG_TOKEN"]
 BASE_URL = os.environ["BASE_URL"]
 PORT = os.environ.get("PORT")
@@ -43,17 +42,18 @@ def telegram_ping_handler():
     return "OK"
 
 
-@app.route(f'/slack/frase', methods=['POST'])
-def slack_phrase_handler():
+@app.route(f'/slack', methods=['POST'])
+def slack_handler():
     data = request.form
-    text = data['text']
-    response_url = data['response_url']
-    requests.post(response_url, json={
-        'text': LongPhrase.get_random_phrase(search=text).text,
-        'response_type': 'in_channel',
-    })
+    if 'payload' in data:
+        data = json.loads(data['payload'])
+    response = handle_slack(data)
+    if response:
+        response_url = data['response_url']
+        requests.post(response_url, json=response['indirect'])
+        return response['direct']
 
-    return ""
+    return ''
 
 
 if __name__ == '__main__':
