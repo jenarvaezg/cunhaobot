@@ -27,8 +27,8 @@ def get_thumb():
     return random.choice(thumbs)
 
 
-def random_combination(iterable: Iterable[str], r: int) -> Tuple[str]:
-    pool: Tuple[str] = tuple(iterable)
+def random_combination(iterable: Iterable, r: int) -> Tuple:
+    pool = tuple(iterable)
     n = len(pool)
     indices: List[int] = sorted(random.sample(range(n), r))
     return tuple(pool[i] for i in indices)

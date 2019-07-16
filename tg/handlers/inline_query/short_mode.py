@@ -10,7 +10,7 @@ BASE_TEMPLATE = '¿Qué pasa, {}?'
 
 
 def _result_id_for_combination(combination: Tuple[str]) -> str:
-    return f"short-{normalize_str(', '.join(combination))}"[:63]
+    return f"short-{normalize_str(', '.join(str(combination)))}"[:63]
 
 
 def get_short_mode_results(input: str) -> List[InlineQueryResultArticle]:
@@ -32,13 +32,14 @@ def get_short_mode_results(input: str) -> List[InlineQueryResultArticle]:
 
     results = [InlineQueryResultArticle(
         id=_result_id_for_combination(combination),
-        title=', '.join(combination),
+        title=', '.join([str(e) for e in combination]),
         input_message_content=InputTextMessageContent(
-            BASE_TEMPLATE.format(', '.join(combination))
+            BASE_TEMPLATE.format(', '.join([str(e) for e in combination]))
         ),
         thumb_url=get_thumb()
     ) for combination in combinations]
 
+    print([result.id for result in results])
     random.shuffle(results)
 
     return results

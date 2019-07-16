@@ -49,8 +49,8 @@ def slack_phrase_handler():
     text = data['text']
     response_url = data['response_url']
     requests.post(response_url, json={
-        'text':LongPhrase.get_random_phrase(search=text),
-        'response_type':'in_channel',
+        'text': LongPhrase.get_random_phrase(search=text).text,
+        'response_type': 'in_channel',
     })
 
     return ""

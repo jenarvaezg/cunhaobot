@@ -30,6 +30,9 @@ class Phrase:
         self.sticker_daily_usages = sticker_daily_usages
         self.sticker_file_id = sticker_file_id
 
+    def __repr__(self) -> str:
+        return self.__str__()
+
     def __str__(self) -> str:
         return self.text
 
@@ -59,17 +62,16 @@ class Phrase:
     @classmethod
     def refresh_cache(cls) -> List['Phrase']:
         query = datastore_client.query(kind=cls.kind)
-        instances = [cls.from_entity(entity) for entity in query.fetch()]
-        cls.phrases_cache = [i.text for i in instances]
+        cls.phrases_cache = [cls.from_entity(entity) for entity in query.fetch()]
 
-        return instances
+        return cls.phrases_cache
 
     @classmethod
     def get_phrases(cls, search='') -> List['Phrase']:
         if len(cls.phrases_cache) == 0:
             cls.refresh_cache()
 
-        return [phrase for phrase in cls.phrases_cache if normalize_str(search) in normalize_str(phrase)]
+        return [phrase for phrase in cls.phrases_cache if normalize_str(search) in normalize_str(phrase.text)]
 
     @classmethod
     def get_random_phrase(cls, search='') -> 'Phrase':
@@ -124,7 +126,7 @@ class Phrase:
         normalized_input_text = normalize_str(text)
 
         return max(
-            [(phrase, fuzz.WRatio(normalized_input_text, normalize_str(phrase))) for phrase in phrases],
+            [(phrase, fuzz.ratio(normalized_input_text, normalize_str(phrase.text))) for phrase in phrases],
             key=lambda x: x[1],
         )
 

@@ -22,6 +22,7 @@ handlers = [
     CommandHandler('submit', handle_submit),
     CommandHandler('proponer', handle_submit),
     CommandHandler('submitlong', handle_submit_long),
+    CommandHandler('submitphrase', handle_submit_long),
     CommandHandler('proponerfrase', handle_submit_long),
     CommandHandler('about', handle_about),
     CommandHandler('stop', handle_stop),

@@ -11,7 +11,7 @@ from tg.decorators import log_update
 
 def reply_cunhao(update: Update):
     n_words = random.choice([3, 4, 5])
-    words = ", ".join([Phrase.get_random_phrase() for _ in range(n_words)])
+    words = ", ".join([Phrase.get_random_phrase().text for _ in range(n_words)])
     msg = "Aquí me tienes, {}.".format(words)
     update.effective_message.reply_text(msg, quote=True)
 

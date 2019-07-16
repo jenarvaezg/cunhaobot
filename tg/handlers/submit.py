@@ -63,4 +63,10 @@ def handle_submit(update: Update, context: CallbackContext):
 
 @log_update
 def handle_submit_long(update: Update, context: CallbackContext):
+    if 'submitlong' in update.effective_message.text:
+        update.effective_message.reply_text(
+            f'Te aviso, {Phrase.get_random_phrase()}, submitlong va a dejar de funcionar, si quieres ir de americano, '
+            f'vas a tener que usar /submitphrase, {Phrase.get_random_phrase()}',
+            quote=True,
+        )
     submit_handling(context.bot, update, LongProposal, LongPhrase)
