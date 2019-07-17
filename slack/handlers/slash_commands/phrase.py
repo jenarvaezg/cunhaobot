@@ -16,15 +16,16 @@ def handle_phrase(slack_data: dict) -> dict:
     if text == 'help':
         return _usage()
 
-    phrase = random.choice(LongPhrase.get_phrases(search=text))
-    if not phrase:
+    phrases = LongPhrase.get_phrases(search=text)
+    if not phrases:
         return {
             'indirect': {
-                'text': f'No tengo ninguna frase que encaje con la busqueda "{text}", {Phrase.get_random_phrase()}'
+                'text': f'No tengo ninguna frase que encaje con la busqueda "{text}", {Phrase.get_random_phrase()}.'
             },
             'direct': '',
         }
 
+    phrase = random.choice(phrases)
     return {
         'indirect': {
             'attachments': build_phrase_attachments(phrase.text, search=text)

@@ -19,7 +19,7 @@ class Phrase:
 
     def __init__(
             self, text, sticker_file_id='', usages=0, audio_usages=0, daily_usages=0, audio_daily_usages=0,
-            sticker_daily_usages=0, sticker_usages=0):
+            sticker_daily_usages=0, sticker_usages=0, user_id=0, chat_id=0):
         self.text = text
         self.usages = usages
         self.audio_usages = audio_usages
@@ -28,6 +28,8 @@ class Phrase:
         self.sticker_usages = sticker_usages
         self.sticker_daily_usages = sticker_daily_usages
         self.sticker_file_id = sticker_file_id
+        self.user_id = user_id
+        self.chat_id = chat_id
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -37,7 +39,7 @@ class Phrase:
 
     @classmethod
     def upload_from_proposal(cls, proposal, bot: telegram.Bot):
-        phrase = cls(proposal.text)
+        phrase = cls(proposal.text, user_id=proposal.user_id, chat_id=proposal.from_chat_id)
         phrase.generate_sticker(bot)
 
         phrase.save()
@@ -56,6 +58,8 @@ class Phrase:
             daily_usages=entity.get('daily_usages', 0),
             audio_daily_usages=entity.get('audio_daily_usages', 0),
             sticker_daily_usages=entity.get('sticker_daily_usages', 0),
+            user_id=entity.get('user_id', 0),
+            chat_id=entity.get('chat_id', 0),
         )
 
     @classmethod
@@ -147,6 +151,8 @@ class Phrase:
         phrase_entity['daily_usages'] = self.daily_usages
         phrase_entity['audio_daily_usages'] = self.audio_daily_usages
         phrase_entity['sticker_daily_usages'] = self.sticker_daily_usages
+        phrase_entity['user_id'] = self.user_id
+        phrase_entity['chat_id'] = self.chat_id
 
         datastore_client.put(phrase_entity)
 
