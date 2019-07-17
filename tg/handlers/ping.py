@@ -26,13 +26,13 @@ def _send_chapas(bot: Bot, tasks: Iterable[ScheduledTask]) -> None:
             query_mode, rest = get_query_mode(task.query)
             resuls_fn = MODE_HANDLERS.get(query_mode)
             result = next(iter(resuls_fn(rest)), None)
-            if result is None:
+            if result is None or '-bad-search-' in result.id:
                 bot.send_message(
                     task.chat_id,
-                    f"No he encontrado nada con los parametros '{task.query}', así que "
+                    f"Te tengo que dar la chapa, pero no he encontrado nada con los parametros '{task.query}', así que "
                     f"aqui tienes algo parecido, {Phrase.get_random_phrase()}."
                 )
-                bot.send_message(task.chat_id, LongPhrase.get_random_phrase())
+                bot.send_message(task.chat_id, LongPhrase.get_random_phrase().text)
                 continue
             if query_mode == AUDIO_MODE:
                 bot.send_voice(task.chat_id, result.voice_url)

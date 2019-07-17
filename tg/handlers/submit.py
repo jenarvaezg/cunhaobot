@@ -16,9 +16,20 @@ proposal_t = Union[Type[Proposal], Type[LongProposal]]
 phrase_t = Union[Type[Phrase], Type[LongPhrase]]
 
 
+def _notify_proposal_to_curators(
+        bot: Bot, proposal: Proposal, submitted_by: str, most_similar: Phrase, similarity_ratio: int
+) -> None:
+    curators_reply_markup = InlineKeyboardMarkup(build_vote_keyboard(proposal.id, proposal.kind))
+    curators_message_text = f"{submitted_by} dice que deberiamos añadir la siguiente {most_similar.name} a la lista:" \
+                            f"\n'*{proposal.text}*'" \
+                            f"\n\nLa mas parecida es: '*{most_similar}*' ({similarity_ratio}%)."
+
+    bot.send_message(curators_chat_id, curators_message_text, reply_markup=curators_reply_markup,
+                     parse_mode=ParseMode.MARKDOWN)
+
+
 def submit_handling(bot: Bot, update: Update, proposal_class: proposal_t, phrase_class: phrase_t):
     submitted_by = update.effective_user.name
-
     proposal = proposal_class.from_update(update)
     if proposal.text == '':
         return update.effective_message.reply_text(
@@ -35,14 +46,8 @@ def submit_handling(bot: Bot, update: Update, proposal_class: proposal_t, phrase
         return update.effective_message.reply_text(text, parse_mode=ParseMode.HTML)
 
     proposal.save()
+    _notify_proposal_to_curators(bot, proposal, submitted_by, most_similar, similarity_ratio)
 
-    curators_reply_markup = InlineKeyboardMarkup(build_vote_keyboard(proposal.id, proposal.kind))
-    curators_message_text = f"{submitted_by} dice que deberiamos añadir la siguiente {phrase_class.name} a la lista:" \
-                            f"\n'<b>{proposal.text}</b>'" \
-                            f"\nLa mas parecida es: '<b>{most_similar}</b>' ({similarity_ratio}%)"
-
-    bot.send_message(curators_chat_id, curators_message_text, reply_markup=curators_reply_markup,
-                     parse_mode=ParseMode.HTML)
     update.effective_message.reply_text(
         f"Tu aportación será valorada por un consejo de cuñaos expertos y te avisaré una vez haya sido evaluada, "
         f"{Phrase.get_random_phrase()}.",
