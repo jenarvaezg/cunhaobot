@@ -25,7 +25,7 @@ def _notify_proposal_to_curators(
                             f"\n\nLa mas parecida es: '*{most_similar}*' ({similarity_ratio}%)."
 
     bot.send_message(curators_chat_id, curators_message_text, reply_markup=curators_reply_markup,
-                     parse_mode=ParseMode.MARKDOWN)
+                     parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
 
 
 def submit_handling(bot: Bot, update: Update, proposal_class: proposal_t, phrase_class: phrase_t):

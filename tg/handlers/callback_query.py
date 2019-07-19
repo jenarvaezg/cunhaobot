@@ -15,7 +15,6 @@ admins = []  # Cool global var to cache stuff
 
 def get_required_votes():
     count = len(admins)
-    # count -= 1  # ignore bot
     return count // 2 + 1
 
 
@@ -31,11 +30,10 @@ def _add_vote(proposal: Proposal, vote: str, callback_query: CallbackQuery) -> N
     callback_query.answer(f"Tu voto: {vote} ha sido añadido.")
 
 
-
 def _approve_proposal(proposal: Proposal, callback_query: CallbackQuery, bot: Bot) -> None:
     callback_query.edit_message_text(
         f"La propuesta '{proposal.text}' queda formalmente aprobada y añadida a la lista.\n\n"
-        f"{get_vote_summary(proposal)}"
+        f"{get_vote_summary(proposal)}", disable_web_page_preview=True
     )
     bot.send_message(
         proposal.from_chat_id,
@@ -47,7 +45,8 @@ def _approve_proposal(proposal: Proposal, callback_query: CallbackQuery, bot: Bo
 
 def _dismiss_proposal(proposal: Proposal, callback_query: CallbackQuery, bot: Bot) -> None:
     callback_query.edit_message_text(
-        f"La propuesta '{proposal.text}' queda formalmente rechazada.\n\n{get_vote_summary(proposal)}"
+        f"La propuesta '{proposal.text}' queda formalmente rechazada.\n\n{get_vote_summary(proposal)}",
+        disable_web_page_preview=True
     )
 
     bot.send_message(
@@ -73,7 +72,8 @@ def _update_proposal_text(proposal: Proposal, callback_query: CallbackQuery) -> 
         callback_query.edit_message_text(
             before_votes_text + votes_text,
             reply_markup=reply_markup,
-            parse_mode=ParseMode.MARKDOWN
+            parse_mode=ParseMode.MARKDOWN,
+            disable_web_page_preview=True
         )
 
 
