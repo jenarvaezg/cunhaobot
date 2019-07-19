@@ -32,8 +32,8 @@ def _on_join(bot: Bot, chat_id: int) -> None:
 
 def _on_other_joined(bot: Bot, user: User, chat_id: int) -> None:
     n_words = random.choice([2, 3, 4])
-    phrases = [user.name] + [Phrase.get_random_phrase() for _ in range(n_words)]
-    words = ", ".join(phrases)
+    phrases = [user.name] + [Phrase.get_random_phrase().text for _ in range(n_words)]
+    words = ", ".join([p for p in phrases])
     bot.send_message(
         chat_id,
         f'¿Qué pasa, {words}?'

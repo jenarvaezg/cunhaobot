@@ -4,10 +4,12 @@ import os
 import requests
 import json
 
-from flask import Flask, request
+from flask import Flask, request, redirect
 from telegram import Update
 
 from slack.handlers import handle_slack
+from slack.auth import do_auth as slack_do_auth
+
 from tg import tg_dispatcher
 from tg.handlers import handle_ping as handle_telegram_ping
 
@@ -54,6 +56,17 @@ def slack_handler():
         return response['direct']
 
     return ''
+
+
+@app.route(f'/slack/auth', methods=['GET'])
+def slack_auth_handler():
+    client_id = os.environ['SLACK_CLIENT_ID']
+    #code = request.args.get('code')
+    scopes = ['commands']
+
+    return redirect(
+        f'https://slack.com/oauth/authorize?client_id={client_id}&scope={" ".join(scopes)}'
+    )
 
 
 if __name__ == '__main__':

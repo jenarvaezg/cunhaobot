@@ -31,7 +31,7 @@ def _notify_proposal_to_curators(
 def submit_handling(bot: Bot, update: Update, proposal_class: proposal_t, phrase_class: phrase_t):
     submitted_by = update.effective_user.name
     proposal = proposal_class.from_update(update)
-    if proposal.text == '':
+    if not proposal.text:
         return update.effective_message.reply_text(
             f'Tienes que decirme que quieres proponer, por ejemplo: "/proponer {Phrase.get_random_phrase()}"'
             f' o "/proponerfrase {LongPhrase.get_random_phrase()}".'

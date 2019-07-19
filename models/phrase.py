@@ -1,4 +1,5 @@
 import random
+from datetime import datetime
 from typing import List, Optional, Tuple
 
 import telegram
@@ -19,7 +20,7 @@ class Phrase:
 
     def __init__(
             self, text, sticker_file_id='', usages=0, audio_usages=0, daily_usages=0, audio_daily_usages=0,
-            sticker_daily_usages=0, sticker_usages=0, user_id=0, chat_id=0):
+            sticker_daily_usages=0, sticker_usages=0, user_id=0, chat_id=0, created_at=None):
         self.text = text
         self.usages = usages
         self.audio_usages = audio_usages
@@ -30,6 +31,7 @@ class Phrase:
         self.sticker_file_id = sticker_file_id
         self.user_id = user_id
         self.chat_id = chat_id
+        self.created_at = created_at
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -39,7 +41,7 @@ class Phrase:
 
     @classmethod
     def upload_from_proposal(cls, proposal, bot: telegram.Bot):
-        phrase = cls(proposal.text, user_id=proposal.user_id, chat_id=proposal.from_chat_id)
+        phrase = cls(proposal.text, user_id=proposal.user_id, chat_id=proposal.from_chat_id, created_at=datetime.now())
         phrase.generate_sticker(bot)
 
         phrase.save()
@@ -60,6 +62,7 @@ class Phrase:
             sticker_daily_usages=entity.get('sticker_daily_usages', 0),
             user_id=entity.get('user_id', 0),
             chat_id=entity.get('chat_id', 0),
+            created_at=entity.get('created_at'),
         )
 
     @classmethod
@@ -153,6 +156,7 @@ class Phrase:
         phrase_entity['sticker_daily_usages'] = self.sticker_daily_usages
         phrase_entity['user_id'] = self.user_id
         phrase_entity['chat_id'] = self.chat_id
+        phrase_entity['created_at'] = self.created_at
 
         datastore_client.put(phrase_entity)
 

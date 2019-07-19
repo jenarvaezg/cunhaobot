@@ -1,7 +1,7 @@
 from typing import Type, List, Optional
 
 from google.cloud import datastore
-from telegram import Update
+from telegram import Update, Message
 
 from models.phrase import Phrase, LongPhrase
 
@@ -11,8 +11,15 @@ class Proposal:
     phrase_class = Phrase
 
     @staticmethod
-    def proposal_text_from_update(update):
-        return " ".join(update.effective_message.text.split(" ")[1:]).strip()
+    def proposal_text_from_message(message: Message):
+        text = ''
+        text_after_command = message.text.split(" ")[1:]
+        if text_after_command:
+            text = " ".join(text_after_command).strip()
+        elif message.reply_to_message:
+            text = message.reply_to_message.text
+
+        return text
 
     def __init__(self, id, from_chat_id, from_message_id, text, liked_by=None, disliked_by=None, user_id=0):
         self.id: str = id
@@ -26,11 +33,12 @@ class Proposal:
     @classmethod
     def from_update(cls, update: Update):
         id = str(update.effective_message.chat.id + update.effective_message.message_id)
+
         return cls(
             id,
             update.effective_message.chat.id,
             update.effective_message.message_id,
-            cls.proposal_text_from_update(update),
+            cls.proposal_text_from_message(update.effective_message),
             user_id=update.effective_user.id,
         )
 
