@@ -44,11 +44,14 @@ def remove_empty_from_dict(di):
         return d
 
 
-def normalize_str(s):
+def normalize_str(s, remove_punctuation=True):
     """Returns a version of s without accents or specials characters such as ñ and lower-cased"""
     without_accents = ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')
-    without_puntuations = ''.join([i for i in without_accents if i.isalpha()])
-    return without_puntuations.lower()
+    #breakpoint()
+    if remove_punctuation:
+        without_puntuations = ''.join([i for i in without_accents if i.isalpha()])
+        return without_puntuations.lower()
+    return without_accents.lower()
 
 
 def improve_punctuation(s):

@@ -95,12 +95,14 @@ class Phrase:
         else:
             result_id = result_id[len('short-'):]
 
-        result_id = normalize_str(result_id)
-        words = result_id.split(", ")
+        words = result_id.split(",")
         phrases = cls.refresh_cache()
 
         for word in words:
-            phrase: Optional['Phrase'] = next(iter(p for p in phrases if normalize_str(p.text) == word), None)
+            phrase: Optional['Phrase'] = next(
+                iter(p for p in phrases if normalize_str(p.text, remove_punctuation=False) == word),
+                None
+            )
             if phrase:
                 if is_audio:
                     phrase.audio_daily_usages += 1

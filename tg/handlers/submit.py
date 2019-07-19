@@ -1,7 +1,7 @@
 import os
 from typing import Union, Type
 
-from telegram import Update, Bot, InlineKeyboardMarkup, ParseMode
+from telegram import Update, Bot, InlineKeyboardMarkup, ForceReply, ParseMode
 from telegram.ext import CallbackContext
 
 from tg.markup.keyboards import build_vote_keyboard
@@ -33,8 +33,10 @@ def submit_handling(bot: Bot, update: Update, proposal_class: proposal_t, phrase
     proposal = proposal_class.from_update(update)
     if not proposal.text:
         return update.effective_message.reply_text(
-            f'Tienes que decirme que quieres proponer, por ejemplo: "/proponer {Phrase.get_random_phrase()}"'
-            f' o "/proponerfrase {LongPhrase.get_random_phrase()}".'
+            f'¿Qué *{phrase_class.name}* quieres proponer, {Phrase.get_random_phrase()}?\n'
+            'Si no quieres proponer nada, puedes usar /cancelar.',
+            reply_markup=ForceReply(selective=True),
+            parse_mode=ParseMode.MARKDOWN,
         )
 
     # Fuzzy search. If we have one similar, discard.

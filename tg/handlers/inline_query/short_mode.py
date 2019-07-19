@@ -9,8 +9,9 @@ from utils import get_thumb, random_combination, normalize_str
 BASE_TEMPLATE = '¿Qué pasa, {}?'
 
 
-def _result_id_for_combination(combination: Tuple[str]) -> str:
-    return f"short-{normalize_str(', '.join(str(combination)))}"[:63]
+def _result_id_for_combination(combination: Tuple[Phrase]) -> str:
+    words = [c.text for c in combination]
+    return f"short-{normalize_str(','.join(words), remove_punctuation=False)}"[:63]
 
 
 def get_short_mode_results(input: str) -> List[InlineQueryResultArticle]:
