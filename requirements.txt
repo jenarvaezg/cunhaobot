@@ -1,34 +1,33 @@
--i https://pypi.org/simple
-asn1crypto==0.24.0
+-i https://pypi.org/simple/
 boto3==1.9.188
-botocore==1.12.188
+botocore==1.12.253
 cachetools==3.1.1
-certifi==2019.6.16
-cffi==1.12.3
+certifi==2019.9.11
+cffi==1.13.1
 chardet==3.0.4
 click==7.0
-cryptography==2.7
-docutils==0.14
+cryptography==2.8
+docutils==0.15.2
 flask==1.1.1
-future==0.17.1
+future==0.18.1
 fuzzywuzzy==0.17.0
-google-api-core[grpc]==1.13.0
+google-api-core[grpc]==1.14.3
 google-auth==1.6.3
-google-cloud-core==1.0.2
+google-cloud-core==1.0.3
 google-cloud-datastore==1.8.0
 google-cloud-storage==1.16.1
-google-resumable-media==0.3.2
+google-resumable-media==0.4.1
 googleapis-common-protos==1.6.0
-grpcio==1.22.0
+grpcio==1.24.1
 idna==2.8
 itsdangerous==1.1.0
-jinja2==2.10.1
+jinja2==2.10.3
 jmespath==0.9.4
 markupsafe==1.1.1
-pillow==6.1.0
-protobuf==3.9.0
-pyasn1-modules==0.2.5
-pyasn1==0.4.5
+pillow==6.2.0
+protobuf==3.10.0
+pyasn1-modules==0.2.7
+pyasn1==0.4.7
 pycparser==2.19
 python-dateutil==2.8.0 ; python_version >= '2.7'
 python-levenshtein==0.12.0
@@ -39,5 +38,5 @@ rsa==4.0
 s3transfer==0.2.1
 six==1.12.0
 tornado==6.0.3
-urllib3==1.25.3 ; python_version >= '3.4'
-werkzeug==0.15.4
+urllib3==1.25.6 ; python_version >= '3.4'
+werkzeug==0.16.0
