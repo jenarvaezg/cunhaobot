@@ -1,43 +1,45 @@
--i https://pypi.org/simple
-asn1crypto==0.24.0
+-i https://pypi.org/simple/
 boto3==1.9.188
-botocore==1.12.188
-cachetools==3.1.1
-certifi==2019.6.16
-cffi==1.12.3
-chardet==3.0.4
-click==7.0
-cryptography==2.7
-docutils==0.14
+botocore==1.12.253
+cachetools==4.2.1
+certifi==2020.12.5
+cffi==1.14.5
+chardet==4.0.0
+click==8.0.0a1
+cryptography==3.4.6
+docutils==0.15.2
 flask==1.1.1
-future==0.17.1
+future==0.18.2
 fuzzywuzzy==0.17.0
-google-api-core[grpc]==1.13.0
-google-auth==1.6.3
-google-cloud-core==1.0.2
+google-api-core[grpc]==1.26.2
+google-auth==1.28.0
+google-cloud-core==1.6.0
 google-cloud-datastore==1.8.0
 google-cloud-storage==1.16.1
-google-resumable-media==0.3.2
-googleapis-common-protos==1.6.0
-grpcio==1.22.0
-idna==2.8
-itsdangerous==1.1.0
-jinja2==2.10.1
-jmespath==0.9.4
-markupsafe==1.1.1
+google-crc32c==1.1.2 ; python_version >= '3.5'
+google-resumable-media==1.2.0
+googleapis-common-protos==1.53.0
+grpcio==1.36.1
+idna==2.10
+itsdangerous==2.0.0rc1
+jinja2==3.0.0a1
+jmespath==0.10.0
+markupsafe==2.0.0rc1
+packaging==20.9
 pillow==6.1.0
-protobuf==3.9.0
-pyasn1-modules==0.2.5
-pyasn1==0.4.5
-pycparser==2.19
-python-dateutil==2.8.0 ; python_version >= '2.7'
+protobuf==4.0.0rc2
+pyasn1-modules==0.2.8
+pyasn1==0.4.8
+pycparser==2.20
+pyparsing==3.0.0b2
+python-dateutil==2.8.1 ; python_version >= '2.7'
 python-levenshtein==0.12.0
 python-telegram-bot==12.0.0b1
 pytz==2019.1
-requests==2.22.0
-rsa==4.0
+requests==2.25.1
+rsa==4.1
 s3transfer==0.2.1
-six==1.12.0
-tornado==6.0.3
-urllib3==1.25.3 ; python_version >= '3.4'
-werkzeug==0.15.4
+six==1.15.0
+tornado==6.1
+urllib3==1.25.11 ; python_version >= '3.4'
+werkzeug==2.0.0rc3
