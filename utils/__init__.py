@@ -15,11 +15,11 @@ thumbs = [
     "https://pbs.twimg.com/media/DFRYYkRXgAIGOjI.jpg",
     "http://www.eluniversalqueretaro.mx/sites/default/files/styles/f03-651x400/public/2018/04/06/q8-20.jpg.jpg?itok=G2zZUM1c",
     "https://static3.elcomercio.es/www/pre2017/multimedia/noticias/201703/26/media/22940314.jpg",
-    'https://www.elplural.com/uploads/s1/62/50/39/el-lider-de-vox-santiago-abascal-sin-barba_6_585x329.png',
-    'https://pbs.twimg.com/media/DwA6mRuW0AAj8FX.jpg',
-    'https://s2.eestatic.com/2018/12/03/actualidad/Actualidad_357976969_108513450_1024x576.jpg',
-    'http://www.elboletin.com/imagenes/portada/santiago-abascal-p.jpg',
-    'https://amenzing.com/wp-content/uploads/2018/12/santiago-abascal.jpg',
+    "https://www.elplural.com/uploads/s1/62/50/39/el-lider-de-vox-santiago-abascal-sin-barba_6_585x329.png",
+    "https://pbs.twimg.com/media/DwA6mRuW0AAj8FX.jpg",
+    "https://s2.eestatic.com/2018/12/03/actualidad/Actualidad_357976969_108513450_1024x576.jpg",
+    "http://www.elboletin.com/imagenes/portada/santiago-abascal-p.jpg",
+    "https://amenzing.com/wp-content/uploads/2018/12/santiago-abascal.jpg",
 ]
 
 
@@ -37,7 +37,11 @@ def random_combination(iterable: Iterable, r: int) -> Tuple:
 def remove_empty_from_dict(di):
     d = deepcopy(di)
     if type(d) is dict:
-        return dict((k, remove_empty_from_dict(v)) for k, v in d.items() if v and remove_empty_from_dict(v))
+        return dict(
+            (k, remove_empty_from_dict(v))
+            for k, v in d.items()
+            if v and remove_empty_from_dict(v)
+        )
     elif type(d) is list:
         return [remove_empty_from_dict(v) for v in d if v and remove_empty_from_dict(v)]
     else:
@@ -46,10 +50,12 @@ def remove_empty_from_dict(di):
 
 def normalize_str(s, remove_punctuation=True):
     """Returns a version of s without accents or specials characters such as ñ and lower-cased"""
-    without_accents = ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')
-    #breakpoint()
+    without_accents = "".join(
+        c for c in unicodedata.normalize("NFD", s) if unicodedata.category(c) != "Mn"
+    )
+    # breakpoint()
     if remove_punctuation:
-        without_puntuations = ''.join([i for i in without_accents if i.isalpha()])
+        without_puntuations = "".join([i for i in without_accents if i.isalpha()])
         return without_puntuations.lower()
     return without_accents.lower()
 

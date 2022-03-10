@@ -1,4 +1,4 @@
-# [START gae_python37_app]
+# [START gae_python39_app]
 import logging
 import os
 import requests
@@ -14,8 +14,7 @@ from tg import tg_dispatcher
 from tg.handlers import handle_ping as handle_telegram_ping
 
 # Enable logging
-logging.basicConfig(format='%(message)s',
-                    level=logging.INFO)
+logging.basicConfig(format="%(message)s", level=logging.INFO)
 
 TG_TOKEN = os.environ["TG_TOKEN"]
 BASE_URL = os.environ["BASE_URL"]
@@ -24,12 +23,12 @@ PORT = os.environ.get("PORT")
 app = Flask(__name__)
 
 
-@app.route('/')
+@app.route("/")
 def ping():
     return "I am alive"
 
 
-@app.route(f'/{TG_TOKEN}', methods=['POST'])
+@app.route(f"/{TG_TOKEN}", methods=["POST"])
 def telegram_handler():
     dispatcher = tg_dispatcher()
     update = Update.de_json(request.json, dispatcher.bot)
@@ -37,43 +36,60 @@ def telegram_handler():
     return "Handled"
 
 
-@app.route(f'/{TG_TOKEN}/ping', methods=['GET'])
+@app.route(f"/{TG_TOKEN}/ping", methods=["GET"])
 def telegram_ping_handler():
     dispatcher = tg_dispatcher()
     handle_telegram_ping(dispatcher.bot)
     return "OK"
 
 
-@app.route(f'/slack', methods=['POST'])
+@app.route(f"/slack", methods=["POST"])
 def slack_handler():
     data = request.form
-    if 'payload' in data:
-        data = json.loads(data['payload'])
+    if "payload" in data:
+        data = json.loads(data["payload"])
     response = handle_slack(data)
     if response:
-        response_url = data['response_url']
-        requests.post(response_url, json=response['indirect'])
-        return response['direct']
+        response_url = data["response_url"]
+        requests.post(response_url, json=response["indirect"])
+        return response["direct"]
 
-    return ''
+    return ""
 
 
-@app.route(f'/slack/auth', methods=['GET'])
+@app.route(f"/slack/auth", methods=["GET"])
 def slack_auth_handler():
-    client_id = os.environ['SLACK_CLIENT_ID']
-    #code = request.args.get('code')
-    scopes = ['commands']
+    client_id = os.environ["SLACK_CLIENT_ID"]
+    scopes = ["commands", "chat:write", "chat:write.public"]
 
     return redirect(
-        f'https://slack.com/oauth/authorize?client_id={client_id}&scope={" ".join(scopes)}'
+        f'https://slack.com/oauth/v2/authorize?client_id={client_id}&scope={",".join(scopes)}'
     )
 
 
-if __name__ == '__main__':
+@app.route(f"/slack/auth/redirect", methods=["GET"])
+def slack_auth_redirect_handler():
+    code = request.args.get("code")
+
+    request_body = {
+        "code": code,
+        "client_id": os.environ["SLACK_CLIENT_ID"],
+        "client_secret": os.environ["SLACK_CLIENT_SECRET"],
+    }
+
+    requests.post(
+        "https://slack.com/api/oauth.v2.access",
+        request_body,
+    )  # We dont want the token
+
+    return ":)"
+
+
+if __name__ == "__main__":
     print(TG_TOKEN)
     # This is used when running locally only. When deploying to Google App
     # Engine, a webserver process such as Gunicorn will serve the app. This
     # can be configured by adding an `entrypoint` to app.yaml.
-    app.run(host='0.0.0.0', port=PORT, debug=True)
+    app.run(host="0.0.0.0", port=PORT, debug=True)
 
-# [END gae_python37_app]
+# [END gae_python39_app]

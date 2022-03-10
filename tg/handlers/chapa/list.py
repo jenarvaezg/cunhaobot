@@ -12,12 +12,12 @@ def handle_list_chapas(update: Update, context: CallbackContext):
     if len(tasks) == 0:
         return update.effective_message.reply_text(
             f"No has configurado chapas, {Phrase.get_random_phrase()}, puedes hacerlo con /chapa.",
-            quote=True
+            quote=True,
         )
 
     tasks_str = "\n".join([f"{pos+1} -> {task}" for pos, task in enumerate(tasks)])
 
     update.effective_message.reply_text(
         f"Estas son las chapas que tienes configuradas, {Phrase.get_random_phrase()}:\n{tasks_str}.",
-        quote=True
+        quote=True,
     )

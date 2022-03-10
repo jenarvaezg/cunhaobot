@@ -1,6 +1,13 @@
 import os
 
-from telegram import Update, Bot, InlineKeyboardMarkup, ParseMode, Message, CallbackQuery
+from telegram import (
+    Update,
+    Bot,
+    InlineKeyboardMarkup,
+    ParseMode,
+    Message,
+    CallbackQuery,
+)
 from telegram.ext import CallbackContext
 
 from tg.constants import LIKE
@@ -9,7 +16,7 @@ from models.proposal import get_proposal_class_by_kind, Proposal
 from tg.markup.keyboards import build_vote_keyboard
 from tg.decorators import log_update
 
-curators_chat_id = int(os.environ.get("MOD_CHAT_ID", '-1'))
+curators_chat_id = int(os.environ.get("MOD_CHAT_ID", "-1"))
 admins = []  # Cool global var to cache stuff
 
 
@@ -30,29 +37,34 @@ def _add_vote(proposal: Proposal, vote: str, callback_query: CallbackQuery) -> N
     callback_query.answer(f"Tu voto: {vote} ha sido añadido.")
 
 
-def _approve_proposal(proposal: Proposal, callback_query: CallbackQuery, bot: Bot) -> None:
+def _approve_proposal(
+    proposal: Proposal, callback_query: CallbackQuery, bot: Bot
+) -> None:
     callback_query.edit_message_text(
         f"La propuesta '{proposal.text}' queda formalmente aprobada y añadida a la lista.\n\n"
-        f"{get_vote_summary(proposal)}", disable_web_page_preview=True
+        f"{get_vote_summary(proposal)}",
+        disable_web_page_preview=True,
     )
     bot.send_message(
         proposal.from_chat_id,
         f"Tu propuesta '{proposal.text}' ha sido aprobada, felicidades, {Phrase.get_random_phrase()}",
-        reply_to_message_id=proposal.from_message_id
+        reply_to_message_id=proposal.from_message_id,
     )
     proposal.phrase_class.upload_from_proposal(proposal, bot)
 
 
-def _dismiss_proposal(proposal: Proposal, callback_query: CallbackQuery, bot: Bot) -> None:
+def _dismiss_proposal(
+    proposal: Proposal, callback_query: CallbackQuery, bot: Bot
+) -> None:
     callback_query.edit_message_text(
         f"La propuesta '{proposal.text}' queda formalmente rechazada.\n\n{get_vote_summary(proposal)}",
-        disable_web_page_preview=True
+        disable_web_page_preview=True,
     )
 
     bot.send_message(
         proposal.from_chat_id,
         f"Tu propuesta '{proposal.text}' ha sido rechazada, lo siento {Phrase.get_random_phrase()}",
-        reply_to_message_id=proposal.from_message_id
+        reply_to_message_id=proposal.from_message_id,
     )
     proposal.delete()
 
@@ -73,7 +85,7 @@ def _update_proposal_text(proposal: Proposal, callback_query: CallbackQuery) -> 
             before_votes_text + votes_text,
             reply_markup=reply_markup,
             parse_mode=ParseMode.MARKDOWN,
-            disable_web_page_preview=True
+            disable_web_page_preview=True,
         )
 
 
@@ -90,7 +102,9 @@ def handle_callback_query(update: Update, context: CallbackContext):
     required_votes = get_required_votes()
 
     if callback_query.from_user.id not in [a.user.id for a in admins]:
-        callback_query.answer(f"Tener una silla en el consejo no te hace maestro cuñao, {Phrase.get_random_phrase()}")
+        callback_query.answer(
+            f"Tener una silla en el consejo no te hace maestro cuñao, {Phrase.get_random_phrase()}"
+        )
         return
 
     if proposal is None:

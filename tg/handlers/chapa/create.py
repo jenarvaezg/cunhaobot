@@ -21,16 +21,20 @@ def usage(update: Update) -> Message:
 
 def require_valid_query(query: str) -> None:
     query_mode, rest = get_query_mode(query)
-    handler = MODE_HANDLERS.get(query_mode) # Raise KeyError if not here
+    handler = MODE_HANDLERS.get(query_mode)  # Raise KeyError if not here
     if handler is None:
-        raise KeyError(f"No entiendo esos parametros: '{query}', {Phrase.get_random_phrase()}.")
+        raise KeyError(
+            f"No entiendo esos parametros: '{query}', {Phrase.get_random_phrase()}."
+        )
 
 
 def split_time(time_s: str) -> Tuple[int, int]:
     try:
-        time = int(time_s.replace(':', ''))
+        time = int(time_s.replace(":", ""))
     except ValueError:
-        raise ValueError(f"La hora me la das con puntos o sin ellos, pero sin basura, {Phrase.get_random_phrase()}.")
+        raise ValueError(
+            f"La hora me la das con puntos o sin ellos, pero sin basura, {Phrase.get_random_phrase()}."
+        )
 
     minute = time % 100
     hour = time // 100
@@ -45,7 +49,7 @@ def split_time(time_s: str) -> Tuple[int, int]:
 @only_admins
 @log_update
 def handle_create_chapa(update: Update, context: CallbackContext):
-    text = ' '.join(update.effective_message.text.split())
+    text = " ".join(update.effective_message.text.split())
 
     try:
         tokens = text.split(" ")
@@ -63,7 +67,14 @@ def handle_create_chapa(update: Update, context: CallbackContext):
         update.effective_message.reply_text(str(e), quote=True)
         return usage(update)
 
-    ScheduledTask(update.effective_chat.id, hour, minute, query, service='telegram', task_type='chapa').save()
+    ScheduledTask(
+        update.effective_chat.id,
+        hour,
+        minute,
+        query,
+        service="telegram",
+        task_type="chapa",
+    ).save()
 
     update.effective_message.reply_text(
         f"Configurada chapa a las {hour:02}:{minute:02}. Puedes eliminarla en cualquier momento usando /borrarchapa.",

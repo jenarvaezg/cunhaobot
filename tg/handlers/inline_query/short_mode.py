@@ -6,7 +6,7 @@ from models.phrase import Phrase
 from utils import get_thumb, random_combination, normalize_str
 
 
-BASE_TEMPLATE = '¿Qué pasa, {}?'
+BASE_TEMPLATE = "¿Qué pasa, {}?"
 
 
 def _result_id_for_combination(combination: Tuple[Phrase]) -> str:
@@ -15,11 +15,11 @@ def _result_id_for_combination(combination: Tuple[Phrase]) -> str:
 
 
 def get_short_mode_results(input: str) -> List[InlineQueryResultArticle]:
-    if input == '':
-        size, finisher = 1, ''
+    if input == "":
+        size, finisher = 1, ""
     else:
-        query_words = input.split(' ')
-        size, finisher = int(query_words[0]), ' '.join(query_words[1:])
+        query_words = input.split(" ")
+        size, finisher = int(query_words[0]), " ".join(query_words[1:])
 
     phrases = Phrase.get_phrases()
     random.shuffle(phrases)
@@ -31,14 +31,17 @@ def get_short_mode_results(input: str) -> List[InlineQueryResultArticle]:
         random.shuffle(phrases)
         combinations.add(combination if not finisher else combination + (finisher,))
 
-    results = [InlineQueryResultArticle(
-        id=_result_id_for_combination(combination),
-        title=', '.join([str(e) for e in combination]),
-        input_message_content=InputTextMessageContent(
-            BASE_TEMPLATE.format(', '.join([str(e) for e in combination]))
-        ),
-        thumb_url=get_thumb()
-    ) for combination in combinations]
+    results = [
+        InlineQueryResultArticle(
+            id=_result_id_for_combination(combination),
+            title=", ".join([str(e) for e in combination]),
+            input_message_content=InputTextMessageContent(
+                BASE_TEMPLATE.format(", ".join([str(e) for e in combination]))
+            ),
+            thumb_url=get_thumb(),
+        )
+        for combination in combinations
+    ]
 
     random.shuffle(results)
 

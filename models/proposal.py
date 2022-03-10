@@ -7,12 +7,12 @@ from models.phrase import Phrase, LongPhrase
 
 
 class Proposal:
-    kind = 'Proposal'
+    kind = "Proposal"
     phrase_class = Phrase
 
     @staticmethod
     def proposal_text_from_message(message: Message):
-        text = ''
+        text = ""
         text_after_command = message.text.split(" ")[1:]
         if text_after_command:
             text = " ".join(text_after_command).strip()
@@ -21,7 +21,16 @@ class Proposal:
 
         return text
 
-    def __init__(self, id, from_chat_id, from_message_id, text, liked_by=None, disliked_by=None, user_id=0):
+    def __init__(
+        self,
+        id,
+        from_chat_id,
+        from_message_id,
+        text,
+        liked_by=None,
+        disliked_by=None,
+        user_id=0,
+    ):
         self.id: str = id
         self.from_chat_id = from_chat_id
         self.from_message_id = from_message_id
@@ -43,19 +52,19 @@ class Proposal:
         )
 
     @classmethod
-    def from_entity(cls, entity: datastore.Entity) -> 'Proposal':
+    def from_entity(cls, entity: datastore.Entity) -> "Proposal":
         return cls(
             entity.key.name,
-            entity['from_chat_id'],
-            entity['from_message_id'],
-            entity['text'],
-            liked_by=entity.get('liked_by', []),
-            disliked_by=entity.get('disliked_by', []),
-            user_id=entity.get('user_id', 0),
+            entity["from_chat_id"],
+            entity["from_message_id"],
+            entity["text"],
+            liked_by=entity.get("liked_by", []),
+            disliked_by=entity.get("disliked_by", []),
+            user_id=entity.get("user_id", 0),
         )
 
     @classmethod
-    def load(cls, id) -> Optional['Proposal']:
+    def load(cls, id) -> Optional["Proposal"]:
         datastore_client = datastore.Client()
         key = datastore_client.key(cls.kind, id)
 
@@ -66,7 +75,7 @@ class Proposal:
         return cls.from_entity(entity)
 
     @classmethod
-    def load_all(cls) -> List['Proposal']:
+    def load_all(cls) -> List["Proposal"]:
         datastore_client = datastore.Client()
         query = datastore_client.query(kind=cls.kind)
         return [cls.from_entity(entity) for entity in query.fetch()]
@@ -76,12 +85,12 @@ class Proposal:
         key = datastore_client.key(self.kind, self.id)
         proposal_entity = datastore.Entity(key=key)
 
-        proposal_entity['text'] = self.text
-        proposal_entity['from_chat_id'] = self.from_chat_id
-        proposal_entity['from_message_id'] = self.from_message_id
-        proposal_entity['liked_by'] = self.liked_by
-        proposal_entity['disliked_by'] = self.disliked_by
-        proposal_entity['user_id'] = self.user_id
+        proposal_entity["text"] = self.text
+        proposal_entity["from_chat_id"] = self.from_chat_id
+        proposal_entity["from_message_id"] = self.from_message_id
+        proposal_entity["liked_by"] = self.liked_by
+        proposal_entity["disliked_by"] = self.disliked_by
+        proposal_entity["user_id"] = self.user_id
 
         datastore_client.put(proposal_entity)
 
@@ -107,7 +116,7 @@ class Proposal:
 
 
 class LongProposal(Proposal):
-    kind = 'LongProposal'
+    kind = "LongProposal"
     phrase_class = LongPhrase
 
 

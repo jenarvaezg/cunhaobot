@@ -12,15 +12,26 @@ datastore_client = datastore.Client()
 
 
 class Phrase:
-    kind = 'Phrase'
-    name = 'palabra poderosa / apelativo'
-    stickerset_template = 'greeting_{}_by_cunhaobot'
-    stickerset_title_template = 'Saludos cuñadiles {} by @cunhaobot'
+    kind = "Phrase"
+    name = "palabra poderosa / apelativo"
+    stickerset_template = "greeting_{}_by_cunhaobot"
+    stickerset_title_template = "Saludos cuñadiles {} by @cunhaobot"
     phrases_cache = []
 
     def __init__(
-            self, text, sticker_file_id='', usages=0, audio_usages=0, daily_usages=0, audio_daily_usages=0,
-            sticker_daily_usages=0, sticker_usages=0, user_id=0, chat_id=0, created_at=None):
+        self,
+        text,
+        sticker_file_id="",
+        usages=0,
+        audio_usages=0,
+        daily_usages=0,
+        audio_daily_usages=0,
+        sticker_daily_usages=0,
+        sticker_usages=0,
+        user_id=0,
+        chat_id=0,
+        created_at=None,
+    ):
         self.text = text
         self.usages = usages
         self.audio_usages = audio_usages
@@ -41,7 +52,12 @@ class Phrase:
 
     @classmethod
     def upload_from_proposal(cls, proposal, bot: telegram.Bot):
-        phrase = cls(proposal.text, user_id=proposal.user_id, chat_id=proposal.from_chat_id, created_at=datetime.now())
+        phrase = cls(
+            proposal.text,
+            user_id=proposal.user_id,
+            chat_id=proposal.from_chat_id,
+            created_at=datetime.now(),
+        )
         phrase.generate_sticker(bot)
 
         phrase.save()
@@ -52,56 +68,64 @@ class Phrase:
     @classmethod
     def from_entity(cls, entity):
         return cls(
-            entity['text'],
-            sticker_file_id=entity.get('sticker_file_id', 0),
-            usages=entity.get('usages', 0),
-            audio_usages=entity.get('audio_usages', 0),
-            sticker_usages=entity.get('sticker_usages', 0),
-            daily_usages=entity.get('daily_usages', 0),
-            audio_daily_usages=entity.get('audio_daily_usages', 0),
-            sticker_daily_usages=entity.get('sticker_daily_usages', 0),
-            user_id=entity.get('user_id', 0),
-            chat_id=entity.get('chat_id', 0),
-            created_at=entity.get('created_at'),
+            entity["text"],
+            sticker_file_id=entity.get("sticker_file_id", 0),
+            usages=entity.get("usages", 0),
+            audio_usages=entity.get("audio_usages", 0),
+            sticker_usages=entity.get("sticker_usages", 0),
+            daily_usages=entity.get("daily_usages", 0),
+            audio_daily_usages=entity.get("audio_daily_usages", 0),
+            sticker_daily_usages=entity.get("sticker_daily_usages", 0),
+            user_id=entity.get("user_id", 0),
+            chat_id=entity.get("chat_id", 0),
+            created_at=entity.get("created_at"),
         )
 
     @classmethod
-    def refresh_cache(cls) -> List['Phrase']:
+    def refresh_cache(cls) -> List["Phrase"]:
         query = datastore_client.query(kind=cls.kind)
         cls.phrases_cache = [cls.from_entity(entity) for entity in query.fetch()]
 
         return cls.phrases_cache
 
     @classmethod
-    def get_phrases(cls, search='') -> List['Phrase']:
+    def get_phrases(cls, search="") -> List["Phrase"]:
         if len(cls.phrases_cache) == 0:
             cls.refresh_cache()
 
-        return [phrase for phrase in cls.phrases_cache if normalize_str(search) in normalize_str(phrase.text)]
+        return [
+            phrase
+            for phrase in cls.phrases_cache
+            if normalize_str(search) in normalize_str(phrase.text)
+        ]
 
     @classmethod
-    def get_random_phrase(cls) -> 'Phrase':
+    def get_random_phrase(cls) -> "Phrase":
         return random.choice(cls.get_phrases())
 
     @classmethod
     def add_usage_by_result_id(cls, result_id: str) -> None:
-        is_audio = result_id.startswith('audio-')
-        is_sticker = result_id.startswith('sticker-')
+        is_audio = result_id.startswith("audio-")
+        is_sticker = result_id.startswith("sticker-")
 
         if is_audio:
-            result_id = result_id[len('audio-short-'):]
+            result_id = result_id[len("audio-short-") :]
         elif is_sticker:
-            result_id = result_id[len('sticker-short-'):]
+            result_id = result_id[len("sticker-short-") :]
         else:
-            result_id = result_id[len('short-'):]
+            result_id = result_id[len("short-") :]
 
         words = result_id.split(",")
         phrases = cls.refresh_cache()
 
         for word in words:
-            phrase: Optional['Phrase'] = next(
-                iter(p for p in phrases if normalize_str(p.text, remove_punctuation=False) == word),
-                None
+            phrase: Optional["Phrase"] = next(
+                iter(
+                    p
+                    for p in phrases
+                    if normalize_str(p.text, remove_punctuation=False) == word
+                ),
+                None,
             )
             if phrase:
                 if is_audio:
@@ -121,44 +145,51 @@ class Phrase:
         entities = [entity for entity in query.fetch()]
         updates = []
         for entity in entities:
-            entity['daily_usages'] = 0
-            entity['audio_daily_usages'] = 0
+            entity["daily_usages"] = 0
+            entity["audio_daily_usages"] = 0
             updates.append(entity)
 
         datastore_client.put_multi(updates)
 
     @classmethod
-    def get_most_similar(cls, text: str) -> Tuple['Phrase', int]:
+    def get_most_similar(cls, text: str) -> Tuple["Phrase", int]:
         phrases = cls.get_phrases()
         normalized_input_text = normalize_str(text)
 
         return max(
-            [(phrase, fuzz.ratio(normalized_input_text, normalize_str(phrase.text))) for phrase in phrases],
+            [
+                (phrase, fuzz.ratio(normalized_input_text, normalize_str(phrase.text)))
+                for phrase in phrases
+            ],
             key=lambda x: x[1],
         )
 
     def generate_sticker(self, bot: telegram.Bot) -> None:
         from tg.stickers import generate_png, upload_sticker
+
         sticker_text = f"¿Qué pasa, {self.text}?"
         self.sticker_file_id = upload_sticker(
-                bot, generate_png(sticker_text), self.stickerset_template, self.stickerset_title_template
+            bot,
+            generate_png(sticker_text),
+            self.stickerset_template,
+            self.stickerset_title_template,
         )
 
     def save(self) -> None:
         key = datastore_client.key(self.kind, self.text)
         phrase_entity = datastore.Entity(key=key)
 
-        phrase_entity['text'] = self.text
-        phrase_entity['sticker_file_id'] = self.sticker_file_id
-        phrase_entity['usages'] = self.usages
-        phrase_entity['audio_usages'] = self.audio_usages
-        phrase_entity['sticker_usages'] = self.sticker_usages
-        phrase_entity['daily_usages'] = self.daily_usages
-        phrase_entity['audio_daily_usages'] = self.audio_daily_usages
-        phrase_entity['sticker_daily_usages'] = self.sticker_daily_usages
-        phrase_entity['user_id'] = self.user_id
-        phrase_entity['chat_id'] = self.chat_id
-        phrase_entity['created_at'] = self.created_at
+        phrase_entity["text"] = self.text
+        phrase_entity["sticker_file_id"] = self.sticker_file_id
+        phrase_entity["usages"] = self.usages
+        phrase_entity["audio_usages"] = self.audio_usages
+        phrase_entity["sticker_usages"] = self.sticker_usages
+        phrase_entity["daily_usages"] = self.daily_usages
+        phrase_entity["audio_daily_usages"] = self.audio_daily_usages
+        phrase_entity["sticker_daily_usages"] = self.sticker_daily_usages
+        phrase_entity["user_id"] = self.user_id
+        phrase_entity["chat_id"] = self.chat_id
+        phrase_entity["created_at"] = self.created_at
 
         datastore_client.put(phrase_entity)
 
@@ -171,16 +202,17 @@ class Phrase:
 
     def delete(self, bot: telegram.Bot) -> None:
         from tg.stickers import delete_sticker
+
         delete_sticker(bot, self.sticker_file_id)
         key = datastore_client.key(self.kind, self.text)
         datastore_client.delete(key)
 
 
 class LongPhrase(Phrase):
-    kind = 'LongPhrase'
-    name = 'frase / dicho cuñadíl'
-    stickerset_template = 'phrase_{}_by_cunhaobot'
-    stickerset_title_template = 'Frases cuñadiles {} by @cunhaobot'
+    kind = "LongPhrase"
+    name = "frase / dicho cuñadíl"
+    stickerset_template = "phrase_{}_by_cunhaobot"
+    stickerset_title_template = "Frases cuñadiles {} by @cunhaobot"
     phrases_cache = []
 
     def __init__(self, text, *args, **kwargs):
@@ -189,25 +221,25 @@ class LongPhrase(Phrase):
 
     @classmethod
     def add_usage_by_result_id(cls, result_id: str) -> None:
-        if 'long-bad-search-' in result_id:
+        if "long-bad-search-" in result_id:
             return
 
-        is_sticker = result_id.startswith('sticker-')
-        is_audio = result_id.startswith('audio-')
+        is_sticker = result_id.startswith("sticker-")
+        is_audio = result_id.startswith("audio-")
 
         if is_audio:
-            result_id = result_id[len('audio-long-'):]
+            result_id = result_id[len("audio-long-") :]
         elif is_sticker:
-            result_id = result_id[len('sticker-long-'):]
+            result_id = result_id[len("sticker-long-") :]
         else:
-            result_id = result_id[len('short-'):]
+            result_id = result_id[len("short-") :]
 
         result_id = normalize_str(result_id)
         phrases = cls.refresh_cache()
 
-        phrase: Optional['Phrase'] = next(iter(
-            p for p in phrases if result_id in normalize_str(p.text)
-        ), None)
+        phrase: Optional["Phrase"] = next(
+            iter(p for p in phrases if result_id in normalize_str(p.text)), None
+        )
 
         if phrase:
             if is_audio:
@@ -223,7 +255,11 @@ class LongPhrase(Phrase):
 
     def generate_sticker(self, bot: telegram.Bot) -> None:
         from tg.stickers import generate_png, upload_sticker
+
         sticker_text = self.text
         self.sticker_file_id = upload_sticker(
-            bot, generate_png(sticker_text), self.stickerset_template, self.stickerset_title_template
+            bot,
+            generate_png(sticker_text),
+            self.stickerset_template,
+            self.stickerset_title_template,
         )

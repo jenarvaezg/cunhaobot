@@ -3,7 +3,7 @@ import logging
 from telegram import Update
 from telegram.ext import CallbackContext
 
-logger = logging.getLogger('cunhaobot')
+logger = logging.getLogger("cunhaobot")
 
 
 def error_handler(update: Update, context: CallbackContext):

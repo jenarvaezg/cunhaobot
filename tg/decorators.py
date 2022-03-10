@@ -7,7 +7,7 @@ from models.user import User
 from models.phrase import Phrase
 from utils import remove_empty_from_dict
 
-logger = logging.getLogger('cunhaobot')
+logger = logging.getLogger("cunhaobot")
 
 
 def only_admins(f):
@@ -39,7 +39,7 @@ def log_update(f):
             u.save()
 
         update_dict = remove_empty_from_dict(update.to_dict())
-        update_dict['method'] = f.__name__
+        update_dict["method"] = f.__name__
 
         logger.info(f"{update_dict}")
         return f(update, *args, **kwargs)

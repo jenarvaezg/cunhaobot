@@ -1,5 +1,4 @@
-
-for s in bot.get_sticker_set('greeting_{}_by_cunhaobot'.format(1)).stickers:
+for s in bot.get_sticker_set("greeting_{}_by_cunhaobot".format(1)).stickers:
     bot.delete_sticker_from_set(s.file_id)
 
 

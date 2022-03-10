@@ -19,3 +19,4 @@ __pycache__/
 /setup.cfg
 Pipfile
 Pipfile.lock
+.python-version

@@ -6,30 +6,27 @@ from slack.attachments import build_phrase_attachments
 
 def _usage() -> dict:
     return {
-        'text': 'Usando /cuñao <texto> te doy frases de cuñao que incluyan texto en su contenido. Si no me das'
-                f'texto para buscar, tendrás una frase al azar, {Phrase.get_random_phrase()}',
+        "text": "Usando /cuñao <texto> te doy frases de cuñao que incluyan texto en su contenido. Si no me das"
+        f"texto para buscar, tendrás una frase al azar, {Phrase.get_random_phrase()}",
     }
 
 
 def handle_phrase(slack_data: dict) -> dict:
-    text = slack_data['text']
-    if text == 'help':
+    text = slack_data["text"]
+    if text == "help":
         return _usage()
 
     phrases = LongPhrase.get_phrases(search=text)
     if not phrases:
         return {
-            'indirect': {
-                'text': f'No tengo ninguna frase que encaje con la busqueda "{text}", {Phrase.get_random_phrase()}.'
+            "indirect": {
+                "text": f'No tengo ninguna frase que encaje con la busqueda "{text}", {Phrase.get_random_phrase()}.'
             },
-            'direct': '',
+            "direct": "",
         }
 
     phrase = random.choice(phrases)
     return {
-        'indirect': {
-            'attachments': build_phrase_attachments(phrase.text, search=text)
-        },
-        'direct': '',
+        "indirect": {"attachments": build_phrase_attachments(phrase.text, search=text)},
+        "direct": "",
     }
-

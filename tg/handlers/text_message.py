@@ -15,7 +15,7 @@ def reply_cunhao(update: Update, context: CallbackContext):
 
 
 MESSAGE_TRIGGERS = {
-    ('cuñao', 'cuñado', 'cunhao', 'cunhaobot'): reply_cunhao,
+    ("cuñao", "cuñado", "cunhao", "cunhaobot"): reply_cunhao,
 }
 
 
@@ -26,6 +26,9 @@ def handle_message(update: Update, context: CallbackContext):
     used_triggers = []
     msg_text = message.text
     for trigger_words, trigger_fn in MESSAGE_TRIGGERS.items():
-        if any(word in msg_text for word in trigger_words) and trigger_fn not in used_triggers:
+        if (
+            any(word in msg_text for word in trigger_words)
+            and trigger_fn not in used_triggers
+        ):
             trigger_fn(update, context)
             used_triggers.append(trigger_fn)

@@ -5,7 +5,7 @@ from telegram import Update, Message
 
 
 class InlineUser:
-    kind = 'InlineUser'
+    kind = "InlineUser"
 
     def __init__(self, user_id: int, name: str, usages: int = 0):
         self.user_id = user_id
@@ -17,7 +17,7 @@ class InlineUser:
         return datastore.Client().key(self.kind, self.user_id)
 
     @classmethod
-    def update_or_create_from_update(cls, update: Update) -> 'InlineUser':
+    def update_or_create_from_update(cls, update: Update) -> "InlineUser":
         datastore_client = datastore.Client()
         update_user = update.effective_user
         user = cls(update_user.id, update_user.name)
@@ -34,15 +34,15 @@ class InlineUser:
         return user
 
     @classmethod
-    def from_entity(cls, entity: datastore.Entity) -> 'InlineUser':
+    def from_entity(cls, entity: datastore.Entity) -> "InlineUser":
         return cls(
-            entity['user_id'],
-            entity['name'],
-            entity['usages'],
+            entity["user_id"],
+            entity["name"],
+            entity["usages"],
         )
 
     @classmethod
-    def get_all(cls) -> List['InlineUser']:
+    def get_all(cls) -> List["InlineUser"]:
         datastore_client = datastore.Client()
         query = datastore_client.query(kind=cls.kind)
         return [cls.from_entity(entity) for entity in query.fetch()]
@@ -55,15 +55,15 @@ class InlineUser:
         datastore_client = datastore.Client()
         entity = datastore.Entity(key=self.datastore_key)
 
-        entity['user_id'] = self.user_id
-        entity['name'] = self.name
-        entity['usages'] = self.usages
+        entity["user_id"] = self.user_id
+        entity["name"] = self.name
+        entity["usages"] = self.usages
 
         datastore_client.put(entity)
 
 
 class User:
-    kind = 'User'
+    kind = "User"
 
     def __init__(self, chat_id, name, is_group, gdpr=False):
         self.chat_id = chat_id
@@ -73,10 +73,12 @@ class User:
 
     @staticmethod
     def _get_name_from_message(msg: Message) -> str:
-        return msg.from_user.name if msg.chat.type == msg.chat.PRIVATE else msg.chat.title
+        return (
+            msg.from_user.name if msg.chat.type == msg.chat.PRIVATE else msg.chat.title
+        )
 
     @classmethod
-    def update_or_create_from_update(cls, update) -> 'User':
+    def update_or_create_from_update(cls, update) -> "User":
         message: Message = update.effective_message
         if not message:
             return None
@@ -93,12 +95,12 @@ class User:
         return user
 
     @classmethod
-    def from_entity(cls, entity) -> 'User':
+    def from_entity(cls, entity) -> "User":
         return cls(
-            entity['chat_id'],
-            entity['name'],
-            entity['is_group'],
-            entity['gdpr'],
+            entity["chat_id"],
+            entity["name"],
+            entity["is_group"],
+            entity["gdpr"],
         )
 
     def save(self):
@@ -106,15 +108,15 @@ class User:
         key = datastore_client.key(self.kind, self.chat_id)
         entity = datastore.Entity(key=key)
 
-        entity['chat_id'] = self.chat_id
-        entity['name'] = self.name
-        entity['is_group'] = self.is_group
-        entity['gdpr'] = self.gdpr
+        entity["chat_id"] = self.chat_id
+        entity["name"] = self.name
+        entity["is_group"] = self.is_group
+        entity["gdpr"] = self.gdpr
 
         datastore_client.put(entity)
 
     @classmethod
-    def load(cls, chat_id) -> Optional['User']:
+    def load(cls, chat_id) -> Optional["User"]:
         datastore_client = datastore.Client()
         key = datastore_client.key(cls.kind, chat_id)
 
@@ -123,11 +125,11 @@ class User:
         return cls.from_entity(entity) if entity else None
 
     @classmethod
-    def load_all(cls, ignore_gdpr=False) -> List['User']:
+    def load_all(cls, ignore_gdpr=False) -> List["User"]:
         datastore_client = datastore.Client()
         query = datastore_client.query(kind=cls.kind)
         if not ignore_gdpr:
-            query.add_filter('gdpr', '=', False)
+            query.add_filter("gdpr", "=", False)
         return [cls.from_entity(entity) for entity in query.fetch()]
 
     def delete(self, hard=False):
@@ -138,5 +140,3 @@ class User:
         else:
             self.gdpr = True
             self.save()
-
-

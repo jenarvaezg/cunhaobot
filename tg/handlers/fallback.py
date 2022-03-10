@@ -17,8 +17,7 @@ def _on_kick(chat_id: int) -> None:
 
 def _on_other_kicked(bot: Bot, user: User, chat_id: int) -> None:
     bot.send_message(
-        chat_id,
-        f"Vaya {Phrase.get_random_phrase()} el {user.name}, ya me jodería."
+        chat_id, f"Vaya {Phrase.get_random_phrase()} el {user.name}, ya me jodería."
     )
 
 
@@ -26,7 +25,7 @@ def _on_join(bot: Bot, chat_id: int) -> None:
     bot.send_message(
         chat_id,
         "¡Muchas gracias por meterme en el grupo! Te recomiendo usar /help para explicarte que puedo hacer, "
-        f"{Phrase.get_random_phrase()}."
+        f"{Phrase.get_random_phrase()}.",
     )
 
 
@@ -34,10 +33,7 @@ def _on_other_joined(bot: Bot, user: User, chat_id: int) -> None:
     n_words = random.choice([2, 3, 4])
     phrases = [user.name] + [Phrase.get_random_phrase().text for _ in range(n_words)]
     words = ", ".join([p for p in phrases])
-    bot.send_message(
-        chat_id,
-        f'¿Qué pasa, {words}?'
-    )
+    bot.send_message(chat_id, f"¿Qué pasa, {words}?")
 
 
 def _on_migrate(from_chat_id: int, to_chat_id: int) -> None:

@@ -11,7 +11,7 @@ def usage(update: Update) -> Message:
         f"Para borrar chapas, {Phrase.get_random_phrase()}, tienes que escribir /borrachapa X, donde X es el numero de "
         f"la chapa que quieras borrar, {Phrase.get_random_phrase()}\n"
         "Tambien puedes usar /borrarchapas y me lo cargo todo.",
-        quote=True
+        quote=True,
     )
 
 
@@ -20,7 +20,7 @@ def usage(update: Update) -> Message:
 def handle_delete_chapas(update: Update, context: CallbackContext):
     chat: Chat = update.effective_chat
     message: Message = update.effective_message
-    if len(message.text.split(' ')) > 1:
+    if len(message.text.split(" ")) > 1:
         return message.reply_text(
             f"Creo que lo que quieres hacer es /borrarchapa, {Phrase.get_random_phrase()}.",
             quote=True,
@@ -42,7 +42,6 @@ def handle_delete_chapas(update: Update, context: CallbackContext):
     )
 
 
-
 @only_admins
 @log_update
 def handle_delete_chapa(update: Update, context: CallbackContext):
@@ -62,8 +61,10 @@ def handle_delete_chapa(update: Update, context: CallbackContext):
         task = tasks[chapa_id]
         task.delete()
     except IndexError as e:
-        update.effective_message.reply_text(f"Te has pasado con el número, {Phrase.get_random_phrase()}.", quote=True)
+        update.effective_message.reply_text(
+            f"Te has pasado con el número, {Phrase.get_random_phrase()}.", quote=True
+        )
     else:
-        update.effective_message.reply_text(f"Ya no te daré esa chapa, {Phrase.get_random_phrase()}.", quote=True)
-
-
+        update.effective_message.reply_text(
+            f"Ya no te daré esa chapa, {Phrase.get_random_phrase()}.", quote=True
+        )

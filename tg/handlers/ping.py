@@ -16,7 +16,7 @@ from tg.text_router import get_query_mode, AUDIO_MODE, STICKER_MODE
 from tg.handlers.inline_query.base import MODE_HANDLERS
 
 curators_chat_id = os.environ.get("MOD_CHAT_ID", "")
-logger = logging.getLogger('cunhaobot')
+logger = logging.getLogger("cunhaobot")
 
 
 def _send_chapas(bot: Bot, tasks: Iterable[ScheduledTask]) -> None:
@@ -26,11 +26,11 @@ def _send_chapas(bot: Bot, tasks: Iterable[ScheduledTask]) -> None:
             query_mode, rest = get_query_mode(task.query)
             resuls_fn = MODE_HANDLERS.get(query_mode)
             result = next(iter(resuls_fn(rest)), None)
-            if result is None or '-bad-search-' in result.id:
+            if result is None or "-bad-search-" in result.id:
                 bot.send_message(
                     task.chat_id,
                     f"Te tengo que dar la chapa, pero no he encontrado nada con los parametros '{task.query}', así que "
-                    f"aqui tienes algo parecido, {Phrase.get_random_phrase()}."
+                    f"aqui tienes algo parecido, {Phrase.get_random_phrase()}.",
                 )
                 bot.send_message(task.chat_id, LongPhrase.get_random_phrase().text)
                 continue
@@ -39,7 +39,9 @@ def _send_chapas(bot: Bot, tasks: Iterable[ScheduledTask]) -> None:
             elif query_mode == STICKER_MODE:
                 bot.send_sticker(task.chat_id, result.sticker_file_id)
             else:
-                bot.send_message(task.chat_id, result.input_message_content.message_text)
+                bot.send_message(
+                    task.chat_id, result.input_message_content.message_text
+                )
         except Exception as e:
             logger.exception("Error sending chapa")
             errors.append((task.datastore_id, e, str(e)))
@@ -47,15 +49,20 @@ def _send_chapas(bot: Bot, tasks: Iterable[ScheduledTask]) -> None:
     if errors:
         bot.send_message(
             curators_chat_id,
-            f"{Phrase.get_random_phrase()}s, mandando chapas he tenido estos errores: {errors}.")
+            f"{Phrase.get_random_phrase()}s, mandando chapas he tenido estos errores: {errors}.",
+        )
 
 
 def _generate_report(now: datetime.date) -> None:
     # Shuffle so in case of draw for usage of the day it's not always the same
-    long_phrases: List[LongPhrase] = random.sample(LongPhrase.refresh_cache(), len(LongPhrase.get_phrases()))
-    short_phrases: List[Phrase] = random.sample(Phrase.refresh_cache(), len(Phrase.get_phrases()))
+    long_phrases: List[LongPhrase] = random.sample(
+        LongPhrase.refresh_cache(), len(LongPhrase.get_phrases())
+    )
+    short_phrases: List[Phrase] = random.sample(
+        Phrase.refresh_cache(), len(Phrase.get_phrases())
+    )
     users = User.load_all(ignore_gdpr=True)
-    chapas = ScheduledTask.get_tasks(type='chapa')
+    chapas = ScheduledTask.get_tasks(type="chapa")
     inline_users = InlineUser.get_all()
     Report.generate(long_phrases, short_phrases, users, inline_users, chapas, now)
     Phrase.remove_daily_usages()
@@ -65,20 +72,37 @@ def _generate_report(now: datetime.date) -> None:
 def _send_report(bot: Bot, now: datetime.date) -> None:
     yesterday = now - timedelta(days=1)
     bef_yesterday = yesterday - timedelta(days=1)
-    today_report, yesterday_report = Report.get_at(yesterday), Report.get_at(bef_yesterday)
+    today_report, yesterday_report = Report.get_at(yesterday), Report.get_at(
+        bef_yesterday
+    )
 
     longs, longs_delta = today_report.longs, today_report.longs - yesterday_report.longs
-    shorts, shorts_delta = today_report.shorts, today_report.shorts - yesterday_report.shorts
+    shorts, shorts_delta = (
+        today_report.shorts,
+        today_report.shorts - yesterday_report.shorts,
+    )
     users, user_delta = today_report.users, today_report.users - yesterday_report.users
-    groups, groups_delta = today_report.groups, today_report.groups - yesterday_report.groups
-    in_users, in_users_delta = today_report.inline_users, today_report.inline_users - yesterday_report.inline_users
-    in_uses, in_uses_delta = today_report.inline_usages, today_report.inline_usages - yesterday_report.inline_usages
+    groups, groups_delta = (
+        today_report.groups,
+        today_report.groups - yesterday_report.groups,
+    )
+    in_users, in_users_delta = (
+        today_report.inline_users,
+        today_report.inline_users - yesterday_report.inline_users,
+    )
+    in_uses, in_uses_delta = (
+        today_report.inline_usages,
+        today_report.inline_usages - yesterday_report.inline_usages,
+    )
     gdprs, gdprs_delta = today_report.gdprs, today_report.gdprs - yesterday_report.gdprs
-    chapas, chapas_delta = today_report.chapas, today_report.chapas - yesterday_report.chapas
+    chapas, chapas_delta = (
+        today_report.chapas,
+        today_report.chapas - yesterday_report.chapas,
+    )
     top_long, top_short = today_report.top_long, today_report.top_short
 
     def fmt_delta(delta: int) -> str:
-        return f'+{delta}' if delta >= 0 else str(delta)
+        return f"+{delta}" if delta >= 0 else str(delta)
 
     bot.send_message(
         curators_chat_id,
@@ -98,14 +122,16 @@ def _send_report(bot: Bot, now: datetime.date) -> None:
 
 
 def handle_ping(bot: Bot):
-    madrid_timezone = pytz.timezone('Europe/Madrid')
+    madrid_timezone = pytz.timezone("Europe/Madrid")
     now = datetime.now().astimezone(madrid_timezone)
 
-    _send_chapas(bot, ScheduledTask.get_tasks(hour=now.hour, minute=now.minute, service='telegram', type='chapa'))
+    _send_chapas(
+        bot,
+        ScheduledTask.get_tasks(
+            hour=now.hour, minute=now.minute, service="telegram", type="chapa"
+        ),
+    )
     if now.hour == 23 and now.minute == 59:
         _generate_report(now.date())
     elif now.hour == 7 and now.minute == 0:
         _send_report(bot, now.date())
-
-
-
