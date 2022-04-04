@@ -6,9 +6,10 @@ import json
 
 from flask import Flask, request, redirect
 from telegram import Update
+import tweepy
 
+from models.phrase import LongPhrase
 from slack.handlers import handle_slack
-from slack.auth import do_auth as slack_do_auth
 
 from tg import tg_dispatcher
 from tg.handlers import handle_ping as handle_telegram_ping
@@ -18,7 +19,7 @@ logging.basicConfig(format="%(message)s", level=logging.INFO)
 
 TG_TOKEN = os.environ["TG_TOKEN"]
 BASE_URL = os.environ["BASE_URL"]
-PORT = os.environ.get("PORT")
+PORT = os.environ.get("PORT", 5050)
 
 app = Flask(__name__)
 
@@ -43,7 +44,7 @@ def telegram_ping_handler():
     return "OK"
 
 
-@app.route(f"/slack", methods=["POST"])
+@app.route("/slack", methods=["POST"])
 def slack_handler():
     data = request.form
     if "payload" in data:
@@ -57,7 +58,7 @@ def slack_handler():
     return ""
 
 
-@app.route(f"/slack/auth", methods=["GET"])
+@app.route("/slack/auth", methods=["GET"])
 def slack_auth_handler():
     client_id = os.environ["SLACK_CLIENT_ID"]
     scopes = ["commands", "chat:write", "chat:write.public"]
@@ -67,7 +68,7 @@ def slack_auth_handler():
     )
 
 
-@app.route(f"/slack/auth/redirect", methods=["GET"])
+@app.route("/slack/auth/redirect", methods=["GET"])
 def slack_auth_redirect_handler():
     code = request.args.get("code")
 
@@ -83,6 +84,23 @@ def slack_auth_redirect_handler():
     )  # We dont want the token
 
     return ":)"
+
+
+@app.route("/twitter/auth/redirect", methods=["GET"])
+def twitter_auth_redirect_handler():
+    return ":)"
+
+@app.route("/twitter/ping", methods=["GET"])
+def twitter_ping_handler():
+    client = tweepy.Client(
+        consumer_key=os.environ["TWITTER_CONSUMER_KEY"],
+        consumer_secret=os.environ["TWITTER_CONSUMER_KEY_SECRET"],
+        access_token=os.environ["TWITTER_ACCESS_TOKEN"],
+        access_token_secret=os.environ["TWITTER_ACCESS_TOKEN_SECRET"],
+    )
+    client.create_tweet(text=LongPhrase.get_random_phrase().text)
+
+    return ""
 
 
 if __name__ == "__main__":

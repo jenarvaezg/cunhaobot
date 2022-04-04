@@ -2,3 +2,6 @@ cron:
 - description: "Telegram ping for schedules"
   url: /$TG_TOKEN/ping
   schedule: every 1 hours from 00:00 to 23:00
+- description: "Ping to tweet""
+  url: /twitter/ping
+  schedule: every 12 hours from 10:00 to 22:00

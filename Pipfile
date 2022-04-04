@@ -16,6 +16,7 @@ pytz = "*"
 fuzzywuzzy = "*"
 python-levenshtein = "*"
 pillow = "*"
+tweepy = "*"
 
 [requires]
 python_version = "3.9"
