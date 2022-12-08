@@ -11,7 +11,7 @@ backports.zoneinfo==0.2.1; python_version < '3.9'
 boto3==1.21.32
 botocore==1.24.32; python_version >= '3.6'
 cachetools==4.2.2; python_version ~= '3.5'
-certifi==2021.10.8
+certifi==2022.12.7
 charset-normalizer==2.0.12; python_version >= '3'
 click==8.1.2; python_version >= '3.7'
 flask==2.1.1
