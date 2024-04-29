@@ -14,7 +14,7 @@ from .error import error_handler
 from .help import handle_help
 from .inline_query import handle_inline_query
 from .start import handle_start
-from .submit import handle_submit, handle_submit_long
+from .submit import handle_submit, handle_submit_phrase
 from .chosen_inine_result import handle_chosen_inline_result
 from .text_message import handle_message
 from .stop import handle_stop
@@ -34,9 +34,8 @@ handlers = [
     CommandHandler("help", handle_help),
     CommandHandler("submit", handle_submit),
     CommandHandler("proponer", handle_submit),
-    CommandHandler("submitlong", handle_submit_long),
-    CommandHandler("submitphrase", handle_submit_long),
-    CommandHandler("proponerfrase", handle_submit_long),
+    CommandHandler("submitphrase", handle_submit_phrase),
+    CommandHandler("proponerfrase", handle_submit_phrase),
     CommandHandler("about", handle_about),
     CommandHandler("stop", handle_stop),
     CommandHandler("cancelar", handle_cancel),

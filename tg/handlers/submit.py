@@ -1,7 +1,7 @@
 import os
 from typing import Union, Type
 
-from telegram import Update, Bot, InlineKeyboardMarkup, ForceReply, ParseMode
+from telegram import Update, Bot, InlineKeyboardMarkup, ForceReply, ParseMode, Message
 from telegram.ext import CallbackContext
 
 from tg.markup.keyboards import build_vote_keyboard
@@ -45,7 +45,7 @@ def _notify_proposal_to_curators(
 
 def submit_handling(
     bot: Bot, update: Update, proposal_class: proposal_t, phrase_class: phrase_t
-):
+) -> Message:
     submitted_by = update.effective_user.name
     proposal = proposal_class.from_update(update)
     if not proposal.text:
@@ -69,7 +69,7 @@ def submit_handling(
         bot, proposal, submitted_by, most_similar, similarity_ratio
     )
 
-    update.effective_message.reply_text(
+    return update.effective_message.reply_text(
         f"Tu aportación será valorada por un consejo de cuñaos expertos y te avisaré una vez haya sido evaluada, "
         f"{Phrase.get_random_phrase()}.",
         quote=True,
@@ -88,11 +88,5 @@ def handle_submit(update: Update, context: CallbackContext):
 
 
 @log_update
-def handle_submit_long(update: Update, context: CallbackContext):
-    if "submitlong" in update.effective_message.text:
-        update.effective_message.reply_text(
-            f"Te aviso, {Phrase.get_random_phrase()}, submitlong va a dejar de funcionar, si quieres ir de americano, "
-            f"vas a tener que usar /submitphrase, {Phrase.get_random_phrase()}",
-            quote=True,
-        )
+def handle_submit_phrase(update: Update, context: CallbackContext):
     submit_handling(context.bot, update, LongProposal, LongPhrase)
