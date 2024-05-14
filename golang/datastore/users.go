@@ -19,7 +19,7 @@ type DatastoreUser struct {
 	Name    string         `datastore:"name"`
 }
 
-func (u DatastoreUser) toEntity() *entities.User {
+func (u DatastoreUser) ToEntity() *entities.User {
 	return &entities.User{
 		Id:      int(u.Id.ID),
 		ChatID:  u.ChatID,
@@ -30,7 +30,6 @@ func (u DatastoreUser) toEntity() *entities.User {
 }
 
 func (d Database) FetchUsers(ctx context.Context) (users []entities.User, err error) {
-
 	q := datastore.NewQuery(userKind)
 	var results []DatastoreUser
 	if _, err := d.client.GetAll(ctx, q, &results); err != nil {
@@ -39,7 +38,7 @@ func (d Database) FetchUsers(ctx context.Context) (users []entities.User, err er
 	}
 
 	for _, u := range results {
-		users = append(users, *u.toEntity())
+		users = append(users, *u.ToEntity())
 	}
 
 	return
@@ -51,6 +50,6 @@ func (d Database) FetchUserById(ctx context.Context, id int) (*entities.User, er
 		return nil, fmt.Errorf("fetching user: %w", err)
 	}
 
-	return result.toEntity(), nil
+	return result.ToEntity(), nil
 
 }

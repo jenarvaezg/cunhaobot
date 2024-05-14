@@ -1,15 +1,16 @@
-package entities
+package entities_test
 
 import (
 	"fmt"
 	"testing"
 
+	"github.com/jenarvaezg/cunhaobot/entities"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestUser(t *testing.T) {
 	t.Run("test String", func(t *testing.T) {
-		u := User{
+		u := entities.User{
 			Id:      123,
 			ChatID:  456,
 			GDPR:    true,

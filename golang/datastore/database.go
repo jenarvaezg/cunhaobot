@@ -13,6 +13,8 @@ type Database struct {
 
 const defaultAppID = datastore.DetectProjectID
 
+type Key = datastore.Key
+
 func New(ctx context.Context) (*Database, error) {
 
 	client, err := datastore.NewClient(ctx, defaultAppID)

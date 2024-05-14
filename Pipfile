@@ -7,14 +7,13 @@ verify_ssl = true
 pytest = "*"
 
 [packages]
-python-telegram-bot = "*"
+python-telegram-bot = "<14"
 google-cloud-datastore = "*"
 flask = "*"
 boto3 = "*"
 google-cloud-storage = "*"
 pytz = "*"
 fuzzywuzzy = "*"
-python-levenshtein = "*"
 pillow = "*"
 tweepy = "*"
 
