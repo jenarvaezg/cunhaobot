@@ -20,3 +20,4 @@ __pycache__/
 Pipfile
 Pipfile.lock
 .python-version
+golang/
