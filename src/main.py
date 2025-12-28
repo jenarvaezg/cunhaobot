@@ -162,7 +162,7 @@ app = Litestar(
     ],
     template_config=TemplateConfig(
         directory="src/templates",
-        engine=JinjaTemplateEngine(),
+        engine=JinjaTemplateEngine,
     ),
     static_files_config=[
         StaticFilesConfig(directories=["src/static"], path="/static"),
