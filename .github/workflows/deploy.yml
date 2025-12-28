@@ -58,7 +58,7 @@ jobs:
           TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
           TWITTER_ACCESS_SECRET: ${{ secrets.TWITTER_ACCESS_SECRET }}
         run: |
-          envsubst < app.yaml.example > app.yaml
+          envsubst '$TG_TOKEN $MOD_CHAT_ID $AWS_ACCESS_KEY $AWS_SECRET_KEY $BASE_URL $OWNER_ID $SLACK_CLIENT_ID $SLACK_CLIENT_SECRET $TWITTER_CONSUMER_KEY $TWITTER_CONSUMER_KEY_SECRET $TWITTER_ACCESS_TOKEN $TWITTER_ACCESS_SECRET' < app.yaml.example > app.yaml
 
       - id: auth
         name: Authenticate to Google Cloud
