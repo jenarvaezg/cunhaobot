@@ -55,6 +55,21 @@ class TestProposal:
         assert p.text == "some text"
         assert p.user_id == 200
 
+    def test_from_update_with_text(self):
+        update = MagicMock()
+        update.effective_message.chat.id = 100
+        update.effective_message.message_id = 50
+        update.effective_message.text = "ignored text"
+        update.effective_user.id = 200
+
+        p = Proposal.from_update(update, text="explicit text")
+        assert p.text == "explicit text"
+
+    def test_proposal_text_from_message_no_command(self):
+        message = MagicMock()
+        message.text = "Just a plain message"
+        assert Proposal.proposal_text_from_message(message) == "Just a plain message"
+
     def test_proposal_text_from_message_reply(self):
         message = MagicMock()
         message.text = "/proponer"

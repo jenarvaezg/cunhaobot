@@ -2,9 +2,10 @@ from telegram import Bot, Message, Update
 from telegram.ext import CallbackContext
 
 from models.phrase import LongPhrase, Phrase
+from models.proposal import LongProposal, Proposal
 from tg.decorators import log_update
 
-from ..commands.submit import handle_submit, handle_submit_phrase
+from ..commands.submit import submit_handling
 
 
 @log_update
@@ -21,9 +22,9 @@ async def handle_reply(update: Update, context: CallbackContext):
         return  # Dont handle
 
     if Phrase.name in reply_to.text:
-        update.effective_message.text = "/proponer " + message.text
-        return await handle_submit(update, context)
+        return await submit_handling(bot, update, Proposal, Phrase, text=message.text)
 
     if LongPhrase.name in reply_to.text:
-        update.effective_message.text = "/proponerfrase " + message.text
-        return await handle_submit_phrase(update, context)
+        return await submit_handling(
+            bot, update, LongProposal, LongPhrase, text=message.text
+        )

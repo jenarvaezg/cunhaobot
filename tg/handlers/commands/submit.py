@@ -43,12 +43,16 @@ async def _notify_proposal_to_curators(
 
 
 async def submit_handling(
-    bot: Bot, update: Update, proposal_class: proposal_t, phrase_class: phrase_t
+    bot: Bot,
+    update: Update,
+    proposal_class: proposal_t,
+    phrase_class: phrase_t,
+    text: str | None = None,
 ) -> Message:
     if not update.effective_user or not update.effective_message:
         raise ValueError("Update has no effective user or message")
     submitted_by = update.effective_user.name
-    proposal = proposal_class.from_update(update)
+    proposal = proposal_class.from_update(update, text=text)
     if not proposal.text:
         return await update.effective_message.reply_text(
             f"¿Qué *{phrase_class.name}* quieres proponer, {Phrase.get_random_phrase()}?\n"

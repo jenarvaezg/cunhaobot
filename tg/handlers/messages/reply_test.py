@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import MagicMock, patch, AsyncMock, ANY
 from tg.handlers.messages.reply import handle_reply
 from models.phrase import Phrase, LongPhrase
 
@@ -45,11 +45,12 @@ class TestReplyHandlers:
         context.bot = bot
 
         with patch(
-            "tg.handlers.messages.reply.handle_submit", new_callable=AsyncMock
+            "tg.handlers.messages.reply.submit_handling", new_callable=AsyncMock
         ) as mock_submit:
             await handle_reply(update, context)
-            mock_submit.assert_called_once()
-            assert update.effective_message.text == "/proponer new phrase"
+            mock_submit.assert_called_once_with(
+                bot, update, ANY, ANY, text="new phrase"
+            )
 
     @pytest.mark.asyncio
     async def test_handle_reply_to_long_phrase_proposal(self):
@@ -66,8 +67,9 @@ class TestReplyHandlers:
         context.bot = bot
 
         with patch(
-            "tg.handlers.messages.reply.handle_submit_phrase", new_callable=AsyncMock
+            "tg.handlers.messages.reply.submit_handling", new_callable=AsyncMock
         ) as mock_submit:
             await handle_reply(update, context)
-            mock_submit.assert_called_once()
-            assert update.effective_message.text == "/proponerfrase new long phrase"
+            mock_submit.assert_called_once_with(
+                bot, update, ANY, ANY, text="new long phrase"
+            )

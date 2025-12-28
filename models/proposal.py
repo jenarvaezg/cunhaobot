@@ -15,10 +15,15 @@ class Proposal:
         if not (msg_text := message.text):
             return ""
 
-        text_after_command = msg_text.split(" ")[1:]
-        if text_after_command:
-            return " ".join(text_after_command).strip()
+        if not msg_text.startswith("/"):
+            return msg_text.strip()
 
+        # It starts with a command
+        parts = msg_text.split(" ", 1)
+        if len(parts) > 1:
+            return parts[1].strip()
+
+        # Just the command, check if it's a reply
         if message.reply_to_message and message.reply_to_message.text:
             return message.reply_to_message.text
 
@@ -43,7 +48,7 @@ class Proposal:
         self.user_id = user_id
 
     @classmethod
-    def from_update(cls, update: Update) -> "Proposal":
+    def from_update(cls, update: Update, text: str | None = None) -> "Proposal":
         if not (message := update.effective_message) or not (
             user := update.effective_user
         ):
@@ -55,7 +60,7 @@ class Proposal:
             proposal_id,
             message.chat.id,
             message.message_id,
-            cls.proposal_text_from_message(message),
+            text if text is not None else cls.proposal_text_from_message(message),
             user_id=user.id,
         )
 

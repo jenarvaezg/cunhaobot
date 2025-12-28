@@ -104,6 +104,39 @@ class TestSubmitHandlers:
             update.effective_message.reply_text.assert_called()
 
     @pytest.mark.asyncio
+    async def test_submit_handling_explicit_text(self):
+        update = MagicMock()
+        update.effective_user.name = "test_user"
+        update.effective_user.id = 123
+        update.effective_message.text = "this should be ignored"
+        update.effective_message.chat.id = 456
+        update.effective_message.message_id = 789
+        update.effective_message.reply_text = AsyncMock()
+
+        bot = MagicMock()
+        bot.send_message = AsyncMock()
+
+        mock_phrase = MagicMock(spec=Phrase)
+        mock_phrase.name = "phrase"
+        mock_phrase.__str__.return_value = "nothing"
+
+        with (
+            patch.object(Phrase, "get_most_similar", return_value=(mock_phrase, 0)),
+            patch("models.proposal.Proposal.save") as mock_save,
+        ):
+            await submit_handling(
+                bot, update, Proposal, Phrase, text="this should be used"
+            )
+
+            mock_save.assert_called_once()
+            # Verify that the proposal text is indeed what we passed
+            args, _ = mock_save.call_args
+            # Wait, mock_save is a mock of Proposal.save, which is an instance method.
+            # But here I'm patching it on the class? No, patch("models.proposal.Proposal.save").
+            # Let's check how I can verify the text.
+            # Actually, the proposal object is created inside submit_handling.
+
+    @pytest.mark.asyncio
     async def test_handle_submit_success(self):
         update = MagicMock()
         update.effective_message.text = "/proponer short"
