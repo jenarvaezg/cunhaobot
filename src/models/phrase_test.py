@@ -46,17 +46,20 @@ class TestPhrase:
         assert Phrase.phrases_cache == phrases
 
     def test_get_phrases(self):
-        p1 = Phrase(text="foo")
-        p2 = Phrase(text="bar")
+        p1 = Phrase("foo", sticker_file_id="s1")
+        p2 = Phrase("bar", sticker_file_id="")
         Phrase.phrases_cache = [p1, p2]
 
-        # Test empty search returns all
         assert Phrase.get_phrases() == [p1, p2]
 
-        # Test search
         assert Phrase.get_phrases("fo") == [p1]
         assert Phrase.get_phrases("ba") == [p2]
         assert Phrase.get_phrases("z") == []
+
+        # Test field filters
+        assert Phrase.get_phrases(sticker_file_id="s1") == [p1]
+        assert Phrase.get_phrases(sticker_file_id="__EMPTY__") == [p2]
+        assert Phrase.get_phrases(non_existent_field=None) == [p1, p2]
 
     def test_get_random_phrase(self):
         p1 = Phrase(text="foo")

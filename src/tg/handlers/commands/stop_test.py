@@ -26,3 +26,35 @@ async def test_handle_stop():
         await handle_stop(update, context)
         mock_user.delete.assert_called_once()
         update.effective_message.reply_text.assert_called()
+
+
+@pytest.mark.asyncio
+async def test_handle_stop_with_chapas():
+    update = MagicMock()
+    update.to_dict.return_value = {"update_id": 1}
+    update.effective_user.id = 123
+    update.effective_chat.id = 456
+    update.effective_chat.type = Chat.PRIVATE
+    update.effective_chat.PRIVATE = Chat.PRIVATE
+    update.effective_message.reply_text = MagicMock(return_value=asyncio.Future())
+    update.effective_message.reply_text.return_value.set_result(None)
+    context = MagicMock()
+
+    mock_task = MagicMock()
+    with (
+        patch("models.user.User.load", return_value=None),
+        patch("models.schedule.ScheduledTask.get_tasks", return_value=[mock_task]),
+    ):
+        await handle_stop(update, context)
+        mock_task.delete.assert_called_once()
+        args, _ = update.effective_message.reply_text.call_args
+        assert "También he borrado tus 1 chapas" in args[0]
+
+
+@pytest.mark.asyncio
+async def test_handle_stop_no_user():
+    update = MagicMock()
+    update.effective_user = None
+    context = MagicMock()
+    await handle_stop(update, context)
+    # Should just return

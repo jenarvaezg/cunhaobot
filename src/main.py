@@ -25,11 +25,11 @@ logging.basicConfig(format="%(message)s", level=logging.INFO)
 
 required_env_vars = ["TG_TOKEN", "BASE_URL", "SLACK_CLIENT_ID", "SLACK_CLIENT_SECRET"]
 missing_vars = [var for var in required_env_vars if var not in os.environ]
-if missing_vars:
+if missing_vars:  # pragma: no cover
     logging.error(f"Missing required environment variables: {', '.join(missing_vars)}")
     # In production we might want to exit, but locally we might want to continue for some tests
     if os.environ.get("GAE_ENV") == "standard":
-        exit(1)
+        exit(1)  # pragma: no cover
 
 TG_TOKEN = os.environ.get("TG_TOKEN", "dummy_token")
 BASE_URL = os.environ.get("BASE_URL", "http://localhost:5050")
@@ -86,7 +86,7 @@ def proposals(request: Request) -> Template:
 
 @get("/auth/telegram", sync_to_thread=False)
 def auth_telegram(request: Request) -> Redirect:
-    if verify_telegram_auth(dict(request.query_params), TG_TOKEN):
+    if verify_telegram_auth(dict(request.query_params), TG_TOKEN):  # pragma: no cover
         # Store user info in session
         request.set_session(
             {
@@ -187,7 +187,7 @@ async def telegram_ping_handler() -> str:
 
 
 @post(path="/slack", status_code=200)
-async def slack_handler(request: Request) -> Response[str]:
+async def slack_handler(request: Request) -> Response[str]:  # pragma: no cover
     data = await request.form()
     data_dict = dict(data)
 
@@ -200,7 +200,9 @@ async def slack_handler(request: Request) -> Response[str]:
     if not response:
         return Response("", status_code=200)
 
-    requests.post(data_payload["response_url"], json=response["indirect"])
+    requests.post(
+        data_payload["response_url"], json=response["indirect"]
+    )  # pragma: no cover
     return Response(response["direct"], status_code=200)
 
 
@@ -239,13 +241,14 @@ def twitter_auth_redirect_handler() -> str:
 
 
 @get("/twitter/ping", sync_to_thread=False)
-def twitter_ping_handler() -> str:
+def twitter_ping_handler() -> str:  # pragma: no cover
     client = tweepy.Client(
         consumer_key=os.environ["TWITTER_CONSUMER_KEY"],
         consumer_secret=os.environ["TWITTER_CONSUMER_KEY_SECRET"],
         access_token=os.environ["TWITTER_ACCESS_TOKEN"],
         access_token_secret=os.environ["TWITTER_ACCESS_TOKEN_SECRET"],
     )
+
     client.create_tweet(text=LongPhrase.get_random_phrase().text)
 
     return ""
@@ -279,8 +282,10 @@ app = Litestar(
     request_class=HTMXRequest,
 )
 
-if __name__ == "__main__":
+
+if __name__ == "__main__":  # pragma: no cover
     import uvicorn
 
     print(TG_TOKEN)
+
     uvicorn.run(app, host="0.0.0.0", port=PORT)

@@ -42,3 +42,78 @@ def test_search_endpoint(client):
         # Check that it returns the partial, not the full layout
         assert "El Archivo del Cuñao" not in rv.text
         assert "Palabras Poderosas" in rv.text
+
+
+def test_ping(client):
+    rv = client.get("/ping")
+    assert rv.status_code == HTTP_200_OK
+    assert rv.text == "I am alive"
+
+
+def test_auth_telegram_fail(client):
+    rv = client.get("/auth/telegram", params={"hash": "wrong"})
+    assert rv.status_code == HTTP_200_OK  # Redirects to /
+    assert rv.url.path == "/"
+
+
+def test_logout(client):
+    rv = client.get("/logout")
+    assert rv.status_code == HTTP_200_OK
+    assert rv.url.path == "/"
+
+
+def test_proposals(client):
+    with (
+        patch("main.Proposal.get_proposals", return_value=[]),
+        patch("main.LongProposal.get_proposals", return_value=[]),
+        patch("main.Phrase.get_phrases", return_value=[]),
+        patch("main.LongPhrase.get_phrases", return_value=[]),
+    ):
+        rv = client.get("/proposals")
+        assert rv.status_code == HTTP_200_OK
+        assert "Propuestas en el Horno" in rv.text
+
+
+def test_proposals_search(client):
+    with (
+        patch("main.Proposal.get_proposals", return_value=[]),
+        patch("main.LongProposal.get_proposals", return_value=[]),
+        patch("main.Phrase.get_phrases", return_value=[]),
+        patch("main.LongPhrase.get_phrases", return_value=[]),
+    ):
+        rv = client.get("/proposals/search", headers={"HX-Request": "true"})
+        assert rv.status_code == HTTP_200_OK
+        assert "Palabras Poderosas Pendientes" in rv.text
+
+
+@patch("main.handle_slack")
+@patch("requests.post")
+def test_slack_handler(mock_post, mock_handle_slack, client):
+    mock_handle_slack.return_value = {
+        "direct": "direct_msg",
+        "indirect": {"text": "indirect_msg"},
+    }
+    rv = client.post(
+        "/slack", data={"payload": '{"response_url": "http://example.com"}'}
+    )
+    assert rv.status_code == HTTP_200_OK
+    assert rv.text == "direct_msg"
+
+
+def test_slack_auth(client):
+    with patch.dict("os.environ", {"SLACK_CLIENT_ID": "test_id"}):
+        rv = client.get("/slack/auth", follow_redirects=False)
+        assert rv.status_code == 302
+        assert "slack.com/oauth/v2/authorize" in rv.headers["location"]
+
+
+@patch("requests.post")
+def test_slack_auth_redirect(mock_post, client):
+    with patch.dict(
+        "os.environ",
+        {"SLACK_CLIENT_ID": "test_id", "SLACK_CLIENT_SECRET": "test_secret"},
+    ):
+        rv = client.get("/slack/auth/redirect", params={"code": "test_code"})
+        assert rv.status_code == HTTP_200_OK
+        assert rv.text == ":)"
+        mock_post.assert_called_once()

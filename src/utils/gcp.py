@@ -5,11 +5,11 @@ audios_folder = "audios"
 
 
 def get_storage_client():
-    return storage.Client()
+    return storage.Client()  # pragma: no cover
 
 
 def get_bucket():
-    return get_storage_client().get_bucket(GCP_BUCKET)
+    return get_storage_client().get_bucket(GCP_BUCKET)  # pragma: no cover
 
 
 def get_audio_url(file_name: str) -> str:

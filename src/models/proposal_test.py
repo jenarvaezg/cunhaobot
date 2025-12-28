@@ -136,6 +136,17 @@ class TestProposal:
         self.mock_client.get.return_value = None
         assert Proposal.load("999") is None
 
+    @patch("models.proposal.Proposal.load_all")
+    def test_get_proposals(self, mock_load_all):
+        p1 = Proposal("1", 100, 200, "foo", user_id=1)
+        p2 = Proposal("2", 101, 201, "bar", user_id=0)
+        mock_load_all.return_value = [p1, p2]
+
+        assert Proposal.get_proposals("fo") == [p1]
+        assert Proposal.get_proposals(user_id=1) == [p1]
+        assert Proposal.get_proposals(user_id=0) == [p1, p2]  # skips because 0 is falsy
+        assert Proposal.get_proposals(id="__EMPTY__") == []
+
 
 def test_get_proposal_class_by_kind():
     assert get_proposal_class_by_kind("Proposal") == Proposal
