@@ -1,0 +1,66 @@
+name: CI/CD - Test and Deploy
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+# Evita que se solapen dos despliegues si haces varios pushes seguidos
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Run pytest
+        run: uv run pytest
+
+  deploy:
+    name: Deploy to App Engine
+    needs: test  # Solo intenta desplegar si el job 'test' termina con éxito
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Create app.yaml from secret
+        run: |
+          echo "${{ secrets.APP_YAML }}" > app.yaml
+
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Deploy to App Engine
+        uses: google-github-actions/deploy-appengine@v2
+        with:
+          promote: true
+          flags: --stop-previous-version
+          deliverables: app.yaml cron.yaml
+
+      - name: Cleanup old versions
+        run: |
+          # Borra todas las versiones que NO están recibiendo tráfico
+          gcloud app versions list --format="value(id)" --filter="traffic_split=0" | xargs -r gcloud app versions delete --quiet
