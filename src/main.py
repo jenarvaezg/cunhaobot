@@ -9,6 +9,7 @@ from litestar.response import Redirect, Response, Template
 from litestar.template.config import TemplateConfig
 from litestar.contrib.jinja import JinjaTemplateEngine
 from litestar.plugins.htmx import HTMXRequest, HTMXTemplate
+from litestar.middleware.session.client_side import CookieBackendConfig
 from litestar.static_files import create_static_files_router
 from telegram import Update
 
@@ -17,7 +18,7 @@ from models.proposal import LongProposal, Proposal
 from slack.handlers import handle_slack
 from tg import get_tg_application
 from tg.handlers import handle_ping as handle_telegram_ping
-from utils import normalize_str
+from utils import normalize_str, verify_telegram_auth
 
 # Enable logging
 logging.basicConfig(format="%(message)s", level=logging.INFO)
@@ -25,10 +26,11 @@ logging.basicConfig(format="%(message)s", level=logging.INFO)
 TG_TOKEN = os.environ["TG_TOKEN"]
 BASE_URL = os.environ["BASE_URL"]
 PORT = int(os.environ.get("PORT", 5050))
+SESSION_SECRET = os.environ.get("SESSION_SECRET", "a-very-secret-key-of-32-chars-!!")
 
 
 @get("/", sync_to_thread=False)
-def index() -> Template:
+def index(request: Request) -> Template:
     short_phrases = Phrase.get_phrases()
     long_phrases = LongPhrase.get_phrases()
     return Template(
@@ -38,6 +40,7 @@ def index() -> Template:
                 short_phrases, key=lambda x: x.usages, reverse=True
             ),
             "long_phrases": sorted(long_phrases, key=lambda x: x.usages, reverse=True),
+            "user": request.session.get("user"),
         },
     )
 
@@ -45,17 +48,13 @@ def index() -> Template:
 @get("/proposals", sync_to_thread=False)
 def proposals(request: Request) -> Template:
     # Get all filters from query params
-
     filters = {k: v for k, v in request.query_params.items() if k not in ["search"]}
-
     search_query = request.query_params.get("search", "")
 
     all_short_proposals = Proposal.get_proposals(search=search_query, **filters)
-
     all_long_proposals = LongProposal.get_proposals(search=search_query, **filters)
 
     short_phrases_texts = {normalize_str(p.text) for p in Phrase.get_phrases()}
-
     long_phrases_texts = {normalize_str(p.text) for p in LongPhrase.get_phrases()}
 
     pending_short = [
@@ -63,7 +62,6 @@ def proposals(request: Request) -> Template:
         for p in all_short_proposals
         if normalize_str(p.text) not in short_phrases_texts
     ]
-
     pending_long = [
         p for p in all_long_proposals if normalize_str(p.text) not in long_phrases_texts
     ]
@@ -73,8 +71,32 @@ def proposals(request: Request) -> Template:
         context={
             "pending_short": pending_short,
             "pending_long": pending_long,
+            "user": request.session.get("user"),
         },
     )
+
+
+@get("/auth/telegram", sync_to_thread=False)
+def auth_telegram(request: Request) -> Redirect:
+    if verify_telegram_auth(dict(request.query_params), TG_TOKEN):
+        # Store user info in session
+        request.set_session(
+            {
+                "user": {
+                    "id": request.query_params.get("id"),
+                    "first_name": request.query_params.get("first_name"),
+                    "username": request.query_params.get("username"),
+                    "photo_url": request.query_params.get("photo_url"),
+                }
+            }
+        )
+    return Redirect(path="/")
+
+
+@get("/logout", sync_to_thread=False)
+def logout(request: Request) -> Redirect:
+    request.clear_session()
+    return Redirect(path="/")
 
 
 @get("/proposals/search", sync_to_thread=False)
@@ -225,6 +247,8 @@ app = Litestar(
     route_handlers=[
         index,
         proposals,
+        auth_telegram,
+        logout,
         proposals_search,
         search,
         ping,
@@ -236,6 +260,9 @@ app = Litestar(
         twitter_auth_redirect_handler,
         twitter_ping_handler,
         create_static_files_router(directories=["src/static"], path="/static"),
+    ],
+    middleware=[
+        CookieBackendConfig(secret=SESSION_SECRET.encode()).middleware,
     ],
     template_config=TemplateConfig(
         directory="src/templates",

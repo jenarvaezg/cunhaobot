@@ -13,6 +13,8 @@ certifi==2025.11.12
     #   httpcore
     #   httpx
     #   requests
+cffi==2.0.0 ; platform_python_implementation != 'PyPy'
+    # via cryptography
 cfgv==3.5.0
     # via pre-commit
 charset-normalizer==3.4.4
@@ -29,6 +31,8 @@ colorama==0.4.6 ; sys_platform == 'win32'
     #   rich-click
 coverage==7.13.1
     # via pytest-cov
+cryptography==46.0.3
+    # via cunhaobot
 distlib==0.4.0
     # via virtualenv
 faker==39.0.0
@@ -152,6 +156,8 @@ pyasn1==0.6.1
     #   rsa
 pyasn1-modules==0.4.2
     # via google-auth
+pycparser==2.23 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
+    # via cffi
 pygments==2.19.2
     # via
     #   pytest

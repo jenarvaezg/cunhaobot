@@ -102,9 +102,30 @@
                 <img src="/static/favicon.png" alt="Logo" width="30" height="30" class="d-inline-block align-text-top me-2">
                 CUÑAOBOT
             </a>
-            <div class="navbar-nav flex-row gap-3">
+            <div class="navbar-nav flex-row gap-3 align-items-center">
                 <a class="nav-link" href="/">Archivo</a>
                 <a class="nav-link" href="/proposals">Propuestas</a>
+                {% if user %}
+                <div class="dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown">
+                        {% if user.photo_url %}
+                        <img src="{{ user.photo_url }}" alt="Profile" width="30" height="30" class="rounded-circle border border-primary">
+                        {% endif %}
+                        <span class="small text-info fw-bold">{{ user.first_name }}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end border-secondary shadow">
+                        <li><a class="dropdown-item small" href="/logout">Cerrar Sesión</a></li>
+                    </ul>
+                </div>
+                {% else %}
+                <div id="telegram-login-container" class="animate__animated animate__fadeIn">
+                    <script async src="https://telegram.org/js/telegram-widget.js?22"
+                            data-telegram-login="cunhaobot"
+                            data-size="medium"
+                            data-auth-url="/auth/telegram"
+                            data-request-access="write"></script>
+                </div>
+                {% endif %}
             </div>
         </div>
     </nav>
