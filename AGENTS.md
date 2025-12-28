@@ -93,6 +93,9 @@ The project uses the specialized Litestar HTMX plugin for web interactivity.
 *   **NEVER** use the `--no-verify` flag when making a commit. All commits must pass the pre-commit hooks.
 *   **ALWAYS** run the full test suite (`uv run pytest src/`) and ensure all tests pass before making a commit.
 
+### Python Coding Standards
+*   **NEVER** use `# type: ignore` without specifying the specific error code (e.g., `# type: ignore[invalid-argument-type]`).
+
 ## CI/CD & Deployment
 
 ### Automated Deployment

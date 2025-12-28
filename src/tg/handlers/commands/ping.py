@@ -60,7 +60,7 @@ def _generate_report(now: date) -> None:
     # Shuffle so in case of draw for usage of the day it's not always the same
     long_phrases: list[LongPhrase] = random.sample(
         LongPhrase.refresh_cache(), len(LongPhrase.get_phrases())
-    )  # type: ignore
+    )  # type: ignore[invalid-argument-type]
     short_phrases: list[Phrase] = random.sample(
         Phrase.refresh_cache(), len(Phrase.get_phrases())
     )
