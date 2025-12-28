@@ -9,16 +9,13 @@ from models.phrase import LongPhrase, Phrase
 
 class TestPhrase:
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, mock_datastore_client):
         # Reset the cache and mock calls before each test
         Phrase.phrases_cache = []
         LongPhrase.phrases_cache = []
 
-        # Get the mock client from the imported module
-        from models.phrase import datastore_client
-
-        datastore_client.reset_mock()
-        self.mock_client = datastore_client
+        mock_datastore_client.reset_mock()
+        self.mock_client = mock_datastore_client
 
         yield
 

@@ -7,7 +7,9 @@ from google.cloud import datastore
 
 from utils import improve_punctuation, normalize_str
 
-datastore_client = datastore.Client()
+
+def get_datastore_client():
+    return datastore.Client()
 
 
 class Phrase:
@@ -82,7 +84,7 @@ class Phrase:
 
     @classmethod
     def refresh_cache(cls) -> list["Phrase"]:
-        query = datastore_client.query(kind=cls.kind)
+        query = get_datastore_client().query(kind=cls.kind)
         cls.phrases_cache = [cls.from_entity(entity) for entity in query.fetch()]
 
         return cls.phrases_cache
@@ -158,7 +160,8 @@ class Phrase:
 
     @classmethod
     def remove_daily_usages(cls) -> None:
-        query = datastore_client.query(kind=cls.kind)
+        client = get_datastore_client()
+        query = client.query(kind=cls.kind)
         entities = [entity for entity in query.fetch()]
         updates = []
         for entity in entities:
@@ -166,7 +169,7 @@ class Phrase:
             entity["audio_daily_usages"] = 0
             updates.append(entity)
 
-        datastore_client.put_multi(updates)
+        client.put_multi(updates)
 
     @classmethod
     def get_most_similar(cls, text: str) -> tuple["Phrase", int]:
@@ -193,7 +196,8 @@ class Phrase:
         )
 
     def save(self) -> None:
-        key = datastore_client.key(self.kind, self.text)
+        client = get_datastore_client()
+        key = client.key(self.kind, self.text)
         phrase_entity = datastore.Entity(key=key)
 
         phrase_entity["text"] = self.text
@@ -208,7 +212,7 @@ class Phrase:
         phrase_entity["chat_id"] = self.chat_id
         phrase_entity["created_at"] = self.created_at
 
-        datastore_client.put(phrase_entity)
+        client.put(phrase_entity)
 
     async def edit_text(self, new_text: str, bot: telegram.Bot):
         await self.delete(bot)
@@ -221,8 +225,9 @@ class Phrase:
         from tg.stickers import delete_sticker
 
         await delete_sticker(bot, self.sticker_file_id)
-        key = datastore_client.key(self.kind, self.text)
-        datastore_client.delete(key)
+        client = get_datastore_client()
+        key = client.key(self.kind, self.text)
+        client.delete(key)
 
 
 class LongPhrase(Phrase):

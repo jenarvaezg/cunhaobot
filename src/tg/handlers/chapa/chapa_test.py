@@ -13,18 +13,18 @@ from telegram import Chat
 
 class TestChapaHandlers:
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, mock_datastore_client):
         self.patcher_phrase = patch(
             "models.phrase.Phrase.get_random_phrase", return_value="cuñao"
         )
         self.mock_phrase = self.patcher_phrase.start()
-        from models.phrase import Phrase, LongPhrase, datastore_client
+        from models.phrase import Phrase, LongPhrase
 
         Phrase.phrases_cache = []
         LongPhrase.phrases_cache = []
-        datastore_client.reset_mock()
+        mock_datastore_client.reset_mock()
         # Ensure refresh_cache doesn't crash if called
-        datastore_client.query.return_value.fetch.return_value = []
+        mock_datastore_client.query.return_value.fetch.return_value = []
         yield
         self.patcher_phrase.stop()
 

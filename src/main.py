@@ -23,8 +23,16 @@ from utils import normalize_str, verify_telegram_auth
 # Enable logging
 logging.basicConfig(format="%(message)s", level=logging.INFO)
 
-TG_TOKEN = os.environ["TG_TOKEN"]
-BASE_URL = os.environ["BASE_URL"]
+required_env_vars = ["TG_TOKEN", "BASE_URL", "SLACK_CLIENT_ID", "SLACK_CLIENT_SECRET"]
+missing_vars = [var for var in required_env_vars if var not in os.environ]
+if missing_vars:
+    logging.error(f"Missing required environment variables: {', '.join(missing_vars)}")
+    # In production we might want to exit, but locally we might want to continue for some tests
+    if os.environ.get("GAE_ENV") == "standard":
+        exit(1)
+
+TG_TOKEN = os.environ.get("TG_TOKEN", "dummy_token")
+BASE_URL = os.environ.get("BASE_URL", "http://localhost:5050")
 PORT = int(os.environ.get("PORT", 5050))
 SESSION_SECRET = os.environ.get("SESSION_SECRET", "a-very-secret-key-of-32-chars-!!")
 

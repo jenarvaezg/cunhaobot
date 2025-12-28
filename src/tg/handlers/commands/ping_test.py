@@ -14,13 +14,13 @@ from models.report import Report
 
 class TestPingHandlers:
     @pytest.fixture(autouse=True)
-    def setup(self):
-        from models.phrase import Phrase, LongPhrase, datastore_client
+    def setup(self, mock_datastore_client):
+        from models.phrase import Phrase, LongPhrase
 
         Phrase.phrases_cache = []
         LongPhrase.phrases_cache = []
-        datastore_client.reset_mock()
-        datastore_client.query.return_value.fetch.return_value = []
+        mock_datastore_client.reset_mock()
+        mock_datastore_client.query.return_value.fetch.return_value = []
 
         # Mock random phrase generation
         self.patcher_phrase = patch(
