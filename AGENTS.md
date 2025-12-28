@@ -83,6 +83,12 @@ This project uses custom agent "skills" and patterns to ensure code quality and 
 *   `.gemini/skills/PATTERNS.md`: Idiomatic coding patterns.
 *   `.gemini/skills/TESTING.md`: Guidelines and patterns for testing.
 
+### HTMX Integration
+The project uses the specialized Litestar HTMX plugin for web interactivity.
+*   **Request Class**: Use `litestar.plugins.htmx.HTMXRequest` to handle incoming web requests. This provides properties like `request.htmx` to detect HTMX-driven requests.
+*   **Response Class**: Use `litestar.plugins.htmx.HTMXTemplate` for returning template responses, especially when dealing with partial updates or fragments.
+*   **Configuration**: The `Litestar` application must be configured with `request_class=HTMXRequest` and a proper `TemplateConfig`.
+
 ### Git Workflow
 *   **NEVER** use the `--no-verify` flag when making a commit. All commits must pass the pre-commit hooks.
 

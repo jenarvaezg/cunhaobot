@@ -8,6 +8,7 @@ from litestar import Litestar, Request, get, post
 from litestar.response import Redirect, Response, Template
 from litestar.template.config import TemplateConfig
 from litestar.contrib.jinja import JinjaTemplateEngine
+from litestar.plugins.htmx import HTMXRequest, HTMXTemplate
 from telegram import Update
 
 from models.phrase import LongPhrase, Phrase
@@ -39,12 +40,12 @@ def index() -> Template:
 
 
 @get("/search", sync_to_thread=False)
-def search(request: Request) -> Template:
+def search(request: HTMXRequest) -> HTMXTemplate:
     search_query = request.query_params.get("search", "")
     short_phrases = Phrase.get_phrases(search=search_query)
     long_phrases = LongPhrase.get_phrases(search=search_query)
 
-    return Template(
+    return HTMXTemplate(
         template_name="partials/phrases_list.html",
         context={
             "short_phrases": sorted(
@@ -162,6 +163,7 @@ app = Litestar(
         directory="templates",
         engine=JinjaTemplateEngine,
     ),
+    request_class=HTMXRequest,
 )
 
 if __name__ == "__main__":
