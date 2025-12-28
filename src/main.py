@@ -9,7 +9,7 @@ from litestar.response import Redirect, Response, Template
 from litestar.template.config import TemplateConfig
 from litestar.contrib.jinja import JinjaTemplateEngine
 from litestar.plugins.htmx import HTMXRequest, HTMXTemplate
-from litestar.static_files import StaticFilesConfig
+from litestar.static_files import create_static_files_router
 from telegram import Update
 
 from models.phrase import LongPhrase, Phrase
@@ -235,14 +235,12 @@ app = Litestar(
         slack_auth_redirect_handler,
         twitter_auth_redirect_handler,
         twitter_ping_handler,
+        create_static_files_router(directories=["src/static"], path="/static"),
     ],
     template_config=TemplateConfig(
         directory="src/templates",
         engine=JinjaTemplateEngine,  # type: ignore[invalid-argument-type]
     ),
-    static_files_config=[
-        StaticFilesConfig(directories=["src/static"], path="/static"),
-    ],
     request_class=HTMXRequest,
 )
 
