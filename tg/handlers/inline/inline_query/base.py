@@ -11,7 +11,7 @@ from telegram.ext import CallbackContext
 from models.phrase import Phrase
 from models.user import InlineUser
 from tg.decorators import log_update
-from tg.handlers.inline_query.sticker_mode import get_sticker_mode_results
+from tg.handlers.inline.inline_query.sticker_mode import get_sticker_mode_results
 from tg.text_router import (
     AUDIO_MODE,
     LONG_MODE,

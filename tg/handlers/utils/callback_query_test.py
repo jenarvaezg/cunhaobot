@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, patch, AsyncMock
 import sys
-from tg.handlers.callback_query import (
+from tg.handlers.utils.callback_query import (
     handle_callback_query,
     _approve_proposal,
     _dismiss_proposal,
@@ -36,7 +36,7 @@ class TestCallbackQuery:
         context.bot.get_chat_administrators = AsyncMock(return_value=[admin_member])
 
         with (
-            patch("tg.handlers.callback_query.admins", []),
+            patch("tg.handlers.utils.callback_query.admins", []),
             patch("models.proposal.Proposal.load", return_value=MagicMock()),
         ):
             await handle_callback_query(update, context)
@@ -56,7 +56,7 @@ class TestCallbackQuery:
         context.bot.get_chat_administrators = AsyncMock(return_value=[admin_member])
 
         with (
-            patch("tg.handlers.callback_query.admins", [admin_member]),
+            patch("tg.handlers.utils.callback_query.admins", [admin_member]),
             patch("models.proposal.Proposal.load", return_value=None),
         ):
             await handle_callback_query(update, context)
@@ -79,12 +79,15 @@ class TestCallbackQuery:
         mock_proposal.kind = "Proposal"
 
         with (
-            patch("tg.handlers.callback_query.admins", [admin_member]),
+            patch("tg.handlers.utils.callback_query.admins", [admin_member]),
             patch("models.proposal.Proposal.load", return_value=mock_proposal),
-            patch("tg.handlers.callback_query._add_vote", new_callable=AsyncMock),
-            patch("tg.handlers.callback_query.get_required_votes", return_value=1),
+            patch("tg.handlers.utils.callback_query._add_vote", new_callable=AsyncMock),
             patch(
-                "tg.handlers.callback_query._approve_proposal", new_callable=AsyncMock
+                "tg.handlers.utils.callback_query.get_required_votes", return_value=1
+            ),
+            patch(
+                "tg.handlers.utils.callback_query._approve_proposal",
+                new_callable=AsyncMock,
             ) as mock_approve,
         ):
             await handle_callback_query(update, context)
@@ -107,12 +110,15 @@ class TestCallbackQuery:
         mock_proposal.kind = "Proposal"
 
         with (
-            patch("tg.handlers.callback_query.admins", [admin_member]),
+            patch("tg.handlers.utils.callback_query.admins", [admin_member]),
             patch("models.proposal.Proposal.load", return_value=mock_proposal),
-            patch("tg.handlers.callback_query._add_vote", new_callable=AsyncMock),
-            patch("tg.handlers.callback_query.get_required_votes", return_value=1),
+            patch("tg.handlers.utils.callback_query._add_vote", new_callable=AsyncMock),
             patch(
-                "tg.handlers.callback_query._dismiss_proposal", new_callable=AsyncMock
+                "tg.handlers.utils.callback_query.get_required_votes", return_value=1
+            ),
+            patch(
+                "tg.handlers.utils.callback_query._dismiss_proposal",
+                new_callable=AsyncMock,
             ) as mock_dismiss,
         ):
             await handle_callback_query(update, context)
@@ -170,8 +176,10 @@ class TestCallbackQuery:
         mock_admin.user.name = "Admin1"
 
         with (
-            patch("tg.handlers.callback_query.admins", [mock_admin]),
-            patch("tg.handlers.callback_query.build_vote_keyboard", return_value=[]),
+            patch("tg.handlers.utils.callback_query.admins", [mock_admin]),
+            patch(
+                "tg.handlers.utils.callback_query.build_vote_keyboard", return_value=[]
+            ),
         ):
             await _update_proposal_text(p, cb)
             cb.edit_message_text.assert_called_once()
@@ -193,11 +201,13 @@ class TestCallbackQuery:
         mock_proposal.kind = "Proposal"
 
         with (
-            patch("tg.handlers.callback_query.admins", [admin_member]),
+            patch("tg.handlers.utils.callback_query.admins", [admin_member]),
             patch("models.proposal.Proposal.load", return_value=mock_proposal),
-            patch("tg.handlers.callback_query.get_required_votes", return_value=5),
             patch(
-                "tg.handlers.callback_query._update_proposal_text",
+                "tg.handlers.utils.callback_query.get_required_votes", return_value=5
+            ),
+            patch(
+                "tg.handlers.utils.callback_query._update_proposal_text",
                 new_callable=AsyncMock,
             ),
         ):
@@ -228,7 +238,10 @@ class TestCallbackQuery:
         mock_admin2.user.name = "A2"
 
         # Use sys.modules to patch the actual module's global
-        sys.modules["tg.handlers.callback_query"].admins = [mock_admin1, mock_admin2]
+        sys.modules["tg.handlers.utils.callback_query"].admins = [
+            mock_admin1,
+            mock_admin2,
+        ]
 
         summary = get_vote_summary(p)
         assert "A1" in summary

@@ -11,7 +11,7 @@ from models.phrase import LongPhrase, Phrase
 from models.report import Report
 from models.schedule import ScheduledTask
 from models.user import InlineUser, User
-from tg.handlers.inline_query.base import MODE_HANDLERS
+from tg.handlers.inline.inline_query.base import MODE_HANDLERS
 from tg.text_router import AUDIO_MODE, STICKER_MODE, get_query_mode
 
 curators_chat_id = os.environ.get("MOD_CHAT_ID", "")

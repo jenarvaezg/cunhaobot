@@ -1,11 +1,11 @@
 import pytest
 from unittest.mock import MagicMock, patch, AsyncMock
-from tg.handlers.inline_query.base import handle_inline_query
-from tg.handlers.inline_query.short_mode import get_short_mode_results
-from tg.handlers.inline_query.long_mode import get_long_mode_results
-from tg.handlers.inline_query.sticker_mode import get_sticker_mode_results
-from tg.handlers.inline_query.audio_mode import get_audio_mode_results
-from tg.handlers.chosen_inine_result import handle_chosen_inline_result
+from tg.handlers.inline.inline_query.base import handle_inline_query
+from tg.handlers.inline.inline_query.short_mode import get_short_mode_results
+from tg.handlers.inline.inline_query.long_mode import get_long_mode_results
+from tg.handlers.inline.inline_query.sticker_mode import get_sticker_mode_results
+from tg.handlers.inline.inline_query.audio_mode import get_audio_mode_results
+from tg.handlers.inline.chosen_inine_result import handle_chosen_inline_result
 from models.phrase import Phrase, LongPhrase
 
 
@@ -37,11 +37,11 @@ class TestInlineQuery:
 
         with (
             patch(
-                "tg.handlers.inline_query.base.get_query_mode",
+                "tg.handlers.inline.inline_query.base.get_query_mode",
                 return_value=("SHORT", "test"),
             ),
             patch(
-                "tg.handlers.inline_query.base.MODE_HANDLERS",
+                "tg.handlers.inline.inline_query.base.MODE_HANDLERS",
                 {"SHORT": lambda x: ["result"]},
             ),
             patch("models.user.InlineUser.update_or_create_from_update"),
@@ -79,15 +79,15 @@ class TestInlineQuery:
 
         with (
             patch(
-                "tg.handlers.inline_query.audio_mode.get_query_mode",
+                "tg.handlers.inline.inline_query.audio_mode.get_query_mode",
                 return_value=("SHORT", "test"),
             ),
             patch(
-                "tg.handlers.inline_query.audio_mode.get_short_mode_results",
+                "tg.handlers.inline.inline_query.audio_mode.get_short_mode_results",
                 return_value=[mock_short_res],
             ),
             patch(
-                "tg.handlers.inline_query.audio_mode.get_audio_url",
+                "tg.handlers.inline.inline_query.audio_mode.get_audio_url",
                 return_value="http://url",
             ),
         ):
@@ -103,19 +103,22 @@ class TestInlineQuery:
 
         with (
             patch(
-                "tg.handlers.inline_query.audio_mode.get_query_mode",
+                "tg.handlers.inline.inline_query.audio_mode.get_query_mode",
                 return_value=("SHORT", "test"),
             ),
             patch(
-                "tg.handlers.inline_query.audio_mode.get_short_mode_results",
+                "tg.handlers.inline.inline_query.audio_mode.get_short_mode_results",
                 return_value=[mock_short_res],
             ),
             patch(
-                "tg.handlers.inline_query.audio_mode.get_audio_url", return_value=None
+                "tg.handlers.inline.inline_query.audio_mode.get_audio_url",
+                return_value=None,
             ),
-            patch("tg.handlers.inline_query.audio_mode.polly_client") as mock_polly,
             patch(
-                "tg.handlers.inline_query.audio_mode.upload_audio",
+                "tg.handlers.inline.inline_query.audio_mode.polly_client"
+            ) as mock_polly,
+            patch(
+                "tg.handlers.inline.inline_query.audio_mode.upload_audio",
                 return_value="http://uploaded",
             ),
         ):
@@ -132,15 +135,15 @@ class TestInlineQuery:
 
         with (
             patch(
-                "tg.handlers.inline_query.audio_mode.get_query_mode",
+                "tg.handlers.inline.inline_query.audio_mode.get_query_mode",
                 return_value=("LONG", "test"),
             ),
             patch(
-                "tg.handlers.inline_query.audio_mode.get_long_mode_results",
+                "tg.handlers.inline.inline_query.audio_mode.get_long_mode_results",
                 return_value=[mock_long_res],
             ),
             patch(
-                "tg.handlers.inline_query.audio_mode.get_audio_url",
+                "tg.handlers.inline.inline_query.audio_mode.get_audio_url",
                 return_value="http://url",
             ),
         ):
@@ -156,19 +159,22 @@ class TestInlineQuery:
 
         with (
             patch(
-                "tg.handlers.inline_query.audio_mode.get_query_mode",
+                "tg.handlers.inline.inline_query.audio_mode.get_query_mode",
                 return_value=("LONG", "test"),
             ),
             patch(
-                "tg.handlers.inline_query.audio_mode.get_long_mode_results",
+                "tg.handlers.inline.inline_query.audio_mode.get_long_mode_results",
                 return_value=[mock_long_res],
             ),
             patch(
-                "tg.handlers.inline_query.audio_mode.get_audio_url", return_value=None
+                "tg.handlers.inline.inline_query.audio_mode.get_audio_url",
+                return_value=None,
             ),
-            patch("tg.handlers.inline_query.audio_mode.polly_client") as mock_polly,
             patch(
-                "tg.handlers.inline_query.audio_mode.upload_audio",
+                "tg.handlers.inline.inline_query.audio_mode.polly_client"
+            ) as mock_polly,
+            patch(
+                "tg.handlers.inline.inline_query.audio_mode.upload_audio",
                 return_value="http://uploaded",
             ),
         ):
@@ -180,7 +186,9 @@ class TestInlineQuery:
     @pytest.mark.asyncio
     async def test_short_audio_ssml_path(self):
         # From final_push_test.py
-        from tg.handlers.inline_query.audio_mode import short_result_to_audio_result
+        from tg.handlers.inline.inline_query.audio_mode import (
+            short_result_to_audio_result,
+        )
         import io
 
         # Provocamos que no encuentre audio en GCP para disparar Polly con SSML
@@ -191,11 +199,14 @@ class TestInlineQuery:
 
         with (
             patch(
-                "tg.handlers.inline_query.audio_mode.get_audio_url", return_value=None
+                "tg.handlers.inline.inline_query.audio_mode.get_audio_url",
+                return_value=None,
             ),
-            patch("tg.handlers.inline_query.audio_mode.polly_client") as mock_polly,
             patch(
-                "tg.handlers.inline_query.audio_mode.upload_audio",
+                "tg.handlers.inline.inline_query.audio_mode.polly_client"
+            ) as mock_polly,
+            patch(
+                "tg.handlers.inline.inline_query.audio_mode.upload_audio",
                 return_value="http://u",
             ),
         ):
@@ -291,7 +302,7 @@ class TestInlineQuery:
         update.inline_query.answer = AsyncMock()
 
         with patch(
-            "tg.handlers.inline_query.base.get_query_mode",
+            "tg.handlers.inline.inline_query.base.get_query_mode",
             return_value=("UNKNOWN", "rest"),
         ):
             await handle_inline_query(update, MagicMock())

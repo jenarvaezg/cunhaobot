@@ -2,7 +2,12 @@ import pytest
 from unittest.mock import MagicMock, patch, AsyncMock
 from datetime import datetime, date
 import pytz
-from tg.handlers.ping import handle_ping, _send_chapas, _generate_report, _send_report
+from tg.handlers.commands.ping import (
+    handle_ping,
+    _send_chapas,
+    _generate_report,
+    _send_report,
+)
 from models.schedule import ScheduledTask
 from models.report import Report
 
@@ -42,9 +47,9 @@ class TestPingHandlers:
         mock_now = madrid.localize(datetime(2025, 12, 28, 12, 0, 0))
 
         with (
-            patch("tg.handlers.ping.datetime") as mock_datetime,
+            patch("tg.handlers.commands.ping.datetime") as mock_datetime,
             patch(
-                "tg.handlers.ping._send_chapas", new_callable=AsyncMock
+                "tg.handlers.commands.ping._send_chapas", new_callable=AsyncMock
             ) as mock_chapas,
         ):
             mock_datetime.now.return_value = mock_now
@@ -61,9 +66,9 @@ class TestPingHandlers:
         mock_now = madrid.localize(datetime(2025, 12, 28, 23, 59, 0))
 
         with (
-            patch("tg.handlers.ping.datetime") as mock_datetime,
-            patch("tg.handlers.ping._generate_report") as mock_gen,
-            patch("tg.handlers.ping._send_chapas", new_callable=AsyncMock),
+            patch("tg.handlers.commands.ping.datetime") as mock_datetime,
+            patch("tg.handlers.commands.ping._generate_report") as mock_gen,
+            patch("tg.handlers.commands.ping._send_chapas", new_callable=AsyncMock),
         ):
             mock_datetime.now.return_value = mock_now
 
@@ -79,9 +84,11 @@ class TestPingHandlers:
         mock_now = madrid.localize(datetime(2025, 12, 28, 7, 0, 0))
 
         with (
-            patch("tg.handlers.ping.datetime") as mock_datetime,
-            patch("tg.handlers.ping._send_report", new_callable=AsyncMock) as mock_send,
-            patch("tg.handlers.ping._send_chapas", new_callable=AsyncMock),
+            patch("tg.handlers.commands.ping.datetime") as mock_datetime,
+            patch(
+                "tg.handlers.commands.ping._send_report", new_callable=AsyncMock
+            ) as mock_send,
+            patch("tg.handlers.commands.ping._send_chapas", new_callable=AsyncMock),
         ):
             mock_datetime.now.return_value = mock_now
 
@@ -102,8 +109,14 @@ class TestPingHandlers:
         mock_result.input_message_content.message_text = "chapa text"
 
         with (
-            patch("tg.handlers.ping.get_query_mode", return_value=("SHORT", "test")),
-            patch("tg.handlers.ping.MODE_HANDLERS", {"SHORT": lambda x: [mock_result]}),
+            patch(
+                "tg.handlers.commands.ping.get_query_mode",
+                return_value=("SHORT", "test"),
+            ),
+            patch(
+                "tg.handlers.commands.ping.MODE_HANDLERS",
+                {"SHORT": lambda x: [mock_result]},
+            ),
         ):
             await _send_chapas(bot, [task])
             bot.send_message.assert_called_with(123, "chapa text")
@@ -117,8 +130,11 @@ class TestPingHandlers:
         task.chat_id = 123
 
         with (
-            patch("tg.handlers.ping.get_query_mode", return_value=("SHORT", "unknown")),
-            patch("tg.handlers.ping.MODE_HANDLERS", {"SHORT": lambda x: []}),
+            patch(
+                "tg.handlers.commands.ping.get_query_mode",
+                return_value=("SHORT", "unknown"),
+            ),
+            patch("tg.handlers.commands.ping.MODE_HANDLERS", {"SHORT": lambda x: []}),
             patch("models.phrase.LongPhrase.get_random_phrase") as mock_random,
         ):
             mock_random.return_value.text = "random phrase"
@@ -131,7 +147,9 @@ class TestPingHandlers:
         task = MagicMock()
         task.query = "unknown"
         bot = MagicMock()
-        with patch("tg.handlers.ping.get_query_mode", return_value=("UNKNOWN", "rest")):
+        with patch(
+            "tg.handlers.commands.ping.get_query_mode", return_value=("UNKNOWN", "rest")
+        ):
             await _send_chapas(bot, [task])
             # Should continue without error
 
@@ -150,7 +168,9 @@ class TestPingHandlers:
         Phrase.phrases_cache = [Phrase(text="p1")]
 
         # Forzamos una excepción en get_query_mode
-        with patch("tg.handlers.ping.get_query_mode", side_effect=Exception("boom")):
+        with patch(
+            "tg.handlers.commands.ping.get_query_mode", side_effect=Exception("boom")
+        ):
             await _send_chapas(bot, [task])
             # Debería haber enviado un reporte de error a los curadores
             bot.send_message.assert_called()
@@ -170,8 +190,8 @@ class TestPingHandlers:
         res_sticker = MagicMock(sticker_file_id="s123")
 
         with (
-            patch("tg.handlers.ping.get_query_mode") as mock_mode,
-            patch("tg.handlers.ping.MODE_HANDLERS") as mock_handlers,
+            patch("tg.handlers.commands.ping.get_query_mode") as mock_mode,
+            patch("tg.handlers.commands.ping.MODE_HANDLERS") as mock_handlers,
         ):
             mock_mode.side_effect = [("AUDIO", ""), ("STICKER", "")]
             mock_handlers.get.side_effect = [

@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch, AsyncMock
-from tg.handlers.fallback import (
+from tg.handlers.messages.fallback import (
     handle_fallback_message,
     _on_kick,
     _on_join,
@@ -36,7 +36,7 @@ class TestFallbackHandlers:
         context = MagicMock()
         context.bot = bot
 
-        with patch("tg.handlers.fallback._on_kick") as mock_kick:
+        with patch("tg.handlers.messages.fallback._on_kick") as mock_kick:
             await handle_fallback_message(update, context)
             mock_kick.assert_called_once_with(456)
 

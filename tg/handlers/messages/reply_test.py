@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch, AsyncMock
-from tg.handlers.reply import handle_reply
+from tg.handlers.messages.reply import handle_reply
 from models.phrase import Phrase, LongPhrase
 
 
@@ -45,7 +45,7 @@ class TestReplyHandlers:
         context.bot = bot
 
         with patch(
-            "tg.handlers.reply.handle_submit", new_callable=AsyncMock
+            "tg.handlers.messages.reply.handle_submit", new_callable=AsyncMock
         ) as mock_submit:
             await handle_reply(update, context)
             mock_submit.assert_called_once()
@@ -66,7 +66,7 @@ class TestReplyHandlers:
         context.bot = bot
 
         with patch(
-            "tg.handlers.reply.handle_submit_phrase", new_callable=AsyncMock
+            "tg.handlers.messages.reply.handle_submit_phrase", new_callable=AsyncMock
         ) as mock_submit:
             await handle_reply(update, context)
             mock_submit.assert_called_once()

@@ -1,13 +1,13 @@
 import pytest
 from unittest.mock import MagicMock
-from tg.handlers.about import handle_about
-from tg.handlers.cancel import handle_cancel
-from tg.handlers.help import handle_help
-from tg.handlers.submit import handle_submit, handle_submit_phrase
-from tg.handlers.text_message import handle_message
-from tg.handlers.callback_query import handle_callback_query
-from tg.handlers.stop import handle_stop
-from tg.handlers.start import handle_start
+from tg.handlers.commands.about import handle_about
+from tg.handlers.commands.cancel import handle_cancel
+from tg.handlers.commands.help import handle_help
+from tg.handlers.commands.submit import handle_submit, handle_submit_phrase
+from tg.handlers.messages.text_message import handle_message
+from tg.handlers.utils.callback_query import handle_callback_query
+from tg.handlers.commands.stop import handle_stop
+from tg.handlers.commands.start import handle_start
 
 
 class TestGenericHandlersNoMessage:

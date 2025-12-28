@@ -4,7 +4,7 @@ from telegram.ext import CallbackContext
 from models.phrase import Phrase
 from models.schedule import ScheduledTask
 from tg.decorators import log_update, only_admins
-from tg.handlers.inline_query.base import MODE_HANDLERS, get_query_mode
+from tg.handlers.inline.inline_query.base import MODE_HANDLERS, get_query_mode
 
 
 async def usage(update: Update) -> Message:

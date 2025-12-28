@@ -1,6 +1,10 @@
 import pytest
 from unittest.mock import MagicMock, patch, AsyncMock
-from tg.handlers.submit import handle_submit, handle_submit_phrase, submit_handling
+from tg.handlers.commands.submit import (
+    handle_submit,
+    handle_submit_phrase,
+    submit_handling,
+)
 from models.proposal import Proposal
 from models.phrase import Phrase
 from telegram import ForceReply
@@ -106,7 +110,7 @@ class TestSubmitHandlers:
         update.effective_user.name = "user"
 
         with patch(
-            "tg.handlers.submit.submit_handling", new_callable=AsyncMock
+            "tg.handlers.commands.submit.submit_handling", new_callable=AsyncMock
         ) as mock_sub:
             await handle_submit(update, MagicMock())
             mock_sub.assert_called_once()
@@ -119,7 +123,7 @@ class TestSubmitHandlers:
         context = MagicMock()
 
         with patch(
-            "tg.handlers.submit.submit_handling", new_callable=AsyncMock
+            "tg.handlers.commands.submit.submit_handling", new_callable=AsyncMock
         ) as mock_handling:
             await handle_submit_phrase(update, context)
             mock_handling.assert_called_once()
@@ -169,7 +173,7 @@ class TestSubmitHandlers:
             func = func.__wrapped__
 
         with patch(
-            "tg.handlers.submit.submit_handling", new_callable=AsyncMock
+            "tg.handlers.commands.submit.submit_handling", new_callable=AsyncMock
         ) as mock_sub:
             await func(update, MagicMock())
             mock_sub.assert_called_once()
