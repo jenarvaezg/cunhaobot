@@ -4,12 +4,12 @@
 
 **cunhaobot** is a multi-platform chatbot designed to reply with "brother-in-law-like" (cuñao) phrases. It integrates with **Telegram**, **Slack**, and **Twitter**, and is hosted on **Google Cloud App Engine**.
 
-The core application is written in **Python**, utilizing **Flask** to handle webhooks.
+The core application is written in **Python**, utilizing **Litestar** to handle webhooks.
 
 ## Tech Stack
 
 *   **Runtime:** Python 3.14 (Google App Engine Standard Environment)
-*   **Web Framework:** Flask
+*   **Web Framework:** Litestar
 *   **Database:** Google Cloud Datastore (NoSQL)
 *   **Bot APIs:**
     *   `python-telegram-bot` (Telegram)
@@ -19,6 +19,7 @@ The core application is written in **Python**, utilizing **Flask** to handle web
     *   `uv`: Dependency management and script execution.
     *   `ruff`: Fast linting and formatting.
     *   `ty`: Astral's fast type checker (replacing mypy).
+    *   `uvicorn`: ASGI server for running the Litestar app.
 *   **Cloud Services:**
     *   Google App Engine (Hosting)
     *   Google Cloud Datastore (Persistence)
@@ -26,7 +27,7 @@ The core application is written in **Python**, utilizing **Flask** to handle web
 
 ## Project Structure
 
-*   `main.py`: The entry point for the Flask application. It defines routes for Telegram and Slack webhooks and health checks.
+*   `main.py`: The entry point for the Litestar application. It defines routes for Telegram and Slack webhooks and health checks.
 *   `tg/`: Contains logic specific to the Telegram bot.
     *   `handlers/`: Command and message handlers (e.g., `start.py`, `text_message.py`).
     *   `text_router.py`: Logic for routing incoming text messages.
@@ -85,6 +86,9 @@ This project uses custom agent "skills" and patterns to ensure code quality and 
 *   `.gemini/skills/PATTERNS.md`: Idiomatic coding patterns.
 *   `.gemini/skills/TESTING.md`: Guidelines and patterns for testing.
 
+### Git Workflow
+*   **NEVER** use the `--no-verify` flag when making a commit. All commits must pass the pre-commit hooks.
+
 ## CI/CD & Deployment
 
 ### Automated Deployment
@@ -106,7 +110,7 @@ gcloud app deploy
 
 ## Key Files
 
-*   `main.py`: Main Flask server file.
+*   `main.py`: Main Litestar server file.
 *   `.gemini/skills/`: Custom agent instructions and coding patterns.
 *   `app.yaml.example`: Template for App Engine configuration and environment variables.
 *   `deploy.sh`: Automated deployment script.

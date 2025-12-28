@@ -3,7 +3,11 @@ from unittest.mock import patch
 
 class TestEntryPoint:
     def test_main_run(self):
-        with patch("main.app.run"), patch("builtins.print"):
+        with (
+            patch("uvicorn.run"),
+            patch("builtins.print"),
+            patch("main.TG_TOKEN", "dummy"),
+        ):
             # Simulamos la ejecución del bloque if __name__ == "__main__":
             # Aunque no podemos ejecutarlo directamente sin un subproceso, podemos llamar a las funciones que contiene
             # o simplemente verificar que app.run está configurado correctamente.

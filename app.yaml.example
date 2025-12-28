@@ -1,5 +1,5 @@
 runtime: python314
-entrypoint: "gunicorn -b :$PORT main:app"
+entrypoint: "uvicorn main:app --host 0.0.0.0 --port $PORT"
 
 env_variables:
   TG_TOKEN: $TG_TOKEN

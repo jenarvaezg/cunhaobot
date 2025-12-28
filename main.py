@@ -4,7 +4,8 @@ import os
 
 import requests
 import tweepy
-from flask import Flask, redirect, request
+from litestar import Litestar, Request, get, post
+from litestar.response import Redirect, Response
 from telegram import Update
 
 from models.phrase import LongPhrase
@@ -19,26 +20,25 @@ TG_TOKEN = os.environ["TG_TOKEN"]
 BASE_URL = os.environ["BASE_URL"]
 PORT = int(os.environ.get("PORT", 5050))
 
-app = Flask(__name__)
 
-
-@app.route("/")
-def ping():
+@get("/", sync_to_thread=False)
+def ping() -> str:
     return "I am alive"
 
 
-@app.route(f"/{TG_TOKEN}", methods=["POST"])
-async def telegram_handler():
+@post(path=f"/{TG_TOKEN}", status_code=200)
+async def telegram_handler(request: Request) -> str:
     application = get_tg_application()
     await application.initialize()
 
-    update = Update.de_json(request.json, application.bot)
+    body = await request.json()
+    update = Update.de_json(body, application.bot)
     await application.process_update(update)
     return "Handled"
 
 
-@app.route(f"/{TG_TOKEN}/ping", methods=["GET"])
-async def telegram_ping_handler():
+@get(path=f"/{TG_TOKEN}/ping")
+async def telegram_ping_handler() -> str:
     application = get_tg_application()
     await application.initialize()
 
@@ -46,33 +46,38 @@ async def telegram_ping_handler():
     return "OK"
 
 
-@app.route("/slack", methods=["POST"])
-def slack_handler():
-    data = request.form
-    if "payload" in data:
-        data = json.loads(data["payload"])
+@post(path="/slack", status_code=200)
+async def slack_handler(request: Request) -> Response[str]:
+    data = await request.form()
+    data_dict = dict(data)
 
-    response = handle_slack(data)
+    if "payload" in data_dict:
+        data_payload = json.loads(str(data_dict["payload"]))
+    else:
+        data_payload = data_dict
+
+    response = handle_slack(data_payload)
     if not response:
-        return ""
+        return Response("", status_code=200)
 
-    requests.post(data["response_url"], json=response["indirect"])
-    return response["direct"]
+    requests.post(data_payload["response_url"], json=response["indirect"])
+    return Response(response["direct"], status_code=200)
 
 
-@app.route("/slack/auth", methods=["GET"])
-def slack_auth_handler():
+@get("/slack/auth", sync_to_thread=False)
+def slack_auth_handler() -> Redirect:
     client_id = os.environ["SLACK_CLIENT_ID"]
     scopes = ["commands", "chat:write", "chat:write.public"]
 
-    return redirect(
-        f"https://slack.com/oauth/v2/authorize?client_id={client_id}&scope={','.join(scopes)}"
+    return Redirect(
+        path=f"https://slack.com/oauth/v2/authorize?client_id={client_id}&scope={','.join(scopes)}",
+        status_code=302,
     )
 
 
-@app.route("/slack/auth/redirect", methods=["GET"])
-def slack_auth_redirect_handler():
-    code = request.args.get("code")
+@get("/slack/auth/redirect")
+async def slack_auth_redirect_handler(request: Request) -> str:
+    code = request.query_params.get("code")
 
     request_body = {
         "code": code,
@@ -88,13 +93,13 @@ def slack_auth_redirect_handler():
     return ":)"
 
 
-@app.route("/twitter/auth/redirect", methods=["GET"])
-def twitter_auth_redirect_handler():
+@get("/twitter/auth/redirect", sync_to_thread=False)
+def twitter_auth_redirect_handler() -> str:
     return ":)"
 
 
-@app.route("/twitter/ping", methods=["GET"])
-def twitter_ping_handler():
+@get("/twitter/ping", sync_to_thread=False)
+def twitter_ping_handler() -> str:
     client = tweepy.Client(
         consumer_key=os.environ["TWITTER_CONSUMER_KEY"],
         consumer_secret=os.environ["TWITTER_CONSUMER_KEY_SECRET"],
@@ -106,9 +111,21 @@ def twitter_ping_handler():
     return ""
 
 
+app = Litestar(
+    route_handlers=[
+        ping,
+        telegram_handler,
+        telegram_ping_handler,
+        slack_handler,
+        slack_auth_handler,
+        slack_auth_redirect_handler,
+        twitter_auth_redirect_handler,
+        twitter_ping_handler,
+    ]
+)
+
 if __name__ == "__main__":
+    import uvicorn
+
     print(TG_TOKEN)
-    # This is used when running locally only. When deploying to Google App
-    # Engine, a webserver process such as Gunicorn will serve the app. This
-    # can be configured by adding an `entrypoint` to app.yaml.
-    app.run(host="0.0.0.0", port=PORT, debug=True)
+    uvicorn.run(app, host="0.0.0.0", port=PORT)

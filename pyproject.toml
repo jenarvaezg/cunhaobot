@@ -7,7 +7,6 @@ requires-python = ">=3.14"
 dependencies = [
     "python-telegram-bot>=20.0",
     "google-cloud-datastore",
-    "flask",
     "boto3",
     "google-cloud-storage",
     "pytz",
@@ -16,7 +15,9 @@ dependencies = [
     "tweepy",
     "gunicorn",
     "asgiref",
-    "levenshtein"
+    "levenshtein",
+    "litestar>=2.19.0",
+    "uvicorn>=0.40.0",
 ]
 
 [dependency-groups]
@@ -34,7 +35,7 @@ dev = [
 python-version = "3.14"
 
 [tool.ty.src]
-exclude = ["**/tests/**"]
+exclude = ["**/tests/**", "**/*_test.py"]
 
 [tool.ty.rules]
 possibly-missing-attribute = "warn"

@@ -3,6 +3,8 @@ import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from litestar.status_codes import HTTP_200_OK
+from litestar.testing import TestClient
 
 # Import app from main
 from main import app
@@ -10,14 +12,14 @@ from main import app
 
 @pytest.fixture
 def client():
-    app.config["TESTING"] = True
-    with app.test_client() as client:
+    with TestClient(app=app) as client:
         yield client
 
 
 def test_ping(client):
     rv = client.get("/")
-    assert rv.data == b"I am alive"
+    assert rv.status_code == HTTP_200_OK
+    assert rv.text == "I am alive"
 
 
 def test_telegram_handler(client):
@@ -40,7 +42,8 @@ def test_telegram_handler(client):
 
             rv = client.post(f"/{token}", json={"update_id": 123})
 
-            assert rv.data == b"Handled"
+            assert rv.status_code == HTTP_200_OK
+            assert rv.text == "Handled"
             mock_de_json.assert_called()
             mock_app.initialize.assert_called()
             mock_app.process_update.assert_called_with(mock_update)
@@ -60,7 +63,8 @@ def test_telegram_ping_handler(client):
         with patch("main.handle_telegram_ping", new_callable=AsyncMock) as mock_ping:
             rv = client.get(f"/{token}/ping")
 
-            assert rv.data == b"OK"
+            assert rv.status_code == HTTP_200_OK
+            assert rv.text == "OK"
             mock_app.initialize.assert_called()
             mock_ping.assert_called_with(mock_app.bot)
 
@@ -74,13 +78,14 @@ def test_slack_handler_direct(client):
         }
 
         with patch("requests.post") as mock_post:
-            # Slack sends payload as form data string
+            # Slack sends payload as form data
             data = {
                 "payload": json.dumps({"response_url": "http://slack.com/response"})
             }
             rv = client.post("/slack", data=data)
 
-            assert rv.data == b"direct_response"
+            assert rv.status_code == HTTP_200_OK
+            assert rv.text == "direct_response"
             mock_post.assert_called_with(
                 "http://slack.com/response", json="indirect_payload"
             )
@@ -93,25 +98,28 @@ def test_slack_handler_no_response(client):
         data = {"payload": json.dumps({})}
         rv = client.post("/slack", data=data)
 
-        assert rv.data == b""
+        assert rv.status_code == HTTP_200_OK
+        assert rv.text == ""
 
 
 def test_slack_auth(client):
-    rv = client.get("/slack/auth")
+    rv = client.get("/slack/auth", follow_redirects=False)
     assert rv.status_code == 302
-    assert "slack.com/oauth/v2/authorize" in rv.location
+    assert "slack.com/oauth/v2/authorize" in rv.headers["location"]
 
 
 def test_slack_auth_redirect(client):
     with patch("requests.post") as mock_post:
-        rv = client.get("/slack/auth/redirect?code=123")
-        assert rv.data == b":)"
+        rv = client.get("/slack/auth/redirect", params={"code": "123"})
+        assert rv.status_code == HTTP_200_OK
+        assert rv.text == ":)"
         mock_post.assert_called()
 
 
 def test_twitter_auth_redirect(client):
     rv = client.get("/twitter/auth/redirect")
-    assert rv.data == b":)"
+    assert rv.status_code == HTTP_200_OK
+    assert rv.text == ":)"
 
 
 def test_twitter_ping(client):
@@ -124,7 +132,8 @@ def test_twitter_ping(client):
 
             rv = client.get("/twitter/ping")
 
-            assert rv.data == b""
+            assert rv.status_code == HTTP_200_OK
+            assert rv.text == ""
             mock_client.create_tweet.assert_called_with(text="tweet text")
 
 
@@ -132,9 +141,9 @@ def test_main_entry_point():
     import runpy
     from unittest.mock import patch
 
-    # Mock Flask.run globally to be sure it doesn't start the server
+    # Mock uvicorn.run globally to be sure it doesn't start the server
     with (
-        patch("flask.Flask.run"),
+        patch("uvicorn.run"),
         patch("main.TG_TOKEN", "dummy"),
         patch("builtins.print"),
     ):
