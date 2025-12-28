@@ -13,9 +13,11 @@ from litestar.static_files import StaticFilesConfig
 from telegram import Update
 
 from models.phrase import LongPhrase, Phrase
+from models.proposal import LongProposal, Proposal
 from slack.handlers import handle_slack
 from tg import get_tg_application
 from tg.handlers import handle_ping as handle_telegram_ping
+from utils import normalize_str
 
 # Enable logging
 logging.basicConfig(format="%(message)s", level=logging.INFO)
@@ -36,6 +38,32 @@ def index() -> Template:
                 short_phrases, key=lambda x: x.usages, reverse=True
             ),
             "long_phrases": sorted(long_phrases, key=lambda x: x.usages, reverse=True),
+        },
+    )
+
+
+@get("/proposals", sync_to_thread=False)
+def proposals() -> Template:
+    all_short_proposals = Proposal.load_all()
+    all_long_proposals = LongProposal.load_all()
+
+    short_phrases_texts = {normalize_str(p.text) for p in Phrase.get_phrases()}
+    long_phrases_texts = {normalize_str(p.text) for p in LongPhrase.get_phrases()}
+
+    pending_short = [
+        p
+        for p in all_short_proposals
+        if normalize_str(p.text) not in short_phrases_texts
+    ]
+    pending_long = [
+        p for p in all_long_proposals if normalize_str(p.text) not in long_phrases_texts
+    ]
+
+    return Template(
+        template_name="proposals.html",
+        context={
+            "pending_short": pending_short,
+            "pending_long": pending_long,
         },
     )
 
@@ -150,6 +178,7 @@ def twitter_ping_handler() -> str:
 app = Litestar(
     route_handlers=[
         index,
+        proposals,
         search,
         ping,
         telegram_handler,
