@@ -27,7 +27,7 @@ async def handle_delete_chapas(update: Update, context: CallbackContext):
         )
 
     tasks = ScheduledTask.get_tasks(chat_id=chat.id)
-    if len(tasks) == 0:
+    if not tasks:
         return await message.reply_text(
             f"¡Pero si no te estoy dando la chapa, {Phrase.get_random_phrase()}!",
             do_quote=True,
@@ -45,15 +45,21 @@ async def handle_delete_chapas(update: Update, context: CallbackContext):
 @only_admins
 @log_update
 async def handle_delete_chapa(update: Update, context: CallbackContext):
-    tokens = update.effective_message.text.split(" ")
+    if not (message := update.effective_message) or not message.text:
+        return
+
+    tokens = message.text.split(" ")
     try:
         chapa_id = int(tokens[1]) - 1
     except (IndexError, ValueError):
         return await usage(update)
 
+    if not update.effective_chat:
+        return
+
     tasks = ScheduledTask.get_tasks(chat_id=update.effective_chat.id)
-    if len(tasks) == 0:
-        return await update.effective_message.reply_text(
+    if not tasks:
+        return await message.reply_text(
             f"¡Pero si no te estoy dando la chapa, {Phrase.get_random_phrase()}!"
         )
 
@@ -61,10 +67,10 @@ async def handle_delete_chapa(update: Update, context: CallbackContext):
         task = tasks[chapa_id]
         task.delete()
     except IndexError:
-        await update.effective_message.reply_text(
+        await message.reply_text(
             f"Te has pasado con el número, {Phrase.get_random_phrase()}.", do_quote=True
         )
     else:
-        await update.effective_message.reply_text(
+        await message.reply_text(
             f"Ya no te daré esa chapa, {Phrase.get_random_phrase()}.", do_quote=True
         )

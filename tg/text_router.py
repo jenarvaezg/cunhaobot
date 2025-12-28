@@ -12,24 +12,20 @@ STICKER_MODE = "STICKER"
 
 
 def get_query_mode(query: str) -> tuple[str, str]:
-    clean_query = query.strip()
-    query_words = clean_query.split(" ")
-    if clean_query == "" or query_words[0] in SHORT_MODE_WORDS:
-        return SHORT_MODE, " ".join(query_words[1:])
-
-    if query_words[0].isnumeric():
-        return SHORT_MODE, " ".join(query_words)
-
-    if query_words[0] in AUDIO_MODE_WORDS:
-        return AUDIO_MODE, " ".join(query_words[1:])
-
-    if query_words[0] in STICKER_MODE_WORDS:
-        return STICKER_MODE, " ".join(query_words[1:])
-
-    if query_words[0] in LONG_MODE_WORDS:
-        return LONG_MODE, " ".join(query_words[1:])
-
-    if query_words[0].isalpha():
-        return LONG_MODE, " ".join(query_words[0:])
-
-    return "", ""
+    match query.strip().split():
+        case []:
+            return SHORT_MODE, ""
+        case [first, *rest] if first in SHORT_MODE_WORDS:
+            return SHORT_MODE, " ".join(rest)
+        case [first, *rest] if first.isnumeric():
+            return SHORT_MODE, " ".join([first] + rest)
+        case [first, *rest] if first in AUDIO_MODE_WORDS:
+            return AUDIO_MODE, " ".join(rest)
+        case [first, *rest] if first in STICKER_MODE_WORDS:
+            return STICKER_MODE, " ".join(rest)
+        case [first, *rest] if first in LONG_MODE_WORDS:
+            return LONG_MODE, " ".join(rest)
+        case [first, *rest] if first.isalpha():
+            return LONG_MODE, " ".join([first] + rest)
+        case _:
+            return "", ""

@@ -47,7 +47,10 @@ def split_time(time_s: str) -> tuple[int, int]:
 @only_admins
 @log_update
 async def handle_create_chapa(update: Update, context: CallbackContext):
-    text = " ".join(update.effective_message.text.split())
+    if not (message := update.effective_message) or not message.text:
+        return
+
+    text = " ".join(message.text.split())
 
     try:
         tokens = text.split(" ")
@@ -55,15 +58,18 @@ async def handle_create_chapa(update: Update, context: CallbackContext):
             return await usage(update)
         time, query = tokens[1], " ".join(tokens[2:])
     except (KeyError, ValueError, IndexError) as e:
-        await update.effective_message.reply_text(str(e), do_quote=True)
+        await message.reply_text(str(e), do_quote=True)
         return await usage(update)
 
     try:
         require_valid_query(query)
         hour, minute = split_time(time)
     except (KeyError, ValueError) as e:
-        await update.effective_message.reply_text(str(e), do_quote=True)
+        await message.reply_text(str(e), do_quote=True)
         return await usage(update)
+
+    if not update.effective_chat:
+        return
 
     ScheduledTask(
         update.effective_chat.id,
@@ -74,7 +80,7 @@ async def handle_create_chapa(update: Update, context: CallbackContext):
         task_type="chapa",
     ).save()
 
-    await update.effective_message.reply_text(
+    await message.reply_text(
         f"Configurada chapa a las {hour:02}:{minute:02}. Puedes eliminarla en cualquier momento usando /borrarchapa.",
         do_quote=True,
     )

@@ -8,6 +8,8 @@ from tg.decorators import log_update
 @log_update
 async def handle_help(update: Update, context: CallbackContext):
     """Send a message when the command /help is issued."""
+    if not update.effective_message:
+        return
     await update.effective_message.reply_text(
         "Puedes usar /proponer <palabra o apelativo> para proponer tu palabreja de cuñado favorita. "
         f'Ejemplo: "{Phrase.get_random_phrase()}"\n'

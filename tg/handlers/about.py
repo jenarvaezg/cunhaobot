@@ -7,6 +7,8 @@ from tg.decorators import log_update
 @log_update
 async def handle_about(update: Update, context: CallbackContext):
     """Send a message when the command /help is issued."""
+    if not update.effective_message:
+        return
     await update.effective_message.reply_text(
         "Soy un bot hecho por @jenarvaezg, si tienes cualquier duda puedes hablar con él.\n"
         "Mis tripas las puedes ver en https://github.com/jenarvaezg/cunhaobot\n "

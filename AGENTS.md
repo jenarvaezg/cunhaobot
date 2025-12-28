@@ -15,6 +15,10 @@ The core application is written in **Python**, utilizing **Flask** to handle web
     *   `python-telegram-bot` (Telegram)
     *   Slack API (Webhooks & Interactivity)
     *   `tweepy` (Twitter)
+*   **Toolchain:**
+    *   `uv`: Dependency management and script execution.
+    *   `ruff`: Fast linting and formatting.
+    *   `ty`: Astral's fast type checker (replacing mypy).
 *   **Cloud Services:**
     *   Google App Engine (Hosting)
     *   Google Cloud Datastore (Persistence)
@@ -59,24 +63,42 @@ The application relies heavily on environment variables for configuration and se
     uv export --no-hashes --format requirements-txt > requirements.txt
     ```
 
-2.  **Run Locally:**
+2.  **Linting & Type Checking:**
+    ```bash
+    uv run ruff check .
+    uv run ty check
+    ```
+
+3.  **Run Locally:**
     Ensure you have set the necessary environment variables (see above).
     ```bash
     uv run main.py
     ```
     *Note: The local server runs on port 5050 by default.*
 
-## Deployment
+## Agent Guidelines
 
-The project includes a shell script for deploying to Google App Engine and cleaning up previous versions.
+This project uses custom agent "skills" and patterns to ensure code quality and consistency. Before working on the codebase, agents MUST consult:
 
-Ensure `requirements.txt` is up to date before deploying.
+*   `.gemini/skills/README.md`: Index of guidelines and patterns.
+*   `.gemini/skills/SKILL.md`: Core Python 3.14+ philosophy.
+*   `.gemini/skills/PATTERNS.md`: Idiomatic coding patterns.
+
+## CI/CD & Deployment
+
+### Automated Deployment
+The project uses GitHub Actions (`.github/workflows/deploy.yml`) for automated deployment.
+*   **Parallel Verification:** Linting (`pre-commit`) and Testing (`pytest`) run in parallel.
+*   **Deployment:** Only proceeds if both verification jobs pass.
+
+### Manual Deployment
+The project includes a shell script for deploying to Google App Engine and cleaning up previous versions. Ensure `requirements.txt` is up to date before deploying.
 
 ```bash
 ./deploy.sh
 ```
 
-**Manual Deployment:**
+**Manual Command:**
 ```bash
 gcloud app deploy
 ```
@@ -84,7 +106,8 @@ gcloud app deploy
 ## Key Files
 
 *   `main.py`: Main Flask server file.
+*   `.gemini/skills/`: Custom agent instructions and coding patterns.
 *   `app.yaml.example`: Template for App Engine configuration and environment variables.
 *   `deploy.sh`: Automated deployment script.
-*   `pyproject.toml`: Project configuration and dependencies (managed by uv).
+*   `pyproject.toml`: Project configuration, dependencies, and `ty` configuration.
 *   `requirements.txt`: Frozen dependencies for App Engine deployment.

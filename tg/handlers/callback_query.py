@@ -1,9 +1,8 @@
 import os
-from typing import Any
-
 from telegram import (
     Bot,
     CallbackQuery,
+    ChatMember,
     InlineKeyboardMarkup,
     Update,
     constants,
@@ -17,7 +16,7 @@ from tg.decorators import log_update
 from tg.markup.keyboards import build_vote_keyboard
 
 curators_chat_id = int(os.environ.get("MOD_CHAT_ID", "-1"))
-admins: list[Any] = []  # Cool global var to cache stuff
+admins: list[ChatMember] = []  # Cool global var to cache stuff
 
 
 def get_required_votes():
@@ -96,10 +95,16 @@ async def _update_proposal_text(
 @log_update
 async def handle_callback_query(update: Update, context: CallbackContext):
     global admins
+    if update.callback_query is None:
+        return
+
     bot: Bot = context.bot
     admins = admins or await bot.get_chat_administrators(curators_chat_id)
-    callback_query: CallbackQuery = update.callback_query
-    data: str = callback_query.data
+    callback_query = update.callback_query
+    data = callback_query.data
+    if data is None:
+        return
+
     vote, proposal_id, kind = data.split(":")
     proposal_class = get_proposal_class_by_kind(kind)
     proposal = proposal_class.load(proposal_id)
@@ -117,7 +122,7 @@ async def handle_callback_query(update: Update, context: CallbackContext):
         )
         return
 
-    await _add_vote(proposal, vote, update.callback_query)  # type: ignore
+    await _add_vote(proposal, vote, callback_query)
 
     if len(proposal.liked_by) >= required_votes:
         await _approve_proposal(proposal, callback_query, bot)

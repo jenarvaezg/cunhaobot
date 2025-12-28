@@ -8,6 +8,8 @@ from tg.decorators import log_update
 @log_update
 async def handle_cancel(update: Update, context: CallbackContext):
     """Send a message when the command /help is issued."""
+    if not update.effective_message:
+        return
     await update.effective_message.reply_text(
         f"Pues vale, {Phrase.get_random_phrase()}.",
         reply_markup=ReplyKeyboardRemove(selective=True),

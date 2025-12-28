@@ -8,8 +8,14 @@ from tg.decorators import log_update
 
 @log_update
 async def handle_stop(update: Update, context: CallbackContext):
-    """Send a message when the command /start is issued."""
-    user = User.update_or_create_from_update(update)
+    if (
+        not update.effective_user
+        or not update.effective_chat
+        or not update.effective_message
+    ):
+        return
+
+    user = User.load(update.effective_chat.id)
     if user:
         user.delete()
     tasks = ScheduledTask.get_tasks(chat_id=update.effective_chat.id)

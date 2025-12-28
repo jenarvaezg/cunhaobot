@@ -11,19 +11,19 @@ class Report:
 
     def __init__(
         self,
-        longs,
-        shorts,
-        users,
-        groups,
-        inline_users,
-        inline_usages,
-        gdprs,
-        chapas,
-        top_long,
-        top_short,
-        day,
-        month,
-        year,
+        longs: int,
+        shorts: int,
+        users: int,
+        groups: int,
+        inline_users: int,
+        inline_usages: int,
+        gdprs: int,
+        chapas: int,
+        top_long: str,
+        top_short: str,
+        day: int,
+        month: int,
+        year: int,
     ):
         self.longs = longs
         self.shorts = shorts
@@ -78,25 +78,25 @@ class Report:
         return report
 
     @property
-    def datastore_id(self):
+    def datastore_id(self) -> str:
         return f"{self.year}/{self.month}/{self.day}"
 
     @classmethod
-    def from_entity(cls, entity) -> "Report":
+    def from_entity(cls, entity: datastore.Entity) -> "Report":
         return cls(
-            entity["longs"],
-            entity["shorts"],
-            entity["users"],
-            entity["groups"],
-            entity["inline_users"],
-            entity["inline_usages"],
-            entity["gdprs"],
-            entity["chapas"],
-            entity.get("top_long", ""),
-            entity.get("top_short", ""),
-            entity["day"],
-            entity["month"],
-            entity["year"],
+            longs=entity["longs"],
+            shorts=entity["shorts"],
+            users=entity["users"],
+            groups=entity["groups"],
+            inline_users=entity["inline_users"],
+            inline_usages=entity["inline_usages"],
+            gdprs=entity["gdprs"],
+            chapas=entity["chapas"],
+            top_long=entity.get("top_long", ""),
+            top_short=entity.get("top_short", ""),
+            day=entity["day"],
+            month=entity["month"],
+            year=entity["year"],
         )
 
     def save(self) -> None:

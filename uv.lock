@@ -149,7 +149,6 @@ dependencies = [
     { name = "python-telegram-bot" },
     { name = "pytz" },
     { name = "tweepy" },
-    { name = "urllib3" },
 ]
 
 [package.dev-dependencies]
@@ -174,7 +173,6 @@ requires-dist = [
     { name = "python-telegram-bot", specifier = ">=20.0" },
     { name = "pytz" },
     { name = "tweepy" },
-    { name = "urllib3", specifier = "<2" },
 ]
 
 [package.metadata.requires-dev]

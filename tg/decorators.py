@@ -13,21 +13,23 @@ logger = logging.getLogger("cunhaobot")
 def only_admins(f):
     @wraps(f)
     async def wrapper(update: Update, *args, **kwargs):
-        chat: Chat = update.effective_chat
-        if chat.type == chat.PRIVATE:
-            return await f(update, *args, **kwargs)
-        if chat.all_members_are_administrators:
+        if not (chat := update.effective_chat):
+            return
+
+        if chat.type == Chat.PRIVATE:
             return await f(update, *args, **kwargs)
 
         admins = await chat.get_administrators()
         admin_ids = [admin.user.id for admin in admins]
-        if update.effective_user.id in admin_ids:
-            return await f(update, *args, **kwargs)
+        if not update.effective_user or update.effective_user.id not in admin_ids:
+            if update.effective_message:
+                await update.effective_message.reply_text(
+                    f"Esto solo lo pueden hacer administradores, {Phrase.get_random_phrase()}.",
+                    do_quote=True,
+                )
+            return
 
-        await update.effective_message.reply_text(
-            f"Esto solo lo pueden hacer administradores, {Phrase.get_random_phrase()}.",
-            do_quote=True,
-        )
+        return await f(update, *args, **kwargs)
 
     return wrapper
 

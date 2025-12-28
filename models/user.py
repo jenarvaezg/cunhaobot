@@ -17,9 +17,11 @@ class InlineUser:
         return datastore.Client().key(self.kind, self.user_id)
 
     @classmethod
-    def update_or_create_from_update(cls, update: Update) -> "InlineUser":
+    def update_or_create_from_update(cls, update: Update) -> Optional["InlineUser"]:
+        if not (update_user := update.effective_user):
+            return None
+
         datastore_client = datastore.Client()
-        update_user = update.effective_user
         user = cls(update_user.id, update_user.name)
 
         entity = datastore_client.get(user.datastore_key)
@@ -27,7 +29,7 @@ class InlineUser:
             user_from_entity = cls.from_entity(entity)
             if user_from_entity.name != update_user.name:
                 user_from_entity.name = update_user.name
-                user.save()
+                user_from_entity.save()
             return user_from_entity
 
         user.save()
@@ -65,7 +67,7 @@ class InlineUser:
 class User:
     kind = "User"
 
-    def __init__(self, chat_id, name, is_group, gdpr=False):
+    def __init__(self, chat_id: int, name: str, is_group: bool, gdpr: bool = False):
         self.chat_id = chat_id
         self.name = name
         self.is_group = is_group
@@ -82,8 +84,8 @@ class User:
         return msg.chat.title if msg.chat.title else "Unknown"
 
     @classmethod
-    def update_or_create_from_update(cls, update) -> Optional["User"]:
-        message: Message = update.effective_message
+    def update_or_create_from_update(cls, update: Update) -> Optional["User"]:
+        message = update.effective_message
         if not message:
             return None
         chat_id = message.chat_id
@@ -94,20 +96,22 @@ class User:
         if user_from_entity:
             user_from_entity.gdpr = False
             user_from_entity.name = name
-            user.save()
+            user_from_entity.save()
+            return user_from_entity
 
+        user.save()
         return user
 
     @classmethod
-    def from_entity(cls, entity) -> "User":
+    def from_entity(cls, entity: datastore.Entity) -> "User":
         return cls(
-            entity["chat_id"],
-            entity["name"],
-            entity["is_group"],
-            entity["gdpr"],
+            chat_id=entity["chat_id"],
+            name=entity["name"],
+            is_group=entity["is_group"],
+            gdpr=entity["gdpr"],
         )
 
-    def save(self):
+    def save(self) -> None:
         datastore_client = datastore.Client()
         key = datastore_client.key(self.kind, self.chat_id)
         entity = datastore.Entity(key=key)
@@ -120,7 +124,7 @@ class User:
         datastore_client.put(entity)
 
     @classmethod
-    def load(cls, chat_id) -> Optional["User"]:
+    def load(cls, chat_id: int) -> Optional["User"]:
         datastore_client = datastore.Client()
         key = datastore_client.key(cls.kind, chat_id)
 
@@ -129,14 +133,14 @@ class User:
         return cls.from_entity(entity) if entity else None
 
     @classmethod
-    def load_all(cls, ignore_gdpr=False) -> list["User"]:
+    def load_all(cls, ignore_gdpr: bool = False) -> list["User"]:
         datastore_client = datastore.Client()
         query = datastore_client.query(kind=cls.kind)
         if not ignore_gdpr:
             query.add_filter("gdpr", "=", False)
         return [cls.from_entity(entity) for entity in query.fetch()]
 
-    def delete(self, hard=False):
+    def delete(self, hard: bool = False) -> None:
         if hard:
             datastore_client = datastore.Client()
             key = datastore_client.key(self.kind, self.chat_id)

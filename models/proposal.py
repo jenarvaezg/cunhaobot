@@ -8,30 +8,33 @@ from models.phrase import LongPhrase, Phrase
 
 class Proposal:
     kind = "Proposal"
-    phrase_class = Phrase
+    phrase_class: type[Phrase] = Phrase
 
     @staticmethod
-    def proposal_text_from_message(message: Message):
-        text = ""
-        text_after_command = message.text.split(" ")[1:]
-        if text_after_command:
-            text = " ".join(text_after_command).strip()
-        elif message.reply_to_message:
-            text = message.reply_to_message.text
+    def proposal_text_from_message(message: Message) -> str:
+        if not (msg_text := message.text):
+            return ""
 
-        return text
+        text_after_command = msg_text.split(" ")[1:]
+        if text_after_command:
+            return " ".join(text_after_command).strip()
+
+        if message.reply_to_message and message.reply_to_message.text:
+            return message.reply_to_message.text
+
+        return ""
 
     def __init__(
         self,
-        id,
-        from_chat_id,
-        from_message_id,
-        text,
-        liked_by=None,
-        disliked_by=None,
-        user_id=0,
+        id: str,
+        from_chat_id: int,
+        from_message_id: int,
+        text: str,
+        liked_by: list[int] | None = None,
+        disliked_by: list[int] | None = None,
+        user_id: int = 0,
     ):
-        self.id: str = id
+        self.id = id
         self.from_chat_id = from_chat_id
         self.from_message_id = from_message_id
         self.text = text
@@ -40,17 +43,20 @@ class Proposal:
         self.user_id = user_id
 
     @classmethod
-    def from_update(cls, update: Update):
-        if not update.effective_message or not update.effective_user:
+    def from_update(cls, update: Update) -> "Proposal":
+        if not (message := update.effective_message) or not (
+            user := update.effective_user
+        ):
             raise ValueError("Update has no effective message or user")
-        id = str(update.effective_message.chat.id + update.effective_message.message_id)
+
+        proposal_id = str(message.chat.id + message.message_id)
 
         return cls(
-            id,
-            update.effective_message.chat.id,
-            update.effective_message.message_id,
-            cls.proposal_text_from_message(update.effective_message),
-            user_id=update.effective_user.id,
+            proposal_id,
+            message.chat.id,
+            message.message_id,
+            cls.proposal_text_from_message(message),
+            user_id=user.id,
         )
 
     @classmethod

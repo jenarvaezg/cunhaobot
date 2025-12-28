@@ -19,17 +19,17 @@ class Phrase:
 
     def __init__(
         self,
-        text,
-        sticker_file_id="",
-        usages=0,
-        audio_usages=0,
-        daily_usages=0,
-        audio_daily_usages=0,
-        sticker_daily_usages=0,
-        sticker_usages=0,
-        user_id=0,
-        chat_id=0,
-        created_at=None,
+        text: str,
+        sticker_file_id: str = "",
+        usages: int = 0,
+        audio_usages: int = 0,
+        daily_usages: int = 0,
+        audio_daily_usages: int = 0,
+        sticker_daily_usages: int = 0,
+        sticker_usages: int = 0,
+        user_id: int = 0,
+        chat_id: int = 0,
+        created_at: datetime | None = None,
     ):
         self.text = text
         self.usages = usages
@@ -44,7 +44,7 @@ class Phrase:
         self.created_at = created_at
 
     def __repr__(self) -> str:
-        return self.__str__()
+        return str(self)
 
     def __str__(self) -> str:
         return self.text
@@ -52,7 +52,7 @@ class Phrase:
     @classmethod
     async def upload_from_proposal(cls, proposal, bot: telegram.Bot):
         phrase = cls(
-            proposal.text,
+            text=proposal.text,
             user_id=proposal.user_id,
             chat_id=proposal.from_chat_id,
             created_at=datetime.now(),
@@ -65,10 +65,10 @@ class Phrase:
         cls.phrases_cache.append(phrase)
 
     @classmethod
-    def from_entity(cls, entity):
+    def from_entity(cls, entity: datastore.Entity) -> "Phrase":
         return cls(
-            entity["text"],
-            sticker_file_id=entity.get("sticker_file_id", 0),
+            text=entity["text"],
+            sticker_file_id=entity.get("sticker_file_id", ""),
             usages=entity.get("usages", 0),
             audio_usages=entity.get("audio_usages", 0),
             sticker_usages=entity.get("sticker_usages", 0),
@@ -88,14 +88,18 @@ class Phrase:
         return cls.phrases_cache
 
     @classmethod
-    def get_phrases(cls, search="") -> list["Phrase"]:
-        if len(cls.phrases_cache) == 0:
+    def get_phrases(cls, search: str = "") -> list["Phrase"]:
+        if not cls.phrases_cache:
             cls.refresh_cache()
 
+        if not search:
+            return cls.phrases_cache
+
+        normalized_search = normalize_str(search)
         return [
             phrase
             for phrase in cls.phrases_cache
-            if normalize_str(search) in normalize_str(phrase.text)
+            if normalized_search in normalize_str(phrase.text)
         ]
 
     @classmethod
@@ -104,22 +108,25 @@ class Phrase:
 
     @classmethod
     def add_usage_by_result_id(cls, result_id: str) -> None:
-        is_audio = result_id.startswith("audio-")
-        is_sticker = result_id.startswith("sticker-")
+        match result_id:
+            case s if s.startswith("audio-short-"):
+                clean_id = s.removeprefix("audio-short-")
+                is_audio, is_sticker = True, False
+            case s if s.startswith("sticker-short-"):
+                clean_id = s.removeprefix("sticker-short-")
+                is_audio, is_sticker = False, True
+            case s if s.startswith("short-"):
+                clean_id = s.removeprefix("short-")
+                is_audio, is_sticker = False, False
+            case _:
+                return
 
-        if is_audio:
-            result_id = result_id[len("audio-short-") :]
-        elif is_sticker:
-            result_id = result_id[len("sticker-short-") :]
-        else:
-            result_id = result_id[len("short-") :]
-
-        words = result_id.split(",")
+        words = clean_id.split(",")
         phrases = cls.refresh_cache()
 
         for word in words:
-            phrase: Phrase | None = next(
-                iter(
+            phrase = next(
+                (
                     p
                     for p in phrases
                     if normalize_str(p.text, remove_punctuation=False) == word
@@ -223,21 +230,25 @@ class LongPhrase(Phrase):
         if "long-bad-search-" in result_id:
             return
 
-        is_sticker = result_id.startswith("sticker-")
-        is_audio = result_id.startswith("audio-")
+        match result_id:
+            case s if s.startswith("audio-long-"):
+                clean_id = s.removeprefix("audio-long-")
+                is_audio, is_sticker = True, False
+            case s if s.startswith("sticker-long-"):
+                clean_id = s.removeprefix("sticker-long-")
+                is_audio, is_sticker = False, True
+            case s if s.startswith("short-"):
+                clean_id = s.removeprefix("short-")
+                is_audio, is_sticker = False, False
+            case _:
+                clean_id = result_id
+                is_audio, is_sticker = False, False
 
-        if is_audio:
-            result_id = result_id[len("audio-long-") :]
-        elif is_sticker:
-            result_id = result_id[len("sticker-long-") :]
-        else:
-            result_id = result_id[len("short-") :]
-
-        result_id = normalize_str(result_id)
+        normalized_id = normalize_str(clean_id)
         phrases = cls.refresh_cache()
 
-        phrase: Phrase | None = next(
-            iter(p for p in phrases if result_id in normalize_str(p.text)), None
+        phrase = next(
+            (p for p in phrases if normalized_id in normalize_str(p.text)), None
         )
 
         if phrase:

@@ -1,6 +1,6 @@
 import random
 
-from telegram import Message, Update
+from telegram import Update
 from telegram.ext import CallbackContext
 
 from models.phrase import Phrase
@@ -23,14 +23,14 @@ MESSAGE_TRIGGERS = {
 
 @log_update
 async def handle_message(update: Update, context: CallbackContext):
-    message: Message = update.effective_message
+    if not (message := update.effective_message) or not (msg_text := message.text):
+        return
 
     used_triggers = []
-    msg_text = message.text
     for trigger_words, trigger_fn in MESSAGE_TRIGGERS.items():
-        if (
-            any(word in msg_text for word in trigger_words)
-            and trigger_fn not in used_triggers
-        ):
+        if trigger_fn in used_triggers:
+            continue
+
+        if any(word in msg_text for word in trigger_words):
             await trigger_fn(update, context)
             used_triggers.append(trigger_fn)

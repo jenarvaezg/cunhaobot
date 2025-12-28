@@ -14,7 +14,7 @@ owner_id = int(os.environ["OWNER_ID"])
 curators_chat_id = int(os.environ.get("MOD_CHAT_ID", "-1"))
 
 
-def _text_wrap(text: str, font: ImageFont, max_width: int):
+def _text_wrap(text: str, font: ImageFont.FreeTypeFont, max_width: int):
     lines = []
     # If the width of the text is smaller than image width
     # we don't need to split it, just add it to the lines array
@@ -41,7 +41,10 @@ def _text_wrap(text: str, font: ImageFont, max_width: int):
 
 
 def _draw_text_with_border(
-    text: str, text_position: tuple[int, int], font: ImageFont, draw: ImageDraw
+    text: str,
+    text_position: tuple[int, int],
+    font: ImageFont.FreeTypeFont,
+    draw: ImageDraw.ImageDraw,
 ) -> None:
     x, y = text_position
     # draw border

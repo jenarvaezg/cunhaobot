@@ -8,6 +8,8 @@ from tg.decorators import log_update
 @log_update
 async def handle_start(update: Update, context: CallbackContext):
     """Send a message when the command /start is issued."""
+    if not update.effective_message:
+        return
     await update.effective_message.reply_text(
         f"¿Qué pasa, {Phrase.get_random_phrase()}?\n"
         f"Soy , mi función principal es darte frases de cuñao, perfectas para cualquier ocasión.\n"

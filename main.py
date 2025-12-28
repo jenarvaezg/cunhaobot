@@ -1,4 +1,3 @@
-# [START gae_python39_app]
 import json
 import logging
 import os
@@ -52,13 +51,13 @@ def slack_handler():
     data = request.form
     if "payload" in data:
         data = json.loads(data["payload"])
-    response = handle_slack(data)
-    if response:
-        response_url = data["response_url"]
-        requests.post(response_url, json=response["indirect"])
-        return response["direct"]
 
-    return ""
+    response = handle_slack(data)
+    if not response:
+        return ""
+
+    requests.post(data["response_url"], json=response["indirect"])
+    return response["direct"]
 
 
 @app.route("/slack/auth", methods=["GET"])
@@ -113,5 +112,3 @@ if __name__ == "__main__":
     # Engine, a webserver process such as Gunicorn will serve the app. This
     # can be configured by adding an `entrypoint` to app.yaml.
     app.run(host="0.0.0.0", port=PORT, debug=True)
-
-# [END gae_python39_app]

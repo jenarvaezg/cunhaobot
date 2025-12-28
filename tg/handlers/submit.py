@@ -81,8 +81,11 @@ async def submit_handling(
 
 @log_update
 async def handle_submit(update: Update, context: CallbackContext):
-    if len(update.effective_message.text.split(" ")) > 5:
-        return await update.effective_message.reply_text(
+    if not (message := update.effective_message) or not message.text:
+        return
+
+    if len(message.text.split(" ")) > 5:
+        return await message.reply_text(
             f"¿Estás seguro de que esto es una frase corta, {Phrase.get_random_phrase()}?\n"
             f"Mejor prueba con /proponerfrase {Phrase.get_random_phrase()}.",
             do_quote=True,
@@ -92,4 +95,6 @@ async def handle_submit(update: Update, context: CallbackContext):
 
 @log_update
 async def handle_submit_phrase(update: Update, context: CallbackContext):
+    if not update.effective_message:
+        return
     await submit_handling(context.bot, update, LongProposal, LongPhrase)
