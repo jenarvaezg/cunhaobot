@@ -88,19 +88,30 @@ class Phrase:
         return cls.phrases_cache
 
     @classmethod
-    def get_phrases(cls, search: str = "") -> list["Phrase"]:
+    def get_phrases(cls, search: str = "", **filters) -> list["Phrase"]:
         if not cls.phrases_cache:
             cls.refresh_cache()
 
-        if not search:
-            return cls.phrases_cache
+        results = cls.phrases_cache
 
-        normalized_search = normalize_str(search)
-        return [
-            phrase
-            for phrase in cls.phrases_cache
-            if normalized_search in normalize_str(phrase.text)
-        ]
+        if search:
+            normalized_search = normalize_str(search)
+            results = [
+                phrase
+                for phrase in results
+                if normalized_search in normalize_str(phrase.text)
+            ]
+
+        for field, value in filters.items():
+            if not value:
+                continue
+
+            if value == "__EMPTY__":
+                results = [p for p in results if not getattr(p, field)]
+            else:
+                results = [p for p in results if str(getattr(p, field)) == str(value)]
+
+        return results
 
     @classmethod
     def get_random_phrase(cls) -> "Phrase":

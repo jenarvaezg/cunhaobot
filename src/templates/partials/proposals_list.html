@@ -1,0 +1,49 @@
+<div class="row">
+    <div class="col-md-6">
+        <h2 class="h4 mb-4 text-primary fw-bold d-flex align-items-center">
+            <span class="me-2">⚡</span> Palabras Poderosas Pendientes
+        </h2>
+        {% if pending_short %}
+            {% for proposal in pending_short %}
+            <div class="card mb-4 phrase-card shadow border-0 animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index0 * 0.1 }}s">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-3" style="color: var(--primary-color);">{{ proposal.text }}</h5>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge bg-dark border border-success text-success badge-usage">👍 Votos a favor: {{ proposal.liked_by|length }}</span>
+                        <span class="badge bg-dark border border-danger text-danger badge-usage">👎 Votos en contra: {{ proposal.disliked_by|length }}</span>
+                    </div>
+                    <div class="mt-2 text-muted" style="font-size: 0.7rem;">
+                        ID: {{ proposal.id }} | User: {{ proposal.user_id }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted italic">No hay palabras poderosas que coincidan con los filtros.</p>
+        {% endif %}
+    </div>
+
+    <div class="col-md-6">
+        <h2 class="h4 mb-4 text-success fw-bold d-flex align-items-center">
+            <span class="me-2">📜</span> Frases / Dichos Pendientes
+        </h2>
+        {% if pending_long %}
+            {% for proposal in pending_long %}
+            <div class="card mb-4 phrase-card shadow border-0 border-start border-4 border-success animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index0 * 0.1 }}s">
+                <div class="card-body p-4">
+                    <p class="card-text fs-5 mb-3 italic" style="font-style: italic; color: #e2e8f0;">"{{ proposal.text }}"</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge bg-dark border border-success text-success badge-usage">👍 Votos a favor: {{ proposal.liked_by|length }}</span>
+                        <span class="badge bg-dark border border-danger text-danger badge-usage">👎 Votos en contra: {{ proposal.disliked_by|length }}</span>
+                    </div>
+                    <div class="mt-2 text-muted" style="font-size: 0.7rem;">
+                        ID: {{ proposal.id }} | User: {{ proposal.user_id }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted italic">No hay frases pendientes que coincidan con los filtros.</p>
+        {% endif %}
+    </div>
+</div>

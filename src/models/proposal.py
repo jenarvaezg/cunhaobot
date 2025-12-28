@@ -4,6 +4,7 @@ from google.cloud import datastore
 from telegram import Message, Update
 
 from models.phrase import LongPhrase, Phrase
+from utils import normalize_str
 
 
 class Proposal:
@@ -92,6 +93,25 @@ class Proposal:
         datastore_client = datastore.Client()
         query = datastore_client.query(kind=cls.kind)
         return [cls.from_entity(entity) for entity in query.fetch()]
+
+    @classmethod
+    def get_proposals(cls, search: str = "", **filters) -> list["Proposal"]:
+        results = cls.load_all()
+
+        if search:
+            normalized_search = normalize_str(search)
+            results = [p for p in results if normalized_search in normalize_str(p.text)]
+
+        for field, value in filters.items():
+            if not value:
+                continue
+
+            if value == "__EMPTY__":
+                results = [p for p in results if not getattr(p, field)]
+            else:
+                results = [p for p in results if str(getattr(p, field)) == str(value)]
+
+        return results
 
     def save(self):
         datastore_client = datastore.Client()

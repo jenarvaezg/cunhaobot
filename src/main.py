@@ -43,11 +43,19 @@ def index() -> Template:
 
 
 @get("/proposals", sync_to_thread=False)
-def proposals() -> Template:
-    all_short_proposals = Proposal.load_all()
-    all_long_proposals = LongProposal.load_all()
+def proposals(request: Request) -> Template:
+    # Get all filters from query params
+
+    filters = {k: v for k, v in request.query_params.items() if k not in ["search"]}
+
+    search_query = request.query_params.get("search", "")
+
+    all_short_proposals = Proposal.get_proposals(search=search_query, **filters)
+
+    all_long_proposals = LongProposal.get_proposals(search=search_query, **filters)
 
     short_phrases_texts = {normalize_str(p.text) for p in Phrase.get_phrases()}
+
     long_phrases_texts = {normalize_str(p.text) for p in LongPhrase.get_phrases()}
 
     pending_short = [
@@ -55,6 +63,7 @@ def proposals() -> Template:
         for p in all_short_proposals
         if normalize_str(p.text) not in short_phrases_texts
     ]
+
     pending_long = [
         p for p in all_long_proposals if normalize_str(p.text) not in long_phrases_texts
     ]
@@ -68,11 +77,48 @@ def proposals() -> Template:
     )
 
 
+@get("/proposals/search", sync_to_thread=False)
+def proposals_search(request: HTMXRequest) -> HTMXTemplate:
+    filters = {k: v for k, v in request.query_params.items() if k not in ["search"]}
+
+    search_query = request.query_params.get("search", "")
+
+    all_short_proposals = Proposal.get_proposals(search=search_query, **filters)
+
+    all_long_proposals = LongProposal.get_proposals(search=search_query, **filters)
+
+    short_phrases_texts = {normalize_str(p.text) for p in Phrase.get_phrases()}
+
+    long_phrases_texts = {normalize_str(p.text) for p in LongPhrase.get_phrases()}
+
+    pending_short = [
+        p
+        for p in all_short_proposals
+        if normalize_str(p.text) not in short_phrases_texts
+    ]
+
+    pending_long = [
+        p for p in all_long_proposals if normalize_str(p.text) not in long_phrases_texts
+    ]
+
+    return HTMXTemplate(
+        template_name="partials/proposals_list.html",
+        context={
+            "pending_short": pending_short,
+            "pending_long": pending_long,
+        },
+    )
+
+
 @get("/search", sync_to_thread=False)
 def search(request: HTMXRequest) -> HTMXTemplate:
+    filters = {k: v for k, v in request.query_params.items() if k not in ["search"]}
+
     search_query = request.query_params.get("search", "")
-    short_phrases = Phrase.get_phrases(search=search_query)
-    long_phrases = LongPhrase.get_phrases(search=search_query)
+
+    short_phrases = Phrase.get_phrases(search=search_query, **filters)
+
+    long_phrases = LongPhrase.get_phrases(search=search_query, **filters)
 
     return HTMXTemplate(
         template_name="partials/phrases_list.html",
@@ -179,6 +225,7 @@ app = Litestar(
     route_handlers=[
         index,
         proposals,
+        proposals_search,
         search,
         ping,
         telegram_handler,
@@ -191,7 +238,7 @@ app = Litestar(
     ],
     template_config=TemplateConfig(
         directory="src/templates",
-        engine=JinjaTemplateEngine,
+        engine=JinjaTemplateEngine,  # type: ignore
     ),
     static_files_config=[
         StaticFilesConfig(directories=["src/static"], path="/static"),

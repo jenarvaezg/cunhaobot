@@ -10,47 +10,49 @@
     </div>
 </div>
 
-<div class="row animate__animated animate__fadeIn animate__delay-2s">
-    <div class="col-md-6">
-        <h2 class="h4 mb-4 text-primary fw-bold d-flex align-items-center">
-            <span class="me-2">⚡</span> Palabras Poderosas Pendientes
-        </h2>
-        {% if pending_short %}
-            {% for proposal in pending_short %}
-            <div class="card mb-4 phrase-card shadow border-0 animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index0 * 0.1 }}s">
-                <div class="card-body p-4">
-                    <h5 class="card-title fw-bold mb-3" style="color: var(--primary-color);">{{ proposal.text }}</h5>
-                    <div class="d-flex flex-wrap gap-2">
-                        <span class="badge bg-dark border border-success text-success badge-usage">👍 Votos a favor: {{ proposal.liked_by|length }}</span>
-                        <span class="badge bg-dark border border-danger text-danger badge-usage">👎 Votos en contra: {{ proposal.disliked_by|length }}</span>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        {% else %}
-            <p class="text-muted italic">No hay palabras poderosas pendientes. ¡Propón algo, no seas soso!</p>
-        {% endif %}
-    </div>
+<div class="row mb-5 animate__animated animate__fadeInUp animate__delay-1s">
+    <div class="col-md-10 offset-md-1">
+        <form hx-get="/proposals/search"
+              hx-trigger="keyup changed delay:400ms from:input, change from:select"
+              hx-target="#proposals-container"
+              hx-indicator="#search-indicator"
+              class="position-relative">
 
-    <div class="col-md-6">
-        <h2 class="h4 mb-4 text-success fw-bold d-flex align-items-center">
-            <span class="me-2">📜</span> Frases / Dichos Pendientes
-        </h2>
-        {% if pending_long %}
-            {% for proposal in pending_long %}
-            <div class="card mb-4 phrase-card shadow border-0 border-start border-4 border-success animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index0 * 0.1 }}s">
-                <div class="card-body p-4">
-                    <p class="card-text fs-5 mb-3 italic" style="font-style: italic; color: #e2e8f0;">"{{ proposal.text }}"</p>
-                    <div class="d-flex flex-wrap gap-2">
-                        <span class="badge bg-dark border border-success text-success badge-usage">👍 Votos a favor: {{ proposal.liked_by|length }}</span>
-                        <span class="badge bg-dark border border-danger text-danger badge-usage">👎 Votos en contra: {{ proposal.disliked_by|length }}</span>
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <input type="text" name="search" class="form-control search-input"
+                           placeholder="Busca en el texto de las propuestas...">
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-outline-info w-100 h-100 rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#advancedFilters">
+                        ⚙️ Filtros Avanzados
+                    </button>
+                </div>
+            </div>
+
+            <div class="collapse mt-3" id="advancedFilters">
+                <div class="card card-body bg-dark border-secondary p-4 rounded-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-info small fw-bold">User ID</label>
+                            <input type="text" name="user_id" class="form-control bg-dark text-white border-secondary" placeholder="ID del proponente...">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-info small fw-bold">ID Propuesta</label>
+                            <input type="text" name="id" class="form-control bg-dark text-white border-secondary" placeholder="ID técnico...">
+                        </div>
                     </div>
                 </div>
             </div>
-            {% endfor %}
-        {% else %}
-            <p class="text-muted italic">No hay frases pendientes. El archivo está completo... por ahora.</p>
-        {% endif %}
+
+            <div id="search-indicator" class="htmx-indicator position-absolute end-0 top-0 translate-middle-y mt-4 me-5" style="z-index: 10;">
+                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+            </div>
+        </form>
     </div>
+</div>
+
+<div id="proposals-container" class="animate__animated animate__fadeIn animate__delay-2s">
+    {% include "partials/proposals_list.html" %}
 </div>
 {% endblock %}
