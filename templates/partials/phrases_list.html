@@ -1,0 +1,43 @@
+<div class="row">
+    <div class="col-md-6">
+        <h2 class="h3 border-bottom pb-2 mb-3">Palabras Poderosas</h2>
+        {% for phrase in short_phrases %}
+        <div class="card mb-3 phrase-card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">{{ phrase.text }}</h5>
+                <div class="mt-2">
+                    <span class="badge bg-primary badge-usage">Total: {{ phrase.usages }}</span>
+                    <span class="badge bg-info text-dark badge-usage">Audio: {{ phrase.audio_usages }}</span>
+                    <span class="badge bg-warning text-dark badge-usage">Sticker: {{ phrase.sticker_usages }}</span>
+                </div>
+                {% if phrase.created_at %}
+                <div class="text-muted mt-2" style="font-size: 0.75rem;">
+                    Añadida el: {{ phrase.created_at.strftime('%Y-%m-%d') }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="col-md-6">
+        <h2 class="h3 border-bottom pb-2 mb-3">Frases / Dichos</h2>
+        {% for phrase in long_phrases %}
+        <div class="card mb-3 phrase-card shadow-sm border-start border-4 border-success">
+            <div class="card-body">
+                <p class="card-text fs-5">"{{ phrase.text }}"</p>
+                <div class="mt-2">
+                    <span class="badge bg-success badge-usage">Total: {{ phrase.usages }}</span>
+                    <span class="badge bg-info text-dark badge-usage">Audio: {{ phrase.audio_usages }}</span>
+                    <span class="badge bg-warning text-dark badge-usage">Sticker: {{ phrase.sticker_usages }}</span>
+                </div>
+                {% if phrase.created_at %}
+                <div class="text-muted mt-2" style="font-size: 0.75rem;">
+                    Añadida el: {{ phrase.created_at.strftime('%Y-%m-%d') }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>

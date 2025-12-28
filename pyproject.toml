@@ -18,6 +18,7 @@ dependencies = [
     "litestar>=2.19.0",
     "uvicorn>=0.40.0",
     "urllib3>=2.0.0",
+    "jinja2>=3.1.6",
 ]
 
 [dependency-groups]

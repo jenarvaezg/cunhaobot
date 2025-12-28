@@ -5,10 +5,12 @@ import os
 import requests
 import tweepy
 from litestar import Litestar, Request, get, post
-from litestar.response import Redirect, Response
+from litestar.response import Redirect, Response, Template
+from litestar.template.config import TemplateConfig
+from litestar.contrib.jinja import JinjaTemplateEngine
 from telegram import Update
 
-from models.phrase import LongPhrase
+from models.phrase import LongPhrase, Phrase
 from slack.handlers import handle_slack
 from tg import get_tg_application
 from tg.handlers import handle_ping as handle_telegram_ping
@@ -22,6 +24,38 @@ PORT = int(os.environ.get("PORT", 5050))
 
 
 @get("/", sync_to_thread=False)
+def index() -> Template:
+    short_phrases = Phrase.get_phrases()
+    long_phrases = LongPhrase.get_phrases()
+    return Template(
+        template_name="index.html",
+        context={
+            "short_phrases": sorted(
+                short_phrases, key=lambda x: x.usages, reverse=True
+            ),
+            "long_phrases": sorted(long_phrases, key=lambda x: x.usages, reverse=True),
+        },
+    )
+
+
+@get("/search", sync_to_thread=False)
+def search(request: Request) -> Template:
+    search_query = request.query_params.get("search", "")
+    short_phrases = Phrase.get_phrases(search=search_query)
+    long_phrases = LongPhrase.get_phrases(search=search_query)
+
+    return Template(
+        template_name="partials/phrases_list.html",
+        context={
+            "short_phrases": sorted(
+                short_phrases, key=lambda x: x.usages, reverse=True
+            ),
+            "long_phrases": sorted(long_phrases, key=lambda x: x.usages, reverse=True),
+        },
+    )
+
+
+@get("/ping", sync_to_thread=False)
 def ping() -> str:
     return "I am alive"
 
@@ -113,6 +147,8 @@ def twitter_ping_handler() -> str:
 
 app = Litestar(
     route_handlers=[
+        index,
+        search,
         ping,
         telegram_handler,
         telegram_ping_handler,
@@ -121,7 +157,11 @@ app = Litestar(
         slack_auth_redirect_handler,
         twitter_auth_redirect_handler,
         twitter_ping_handler,
-    ]
+    ],
+    template_config=TemplateConfig(
+        directory="templates",
+        engine=JinjaTemplateEngine,
+    ),
 )
 
 if __name__ == "__main__":

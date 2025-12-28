@@ -94,6 +94,8 @@ idna==3.11
     #   requests
 iniconfig==2.3.0
     # via pytest
+jinja2==3.1.6
+    # via cunhaobot
 levenshtein==0.27.3
     # via cunhaobot
 litestar==2.19.0
@@ -102,6 +104,8 @@ litestar-htmx==0.5.0
     # via litestar
 markdown-it-py==4.0.0
     # via rich
+markupsafe==3.0.3
+    # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
 msgspec==0.20.0

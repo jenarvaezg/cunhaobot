@@ -17,7 +17,7 @@ def client():
 
 
 def test_ping(client):
-    rv = client.get("/")
+    rv = client.get("/ping")
     assert rv.status_code == HTTP_200_OK
     assert rv.text == "I am alive"
 
