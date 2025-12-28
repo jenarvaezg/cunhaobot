@@ -14,10 +14,11 @@ from litestar.static_files import create_static_files_router
 from telegram import Update
 
 from models.phrase import LongPhrase, Phrase
-from models.proposal import LongProposal, Proposal
+from models.proposal import LongProposal, Proposal, get_proposal_class_by_kind
 from slack.handlers import handle_slack
 from tg import get_tg_application
 from tg.handlers import handle_ping as handle_telegram_ping
+from tg.handlers.utils.callback_query import approve_proposal
 from utils import normalize_str, verify_telegram_auth
 
 # Enable logging
@@ -29,6 +30,7 @@ required_env_vars = [
     "SLACK_CLIENT_ID",
     "SLACK_CLIENT_SECRET",
     "SESSION_SECRET",
+    "OWNER_ID",
 ]
 missing_vars = [var for var in required_env_vars if var not in os.environ]
 if missing_vars:  # pragma: no cover
@@ -41,6 +43,7 @@ TG_TOKEN = os.environ.get("TG_TOKEN", "dummy_token")
 BASE_URL = os.environ.get("BASE_URL", "http://localhost:5050")
 PORT = int(os.environ.get("PORT", 5050))
 SESSION_SECRET = os.environ.get("SESSION_SECRET", "a-very-secret-key-of-32-chars-!!")
+OWNER_ID = os.environ.get("OWNER_ID")
 
 
 @get("/", sync_to_thread=False)
@@ -55,6 +58,7 @@ def index(request: Request) -> Template:
             ),
             "long_phrases": sorted(long_phrases, key=lambda x: x.usages, reverse=True),
             "user": request.session.get("user"),
+            "owner_id": OWNER_ID,
         },
     )
 
@@ -86,8 +90,30 @@ def proposals(request: Request) -> Template:
             "pending_short": pending_short,
             "pending_long": pending_long,
             "user": request.session.get("user"),
+            "owner_id": OWNER_ID,
         },
     )
+
+
+@post("/proposals/{kind:str}/{proposal_id:str}/approve")
+async def approve_proposal_web(
+    request: Request, kind: str, proposal_id: str
+) -> Response[str]:
+    user = request.session.get("user")
+    if not user or str(user.get("id")) != str(OWNER_ID):
+        return Response("Unauthorized", status_code=401)
+
+    proposal_class = get_proposal_class_by_kind(kind)
+    proposal = proposal_class.load(proposal_id)
+
+    if not proposal:
+        return Response("Proposal not found", status_code=404)
+
+    application = get_tg_application()
+    await application.initialize()
+    await approve_proposal(proposal, application.bot)
+
+    return Response("Approved", status_code=200)
 
 
 @get("/auth/telegram", sync_to_thread=False)
@@ -142,6 +168,8 @@ def proposals_search(request: HTMXRequest) -> HTMXTemplate:
         context={
             "pending_short": pending_short,
             "pending_long": pending_long,
+            "user": request.session.get("user"),
+            "owner_id": OWNER_ID,
         },
     )
 
@@ -264,6 +292,7 @@ app = Litestar(
     route_handlers=[
         index,
         proposals,
+        approve_proposal_web,
         auth_telegram,
         logout,
         proposals_search,

@@ -38,14 +38,15 @@ async def _add_vote(
     await callback_query.answer(f"Tu voto: {vote} ha sido añadido.")
 
 
-async def _approve_proposal(
-    proposal: Proposal, callback_query: CallbackQuery, bot: Bot
+async def approve_proposal(
+    proposal: Proposal, bot: Bot, callback_query: CallbackQuery | None = None
 ) -> None:
-    await callback_query.edit_message_text(
-        f"La propuesta '{proposal.text}' queda formalmente aprobada y añadida a la lista.\n\n"
-        f"{get_vote_summary(proposal)}",
-        disable_web_page_preview=True,
-    )
+    if callback_query:
+        await callback_query.edit_message_text(
+            f"La propuesta '{proposal.text}' queda formalmente aprobada y añadida a la lista.\n\n"
+            f"{get_vote_summary(proposal)}",
+            disable_web_page_preview=True,
+        )
     await bot.send_message(
         proposal.from_chat_id,
         f"Tu propuesta '{proposal.text}' ha sido aprobada, felicidades, {Phrase.get_random_phrase()}",
@@ -54,13 +55,14 @@ async def _approve_proposal(
     await proposal.phrase_class.upload_from_proposal(proposal, bot)
 
 
-async def _dismiss_proposal(
-    proposal: Proposal, callback_query: CallbackQuery, bot: Bot
+async def dismiss_proposal(
+    proposal: Proposal, bot: Bot, callback_query: CallbackQuery | None = None
 ) -> None:
-    await callback_query.edit_message_text(
-        f"La propuesta '{proposal.text}' queda formalmente rechazada.\n\n{get_vote_summary(proposal)}",
-        disable_web_page_preview=True,
-    )
+    if callback_query:
+        await callback_query.edit_message_text(
+            f"La propuesta '{proposal.text}' queda formalmente rechazada.\n\n{get_vote_summary(proposal)}",
+            disable_web_page_preview=True,
+        )
 
     await bot.send_message(
         proposal.from_chat_id,
@@ -68,6 +70,18 @@ async def _dismiss_proposal(
         reply_to_message_id=proposal.from_message_id,
     )
     proposal.delete()
+
+
+async def _approve_proposal(
+    proposal: Proposal, callback_query: CallbackQuery, bot: Bot
+) -> None:
+    await approve_proposal(proposal, bot, callback_query)
+
+
+async def _dismiss_proposal(
+    proposal: Proposal, callback_query: CallbackQuery, bot: Bot
+) -> None:
+    await dismiss_proposal(proposal, bot, callback_query)
 
 
 async def _update_proposal_text(
