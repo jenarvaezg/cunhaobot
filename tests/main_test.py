@@ -1,7 +1,6 @@
-import asyncio
 import json
 import os
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -30,12 +29,10 @@ def test_telegram_handler(client):
         mock_app.bot = MagicMock()
 
         # Mock initialize as async
-        mock_app.initialize = MagicMock(return_value=asyncio.Future())
-        mock_app.initialize.return_value.set_result(None)
+        mock_app.initialize = AsyncMock()
 
         # Mock process_update as async
-        mock_app.process_update = MagicMock(return_value=asyncio.Future())
-        mock_app.process_update.return_value.set_result(None)
+        mock_app.process_update = AsyncMock()
 
         with patch("telegram.Update.de_json") as mock_de_json:
             mock_update = MagicMock()
@@ -58,13 +55,9 @@ def test_telegram_ping_handler(client):
         mock_app.bot = MagicMock()
 
         # Mock initialize as async
-        mock_app.initialize = MagicMock(return_value=asyncio.Future())
-        mock_app.initialize.return_value.set_result(None)
+        mock_app.initialize = AsyncMock()
 
-        with patch("main.handle_telegram_ping") as mock_ping:
-            mock_ping.return_value = asyncio.Future()
-            mock_ping.return_value.set_result(None)
-
+        with patch("main.handle_telegram_ping", new_callable=AsyncMock) as mock_ping:
             rv = client.get(f"/{token}/ping")
 
             assert rv.data == b"OK"
@@ -133,3 +126,16 @@ def test_twitter_ping(client):
 
             assert rv.data == b""
             mock_client.create_tweet.assert_called_with(text="tweet text")
+
+
+def test_main_entry_point():
+    import runpy
+    from unittest.mock import patch
+
+    # Mock Flask.run globally to be sure it doesn't start the server
+    with (
+        patch("flask.Flask.run"),
+        patch("main.TG_TOKEN", "dummy"),
+        patch("builtins.print"),
+    ):
+        runpy.run_module("main", run_name="__main__")

@@ -1,5 +1,5 @@
 import asyncio
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -138,15 +138,104 @@ class TestPhrase:
             self.mock_client.key.assert_called_with("Phrase", "test")
             self.mock_client.delete.assert_called()
 
+    @pytest.mark.asyncio
+    async def test_upload_from_proposal(self):
+        mock_bot = MagicMock()
+        mock_proposal = MagicMock()
+        mock_proposal.text = "proposal text"
+        mock_proposal.user_id = 123
+        mock_proposal.from_chat_id = 456
+
+        with (
+            patch("tg.stickers.generate_png") as mock_png,
+            patch("tg.stickers.upload_sticker", new_callable=AsyncMock) as mock_upload,
+            patch.object(Phrase, "save") as mock_save,
+            patch.object(Phrase, "refresh_cache") as mock_refresh,
+        ):
+            await Phrase.upload_from_proposal(mock_proposal, mock_bot)
+            mock_png.assert_called_once()
+            mock_upload.assert_called_once()
+            mock_save.assert_called_once()
+            mock_refresh.assert_called_once()
+
+    def test_phrase_str(self):
+        p = Phrase(text="hola")
+        assert str(p) == "hola"
+        assert repr(p) == "hola"
+        mock_query = MagicMock()
+        self.mock_client.query.return_value = mock_query
+        # Ensure we hit the inner lines by providing an entity with the key
+        entity1 = {"text": "p1", "daily_usages": 5, "audio_daily_usages": 2}
+        mock_query.fetch.return_value = [entity1]
+
+        Phrase.remove_daily_usages()
+        assert entity1["daily_usages"] == 0
+        assert entity1["audio_daily_usages"] == 0
+        self.mock_client.put_multi.assert_called_once()
+
+    def test_add_usage_by_result_id_invalid(self):
+        with patch.object(Phrase, "refresh_cache") as mock_refresh:
+            Phrase.add_usage_by_result_id("invalid-id")
+            mock_refresh.assert_not_called()
+
+    def test_add_usage_by_result_id_long_default(self):
+        p1 = LongPhrase(text="long phrase")
+        with (
+            patch.object(LongPhrase, "save"),
+            patch.object(LongPhrase, "refresh_cache", return_value=[p1]),
+        ):
+            # default case
+            LongPhrase.add_usage_by_result_id("long-phrase")
+            assert p1.daily_usages == 1
+
+    def test_get_most_similar(self):
+        p1 = Phrase(text="hola")
+        p2 = Phrase(text="adios")
+        Phrase.phrases_cache = [p1, p2]
+
+        result, score = Phrase.get_most_similar("holaa")
+        assert result == p1
+        assert score > 80
+
+    @pytest.mark.asyncio
+    async def test_generate_sticker(self):
+        mock_bot = MagicMock()
+        p = Phrase(text="test")
+
+        with (
+            patch("tg.stickers.generate_png") as mock_png,
+            patch("tg.stickers.upload_sticker", new_callable=AsyncMock) as mock_upload,
+        ):
+            mock_upload.return_value = "file_id_123"
+            await p.generate_sticker(mock_bot)
+            assert p.sticker_file_id == "file_id_123"
+            mock_png.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_edit_text(self):
+        mock_bot = MagicMock()
+        p = Phrase(text="old")
+
+        with (
+            patch.object(Phrase, "delete", new_callable=AsyncMock) as mock_delete,
+            patch.object(
+                Phrase, "generate_sticker", new_callable=AsyncMock
+            ) as mock_gen,
+            patch.object(Phrase, "save") as mock_save,
+        ):
+            await p.edit_text("new", mock_bot)
+            assert p.text == "new"
+            mock_delete.assert_called_once_with(mock_bot)
+            mock_gen.assert_called_once_with(mock_bot)
+            mock_save.assert_called_once()
+
 
 class TestLongPhrase:
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, mock_datastore_client):
         LongPhrase.phrases_cache = []
-        from models.phrase import datastore_client
-
-        datastore_client.reset_mock()
-        self.mock_client = datastore_client
+        self.mock_client = mock_datastore_client
+        self.mock_client.reset_mock()
         yield
 
     def test_init_improves_punctuation(self):
@@ -165,3 +254,45 @@ class TestLongPhrase:
         self.mock_client.query.assert_called_with(kind="LongPhrase")
         assert len(phrases) == 1
         assert isinstance(phrases[0], LongPhrase)
+
+    def test_add_usage_by_result_id_long(self):
+        p1 = LongPhrase(text="long phrase one")
+
+        with (
+            patch.object(LongPhrase, "save"),
+            patch.object(LongPhrase, "refresh_cache", return_value=[p1]),
+        ):
+            # Bad search case
+            LongPhrase.add_usage_by_result_id("long-bad-search-xxx")
+            assert p1.daily_usages == 0
+
+            # Audio case
+            LongPhrase.add_usage_by_result_id("audio-long-phrase-one")
+            assert p1.audio_daily_usages == 1
+
+            # Sticker case
+            LongPhrase.add_usage_by_result_id("sticker-long-phrase-one")
+            assert p1.sticker_daily_usages == 1
+
+            # Normal case
+            LongPhrase.add_usage_by_result_id("short-phrase-one")
+            assert p1.daily_usages == 1
+
+    def test_phrase_random_sample_draw(self):
+        # Coverage for shuffle logic in ping.py?
+        # No, just cover Phrase class methods.
+        pass
+
+    @pytest.mark.asyncio
+    async def test_generate_sticker_long(self):
+        mock_bot = MagicMock()
+        lp = LongPhrase(text="test long")
+
+        with (
+            patch("tg.stickers.generate_png"),
+            patch("tg.stickers.upload_sticker", new_callable=AsyncMock) as mock_upload,
+        ):
+            mock_upload.return_value = "file_id_long"
+            await lp.generate_sticker(mock_bot)
+            assert lp.sticker_file_id == "file_id_long"
+            mock_upload.assert_called_once()

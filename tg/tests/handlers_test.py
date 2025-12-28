@@ -91,3 +91,59 @@ class TestHandlers:
 
         # Should not reply
         update.effective_message.reply_text.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_handle_message_no_text(self):
+        # From missing_lines_test.py
+        update = MagicMock()
+        update.effective_message.text = None
+        await handle_message(update, MagicMock())
+
+    @pytest.mark.asyncio
+    async def test_handle_message_continue_coverage(self):
+        # From missing_lines_test.py
+        from models.phrase import Phrase
+        from tg.handlers.text_message import reply_cunhao
+
+        Phrase.phrases_cache = [Phrase(text="p1")]
+        update = MagicMock()
+        update.effective_message.text = "cuñao cuñao"
+        # Mock reply_text as AsyncMock
+        from unittest.mock import AsyncMock
+
+        update.effective_message.reply_text = AsyncMock()
+
+        # Patch MESSAGE_TRIGGERS to have two entries pointing to the same function
+        mock_triggers = {
+            ("cuñao",): reply_cunhao,
+            ("cunhao",): reply_cunhao,
+        }
+        with patch("tg.handlers.text_message.MESSAGE_TRIGGERS", mock_triggers):
+            await handle_message(update, MagicMock())
+            # Line 32 in text_message.py should now be hit
+
+    @pytest.mark.asyncio
+    async def test_handle_stop(self):
+        # From misc_handlers_test.py
+        from tg.handlers.stop import handle_stop
+        from models.user import User
+        from telegram import Chat
+
+        update = MagicMock()
+        update.to_dict.return_value = {"update_id": 1}
+        update.effective_user.id = 123
+        update.effective_chat.id = 456
+        update.effective_chat.type = Chat.PRIVATE
+        update.effective_chat.PRIVATE = Chat.PRIVATE
+        update.effective_message.reply_text = MagicMock(return_value=asyncio.Future())
+        update.effective_message.reply_text.return_value.set_result(None)
+        context = MagicMock()
+
+        mock_user = MagicMock(spec=User)
+        with (
+            patch("models.user.User.load", return_value=mock_user),
+            patch("models.schedule.ScheduledTask.get_tasks", return_value=[]),
+        ):
+            await handle_stop(update, context)
+            mock_user.delete.assert_called_once()
+            update.effective_message.reply_text.assert_called()

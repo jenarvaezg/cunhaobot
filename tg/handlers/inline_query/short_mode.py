@@ -8,8 +8,8 @@ from utils import get_thumb, normalize_str, random_combination
 BASE_TEMPLATE = "¿Qué pasa, {}?"
 
 
-def _result_id_for_combination(combination: tuple[Phrase]) -> str:
-    words = [c.text for c in combination]
+def _result_id_for_combination(combination: tuple) -> str:
+    words = [str(c) for c in combination]
     return f"short-{normalize_str(','.join(words), remove_punctuation=False)}"[:63]
 
 

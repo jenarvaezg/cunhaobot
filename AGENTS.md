@@ -83,6 +83,7 @@ This project uses custom agent "skills" and patterns to ensure code quality and 
 *   `.gemini/skills/README.md`: Index of guidelines and patterns.
 *   `.gemini/skills/SKILL.md`: Core Python 3.14+ philosophy.
 *   `.gemini/skills/PATTERNS.md`: Idiomatic coding patterns.
+*   `.gemini/skills/TESTING.md`: Guidelines and patterns for testing.
 
 ## CI/CD & Deployment
 

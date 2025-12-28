@@ -4,7 +4,7 @@ from telegram.ext import CallbackContext
 from models.phrase import LongPhrase, Phrase
 from tg.decorators import log_update
 
-from . import handle_submit, handle_submit_phrase
+from .submit import handle_submit, handle_submit_phrase
 
 
 @log_update

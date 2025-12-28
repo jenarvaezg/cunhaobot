@@ -51,20 +51,15 @@ async def handle_create_chapa(update: Update, context: CallbackContext):
         return
 
     text = " ".join(message.text.split())
-
-    try:
-        tokens = text.split(" ")
-        if len(tokens) == 1:
-            return await usage(update)
-        time, query = tokens[1], " ".join(tokens[2:])
-    except (KeyError, ValueError, IndexError) as e:
-        await message.reply_text(str(e), do_quote=True)
+    tokens = text.split(" ")
+    if len(tokens) == 1:
         return await usage(update)
+    time, query = tokens[1], " ".join(tokens[2:])
 
     try:
         require_valid_query(query)
         hour, minute = split_time(time)
-    except (KeyError, ValueError) as e:
+    except (KeyError, ValueError, IndexError) as e:
         await message.reply_text(str(e), do_quote=True)
         return await usage(update)
 

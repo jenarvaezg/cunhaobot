@@ -16,6 +16,7 @@ dependencies = [
     "tweepy",
     "gunicorn",
     "asgiref",
+    "levenshtein"
 ]
 
 [dependency-groups]
@@ -23,6 +24,7 @@ dev = [
     "pre-commit>=4.5.1",
     "pytest",
     "pytest-asyncio",
+    "pytest-cov>=7.0.0",
     "ruff>=0.14.10",
     "ty>=0.0.7",
 ]
@@ -45,3 +47,7 @@ unsupported-operator = "warn"
 invalid-raise = "warn"
 unknown-argument = "error"
 invalid-argument-type = "warn"
+
+[tool.pytest.ini_options]
+python_files = "*_test.py"
+asyncio_mode = "auto"

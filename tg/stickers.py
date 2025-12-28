@@ -134,6 +134,7 @@ async def upload_sticker(
                     stickers=[InputSticker(file_id, [STICKER_EMOJIS], format="static")],
                     sticker_type="regular",
                 )
+                break
 
     stickerset_now = await bot.get_sticker_set(stickerset_name)
     stickers_now = {s.file_id for s in stickerset_now.stickers}
