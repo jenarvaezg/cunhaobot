@@ -11,7 +11,7 @@ async def reply_cunhao(update: Update, context: CallbackContext):
     n_words = random.choice([3, 4, 5])
     words = ", ".join([Phrase.get_random_phrase().text for _ in range(n_words)])
     msg = "Aquí me tienes, {}.".format(words)
-    await update.effective_message.reply_text(msg, quote=True)
+    await update.effective_message.reply_text(msg, reply_to_message_id=update.effective_message.message_id)
 
 
 MESSAGE_TRIGGERS = {
