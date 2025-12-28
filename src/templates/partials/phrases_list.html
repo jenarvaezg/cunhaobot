@@ -1,0 +1,55 @@
+<div class="row">
+    <div class="col-md-6">
+        <h2 class="h4 mb-4 text-primary fw-bold d-flex align-items-center">
+            <span class="me-2">⚡</span> Palabras Poderosas
+        </h2>
+        {% for phrase in short_phrases %}
+        <div class="card mb-4 phrase-card shadow border-0 animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index0 * 0.1 }}s">
+            <div class="card-body p-4">
+                <h5 class="card-title fw-bold mb-3" style="color: var(--primary-color);">{{ phrase.text }}</h5>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <span class="badge bg-dark border border-primary text-primary badge-usage">Usos: {{ phrase.usages }}</span>
+                    <span class="badge bg-dark border border-info text-info badge-usage">🔊 {{ phrase.audio_usages }}</span>
+                    <span class="badge bg-dark border border-warning text-warning badge-usage">🖼️ {{ phrase.sticker_usages }}</span>
+                </div>
+                {% if phrase.created_at %}
+                <div class="text-muted d-flex align-items-center" style="font-size: 0.7rem; opacity: 0.6;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-calendar3 me-1" viewBox="0 0 16 16">
+                        <path d="M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM1 3.857C1 3.384 1.448 3 2 3h12c.552 0 1 .384 1 .857v10.286c0 .473-.448.857-1 .857H2c-.552 0-1-.384-1-.857V3.857z"/>
+                        <path d="M6.5 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+                    </svg>
+                    Añadida el {{ phrase.created_at.strftime('%d/%m/%Y') }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="col-md-6">
+        <h2 class="h4 mb-4 text-success fw-bold d-flex align-items-center">
+            <span class="me-2">📜</span> Frases / Dichos
+        </h2>
+        {% for phrase in long_phrases %}
+        <div class="card mb-4 phrase-card shadow border-0 border-start border-4 border-success animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index0 * 0.1 }}s">
+            <div class="card-body p-4">
+                <p class="card-text fs-5 mb-3 italic" style="font-style: italic; color: #e2e8f0;">"{{ phrase.text }}"</p>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <span class="badge bg-dark border border-success text-success badge-usage">Usos: {{ phrase.usages }}</span>
+                    <span class="badge bg-dark border border-info text-info badge-usage">🔊 {{ phrase.audio_usages }}</span>
+                    <span class="badge bg-dark border border-warning text-warning badge-usage">🖼️ {{ phrase.sticker_usages }}</span>
+                </div>
+                {% if phrase.created_at %}
+                <div class="text-muted d-flex align-items-center" style="font-size: 0.7rem; opacity: 0.6;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-calendar3 me-1" viewBox="0 0 16 16">
+                        <path d="M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM1 3.857C1 3.384 1.448 3 2 3h12c.552 0 1 .384 1 .857v10.286c0 .473-.448.857-1 .857H2c-.552 0-1-.384-1-.857V3.857z"/>
+                        <path d="M6.5 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+                    </svg>
+                    Añadida el {{ phrase.created_at.strftime('%d/%m/%Y') }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>

@@ -1,5 +1,6 @@
 import io
 import os
+from io import BytesIO
 from typing import BinaryIO
 
 import telegram
@@ -57,9 +58,9 @@ def _draw_text_with_border(
     draw.text((x, y), text, font=font)
 
 
-def generate_png(text: str) -> BinaryIO:
-    font_path = "fonts/impact.ttf"
-    sum_y = 0
+def generate_png(text: str) -> BytesIO:
+    font_path = "src/fonts/impact.ttf"
+    font_size = 80
     font = None
     lines = []
 

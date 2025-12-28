@@ -14,27 +14,27 @@ def client():
 
 def test_index_page(client):
     p1 = Phrase(text="p1", usages=10)
-    lp1 = LongPhrase(text="lp1", usages=5)
+    lp1 = LongPhrase(text="esto es una prueba", usages=5)
 
     with (
-        patch("models.phrase.Phrase.get_phrases", return_value=[p1]),
-        patch("models.phrase.LongPhrase.get_phrases", return_value=[lp1]),
+        patch("main.Phrase.get_phrases", return_value=[p1]),
+        patch("main.LongPhrase.get_phrases", return_value=[lp1]),
     ):
         rv = client.get("/")
         assert rv.status_code == HTTP_200_OK
         assert "El Archivo del Cuñao" in rv.text
         assert "p1" in rv.text
-        assert "Lp1" in rv.text
-        assert "Total: 10" in rv.text
-        assert "Total: 5" in rv.text
+        assert "Esto es una prueba." in rv.text
+        assert "Usos: 10" in rv.text
+        assert "Usos: 5" in rv.text
 
 
 def test_search_endpoint(client):
     p1 = Phrase(text="match", usages=10)
 
     with (
-        patch("models.phrase.Phrase.get_phrases", return_value=[p1]),
-        patch("models.phrase.LongPhrase.get_phrases", return_value=[]),
+        patch("main.Phrase.get_phrases", return_value=[p1]),
+        patch("main.LongPhrase.get_phrases", return_value=[]),
     ):
         rv = client.get("/search", params={"search": "match"})
         assert rv.status_code == HTTP_200_OK

@@ -1,7 +1,8 @@
 runtime: python314
-entrypoint: "uvicorn main:app --host 0.0.0.0 --port $PORT"
+entrypoint: "uvicorn src.main:app --host 0.0.0.0 --port $PORT"
 
 env_variables:
+  PYTHONPATH: "src"
   TG_TOKEN: $TG_TOKEN
   MOD_CHAT_ID: $MOD_CHAT_ID
   BASE_URL: $BASE_URL

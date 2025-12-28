@@ -51,5 +51,6 @@ unknown-argument = "error"
 invalid-argument-type = "warn"
 
 [tool.pytest.ini_options]
+pythonpath = ["src"]
 python_files = "*_test.py"
 asyncio_mode = "auto"

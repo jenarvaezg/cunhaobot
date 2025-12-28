@@ -9,6 +9,7 @@ from litestar.response import Redirect, Response, Template
 from litestar.template.config import TemplateConfig
 from litestar.contrib.jinja import JinjaTemplateEngine
 from litestar.plugins.htmx import HTMXRequest, HTMXTemplate
+from litestar.static_files import StaticFilesConfig
 from telegram import Update
 
 from models.phrase import LongPhrase, Phrase
@@ -160,9 +161,12 @@ app = Litestar(
         twitter_ping_handler,
     ],
     template_config=TemplateConfig(
-        directory="templates",
-        engine=JinjaTemplateEngine,
+        directory="src/templates",
+        engine=JinjaTemplateEngine(),
     ),
+    static_files_config=[
+        StaticFilesConfig(directories=["src/static"], path="/static"),
+    ],
     request_class=HTMXRequest,
 )
 
