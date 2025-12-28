@@ -95,7 +95,7 @@ class TestInlineQuery:
             assert len(results) > 0
             assert "audio" in results[0].id
 
-    def test_get_audio_mode_results_polly_short(self):
+    def test_get_audio_mode_results_short_no_url(self):
         mock_short_res = MagicMock()
         mock_short_res.title = "p1, p2"
         mock_short_res.id = "short-p1p2"
@@ -114,18 +114,9 @@ class TestInlineQuery:
                 "tg.handlers.inline.inline_query.audio_mode.get_audio_url",
                 return_value=None,
             ),
-            patch(
-                "tg.handlers.inline.inline_query.audio_mode.polly_client"
-            ) as mock_polly,
-            patch(
-                "tg.handlers.inline.inline_query.audio_mode.upload_audio",
-                return_value="http://uploaded",
-            ),
         ):
-            mock_polly.synthesize_speech.return_value = {"AudioStream": MagicMock()}
             results = get_audio_mode_results("audio test")
-            assert len(results) > 0
-            assert results[0].voice_url == "http://uploaded"
+            assert len(results) == 0
 
     def test_get_audio_mode_results_long(self):
         mock_long_res = MagicMock()
@@ -151,7 +142,7 @@ class TestInlineQuery:
             assert len(results) > 0
             assert "audio" in results[0].id
 
-    def test_get_audio_mode_results_polly_long(self):
+    def test_get_audio_mode_results_long_no_url(self):
         mock_long_res = MagicMock()
         mock_long_res.title = "long title"
         mock_long_res.id = "long-id"
@@ -170,54 +161,9 @@ class TestInlineQuery:
                 "tg.handlers.inline.inline_query.audio_mode.get_audio_url",
                 return_value=None,
             ),
-            patch(
-                "tg.handlers.inline.inline_query.audio_mode.polly_client"
-            ) as mock_polly,
-            patch(
-                "tg.handlers.inline.inline_query.audio_mode.upload_audio",
-                return_value="http://uploaded",
-            ),
         ):
-            mock_polly.synthesize_speech.return_value = {"AudioStream": MagicMock()}
             results = get_audio_mode_results("audio frase test")
-            assert len(results) > 0
-            assert results[0].voice_url == "http://uploaded"
-
-    @pytest.mark.asyncio
-    async def test_short_audio_ssml_path(self):
-        # From final_push_test.py
-        from tg.handlers.inline.inline_query.audio_mode import (
-            short_result_to_audio_result,
-        )
-        import io
-
-        # Provocamos que no encuentre audio en GCP para disparar Polly con SSML
-        result = MagicMock()
-        result.title = "hola,don,pepito"
-        result.input_message_content.message_text = "hola,don,pepito"
-        result.id = "id"
-
-        with (
-            patch(
-                "tg.handlers.inline.inline_query.audio_mode.get_audio_url",
-                return_value=None,
-            ),
-            patch(
-                "tg.handlers.inline.inline_query.audio_mode.polly_client"
-            ) as mock_polly,
-            patch(
-                "tg.handlers.inline.inline_query.audio_mode.upload_audio",
-                return_value="http://u",
-            ),
-        ):
-            mock_polly.synthesize_speech.return_value = {
-                "AudioStream": io.BytesIO(b"audio")
-            }
-            res = short_result_to_audio_result(result)
-            assert res.voice_url == "http://u"
-            # Verificamos que se usó SSML
-            args, kwargs = mock_polly.synthesize_speech.call_args
-            assert kwargs["TextType"] == "ssml"
+            assert len(results) == 0
 
     @pytest.mark.asyncio
     async def test_handle_chosen_inline_result_long_prefix(self):

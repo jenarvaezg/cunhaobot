@@ -7,7 +7,6 @@ requires-python = ">=3.14"
 dependencies = [
     "python-telegram-bot>=20.0",
     "google-cloud-datastore",
-    "boto3",
     "google-cloud-storage",
     "pytz",
     "fuzzywuzzy",

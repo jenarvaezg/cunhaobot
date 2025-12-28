@@ -10,18 +10,6 @@ class TestGCP(unittest.TestCase):
         gcp.storage_client.reset_mock()
         gcp.bucket.reset_mock()
 
-    def test_upload_audio(self):
-        mock_blob = MagicMock()
-        gcp.bucket.blob.return_value = mock_blob
-        mock_blob.public_url = "http://example.com/audio.ogg"
-
-        url = gcp.upload_audio("content", "test_file")
-
-        gcp.bucket.blob.assert_called_with("audios/test_file.ogg")
-        mock_blob.upload_from_string.assert_called_with("content")
-        mock_blob.make_public.assert_called()
-        self.assertEqual(url, "http://example.com/audio.ogg")
-
     def test_get_audio_url_exists(self):
         mock_blob = MagicMock()
         gcp.bucket.blob.return_value = mock_blob

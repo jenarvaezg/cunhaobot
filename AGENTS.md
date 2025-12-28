@@ -23,11 +23,9 @@ The core application is written in **Python**, utilizing **Litestar** to handle 
 *   **Cloud Services:**
     *   Google App Engine (Hosting)
     *   Google Cloud Datastore (Persistence)
-    *   AWS S3 (Implied by `boto3` dependency, likely for media storage)
 
-## Project Structure
-
-*   `main.py`: The entry point for the Litestar application. It defines routes for Telegram and Slack webhooks and health checks.
+    ## Project Structure
+    *   `main.py`: The entry point for the Litestar application. It defines routes for Telegram and Slack webhooks and health checks.
 *   `tg/`: Contains logic specific to the Telegram bot.
     *   `handlers/`: Command and message handlers (e.g., `start.py`, `text_message.py`).
     *   `text_router.py`: Logic for routing incoming text messages.
@@ -47,7 +45,6 @@ The application relies heavily on environment variables for configuration and se
 *   `TG_TOKEN`: Telegram Bot Token
 *   `SLACK_CLIENT_ID` / `SLACK_CLIENT_SECRET`: Slack App credentials
 *   `TWITTER_*`: Twitter API credentials
-*   `AWS_*`: AWS credentials
 *   `MOD_CHAT_ID`: ID for a moderation chat
 *   `OWNER_ID`: Bot owner's ID
 

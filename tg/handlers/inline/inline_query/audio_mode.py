@@ -1,50 +1,23 @@
-import os
+from typing import Optional
 
-import boto3
 from telegram import InlineQueryResultArticle, InlineQueryResultVoice
 
 from tg.text_router import LONG_MODE, SHORT_MODE, get_query_mode
 from utils import normalize_str
-from utils.gcp import get_audio_url, upload_audio
+from utils.gcp import get_audio_url
 
 from .long_mode import get_long_mode_results
 from .short_mode import get_short_mode_results
 
-AWS_ACCESS_KEY = os.environ.get("AWS_ACCESS_KEY", "")
-AWS_SECRET_KEY = os.environ.get("AWS_SECRET_KEY", "")
-
-polly_client = boto3.Session(
-    aws_access_key_id=AWS_ACCESS_KEY,
-    aws_secret_access_key=AWS_SECRET_KEY,
-    region_name="eu-west-1",
-).client("polly")
-
 
 def short_result_to_audio_result(
     result: InlineQueryResultArticle,
-) -> InlineQueryResultVoice:
+) -> Optional[InlineQueryResultVoice]:
     title = result.title
     clean_title = title.replace(",", "").replace(" ", "")
     audio_url = get_audio_url(clean_title)
     if not audio_url:
-        words = result.input_message_content.message_text.split(",")
-        intro = words.pop(0)
-        emphatized_words = ",".join(
-            [
-                f'<emphasis level="reduced"><prosody volume="loud">{word}</prosody></emphasis>'
-                for word in words
-            ]
-        )
-
-        ssml_text = f'<speak>{intro}<amazon:breath duration="long" volume="x-loud"/>{emphatized_words}</speak>'
-
-        speech = polly_client.synthesize_speech(
-            VoiceId="Enrique",
-            OutputFormat="ogg_vorbis",
-            Text=ssml_text,
-            TextType="ssml",
-        )
-        audio_url = upload_audio(speech["AudioStream"].read(), clean_title)
+        return None
 
     result_id = f"audio-{result.id}"
     return InlineQueryResultVoice(
@@ -56,17 +29,11 @@ def short_result_to_audio_result(
 
 def long_result_to_audio_result(
     result: InlineQueryResultArticle,
-) -> InlineQueryResultVoice:
+) -> Optional[InlineQueryResultVoice]:
     title = result.title
     audio_url = get_audio_url(title)
     if not audio_url:
-        text = result.input_message_content.message_text
-        speech = polly_client.synthesize_speech(
-            VoiceId="Enrique",
-            OutputFormat="ogg_vorbis",
-            Text=text,
-        )
-        audio_url = upload_audio(speech["AudioStream"].read(), title)
+        return None
 
     result_id = normalize_str(f"audio-{result.id}")
     return InlineQueryResultVoice(
@@ -92,4 +59,5 @@ def get_audio_mode_results(input: str) -> list:
             for result in get_long_mode_results(rest)
         ]
 
-    return results
+    # Filter out None results where audio was not found
+    return [r for r in results if r is not None]
