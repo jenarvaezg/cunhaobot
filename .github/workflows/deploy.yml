@@ -43,9 +43,22 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Create app.yaml from secret
+      - name: Create app.yaml from template
+        env:
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          MOD_CHAT_ID: ${{ secrets.MOD_CHAT_ID }}
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          BASE_URL: ${{ secrets.BASE_URL }}
+          OWNER_ID: ${{ secrets.OWNER_ID }}
+          SLACK_CLIENT_ID: ${{ secrets.SLACK_CLIENT_ID }}
+          SLACK_CLIENT_SECRET: ${{ secrets.SLACK_CLIENT_SECRET }}
+          TWITTER_CONSUMER_KEY: ${{ secrets.TWITTER_CONSUMER_KEY }}
+          TWITTER_CONSUMER_KEY_SECRET: ${{ secrets.TWITTER_CONSUMER_KEY_SECRET }}
+          TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TWITTER_ACCESS_SECRET: ${{ secrets.TWITTER_ACCESS_SECRET }}
         run: |
-          echo "${{ secrets.APP_YAML }}" > app.yaml
+          envsubst < app.yaml.example > app.yaml
 
       - id: auth
         name: Authenticate to Google Cloud
