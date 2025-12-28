@@ -3,6 +3,8 @@ from typing import Optional
 from google.cloud import datastore
 from telegram import Message, Update
 
+from models.phrase import get_datastore_client
+
 from models.phrase import LongPhrase, Phrase
 from utils import normalize_str
 
@@ -79,10 +81,10 @@ class Proposal:
 
     @classmethod
     def load(cls, id) -> Optional["Proposal"]:
-        datastore_client = datastore.Client()
-        key = datastore_client.key(cls.kind, id)
+        client = get_datastore_client()
+        key = client.key(cls.kind, id)
 
-        entity = datastore_client.get(key)
+        entity = client.get(key)
         if entity is None:
             return entity
 
@@ -90,8 +92,8 @@ class Proposal:
 
     @classmethod
     def load_all(cls) -> list["Proposal"]:
-        datastore_client = datastore.Client()
-        query = datastore_client.query(kind=cls.kind)
+        client = get_datastore_client()
+        query = client.query(kind=cls.kind)
         return [cls.from_entity(entity) for entity in query.fetch()]
 
     @classmethod
@@ -114,8 +116,8 @@ class Proposal:
         return results
 
     def save(self):
-        datastore_client = datastore.Client()
-        key = datastore_client.key(self.kind, self.id)
+        client = get_datastore_client()
+        key = client.key(self.kind, self.id)
         proposal_entity = datastore.Entity(key=key)
 
         proposal_entity["text"] = self.text
@@ -125,12 +127,12 @@ class Proposal:
         proposal_entity["disliked_by"] = self.disliked_by
         proposal_entity["user_id"] = self.user_id
 
-        datastore_client.put(proposal_entity)
+        client.put(proposal_entity)
 
     def delete(self) -> None:
-        datastore_client = datastore.Client()
-        key = datastore_client.key(self.kind, self.id)
-        datastore_client.delete(key)
+        client = get_datastore_client()
+        key = client.key(self.kind, self.id)
+        client.delete(key)
 
     def add_vote(self, positive, voter_id) -> None:
         if positive:

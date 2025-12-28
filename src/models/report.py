@@ -1,9 +1,13 @@
 from datetime import date
+from typing import TYPE_CHECKING
 
 from google.cloud import datastore
 
-from models.phrase import LongPhrase, Phrase
-from models.user import InlineUser, User
+from models.phrase import get_datastore_client
+
+if TYPE_CHECKING:
+    from models.phrase import LongPhrase, Phrase
+    from models.user import InlineUser, User
 
 
 class Report:
@@ -100,8 +104,8 @@ class Report:
         )
 
     def save(self) -> None:
-        datastore_client = datastore.Client()
-        key = datastore_client.key(self.kind, self.datastore_id)
+        client = get_datastore_client()
+        key = client.key(self.kind, self.datastore_id)
         entity = datastore.Entity(key=key)
 
         entity["longs"] = self.longs
@@ -118,15 +122,15 @@ class Report:
         entity["month"] = self.month
         entity["year"] = self.year
 
-        datastore_client.put(entity)
+        client.put(entity)
 
     @classmethod
-    def get_at(cls, day: date) -> "Report":
-        datastore_client = datastore.Client()
-        query: datastore.Query = datastore_client.query(kind=cls.kind)
+    def get_at(cls, dt: date) -> "Report":
+        client = get_datastore_client()
+        query: datastore.Query = client.query(kind=cls.kind)
 
-        query.add_filter("day", "=", day.day)
-        query.add_filter("month", "=", day.month)
-        query.add_filter("year", "=", day.year)
+        query.add_filter("day", "=", dt.day)
+        query.add_filter("month", "=", dt.month)
+        query.add_filter("year", "=", dt.year)
         reports = [r for r in query.fetch()]
         return cls.from_entity(reports[0])

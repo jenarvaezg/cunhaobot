@@ -3,6 +3,8 @@ from typing import Optional
 from google.cloud import datastore
 from telegram import Message, Update
 
+from models.phrase import get_datastore_client
+
 
 class InlineUser:
     kind = "InlineUser"
@@ -14,14 +16,14 @@ class InlineUser:
 
     @property
     def datastore_key(self) -> datastore.Key:
-        return datastore.Client().key(self.kind, self.user_id)
+        return get_datastore_client().key(self.kind, self.user_id)
 
     @classmethod
     def update_or_create_from_update(cls, update: Update) -> Optional["InlineUser"]:
         if not (update_user := update.effective_user):
             return None
 
-        datastore_client = datastore.Client()
+        datastore_client = get_datastore_client()
         user = cls(update_user.id, update_user.name)
 
         entity = datastore_client.get(user.datastore_key)
@@ -45,7 +47,7 @@ class InlineUser:
 
     @classmethod
     def get_all(cls) -> list["InlineUser"]:
-        datastore_client = datastore.Client()
+        datastore_client = get_datastore_client()
         query = datastore_client.query(kind=cls.kind)
         return [cls.from_entity(entity) for entity in query.fetch()]
 
@@ -54,7 +56,7 @@ class InlineUser:
         self.save()
 
     def save(self) -> None:
-        datastore_client = datastore.Client()
+        datastore_client = get_datastore_client()
         entity = datastore.Entity(key=self.datastore_key)
 
         entity["user_id"] = self.user_id
@@ -112,7 +114,7 @@ class User:
         )
 
     def save(self) -> None:
-        datastore_client = datastore.Client()
+        datastore_client = get_datastore_client()
         key = datastore_client.key(self.kind, self.chat_id)
         entity = datastore.Entity(key=key)
 
@@ -125,7 +127,7 @@ class User:
 
     @classmethod
     def load(cls, chat_id: int) -> Optional["User"]:
-        datastore_client = datastore.Client()
+        datastore_client = get_datastore_client()
         key = datastore_client.key(cls.kind, chat_id)
 
         entity = datastore_client.get(key)
@@ -134,7 +136,7 @@ class User:
 
     @classmethod
     def load_all(cls, ignore_gdpr: bool = False) -> list["User"]:
-        datastore_client = datastore.Client()
+        datastore_client = get_datastore_client()
         query = datastore_client.query(kind=cls.kind)
         if not ignore_gdpr:
             query.add_filter("gdpr", "=", False)
@@ -142,7 +144,7 @@ class User:
 
     def delete(self, hard: bool = False) -> None:
         if hard:
-            datastore_client = datastore.Client()
+            datastore_client = get_datastore_client()
             key = datastore_client.key(self.kind, self.chat_id)
             datastore_client.delete(key)
         else:

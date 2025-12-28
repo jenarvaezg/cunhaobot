@@ -1,5 +1,7 @@
 gcp_credentials.json
 .env
+.env.local
+.env.*
 .idea
 app.yaml
 __pycache__

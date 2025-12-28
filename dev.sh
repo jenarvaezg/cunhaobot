@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 
-# Load .env if it exists
-if [ -f .env ]; then
+# Load environment variables
+if [ -f .env.local ]; then
+    echo "Loading .env.local"
+    export $(grep -v '^#' .env.local | xargs)
+elif [ -f .env ]; then
+    echo "Loading .env"
     export $(grep -v '^#' .env | xargs)
 fi
 

@@ -1,5 +1,7 @@
 from google.cloud import datastore
 
+from models.phrase import get_datastore_client
+
 
 class ScheduledTask:
     kind = "ScheduledTask"
@@ -31,8 +33,8 @@ class ScheduledTask:
         )
 
     def save(self) -> None:
-        datastore_client = datastore.Client()
-        key = datastore_client.key(self.kind, self.datastore_id)
+        client = get_datastore_client()
+        key = client.key(self.kind, self.datastore_id)
         entity = datastore.Entity(key=key)
 
         entity["chat_id"] = self.chat_id
@@ -42,17 +44,17 @@ class ScheduledTask:
         entity["service"] = self.service
         entity["type"] = self.type
 
-        datastore_client.put(entity)
+        client.put(entity)
 
     def delete(self) -> None:
-        datastore_client = datastore.Client()
-        key = datastore_client.key(self.kind, self.datastore_id)
-        datastore_client.delete(key)
+        client = get_datastore_client()
+        key = client.key(self.kind, self.datastore_id)
+        client.delete(key)
 
     @classmethod
     def get_tasks(cls, **kwargs) -> list["ScheduledTask"]:
-        datastore_client = datastore.Client()
-        query = datastore_client.query(kind=cls.kind)
+        client = get_datastore_client()
+        query = client.query(kind=cls.kind)
         for k, v in kwargs.items():
             query.add_filter(k, "=", v)
         return [cls.from_entity(entity) for entity in query.fetch()]
