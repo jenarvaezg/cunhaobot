@@ -1,0 +1,4 @@
+cron:
+- description: "Ping to tweet"
+  url: /twitter/ping
+  schedule: every 12 hours from 10:00 to 22:00

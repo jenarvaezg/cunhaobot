@@ -2,5 +2,4 @@ gcp_credentials.json
 .env
 .idea
 app.yaml
-cron.yaml
 __pycache__
