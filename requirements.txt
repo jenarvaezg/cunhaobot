@@ -152,10 +152,7 @@ six==1.17.0
 tweepy==4.16.0
     # via cunhaobot
 typing-extensions==4.15.0
-    # via
-    #   anyio
-    #   grpcio
-    #   pytest-asyncio
+    # via grpcio
 urllib3==1.26.20
     # via
     #   botocore
