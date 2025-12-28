@@ -55,3 +55,9 @@ invalid-argument-type = "warn"
 pythonpath = ["src"]
 python_files = "*_test.py"
 asyncio_mode = "auto"
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+]
