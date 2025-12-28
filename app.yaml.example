@@ -13,7 +13,7 @@ env_variables:
   TWITTER_ACCESS_TOKEN: $TWITTER_ACCESS_TOKEN
   TWITTER_ACCESS_SECRET: $TWITTER_ACCESS_SECRET
 liveness_check:
-  path: "/"
+  path: "/ping"
   check_interval_sec: 30
   timeout_sec: 4
   failure_threshold: 2
