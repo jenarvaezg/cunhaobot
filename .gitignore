@@ -5,6 +5,7 @@ gcp_credentials.json
 .idea
 app.yaml
 __pycache__
+.venv
 
 .gemini/
 gha-creds-*.json
