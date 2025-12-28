@@ -18,7 +18,7 @@ from models.proposal import LongProposal, Proposal, get_proposal_class_by_kind
 from slack.handlers import handle_slack
 from tg import get_tg_application
 from tg.handlers import handle_ping as handle_telegram_ping
-from tg.handlers.utils.callback_query import approve_proposal
+from tg.handlers.utils.callback_query import approve_proposal, dismiss_proposal
 from utils import normalize_str, verify_telegram_auth
 
 # Enable logging
@@ -114,6 +114,27 @@ async def approve_proposal_web(
     await approve_proposal(proposal, application.bot)
 
     return Response("Approved", status_code=200)
+
+
+@post("/proposals/{kind:str}/{proposal_id:str}/reject")
+async def reject_proposal_web(
+    request: Request, kind: str, proposal_id: str
+) -> Response[str]:
+    user = request.session.get("user")
+    if not user or str(user.get("id")) != str(OWNER_ID):
+        return Response("Unauthorized", status_code=401)
+
+    proposal_class = get_proposal_class_by_kind(kind)
+    proposal = proposal_class.load(proposal_id)
+
+    if not proposal:
+        return Response("Proposal not found", status_code=404)
+
+    application = get_tg_application()
+    await application.initialize()
+    await dismiss_proposal(proposal, application.bot)
+
+    return Response("Rejected", status_code=200)
 
 
 @get("/auth/telegram", sync_to_thread=False)
@@ -306,6 +327,7 @@ app = Litestar(
         index,
         proposals,
         approve_proposal_web,
+        reject_proposal_web,
         auth_telegram,
         logout,
         proposals_search,

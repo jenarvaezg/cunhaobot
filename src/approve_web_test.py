@@ -106,3 +106,34 @@ def test_approve_proposal_web_success(mock_approve, mock_get_app, client):
 
             mock_app.initialize.assert_called_once()
             mock_approve.assert_called_once_with(mock_proposal, mock_app.bot)
+
+
+@patch("main.OWNER_ID", "12345")
+@patch("main.get_tg_application")
+@patch("main.dismiss_proposal", new_callable=AsyncMock)
+def test_reject_proposal_web_success(mock_dismiss, mock_get_app, client):
+    with patch(
+        "litestar.connection.Request.session", new_callable=PropertyMock
+    ) as mock_session:
+        mock_session.return_value = {"user": {"id": "12345"}}
+
+        mock_proposal = MagicMock(spec=Proposal)
+        mock_proposal.kind = "Proposal"
+        mock_proposal.id = "123"
+
+        with patch("main.get_proposal_class_by_kind") as mock_get_class:
+            mock_class = MagicMock()
+            mock_class.load.return_value = mock_proposal
+            mock_get_class.return_value = mock_class
+
+            mock_app = MagicMock()
+            mock_app.initialize = AsyncMock()
+            mock_app.bot = MagicMock()
+            mock_get_app.return_value = mock_app
+
+            rv = client.post("/proposals/Proposal/123/reject")
+            assert rv.status_code == HTTP_200_OK
+            assert rv.text == "Rejected"
+
+            mock_app.initialize.assert_called_once()
+            mock_dismiss.assert_called_once_with(mock_proposal, mock_app.bot)

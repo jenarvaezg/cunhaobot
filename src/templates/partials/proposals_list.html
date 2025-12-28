@@ -16,13 +16,22 @@
                         ID: {{ proposal.id }} | User: {{ proposal.user_id }}
                     </div>
                     {% if user and user.id|string == owner_id|string %}
-                    <button hx-post="/proposals/{{ proposal.kind }}/{{ proposal.id }}/approve"
-                            hx-confirm="¿Seguro que quieres aprobar esta propuesta cuñada por tus santos huevos?"
-                            hx-target="closest .card"
-                            hx-swap="delete"
-                            class="btn btn-sm btn-success mt-3 w-100 fw-bold">
-                        🚀 Super Aprobar
-                    </button>
+                    <div class="d-flex gap-2 mt-3">
+                        <button hx-post="/proposals/{{ proposal.kind }}/{{ proposal.id }}/approve"
+                                hx-confirm="¿Seguro que quieres aprobar esta propuesta cuñada por tus santos huevos?"
+                                hx-target="closest .card"
+                                hx-swap="delete"
+                                class="btn btn-sm btn-success flex-grow-1 fw-bold">
+                            🚀 Super Aprobar
+                        </button>
+                        <button hx-post="/proposals/{{ proposal.kind }}/{{ proposal.id }}/reject"
+                                hx-confirm="¿Seguro que quieres MANDAR A LA MIERDA esta propuesta?"
+                                hx-target="closest .card"
+                                hx-swap="delete"
+                                class="btn btn-sm btn-danger flex-grow-1 fw-bold">
+                            🗑️ Super Rechazar
+                        </button>
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -49,13 +58,22 @@
                         ID: {{ proposal.id }} | User: {{ proposal.user_id }}
                     </div>
                     {% if user and user.id|string == owner_id|string %}
-                    <button hx-post="/proposals/{{ proposal.kind }}/{{ proposal.id }}/approve"
-                            hx-confirm="¿Seguro que quieres aprobar esta propuesta cuñada por tus santos huevos?"
-                            hx-target="closest .card"
-                            hx-swap="delete"
-                            class="btn btn-sm btn-success mt-3 w-100 fw-bold">
-                        🚀 Super Aprobar
-                    </button>
+                    <div class="d-flex gap-2 mt-3">
+                        <button hx-post="/proposals/{{ proposal.kind }}/{{ proposal.id }}/approve"
+                                hx-confirm="¿Seguro que quieres aprobar esta propuesta cuñada por tus santos huevos?"
+                                hx-target="closest .card"
+                                hx-swap="delete"
+                                class="btn btn-sm btn-success flex-grow-1 fw-bold">
+                            🚀 Super Aprobar
+                        </button>
+                        <button hx-post="/proposals/{{ proposal.kind }}/{{ proposal.id }}/reject"
+                                hx-confirm="¿Seguro que quieres MANDAR A LA MIERDA esta propuesta?"
+                                hx-target="closest .card"
+                                hx-swap="delete"
+                                class="btn btn-sm btn-danger flex-grow-1 fw-bold">
+                            🗑️ Super Rechazar
+                        </button>
+                    </div>
                     {% endif %}
                 </div>
             </div>
