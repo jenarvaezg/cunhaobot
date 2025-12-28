@@ -220,6 +220,19 @@ async def telegram_ping_handler() -> str:
     return "OK"
 
 
+def auto_login_local(request: Request) -> None:
+    if os.environ.get("GAE_ENV") != "standard" and not request.session.get("user"):
+        request.set_session(
+            {
+                "user": {
+                    "id": OWNER_ID,
+                    "first_name": "Local",
+                    "username": "local_owner",
+                }
+            }
+        )
+
+
 @post(path="/slack", status_code=200)
 async def slack_handler(request: Request) -> Response[str]:  # pragma: no cover
     data = await request.form()
@@ -315,6 +328,7 @@ app = Litestar(
         engine=JinjaTemplateEngine,  # type: ignore[invalid-argument-type]
     ),
     request_class=HTMXRequest,
+    before_request=auto_login_local,
 )
 
 
