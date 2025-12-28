@@ -1,10 +1,9 @@
-from datetime import datetime
-from typing import List
+from datetime import date
 
 from google.cloud import datastore
 
 from models.phrase import LongPhrase, Phrase
-from models.user import User, InlineUser
+from models.user import InlineUser, User
 
 
 class Report:
@@ -43,12 +42,12 @@ class Report:
     @classmethod
     def generate(
         cls,
-        long_phrases: List[LongPhrase],
-        short_phrases: List[Phrase],
-        users: List[User],
-        inline_users: List[InlineUser],
-        chapas: List,
-        date: datetime.date,
+        long_phrases: list[LongPhrase],
+        short_phrases: list[Phrase],
+        users: list[User],
+        inline_users: list[InlineUser],
+        chapas: list,
+        date: date,
     ) -> "Report":
         report = cls(
             longs=len(long_phrases),
@@ -122,7 +121,7 @@ class Report:
         datastore_client.put(entity)
 
     @classmethod
-    def get_at(cls, day: datetime.date) -> "Report":
+    def get_at(cls, day: date) -> "Report":
         datastore_client = datastore.Client()
         query: datastore.Query = datastore_client.query(kind=cls.kind)
 

@@ -1,12 +1,10 @@
-from typing import Tuple
-
-from telegram import Update, Message
+from telegram import Message, Update
 from telegram.ext import CallbackContext
 
-from models.schedule import ScheduledTask
-from tg.handlers.inline_query.base import get_query_mode, MODE_HANDLERS
-from tg.decorators import log_update, only_admins
 from models.phrase import Phrase
+from models.schedule import ScheduledTask
+from tg.decorators import log_update, only_admins
+from tg.handlers.inline_query.base import MODE_HANDLERS, get_query_mode
 
 
 async def usage(update: Update) -> Message:
@@ -15,7 +13,7 @@ async def usage(update: Update) -> Message:
         "puedes añadir parámetros. Ejemplos:\n'/chapa 1100' <- Saludo aleatorio a las 11 como "
         f"¿Qué pasa, {Phrase.get_random_phrase()}?\n'/chapa 2030 frase' <- Frase aleatoria a las 20:30 (8:30PM)\n"
         f"'/chapa 1515 frase mujer' <- Frase aleatoria que incluya 'mujer' a las 15:15 (3:15PM).",
-        quote=True,
+        do_quote=True,
     )
 
 
@@ -28,13 +26,13 @@ def require_valid_query(query: str) -> None:
         )
 
 
-def split_time(time_s: str) -> Tuple[int, int]:
+def split_time(time_s: str) -> tuple[int, int]:
     try:
         time = int(time_s.replace(":", ""))
     except ValueError:
         raise ValueError(
             f"La hora me la das con puntos o sin ellos, pero sin basura, {Phrase.get_random_phrase()}."
-        )
+        ) from None
 
     minute = time % 100
     hour = time // 100
@@ -57,14 +55,14 @@ async def handle_create_chapa(update: Update, context: CallbackContext):
             return await usage(update)
         time, query = tokens[1], " ".join(tokens[2:])
     except (KeyError, ValueError, IndexError) as e:
-        await update.effective_message.reply_text(str(e), quote=True)
+        await update.effective_message.reply_text(str(e), do_quote=True)
         return await usage(update)
 
     try:
         require_valid_query(query)
         hour, minute = split_time(time)
     except (KeyError, ValueError) as e:
-        await update.effective_message.reply_text(str(e), quote=True)
+        await update.effective_message.reply_text(str(e), do_quote=True)
         return await usage(update)
 
     ScheduledTask(
@@ -78,5 +76,5 @@ async def handle_create_chapa(update: Update, context: CallbackContext):
 
     await update.effective_message.reply_text(
         f"Configurada chapa a las {hour:02}:{minute:02}. Puedes eliminarla en cualquier momento usando /borrarchapa.",
-        quote=True,
+        do_quote=True,
     )

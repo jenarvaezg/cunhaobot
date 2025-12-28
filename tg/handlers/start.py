@@ -1,7 +1,7 @@
 from telegram import Update
 from telegram.ext import CallbackContext
 
-from models.phrase import Phrase, LongPhrase
+from models.phrase import LongPhrase, Phrase
 from tg.decorators import log_update
 
 

@@ -21,9 +21,28 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "pre-commit>=4.5.1",
     "pytest",
     "pytest-asyncio",
+    "ruff>=0.14.10",
+    "ty>=0.0.7",
 ]
 
-[tool.uv]
-package = false
+[tool.ty]
+[tool.ty.environment]
+python-version = "3.14"
+
+[tool.ty.src]
+exclude = ["**/tests/**"]
+
+[tool.ty.rules]
+possibly-missing-attribute = "warn"
+invalid-assignment = "warn"
+unresolved-attribute = "warn"
+invalid-return-type = "warn"
+invalid-type-form = "warn"
+missing-argument = "warn"
+unsupported-operator = "warn"
+invalid-raise = "warn"
+unknown-argument = "error"
+invalid-argument-type = "warn"

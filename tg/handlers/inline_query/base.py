@@ -1,26 +1,29 @@
 import logging
-from typing import Tuple
 
-from telegram import InlineQueryResultArticle, InputTextMessageContent, InlineQueryResultsButton
-from telegram import Update
+from telegram import (
+    InlineQueryResultArticle,
+    InlineQueryResultsButton,
+    InputTextMessageContent,
+    Update,
+)
 from telegram.ext import CallbackContext
 
-from models.user import InlineUser
-from tg.handlers.inline_query.sticker_mode import get_sticker_mode_results
-from utils import get_thumb, normalize_str
 from models.phrase import Phrase
+from models.user import InlineUser
 from tg.decorators import log_update
+from tg.handlers.inline_query.sticker_mode import get_sticker_mode_results
 from tg.text_router import (
-    SHORT_MODE,
-    LONG_MODE,
     AUDIO_MODE,
+    LONG_MODE,
+    SHORT_MODE,
     STICKER_MODE,
     get_query_mode,
 )
+from utils import get_thumb, normalize_str
 
-from .short_mode import get_short_mode_results
 from .audio_mode import get_audio_mode_results
 from .long_mode import get_long_mode_results
+from .short_mode import get_short_mode_results
 
 logger = logging.getLogger("cunhaobot")
 
@@ -59,7 +62,7 @@ async def handle_inline_query(update: Update, context: CallbackContext):
 
     results = results_func(rest)
 
-    switch_pm_param = f'{mode}-{normalize_str(rest.replace(" ", "-"))}'
+    switch_pm_param = f"{mode}-{normalize_str(rest.replace(' ', '-'))}"
     await update.inline_query.answer(
         results,
         cache_time=1,

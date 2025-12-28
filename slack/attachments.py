@@ -1,7 +1,4 @@
-from typing import List
-
-
-def build_phrase_attachments(text: str, search: str) -> List[dict]:
+def build_phrase_attachments(text: str, search: str) -> list[dict]:
     return [
         {
             "text": text,

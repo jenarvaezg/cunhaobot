@@ -1,19 +1,18 @@
 import logging
 import os
 import random
-from datetime import datetime, timedelta
-from typing import Iterable, List
+from collections.abc import Iterable
+from datetime import date, datetime, timedelta
 
 import pytz
-
 from telegram import Bot, constants
 
+from models.phrase import LongPhrase, Phrase
 from models.report import Report
 from models.schedule import ScheduledTask
-from models.phrase import Phrase, LongPhrase
-from models.user import User, InlineUser
-from tg.text_router import get_query_mode, AUDIO_MODE, STICKER_MODE
+from models.user import InlineUser, User
 from tg.handlers.inline_query.base import MODE_HANDLERS
+from tg.text_router import AUDIO_MODE, STICKER_MODE, get_query_mode
 
 curators_chat_id = os.environ.get("MOD_CHAT_ID", "")
 logger = logging.getLogger("cunhaobot")
@@ -25,6 +24,8 @@ async def _send_chapas(bot: Bot, tasks: Iterable[ScheduledTask]) -> None:
         try:
             query_mode, rest = get_query_mode(task.query)
             resuls_fn = MODE_HANDLERS.get(query_mode)
+            if not resuls_fn:
+                continue
             result = next(iter(resuls_fn(rest)), None)
             if result is None or "-bad-search-" in result.id:
                 await bot.send_message(
@@ -32,7 +33,9 @@ async def _send_chapas(bot: Bot, tasks: Iterable[ScheduledTask]) -> None:
                     f"Te tengo que dar la chapa, pero no he encontrado nada con los parametros '{task.query}', así que "
                     f"aqui tienes algo parecido, {Phrase.get_random_phrase()}.",
                 )
-                await bot.send_message(task.chat_id, LongPhrase.get_random_phrase().text)
+                await bot.send_message(
+                    task.chat_id, LongPhrase.get_random_phrase().text
+                )
                 continue
             if query_mode == AUDIO_MODE:
                 await bot.send_voice(task.chat_id, result.voice_url)
@@ -53,12 +56,12 @@ async def _send_chapas(bot: Bot, tasks: Iterable[ScheduledTask]) -> None:
         )
 
 
-def _generate_report(now: datetime.date) -> None:
+def _generate_report(now: date) -> None:
     # Shuffle so in case of draw for usage of the day it's not always the same
-    long_phrases: List[LongPhrase] = random.sample(
+    long_phrases: list[LongPhrase] = random.sample(
         LongPhrase.refresh_cache(), len(LongPhrase.get_phrases())
-    )
-    short_phrases: List[Phrase] = random.sample(
+    )  # type: ignore
+    short_phrases: list[Phrase] = random.sample(
         Phrase.refresh_cache(), len(Phrase.get_phrases())
     )
     users = User.load_all(ignore_gdpr=True)
@@ -69,11 +72,12 @@ def _generate_report(now: datetime.date) -> None:
     LongPhrase.remove_daily_usages()
 
 
-async def _send_report(bot: Bot, now: datetime.date) -> None:
+async def _send_report(bot: Bot, now: date) -> None:
     yesterday = now - timedelta(days=1)
     bef_yesterday = yesterday - timedelta(days=1)
-    today_report, yesterday_report = Report.get_at(yesterday), Report.get_at(
-        bef_yesterday
+    today_report, yesterday_report = (
+        Report.get_at(yesterday),
+        Report.get_at(bef_yesterday),
     )
 
     longs, longs_delta = today_report.longs, today_report.longs - yesterday_report.longs

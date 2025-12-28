@@ -1,8 +1,8 @@
-from telegram import Update, ReplyKeyboardRemove
+from telegram import ReplyKeyboardRemove, Update
 from telegram.ext import CallbackContext
 
-from tg.decorators import log_update
 from models.phrase import Phrase
+from tg.decorators import log_update
 
 
 @log_update
@@ -11,5 +11,5 @@ async def handle_cancel(update: Update, context: CallbackContext):
     await update.effective_message.reply_text(
         f"Pues vale, {Phrase.get_random_phrase()}.",
         reply_markup=ReplyKeyboardRemove(selective=True),
-        quote=True,
+        do_quote=True,
     )

@@ -1,21 +1,20 @@
 import os
-from typing import Union, Type
 
-from telegram import Update, Bot, InlineKeyboardMarkup, ForceReply, constants, Message
+from telegram import Bot, ForceReply, InlineKeyboardMarkup, Message, Update, constants
 from telegram.ext import CallbackContext
 
-from tg.markup.keyboards import build_vote_keyboard
-from models.phrase import Phrase, LongPhrase
-from models.proposal import Proposal, LongProposal
+from models.phrase import LongPhrase, Phrase
+from models.proposal import LongProposal, Proposal
 from tg.decorators import log_update
+from tg.markup.keyboards import build_vote_keyboard
 
 curators_chat_id = os.environ.get("MOD_CHAT_ID", "")
 SIMILARITY_DISCARD_THRESHOLD = int(
     os.getenv("PHRASE_DISMISSAL_SIMILARITY_THRESHOLD", 90)
 )
 
-proposal_t = Union[Type[Proposal], Type[LongProposal]]
-phrase_t = Union[Type[Phrase], Type[LongPhrase]]
+proposal_t = type[Proposal] | type[LongProposal]
+phrase_t = type[Phrase] | type[LongPhrase]
 
 
 async def _notify_proposal_to_curators(
@@ -46,6 +45,8 @@ async def _notify_proposal_to_curators(
 async def submit_handling(
     bot: Bot, update: Update, proposal_class: proposal_t, phrase_class: phrase_t
 ) -> Message:
+    if not update.effective_user or not update.effective_message:
+        raise ValueError("Update has no effective user or message")
     submitted_by = update.effective_user.name
     proposal = proposal_class.from_update(update)
     if not proposal.text:
@@ -62,7 +63,9 @@ async def submit_handling(
         text = f"Esa ya la tengo, {Phrase.get_random_phrase()}, {Phrase.get_random_phrase()}."
         if similarity_ratio != 100:
             text += f'\nSe parece demasiado a "<b>{most_similar}</b>", {Phrase.get_random_phrase()}.'
-        return await update.effective_message.reply_text(text, parse_mode=constants.ParseMode.HTML)
+        return await update.effective_message.reply_text(
+            text, parse_mode=constants.ParseMode.HTML
+        )
 
     proposal.save()
     await _notify_proposal_to_curators(
@@ -72,7 +75,7 @@ async def submit_handling(
     return await update.effective_message.reply_text(
         f"Tu aportación será valorada por un consejo de cuñaos expertos y te avisaré una vez haya sido evaluada, "
         f"{Phrase.get_random_phrase()}.",
-        quote=True,
+        do_quote=True,
     )
 
 
@@ -82,7 +85,7 @@ async def handle_submit(update: Update, context: CallbackContext):
         return await update.effective_message.reply_text(
             f"¿Estás seguro de que esto es una frase corta, {Phrase.get_random_phrase()}?\n"
             f"Mejor prueba con /proponerfrase {Phrase.get_random_phrase()}.",
-            quote=True,
+            do_quote=True,
         )
     await submit_handling(context.bot, update, Proposal, Phrase)
 

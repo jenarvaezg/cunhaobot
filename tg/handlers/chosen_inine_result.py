@@ -1,7 +1,7 @@
-from telegram import Update, ChosenInlineResult
+from telegram import ChosenInlineResult, Update
 from telegram.ext import CallbackContext
 
-from models.phrase import Phrase, LongPhrase
+from models.phrase import LongPhrase, Phrase
 from models.user import InlineUser
 from tg.decorators import log_update
 

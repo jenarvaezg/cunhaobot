@@ -1,8 +1,7 @@
 import io
 import os
-from typing import Tuple, BinaryIO
+from typing import BinaryIO
 
-import requests
 import telegram
 from PIL import Image, ImageDraw, ImageFont
 
@@ -11,7 +10,7 @@ BORDER_SIZE = 3
 SHADOW_COLOR = "black"
 STICKER_EMOJIS = "😎"
 
-owner_id = os.environ["OWNER_ID"]
+owner_id = int(os.environ["OWNER_ID"])
 curators_chat_id = int(os.environ.get("MOD_CHAT_ID", "-1"))
 
 
@@ -20,7 +19,7 @@ def _text_wrap(text: str, font: ImageFont, max_width: int):
     # If the width of the text is smaller than image width
     # we don't need to split it, just add it to the lines array
     # and return
-    if font.getsize(text)[0] <= max_width:
+    if font.getbbox(text)[2] <= max_width:
         lines.append(text)
     else:
         # split the line by spaces to get words
@@ -29,7 +28,7 @@ def _text_wrap(text: str, font: ImageFont, max_width: int):
         # append every word to a line while its width is shorter than image width
         while i < len(words):
             line = ""
-            while i < len(words) and font.getsize(line + words[i])[0] <= max_width:
+            while i < len(words) and font.getbbox(line + words[i])[2] <= max_width:
                 line = line + words[i] + " "
                 i += 1
             if not line:
@@ -42,7 +41,7 @@ def _text_wrap(text: str, font: ImageFont, max_width: int):
 
 
 def _draw_text_with_border(
-    text: str, text_position: Tuple[int, int], font: ImageFont, draw: ImageDraw
+    text: str, text_position: tuple[int, int], font: ImageFont, draw: ImageDraw
 ) -> None:
     x, y = text_position
     # draw border
@@ -64,19 +63,26 @@ def generate_png(text: str) -> BinaryIO:
     for font_size in range(80, 1, -1):
         font = ImageFont.truetype(font_path, size=font_size)
         lines = _text_wrap(text, font, MAX_SIZE[0] - BORDER_SIZE * 2)
-        sum_y = sum(font.getsize(l)[1] + BORDER_SIZE * 2 for l in lines)
-        longest_x = max(font.getsize(l)[0] + BORDER_SIZE * 2 for l in lines)
+        sum_y = sum(
+            (font.getbbox(line)[3] - font.getbbox(line)[1]) + BORDER_SIZE * 2
+            for line in lines
+        )
+        longest_x = max(font.getbbox(line)[2] + BORDER_SIZE * 2 for line in lines)
         if sum_y < MAX_SIZE[1] and longest_x < MAX_SIZE[0]:
             break
 
-    image_size = (MAX_SIZE[0], sum_y)
+    if font is None:
+        raise ValueError("Could not calculate font size")
+
+    image_size = (MAX_SIZE[0], int(sum_y))
     img = Image.new("RGBA", image_size)
     img_draw = ImageDraw.Draw(img)
 
-    line_height = font.getsize("hg")[1]
+    bbox_hg = font.getbbox("hg")
+    line_height = bbox_hg[3] - bbox_hg[1]
     y = BORDER_SIZE
     for line in lines:
-        line_x = (image_size[0] - font.getsize(line)[0] + BORDER_SIZE * 2) / 2
+        line_x = int((image_size[0] - font.getbbox(line)[2] + BORDER_SIZE * 2) / 2)
 
         _draw_text_with_border(line, (line_x, y), font, img_draw)
         y = y + line_height
@@ -94,7 +100,10 @@ async def upload_sticker(
     stickerset_title_template: str,
 ) -> str:
     from telegram import InputSticker
-    file_id = (await bot.upload_sticker_file(owner_id, sticker_png)).file_id
+
+    file_id = (
+        await bot.upload_sticker_file(owner_id, sticker_png, sticker_format="static")
+    ).file_id
     offset = 0
     stickers_before = set()
     while True:
@@ -102,10 +111,12 @@ async def upload_sticker(
         stickerset_name = stickerset_template.format(offset)
         try:
             stickerset = await bot.get_sticker_set(stickerset_name)
-            stickers_before = {
-                s.file_id for s in stickerset.stickers
-            }
-            await bot.add_sticker_to_set(owner_id, stickerset_name, sticker=InputSticker(file_id, [STICKER_EMOJIS]))
+            stickers_before = {s.file_id for s in stickerset.stickers}
+            await bot.add_sticker_to_set(
+                owner_id,
+                stickerset_name,
+                sticker=InputSticker(file_id, [STICKER_EMOJIS], format="static"),
+            )
             break
         except telegram.error.BadRequest as e:
             if e.message in ["Stickerpack_stickers_too_much", "Stickers_too_much"]:
@@ -114,15 +125,12 @@ async def upload_sticker(
                 # No stickerset, create it!
                 stickerset_title = stickerset_title_template.format(offset)
                 await bot.create_new_sticker_set(
-                    owner_id, stickerset_name, stickerset_title, stickers=[InputSticker(file_id, [STICKER_EMOJIS])], sticker_format="static"
+                    owner_id,
+                    stickerset_name,
+                    stickerset_title,
+                    stickers=[InputSticker(file_id, [STICKER_EMOJIS], format="static")],
+                    sticker_type="regular",
                 )
-                await bot.send_message(
-                    curators_chat_id,
-                    f"Nuevo paquete de stickers: t.me/addstickers/{stickerset_name}",
-                )
-                break
-            else:
-                raise
 
     stickerset_now = await bot.get_sticker_set(stickerset_name)
     stickers_now = {s.file_id for s in stickerset_now.stickers}

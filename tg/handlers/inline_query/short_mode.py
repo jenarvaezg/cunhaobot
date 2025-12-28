@@ -1,20 +1,19 @@
 import random
-from typing import Tuple, List
+
 from telegram import InlineQueryResultArticle, InputTextMessageContent
 
 from models.phrase import Phrase
-from utils import get_thumb, random_combination, normalize_str
-
+from utils import get_thumb, normalize_str, random_combination
 
 BASE_TEMPLATE = "¿Qué pasa, {}?"
 
 
-def _result_id_for_combination(combination: Tuple[Phrase]) -> str:
+def _result_id_for_combination(combination: tuple[Phrase]) -> str:
     words = [c.text for c in combination]
     return f"short-{normalize_str(','.join(words), remove_punctuation=False)}"[:63]
 
 
-def get_short_mode_results(input: str) -> List[InlineQueryResultArticle]:
+def get_short_mode_results(input: str) -> list[InlineQueryResultArticle]:
     if input == "":
         size, finisher = 1, ""
     else:
@@ -26,7 +25,7 @@ def get_short_mode_results(input: str) -> List[InlineQueryResultArticle]:
     size = size if size <= len(phrases) else len(phrases)
     combinations = set()
 
-    for i in range(10):
+    for _ in range(10):
         combination = random_combination(phrases, size)
         random.shuffle(phrases)
         combinations.add(combination if not finisher else combination + (finisher,))

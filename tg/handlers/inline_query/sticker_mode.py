@@ -1,13 +1,12 @@
 import random
-from typing import List, Union, Type
 
 from telegram import InlineQueryResultCachedSticker
 
 from models.phrase import LongPhrase, Phrase
+from tg.text_router import LONG_MODE, SHORT_MODE, get_query_mode
 from utils import normalize_str
-from tg.text_router import get_query_mode, SHORT_MODE, LONG_MODE
 
-phrase_t = Union[Phrase, LongPhrase]
+phrase_t = Phrase | LongPhrase
 
 
 def _phrase_to_inline_sticker(
@@ -19,7 +18,7 @@ def _phrase_to_inline_sticker(
     )
 
 
-def get_sticker_mode_results(input: str) -> List[InlineQueryResultCachedSticker]:
+def get_sticker_mode_results(input: str) -> list[InlineQueryResultCachedSticker]:
     mode, rest = get_query_mode(input)
 
     result_type = ""

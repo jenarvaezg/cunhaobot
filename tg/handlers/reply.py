@@ -1,8 +1,8 @@
-from telegram import Update, Message, Bot
+from telegram import Bot, Message, Update
 from telegram.ext import CallbackContext
 
+from models.phrase import LongPhrase, Phrase
 from tg.decorators import log_update
-from models.phrase import Phrase, LongPhrase
 
 from . import handle_submit, handle_submit_phrase
 
@@ -14,7 +14,10 @@ async def handle_reply(update: Update, context: CallbackContext):
     bot: Bot = context.bot
 
     me = await bot.get_me()
-    if reply_to.from_user.username != me.username or "dice que deberiamos" in reply_to.text:
+    if (
+        reply_to.from_user.username != me.username
+        or "dice que deberiamos" in reply_to.text
+    ):
         return  # Dont handle
 
     if Phrase.name in reply_to.text:

@@ -1,15 +1,15 @@
 import unittest
 
 from tg.text_router import (
-    get_query_mode,
+    AUDIO_MODE,
+    AUDIO_MODE_WORDS,
+    LONG_MODE,
+    LONG_MODE_WORDS,
     SHORT_MODE,
     SHORT_MODE_WORDS,
-    LONG_MODE_WORDS,
-    LONG_MODE,
-    AUDIO_MODE_WORDS,
-    AUDIO_MODE,
-    STICKER_MODE_WORDS,
     STICKER_MODE,
+    STICKER_MODE_WORDS,
+    get_query_mode,
 )
 
 

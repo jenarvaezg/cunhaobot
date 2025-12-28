@@ -1,5 +1,3 @@
-from typing import List
-
 from google.cloud import datastore
 
 
@@ -52,7 +50,7 @@ class ScheduledTask:
         datastore_client.delete(key)
 
     @classmethod
-    def get_tasks(cls, **kwargs) -> List["ScheduledTask"]:
+    def get_tasks(cls, **kwargs) -> list["ScheduledTask"]:
         datastore_client = datastore.Client()
         query = datastore_client.query(kind=cls.kind)
         for k, v in kwargs.items():

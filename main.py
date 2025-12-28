@@ -1,16 +1,15 @@
 # [START gae_python39_app]
+import json
 import logging
 import os
-import requests
-import json
 
-from flask import Flask, request, redirect
-from telegram import Update
+import requests
 import tweepy
+from flask import Flask, redirect, request
+from telegram import Update
 
 from models.phrase import LongPhrase
 from slack.handlers import handle_slack
-
 from tg import get_tg_application
 from tg.handlers import handle_ping as handle_telegram_ping
 
@@ -19,7 +18,7 @@ logging.basicConfig(format="%(message)s", level=logging.INFO)
 
 TG_TOKEN = os.environ["TG_TOKEN"]
 BASE_URL = os.environ["BASE_URL"]
-PORT = os.environ.get("PORT", 5050)
+PORT = int(os.environ.get("PORT", 5050))
 
 app = Flask(__name__)
 
@@ -68,7 +67,7 @@ def slack_auth_handler():
     scopes = ["commands", "chat:write", "chat:write.public"]
 
     return redirect(
-        f'https://slack.com/oauth/v2/authorize?client_id={client_id}&scope={",".join(scopes)}'
+        f"https://slack.com/oauth/v2/authorize?client_id={client_id}&scope={','.join(scopes)}"
     )
 
 
@@ -93,6 +92,7 @@ def slack_auth_redirect_handler():
 @app.route("/twitter/auth/redirect", methods=["GET"])
 def twitter_auth_redirect_handler():
     return ":)"
+
 
 @app.route("/twitter/ping", methods=["GET"])
 def twitter_ping_handler():

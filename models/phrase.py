@@ -1,12 +1,11 @@
 import random
 from datetime import datetime
-from typing import List, Optional, Tuple
 
 import telegram
 from fuzzywuzzy import fuzz
 from google.cloud import datastore
 
-from utils import normalize_str, improve_punctuation
+from utils import improve_punctuation, normalize_str
 
 datastore_client = datastore.Client()
 
@@ -16,7 +15,7 @@ class Phrase:
     name = "palabra poderosa / apelativo"
     stickerset_template = "greeting_{}_by_cunhaobot"
     stickerset_title_template = "Saludos cuñadiles {} by @cunhaobot"
-    phrases_cache = []
+    phrases_cache: list["Phrase"] = []
 
     def __init__(
         self,
@@ -82,14 +81,14 @@ class Phrase:
         )
 
     @classmethod
-    def refresh_cache(cls) -> List["Phrase"]:
+    def refresh_cache(cls) -> list["Phrase"]:
         query = datastore_client.query(kind=cls.kind)
         cls.phrases_cache = [cls.from_entity(entity) for entity in query.fetch()]
 
         return cls.phrases_cache
 
     @classmethod
-    def get_phrases(cls, search="") -> List["Phrase"]:
+    def get_phrases(cls, search="") -> list["Phrase"]:
         if len(cls.phrases_cache) == 0:
             cls.refresh_cache()
 
@@ -119,7 +118,7 @@ class Phrase:
         phrases = cls.refresh_cache()
 
         for word in words:
-            phrase: Optional["Phrase"] = next(
+            phrase: Phrase | None = next(
                 iter(
                     p
                     for p in phrases
@@ -152,7 +151,7 @@ class Phrase:
         datastore_client.put_multi(updates)
 
     @classmethod
-    def get_most_similar(cls, text: str) -> Tuple["Phrase", int]:
+    def get_most_similar(cls, text: str) -> tuple["Phrase", int]:
         phrases = cls.get_phrases()
         normalized_input_text = normalize_str(text)
 
@@ -213,7 +212,7 @@ class LongPhrase(Phrase):
     name = "frase / dicho cuñadíl"
     stickerset_template = "phrase_{}_by_cunhaobot"
     stickerset_title_template = "Frases cuñadiles {} by @cunhaobot"
-    phrases_cache = []
+    phrases_cache: list["Phrase"] = []
 
     def __init__(self, text, *args, **kwargs):
         super().__init__(text, *args, **kwargs)
@@ -237,7 +236,7 @@ class LongPhrase(Phrase):
         result_id = normalize_str(result_id)
         phrases = cls.refresh_cache()
 
-        phrase: Optional["Phrase"] = next(
+        phrase: Phrase | None = next(
             iter(p for p in phrases if result_id in normalize_str(p.text)), None
         )
 

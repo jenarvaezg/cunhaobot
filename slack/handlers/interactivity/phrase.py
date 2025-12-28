@@ -1,5 +1,4 @@
 import random
-from typing import Optional
 
 from models.phrase import LongPhrase
 from slack.attachments import build_phrase_attachments
@@ -16,8 +15,8 @@ def _handle_send(slack_data: dict) -> dict:
             "attachments": [
                 {
                     "pretext": text,
-                    "title": f'Mensaje patrocinado por <@{slack_data["user"]["name"]}>',
-                    "fallback": f'Mensaje patrocinado por <@{slack_data["user"]["name"]}>',
+                    "title": f"Mensaje patrocinado por <@{slack_data['user']['name']}>",
+                    "fallback": f"Mensaje patrocinado por <@{slack_data['user']['name']}>",
                     "actions": [],
                 }
             ],
@@ -55,10 +54,12 @@ command_router = {
 }
 
 
-def handle_phrase(slack_data: dict) -> Optional[dict]:
+def handle_phrase(slack_data: dict) -> dict | None:
     actions = slack_data["actions"]
     action = actions[0]
     value, *_ = action["value"].split("-")
     handler = command_router.get(value)
     if handler:
         return handler(slack_data)
+
+    return None

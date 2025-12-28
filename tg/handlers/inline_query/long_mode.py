@@ -1,12 +1,12 @@
 import random
-from typing import List
+
 from telegram import InlineQueryResultArticle, InputTextMessageContent
 
 from models.phrase import LongPhrase
 from utils import get_thumb, normalize_str
 
 
-def get_long_mode_results(input: str) -> List[InlineQueryResultArticle]:
+def get_long_mode_results(input: str) -> list[InlineQueryResultArticle]:
     max_results_number = 10
     phrases = LongPhrase.get_phrases(search=input)
     random.shuffle(phrases)

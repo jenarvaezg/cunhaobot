@@ -1,9 +1,9 @@
-from typing import Type, List, Optional
+from typing import Optional
 
 from google.cloud import datastore
-from telegram import Update, Message
+from telegram import Message, Update
 
-from models.phrase import Phrase, LongPhrase
+from models.phrase import LongPhrase, Phrase
 
 
 class Proposal:
@@ -41,6 +41,8 @@ class Proposal:
 
     @classmethod
     def from_update(cls, update: Update):
+        if not update.effective_message or not update.effective_user:
+            raise ValueError("Update has no effective message or user")
         id = str(update.effective_message.chat.id + update.effective_message.message_id)
 
         return cls(
@@ -75,7 +77,7 @@ class Proposal:
         return cls.from_entity(entity)
 
     @classmethod
-    def load_all(cls) -> List["Proposal"]:
+    def load_all(cls) -> list["Proposal"]:
         datastore_client = datastore.Client()
         query = datastore_client.query(kind=cls.kind)
         return [cls.from_entity(entity) for entity in query.fetch()]
@@ -120,7 +122,7 @@ class LongProposal(Proposal):
     phrase_class = LongPhrase
 
 
-def get_proposal_class_by_kind(kind: str) -> Type[Proposal]:
+def get_proposal_class_by_kind(kind: str) -> type[Proposal]:
     if kind == LongProposal.kind:
         return LongProposal
 

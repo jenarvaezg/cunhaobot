@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 from unittest.mock import MagicMock
 
 # Set dummy environment variables to avoid KeyErrors during import
@@ -27,7 +27,8 @@ sys.modules["google.cloud.datastore"] = mock_datastore
 mock_storage = MagicMock()
 sys.modules["google.cloud.storage"] = mock_storage
 
-import pytest
+import pytest  # noqa: E402
+
 
 @pytest.fixture
 def mock_datastore_client():

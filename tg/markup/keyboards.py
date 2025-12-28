@@ -1,12 +1,11 @@
-from typing import List
 from telegram import InlineKeyboardButton
 
-from tg.constants import LIKE, DISLIKE
+from tg.constants import DISLIKE, LIKE
 
 
 def build_vote_keyboard(
     message_id: str, proposal_kind: str
-) -> List[List[InlineKeyboardButton]]:
+) -> list[list[InlineKeyboardButton]]:
     return [
         [
             InlineKeyboardButton(

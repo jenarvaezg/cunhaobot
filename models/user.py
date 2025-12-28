@@ -1,7 +1,7 @@
-from typing import List, Optional
+from typing import Optional
 
 from google.cloud import datastore
-from telegram import Update, Message
+from telegram import Message, Update
 
 
 class InlineUser:
@@ -42,7 +42,7 @@ class InlineUser:
         )
 
     @classmethod
-    def get_all(cls) -> List["InlineUser"]:
+    def get_all(cls) -> list["InlineUser"]:
         datastore_client = datastore.Client()
         query = datastore_client.query(kind=cls.kind)
         return [cls.from_entity(entity) for entity in query.fetch()]
@@ -73,12 +73,16 @@ class User:
 
     @staticmethod
     def _get_name_from_message(msg: Message) -> str:
-        return (
-            msg.from_user.name if msg.chat.type == msg.chat.PRIVATE else msg.chat.title
-        )
+        if msg.chat.type == msg.chat.PRIVATE:
+            return (
+                msg.from_user.name
+                if msg.from_user and msg.from_user.name
+                else "Unknown"
+            )
+        return msg.chat.title if msg.chat.title else "Unknown"
 
     @classmethod
-    def update_or_create_from_update(cls, update) -> "User":
+    def update_or_create_from_update(cls, update) -> Optional["User"]:
         message: Message = update.effective_message
         if not message:
             return None
@@ -125,7 +129,7 @@ class User:
         return cls.from_entity(entity) if entity else None
 
     @classmethod
-    def load_all(cls, ignore_gdpr=False) -> List["User"]:
+    def load_all(cls, ignore_gdpr=False) -> list["User"]:
         datastore_client = datastore.Client()
         query = datastore_client.query(kind=cls.kind)
         if not ignore_gdpr:

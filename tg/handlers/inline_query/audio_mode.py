@@ -1,14 +1,14 @@
 import os
-from typing import List
 
 import boto3
-from telegram import InlineQueryResultVoice, InlineQueryResultArticle
+from telegram import InlineQueryResultArticle, InlineQueryResultVoice
 
+from tg.text_router import LONG_MODE, SHORT_MODE, get_query_mode
 from utils import normalize_str
-from utils.gcp import upload_audio, get_audio_url
-from tg.text_router import get_query_mode, SHORT_MODE, LONG_MODE
-from .short_mode import get_short_mode_results
+from utils.gcp import get_audio_url, upload_audio
+
 from .long_mode import get_long_mode_results
+from .short_mode import get_short_mode_results
 
 AWS_ACCESS_KEY = os.environ.get("AWS_ACCESS_KEY", "")
 AWS_SECRET_KEY = os.environ.get("AWS_SECRET_KEY", "")
@@ -76,7 +76,7 @@ def long_result_to_audio_result(
     )
 
 
-def get_audio_mode_results(input: str) -> List:
+def get_audio_mode_results(input: str) -> list:
     mode, rest = get_query_mode(input)
 
     results = []

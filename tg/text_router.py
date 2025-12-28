@@ -1,5 +1,3 @@
-from typing import Tuple
-
 SHORT_MODE_WORDS = ["short", "corto", "corta", "saludo"]
 LONG_MODE_WORDS = ["long", "largo", "larga", "frase"]
 AUDIO_MODE_WORDS = ["audio", "sonido", "sound"]
@@ -13,7 +11,7 @@ AUDIO_MODE = "AUDIO"
 STICKER_MODE = "STICKER"
 
 
-def get_query_mode(query: str) -> Tuple[str, str]:
+def get_query_mode(query: str) -> tuple[str, str]:
     clean_query = query.strip()
     query_words = clean_query.split(" ")
     if clean_query == "" or query_words[0] in SHORT_MODE_WORDS:

@@ -1,18 +1,20 @@
 import random
 
-from telegram import Bot, Update, Message
+from telegram import Bot, Message, Update
 from telegram.ext import CallbackContext
 
-from tg.decorators import log_update
-
 from models.phrase import Phrase
-from models.user import User
 from models.schedule import ScheduledTask
+from models.user import User
+from tg.decorators import log_update
 
 
 def _on_kick(chat_id: int) -> None:
-    User.load(chat_id=chat_id).delete()
-    [task.delete() for task in ScheduledTask.get_tasks(chat_id=chat_id)]
+    user = User.load(chat_id=chat_id)
+    if user:
+        user.delete()
+    for task in ScheduledTask.get_tasks(chat_id=chat_id):
+        task.delete()
 
 
 async def _on_other_kicked(bot: Bot, user: User, chat_id: int) -> None:
@@ -44,9 +46,10 @@ def _on_migrate(from_chat_id: int, to_chat_id: int) -> None:
         task.save()
 
     user = User.load(from_chat_id)
-    user.delete(hard=True)
-    user.chat_id = to_chat_id
-    user.save()
+    if user:
+        user.delete(hard=True)
+        user.chat_id = to_chat_id
+        user.save()
 
 
 @log_update

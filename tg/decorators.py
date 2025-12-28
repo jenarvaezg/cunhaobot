@@ -1,10 +1,10 @@
 import logging
 from functools import wraps
 
-from telegram import Update, Chat
+from telegram import Chat, Update
 
-from models.user import User
 from models.phrase import Phrase
+from models.user import User
 from utils import remove_empty_from_dict
 
 logger = logging.getLogger("cunhaobot")
@@ -26,7 +26,7 @@ def only_admins(f):
 
         await update.effective_message.reply_text(
             f"Esto solo lo pueden hacer administradores, {Phrase.get_random_phrase()}.",
-            quote=True,
+            do_quote=True,
         )
 
     return wrapper

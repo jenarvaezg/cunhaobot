@@ -1,23 +1,23 @@
 import os
+from typing import Any
 
 from telegram import (
-    Update,
     Bot,
-    InlineKeyboardMarkup,
-    constants,
-    Message,
     CallbackQuery,
+    InlineKeyboardMarkup,
+    Update,
+    constants,
 )
 from telegram.ext import CallbackContext
 
-from tg.constants import LIKE
 from models.phrase import Phrase
-from models.proposal import get_proposal_class_by_kind, Proposal
-from tg.markup.keyboards import build_vote_keyboard
+from models.proposal import Proposal, get_proposal_class_by_kind
+from tg.constants import LIKE
 from tg.decorators import log_update
+from tg.markup.keyboards import build_vote_keyboard
 
 curators_chat_id = int(os.environ.get("MOD_CHAT_ID", "-1"))
-admins = []  # Cool global var to cache stuff
+admins: list[Any] = []  # Cool global var to cache stuff
 
 
 def get_required_votes():
@@ -31,7 +31,9 @@ def get_vote_summary(proposal: Proposal) -> str:
     return f"Han votado que si: {' '.join(likers)}\nHan votado que no: {' '.join(dislikers)}"
 
 
-async def _add_vote(proposal: Proposal, vote: str, callback_query: CallbackQuery) -> None:
+async def _add_vote(
+    proposal: Proposal, vote: str, callback_query: CallbackQuery
+) -> None:
     proposal.add_vote(vote == LIKE, callback_query.from_user.id)
     proposal.save()
     await callback_query.answer(f"Tu voto: {vote} ha sido añadido.")
@@ -50,7 +52,7 @@ async def _approve_proposal(
         f"Tu propuesta '{proposal.text}' ha sido aprobada, felicidades, {Phrase.get_random_phrase()}",
         reply_to_message_id=proposal.from_message_id,
     )
-    proposal.phrase_class.upload_from_proposal(proposal, bot)
+    await proposal.phrase_class.upload_from_proposal(proposal, bot)
 
 
 async def _dismiss_proposal(
@@ -69,7 +71,9 @@ async def _dismiss_proposal(
     proposal.delete()
 
 
-async def _update_proposal_text(proposal: Proposal, callback_query: CallbackQuery) -> None:
+async def _update_proposal_text(
+    proposal: Proposal, callback_query: CallbackQuery
+) -> None:
     text = callback_query.message.text_markdown
     reply_markup = InlineKeyboardMarkup(build_vote_keyboard(proposal.id, proposal.kind))
     votes_text = "\n\n*Han votado ya:*\n"
@@ -108,10 +112,12 @@ async def handle_callback_query(update: Update, context: CallbackContext):
         return
 
     if proposal is None:
-        await callback_query.answer(f"Esa propuesta ha muerto, {Phrase.get_random_phrase()}")
+        await callback_query.answer(
+            f"Esa propuesta ha muerto, {Phrase.get_random_phrase()}"
+        )
         return
 
-    await _add_vote(proposal, vote, update.callback_query)
+    await _add_vote(proposal, vote, update.callback_query)  # type: ignore
 
     if len(proposal.liked_by) >= required_votes:
         await _approve_proposal(proposal, callback_query, bot)
