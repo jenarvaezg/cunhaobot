@@ -87,23 +87,25 @@ def generate_png(text: str) -> BinaryIO:
     return b
 
 
-def upload_sticker(
+async def upload_sticker(
     bot: telegram.Bot,
     sticker_png: BinaryIO,
     stickerset_template: str,
     stickerset_title_template: str,
 ) -> str:
-    file_id = bot.upload_sticker_file(owner_id, sticker_png).file_id
+    from telegram import InputSticker
+    file_id = (await bot.upload_sticker_file(owner_id, sticker_png)).file_id
     offset = 0
     stickers_before = set()
     while True:
         offset += 1
         stickerset_name = stickerset_template.format(offset)
         try:
+            stickerset = await bot.get_sticker_set(stickerset_name)
             stickers_before = {
-                s.file_id for s in bot.get_sticker_set(stickerset_name).stickers
+                s.file_id for s in stickerset.stickers
             }
-            bot.add_sticker_to_set(owner_id, stickerset_name, file_id, STICKER_EMOJIS)
+            await bot.add_sticker_to_set(owner_id, stickerset_name, sticker=InputSticker(file_id, [STICKER_EMOJIS]))
             break
         except telegram.error.BadRequest as e:
             if e.message in ["Stickerpack_stickers_too_much", "Stickers_too_much"]:
@@ -111,10 +113,10 @@ def upload_sticker(
             elif e.message == "Stickerset_invalid":
                 # No stickerset, create it!
                 stickerset_title = stickerset_title_template.format(offset)
-                bot.create_new_sticker_set(
-                    owner_id, stickerset_name, stickerset_title, file_id, STICKER_EMOJIS
+                await bot.create_new_sticker_set(
+                    owner_id, stickerset_name, stickerset_title, stickers=[InputSticker(file_id, [STICKER_EMOJIS])], sticker_format="static"
                 )
-                bot.send_message(
+                await bot.send_message(
                     curators_chat_id,
                     f"Nuevo paquete de stickers: t.me/addstickers/{stickerset_name}",
                 )
@@ -122,10 +124,11 @@ def upload_sticker(
             else:
                 raise
 
-    stickers_now = {s.file_id for s in bot.get_sticker_set(stickerset_name).stickers}
+    stickerset_now = await bot.get_sticker_set(stickerset_name)
+    stickers_now = {s.file_id for s in stickerset_now.stickers}
 
     return (stickers_now - stickers_before).pop()
 
 
-def delete_sticker(bot: telegram.Bot, sticker_file_id: str) -> None:
-    bot.delete_sticker_from_set(sticker_file_id)
+async def delete_sticker(bot: telegram.Bot, sticker_file_id: str) -> None:
+    await bot.delete_sticker_from_set(sticker_file_id)

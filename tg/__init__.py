@@ -1,23 +1,19 @@
 import os
 
-from telegram.ext import Updater, Dispatcher
+from telegram.ext import Application
 
 from tg.handlers import error_handler, handlers
 
 TG_TOKEN = os.environ["TG_TOKEN"]
 
+_application = None
 
-def tg_dispatcher() -> Dispatcher:
-    # Create the Updater and pass it your bot's token.
-    updater = Updater(TG_TOKEN, use_context=True)
 
-    # Get the dispatcher to register handlers
-    dp = updater.dispatcher
+def get_tg_application() -> Application:
+    global _application
+    if _application is None:
+        _application = Application.builder().token(TG_TOKEN).build()
+        _application.add_handlers(handlers)
+        _application.add_error_handler(error_handler)
 
-    for handler in handlers:
-        dp.add_handler(handler)
-
-    # log all errors
-    dp.add_error_handler(error_handler)
-
-    return dp
+    return _application

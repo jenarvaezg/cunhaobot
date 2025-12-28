@@ -1,7 +1,7 @@
 import logging
 from typing import Tuple
 
-from telegram import InlineQueryResultArticle, InputTextMessageContent
+from telegram import InlineQueryResultArticle, InputTextMessageContent, InlineQueryResultsButton
 from telegram import Update
 from telegram.ext import CallbackContext
 
@@ -33,13 +33,13 @@ MODE_HANDLERS = {
 
 
 @log_update
-def handle_inline_query(update: Update, context: CallbackContext):
+async def handle_inline_query(update: Update, context: CallbackContext):
     """Handle the inline query."""
     mode, rest = get_query_mode(update.inline_query.query)
 
     results_func = MODE_HANDLERS.get(mode)
     if not results_func:
-        update.inline_query.answer(
+        await update.inline_query.answer(
             [
                 InlineQueryResultArticle(
                     id="Dont know how to use",
@@ -47,22 +47,26 @@ def handle_inline_query(update: Update, context: CallbackContext):
                     input_message_content=InputTextMessageContent(
                         f"Soy un {Phrase.get_random_phrase()} y no se usar el CuñaoBot"
                     ),
-                    thumb_url=get_thumb(),
+                    thumbnail_url=get_thumb(),
                 )
             ],
-            switch_pm_text="PULSA AQUI PARA RECIBIR AYUDA",
-            switch_pm_parameter="dont_know_how_to_use",
+            button=InlineQueryResultsButton(
+                text="PULSA AQUI PARA RECIBIR AYUDA",
+                start_parameter="dont_know_how_to_use",
+            ),
         )
         return
 
     results = results_func(rest)
 
     switch_pm_param = f'{mode}-{normalize_str(rest.replace(" ", "-"))}'
-    update.inline_query.answer(
+    await update.inline_query.answer(
         results,
         cache_time=1,
-        switch_pm_text="PULSA AQUÍ PARA RECIBIR AYUDA",
-        switch_pm_parameter=switch_pm_param[:63],
+        button=InlineQueryResultsButton(
+            text="PULSA AQUÍ PARA RECIBIR AYUDA",
+            start_parameter=switch_pm_param[:63],
+        ),
     )
 
     InlineUser.update_or_create_from_update(update)

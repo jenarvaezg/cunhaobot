@@ -1,7 +1,7 @@
 import os
 from typing import Union, Type
 
-from telegram import Update, Bot, InlineKeyboardMarkup, ForceReply, ParseMode, Message
+from telegram import Update, Bot, InlineKeyboardMarkup, ForceReply, constants, Message
 from telegram.ext import CallbackContext
 
 from tg.markup.keyboards import build_vote_keyboard
@@ -18,7 +18,7 @@ proposal_t = Union[Type[Proposal], Type[LongProposal]]
 phrase_t = Union[Type[Phrase], Type[LongPhrase]]
 
 
-def _notify_proposal_to_curators(
+async def _notify_proposal_to_curators(
     bot: Bot,
     proposal: Proposal,
     submitted_by: str,
@@ -34,26 +34,26 @@ def _notify_proposal_to_curators(
         f"\n\nLa mas parecida es: '*{most_similar}*' ({similarity_ratio}%)."
     )
 
-    bot.send_message(
+    await bot.send_message(
         curators_chat_id,
         curators_message_text,
         reply_markup=curators_reply_markup,
-        parse_mode=ParseMode.MARKDOWN,
+        parse_mode=constants.ParseMode.MARKDOWN,
         disable_web_page_preview=True,
     )
 
 
-def submit_handling(
+async def submit_handling(
     bot: Bot, update: Update, proposal_class: proposal_t, phrase_class: phrase_t
 ) -> Message:
     submitted_by = update.effective_user.name
     proposal = proposal_class.from_update(update)
     if not proposal.text:
-        return update.effective_message.reply_text(
+        return await update.effective_message.reply_text(
             f"¿Qué *{phrase_class.name}* quieres proponer, {Phrase.get_random_phrase()}?\n"
             "Si no quieres proponer nada, puedes usar /cancelar.",
             reply_markup=ForceReply(selective=True),
-            parse_mode=ParseMode.MARKDOWN,
+            parse_mode=constants.ParseMode.MARKDOWN,
         )
 
     # Fuzzy search. If we have one similar, discard.
@@ -62,14 +62,14 @@ def submit_handling(
         text = f"Esa ya la tengo, {Phrase.get_random_phrase()}, {Phrase.get_random_phrase()}."
         if similarity_ratio != 100:
             text += f'\nSe parece demasiado a "<b>{most_similar}</b>", {Phrase.get_random_phrase()}.'
-        return update.effective_message.reply_text(text, parse_mode=ParseMode.HTML)
+        return await update.effective_message.reply_text(text, parse_mode=constants.ParseMode.HTML)
 
     proposal.save()
-    _notify_proposal_to_curators(
+    await _notify_proposal_to_curators(
         bot, proposal, submitted_by, most_similar, similarity_ratio
     )
 
-    return update.effective_message.reply_text(
+    return await update.effective_message.reply_text(
         f"Tu aportación será valorada por un consejo de cuñaos expertos y te avisaré una vez haya sido evaluada, "
         f"{Phrase.get_random_phrase()}.",
         quote=True,
@@ -77,16 +77,16 @@ def submit_handling(
 
 
 @log_update
-def handle_submit(update: Update, context: CallbackContext):
+async def handle_submit(update: Update, context: CallbackContext):
     if len(update.effective_message.text.split(" ")) > 5:
-        return update.effective_message.reply_text(
+        return await update.effective_message.reply_text(
             f"¿Estás seguro de que esto es una frase corta, {Phrase.get_random_phrase()}?\n"
             f"Mejor prueba con /proponerfrase {Phrase.get_random_phrase()}.",
             quote=True,
         )
-    submit_handling(context.bot, update, Proposal, Phrase)
+    await submit_handling(context.bot, update, Proposal, Phrase)
 
 
 @log_update
-def handle_submit_phrase(update: Update, context: CallbackContext):
-    submit_handling(context.bot, update, LongProposal, LongPhrase)
+async def handle_submit_phrase(update: Update, context: CallbackContext):
+    await submit_handling(context.bot, update, LongProposal, LongPhrase)

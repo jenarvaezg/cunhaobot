@@ -17,7 +17,7 @@ def get_long_mode_results(input: str) -> List[InlineQueryResultArticle]:
             id=f"long-{normalize_str(phrase.text)[:58]}",
             title=phrase.text,
             input_message_content=InputTextMessageContent(phrase.text),
-            thumb_url=get_thumb(),
+            thumbnail_url=get_thumb(),
         )
         for phrase in random.sample(phrases, results_number)
     ]
@@ -31,7 +31,7 @@ def get_long_mode_results(input: str) -> List[InlineQueryResultArticle]:
                 input_message_content=InputTextMessageContent(
                     LongPhrase.get_random_phrase().text
                 ),
-                thumb_url=get_thumb(),
+                thumbnail_url=get_thumb(),
             )
         ]
 

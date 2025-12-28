@@ -11,7 +11,7 @@ import tweepy
 from models.phrase import LongPhrase
 from slack.handlers import handle_slack
 
-from tg import tg_dispatcher
+from tg import get_tg_application
 from tg.handlers import handle_ping as handle_telegram_ping
 
 # Enable logging
@@ -30,17 +30,21 @@ def ping():
 
 
 @app.route(f"/{TG_TOKEN}", methods=["POST"])
-def telegram_handler():
-    dispatcher = tg_dispatcher()
-    update = Update.de_json(request.json, dispatcher.bot)
-    dispatcher.process_update(update)
+async def telegram_handler():
+    application = get_tg_application()
+    await application.initialize()
+
+    update = Update.de_json(request.json, application.bot)
+    await application.process_update(update)
     return "Handled"
 
 
 @app.route(f"/{TG_TOKEN}/ping", methods=["GET"])
-def telegram_ping_handler():
-    dispatcher = tg_dispatcher()
-    handle_telegram_ping(dispatcher.bot)
+async def telegram_ping_handler():
+    application = get_tg_application()
+    await application.initialize()
+
+    await handle_telegram_ping(application.bot)
     return "OK"
 
 

@@ -3,7 +3,7 @@ from telegram.ext import (
     CommandHandler,
     CallbackQueryHandler,
     MessageHandler,
-    Filters,
+    filters,
     ChosenInlineResultHandler,
 )
 
@@ -43,10 +43,10 @@ handlers = [
     CommandHandler("chapas", handle_list_chapas),
     CommandHandler("borrarchapa", handle_delete_chapa),
     CommandHandler("borrarchapas", handle_delete_chapas),
-    MessageHandler(Filters.reply, handle_reply),
-    MessageHandler(Filters.text, handle_message),
+    MessageHandler(filters.REPLY, handle_reply),
+    MessageHandler(filters.TEXT, handle_message),
     InlineQueryHandler(handle_inline_query),
     CallbackQueryHandler(handle_callback_query),
     ChosenInlineResultHandler(handle_chosen_inline_result),
-    MessageHandler(None, handle_fallback_message),
+    MessageHandler(filters.ALL, handle_fallback_message),
 ]

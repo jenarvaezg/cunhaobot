@@ -1,4 +1,5 @@
 runtime: python314
+entrypoint: gunicorn -b :$PORT main:app
 
 env_variables:
   TG_TOKEN: $TG_TOKEN

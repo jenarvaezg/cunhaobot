@@ -38,7 +38,7 @@ def get_short_mode_results(input: str) -> List[InlineQueryResultArticle]:
             input_message_content=InputTextMessageContent(
                 BASE_TEMPLATE.format(", ".join([str(e) for e in combination]))
             ),
-            thumb_url=get_thumb(),
+            thumbnail_url=get_thumb(),
         )
         for combination in combinations
     ]

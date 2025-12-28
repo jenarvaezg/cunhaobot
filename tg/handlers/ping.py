@@ -6,7 +6,7 @@ from typing import Iterable, List
 
 import pytz
 
-from telegram import Bot, ParseMode
+from telegram import Bot, constants
 
 from models.report import Report
 from models.schedule import ScheduledTask
@@ -19,7 +19,7 @@ curators_chat_id = os.environ.get("MOD_CHAT_ID", "")
 logger = logging.getLogger("cunhaobot")
 
 
-def _send_chapas(bot: Bot, tasks: Iterable[ScheduledTask]) -> None:
+async def _send_chapas(bot: Bot, tasks: Iterable[ScheduledTask]) -> None:
     errors = []
     for task in tasks:
         try:
@@ -27,19 +27,19 @@ def _send_chapas(bot: Bot, tasks: Iterable[ScheduledTask]) -> None:
             resuls_fn = MODE_HANDLERS.get(query_mode)
             result = next(iter(resuls_fn(rest)), None)
             if result is None or "-bad-search-" in result.id:
-                bot.send_message(
+                await bot.send_message(
                     task.chat_id,
                     f"Te tengo que dar la chapa, pero no he encontrado nada con los parametros '{task.query}', así que "
                     f"aqui tienes algo parecido, {Phrase.get_random_phrase()}.",
                 )
-                bot.send_message(task.chat_id, LongPhrase.get_random_phrase().text)
+                await bot.send_message(task.chat_id, LongPhrase.get_random_phrase().text)
                 continue
             if query_mode == AUDIO_MODE:
-                bot.send_voice(task.chat_id, result.voice_url)
+                await bot.send_voice(task.chat_id, result.voice_url)
             elif query_mode == STICKER_MODE:
-                bot.send_sticker(task.chat_id, result.sticker_file_id)
+                await bot.send_sticker(task.chat_id, result.sticker_file_id)
             else:
-                bot.send_message(
+                await bot.send_message(
                     task.chat_id, result.input_message_content.message_text
                 )
         except Exception as e:
@@ -47,7 +47,7 @@ def _send_chapas(bot: Bot, tasks: Iterable[ScheduledTask]) -> None:
             errors.append((task.datastore_id, e, str(e)))
 
     if errors:
-        bot.send_message(
+        await bot.send_message(
             curators_chat_id,
             f"{Phrase.get_random_phrase()}s, mandando chapas he tenido estos errores: {errors}.",
         )
@@ -69,7 +69,7 @@ def _generate_report(now: datetime.date) -> None:
     LongPhrase.remove_daily_usages()
 
 
-def _send_report(bot: Bot, now: datetime.date) -> None:
+async def _send_report(bot: Bot, now: datetime.date) -> None:
     yesterday = now - timedelta(days=1)
     bef_yesterday = yesterday - timedelta(days=1)
     today_report, yesterday_report = Report.get_at(yesterday), Report.get_at(
@@ -104,7 +104,7 @@ def _send_report(bot: Bot, now: datetime.date) -> None:
     def fmt_delta(delta: int) -> str:
         return f"+{delta}" if delta >= 0 else str(delta)
 
-    bot.send_message(
+    await bot.send_message(
         curators_chat_id,
         f"<b>Resumen del {yesterday.strftime('%Y/%m/%d')}</b>:\n"
         f"Frases largas: {longs} ({fmt_delta(longs_delta)})\n"
@@ -117,15 +117,15 @@ def _send_report(bot: Bot, now: datetime.date) -> None:
         f"GDPRs: {gdprs} ({fmt_delta(gdprs_delta)})\n\n"
         f"La frase más usada de ayer fue:\n<b>{top_long}</b>\n"
         f"El apelativo más usado ayer fue:\n<b>{top_short}</b>\n",
-        parse_mode=ParseMode.HTML,
+        parse_mode=constants.ParseMode.HTML,
     )
 
 
-def handle_ping(bot: Bot):
+async def handle_ping(bot: Bot):
     madrid_timezone = pytz.timezone("Europe/Madrid")
     now = datetime.now().astimezone(madrid_timezone)
 
-    _send_chapas(
+    await _send_chapas(
         bot,
         ScheduledTask.get_tasks(
             hour=now.hour, minute=now.minute, service="telegram", type="chapa"
@@ -134,4 +134,4 @@ def handle_ping(bot: Bot):
     if now.hour == 23 and now.minute == 59:
         _generate_report(now.date())
     elif now.hour == 7 and now.minute == 0:
-        _send_report(bot, now.date())
+        await _send_report(bot, now.date())

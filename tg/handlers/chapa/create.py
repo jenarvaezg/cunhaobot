@@ -9,8 +9,8 @@ from tg.decorators import log_update, only_admins
 from models.phrase import Phrase
 
 
-def usage(update: Update) -> Message:
-    return update.effective_message.reply_text(
+async def usage(update: Update) -> Message:
+    return await update.effective_message.reply_text(
         "Para usar el servicio de chapas, tienes que decirme la hora a la que quieres la chapa y, opcionalmente, "
         "puedes añadir parámetros. Ejemplos:\n'/chapa 1100' <- Saludo aleatorio a las 11 como "
         f"¿Qué pasa, {Phrase.get_random_phrase()}?\n'/chapa 2030 frase' <- Frase aleatoria a las 20:30 (8:30PM)\n"
@@ -48,24 +48,24 @@ def split_time(time_s: str) -> Tuple[int, int]:
 
 @only_admins
 @log_update
-def handle_create_chapa(update: Update, context: CallbackContext):
+async def handle_create_chapa(update: Update, context: CallbackContext):
     text = " ".join(update.effective_message.text.split())
 
     try:
         tokens = text.split(" ")
         if len(tokens) == 1:
-            return usage(update)
+            return await usage(update)
         time, query = tokens[1], " ".join(tokens[2:])
     except (KeyError, ValueError, IndexError) as e:
-        update.effective_message.reply_text(str(e), quote=True)
-        return usage(update)
+        await update.effective_message.reply_text(str(e), quote=True)
+        return await usage(update)
 
     try:
         require_valid_query(query)
         hour, minute = split_time(time)
     except (KeyError, ValueError) as e:
-        update.effective_message.reply_text(str(e), quote=True)
-        return usage(update)
+        await update.effective_message.reply_text(str(e), quote=True)
+        return await usage(update)
 
     ScheduledTask(
         update.effective_chat.id,
@@ -76,7 +76,7 @@ def handle_create_chapa(update: Update, context: CallbackContext):
         task_type="chapa",
     ).save()
 
-    update.effective_message.reply_text(
+    await update.effective_message.reply_text(
         f"Configurada chapa a las {hour:02}:{minute:02}. Puedes eliminarla en cualquier momento usando /borrarchapa.",
         quote=True,
     )

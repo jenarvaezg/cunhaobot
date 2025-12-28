@@ -7,11 +7,11 @@ from models.phrase import Phrase
 from tg.decorators import log_update
 
 
-def reply_cunhao(update: Update, context: CallbackContext):
+async def reply_cunhao(update: Update, context: CallbackContext):
     n_words = random.choice([3, 4, 5])
     words = ", ".join([Phrase.get_random_phrase().text for _ in range(n_words)])
     msg = "Aquí me tienes, {}.".format(words)
-    update.effective_message.reply_text(msg, quote=True)
+    await update.effective_message.reply_text(msg, quote=True)
 
 
 MESSAGE_TRIGGERS = {
@@ -20,7 +20,7 @@ MESSAGE_TRIGGERS = {
 
 
 @log_update
-def handle_message(update: Update, context: CallbackContext):
+async def handle_message(update: Update, context: CallbackContext):
     message: Message = update.effective_message
 
     used_triggers = []
@@ -30,5 +30,5 @@ def handle_message(update: Update, context: CallbackContext):
             any(word in msg_text for word in trigger_words)
             and trigger_fn not in used_triggers
         ):
-            trigger_fn(update, context)
+            await trigger_fn(update, context)
             used_triggers.append(trigger_fn)

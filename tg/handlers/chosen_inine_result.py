@@ -7,7 +7,7 @@ from tg.decorators import log_update
 
 
 @log_update
-def handle_chosen_inline_result(update: Update, context: CallbackContext):
+async def handle_chosen_inline_result(update: Update, context: CallbackContext):
     InlineUser.update_or_create_from_update(update).add_usage()
     result: ChosenInlineResult = update.chosen_inline_result
     if "short-" in result.result_id:

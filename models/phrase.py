@@ -51,14 +51,14 @@ class Phrase:
         return self.text
 
     @classmethod
-    def upload_from_proposal(cls, proposal, bot: telegram.Bot):
+    async def upload_from_proposal(cls, proposal, bot: telegram.Bot):
         phrase = cls(
             proposal.text,
             user_id=proposal.user_id,
             chat_id=proposal.from_chat_id,
             created_at=datetime.now(),
         )
-        phrase.generate_sticker(bot)
+        await phrase.generate_sticker(bot)
 
         phrase.save()
 
@@ -164,11 +164,11 @@ class Phrase:
             key=lambda x: x[1],
         )
 
-    def generate_sticker(self, bot: telegram.Bot) -> None:
+    async def generate_sticker(self, bot: telegram.Bot) -> None:
         from tg.stickers import generate_png, upload_sticker
 
         sticker_text = f"¿Qué pasa, {self.text}?"
-        self.sticker_file_id = upload_sticker(
+        self.sticker_file_id = await upload_sticker(
             bot,
             generate_png(sticker_text),
             self.stickerset_template,
@@ -193,17 +193,17 @@ class Phrase:
 
         datastore_client.put(phrase_entity)
 
-    def edit_text(self, new_text: str, bot: telegram.Bot):
-        self.delete(bot)
+    async def edit_text(self, new_text: str, bot: telegram.Bot):
+        await self.delete(bot)
 
         self.text = new_text
-        self.generate_sticker(bot)
+        await self.generate_sticker(bot)
         self.save()
 
-    def delete(self, bot: telegram.Bot) -> None:
+    async def delete(self, bot: telegram.Bot) -> None:
         from tg.stickers import delete_sticker
 
-        delete_sticker(bot, self.sticker_file_id)
+        await delete_sticker(bot, self.sticker_file_id)
         key = datastore_client.key(self.kind, self.text)
         datastore_client.delete(key)
 
@@ -253,11 +253,11 @@ class LongPhrase(Phrase):
                 phrase.usages += 1
             phrase.save()
 
-    def generate_sticker(self, bot: telegram.Bot) -> None:
+    async def generate_sticker(self, bot: telegram.Bot) -> None:
         from tg.stickers import generate_png, upload_sticker
 
         sticker_text = self.text
-        self.sticker_file_id = upload_sticker(
+        self.sticker_file_id = await upload_sticker(
             bot,
             generate_png(sticker_text),
             self.stickerset_template,
