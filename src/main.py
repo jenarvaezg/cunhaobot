@@ -23,7 +23,13 @@ from utils import normalize_str, verify_telegram_auth
 # Enable logging
 logging.basicConfig(format="%(message)s", level=logging.INFO)
 
-required_env_vars = ["TG_TOKEN", "BASE_URL", "SLACK_CLIENT_ID", "SLACK_CLIENT_SECRET"]
+required_env_vars = [
+    "TG_TOKEN",
+    "BASE_URL",
+    "SLACK_CLIENT_ID",
+    "SLACK_CLIENT_SECRET",
+    "SESSION_SECRET",
+]
 missing_vars = [var for var in required_env_vars if var not in os.environ]
 if missing_vars:  # pragma: no cover
     logging.error(f"Missing required environment variables: {', '.join(missing_vars)}")
