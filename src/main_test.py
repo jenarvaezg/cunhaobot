@@ -1,5 +1,4 @@
 import json
-import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -7,7 +6,7 @@ from litestar.status_codes import HTTP_200_OK
 from litestar.testing import TestClient
 
 # Import app from main
-from main import app
+from main import app, config
 
 
 @pytest.fixture
@@ -23,7 +22,7 @@ def test_ping(client):
 
 
 def test_telegram_handler(client):
-    token = os.environ["TG_TOKEN"]
+    token = config.tg_token
 
     with patch("main.get_tg_application") as mock_get_app:
         mock_app = MagicMock()
@@ -50,7 +49,7 @@ def test_telegram_handler(client):
 
 
 def test_telegram_ping_handler(client):
-    token = os.environ["TG_TOKEN"]
+    token = config.tg_token
 
     with patch("main.get_tg_application") as mock_get_app:
         mock_app = MagicMock()
@@ -144,7 +143,7 @@ def test_main_entry_point():
     # Mock uvicorn.run globally to be sure it doesn't start the server
     with (
         patch("uvicorn.run"),
-        patch("main.TG_TOKEN", "dummy"),
+        patch.object(config, "tg_token", "dummy"),
         patch("builtins.print"),
     ):
         runpy.run_module("main", run_name="__main__")

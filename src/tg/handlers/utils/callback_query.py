@@ -1,4 +1,5 @@
 import os
+from dataclasses import dataclass
 from telegram import (
     Bot,
     CallbackQuery,
@@ -15,19 +16,38 @@ from tg.constants import LIKE
 from tg.decorators import log_update
 from tg.markup.keyboards import build_vote_keyboard
 
-curators_chat_id = int(os.environ.get("MOD_CHAT_ID", "-1"))
+
+class ConfigError(Exception):
+    """Raised when required environment variables are missing."""
+
+
+@dataclass
+class TGConfig:
+    curators_chat_id: int
+
+    @classmethod
+    def from_env(cls) -> "TGConfig":
+        try:
+            return cls(curators_chat_id=int(os.environ["MOD_CHAT_ID"]))
+        except (KeyError, ValueError) as e:
+            raise ConfigError(f"Invalid or missing MOD_CHAT_ID: {e}") from e
+
+
+config = TGConfig.from_env()
 admins: list[ChatMember] = []  # Cool global var to cache stuff
 
 
-def get_required_votes():
-    count = len(admins)
-    return count // 2 + 1
+def get_required_votes() -> int:
+    return len(admins) // 2 + 1
 
 
 def get_vote_summary(proposal: Proposal) -> str:
     likers = [a.user.name for a in admins if a.user.id in proposal.liked_by]
     dislikers = [a.user.name for a in admins if a.user.id in proposal.disliked_by]
-    return f"Han votado que si: {' '.join(likers)}\nHan votado que no: {' '.join(dislikers)}"
+    return (
+        f"Han votado que si: {' '.join(likers)}\n"
+        f"Han votado que no: {' '.join(dislikers)}"
+    )
 
 
 async def _add_vote(
@@ -60,7 +80,8 @@ async def dismiss_proposal(
 ) -> None:
     if callback_query:
         await callback_query.edit_message_text(
-            f"La propuesta '{proposal.text}' queda formalmente rechazada.\n\n{get_vote_summary(proposal)}",
+            f"La propuesta '{proposal.text}' queda formalmente rechazada.\n\n"
+            f"{get_vote_summary(proposal)}",
             disable_web_page_preview=True,
         )
 
@@ -87,6 +108,9 @@ async def _dismiss_proposal(
 async def _update_proposal_text(
     proposal: Proposal, callback_query: CallbackQuery
 ) -> None:
+    if not callback_query.message:
+        return
+
     text = callback_query.message.text_markdown
     reply_markup = InlineKeyboardMarkup(build_vote_keyboard(proposal.id, proposal.kind))
     votes_text = "\n\n*Han votado ya:*\n"
@@ -97,38 +121,37 @@ async def _update_proposal_text(
     votes_text += "\n".join([u.name for u in voted_admins])
 
     final_text = before_votes_text + votes_text
-    if final_text != text:
-        await callback_query.edit_message_text(
-            before_votes_text + votes_text,
-            reply_markup=reply_markup,
-            parse_mode=constants.ParseMode.MARKDOWN,
-            disable_web_page_preview=True,
-        )
+    if final_text == text:
+        return
+
+    await callback_query.edit_message_text(
+        final_text,
+        reply_markup=reply_markup,
+        parse_mode=constants.ParseMode.MARKDOWN,
+        disable_web_page_preview=True,
+    )
 
 
 @log_update
-async def handle_callback_query(update: Update, context: CallbackContext):
+async def handle_callback_query(update: Update, context: CallbackContext) -> None:
     global admins
-    if update.callback_query is None:
+    if not (callback_query := update.callback_query) or not (
+        data := callback_query.data
+    ):
         return
 
     bot: Bot = context.bot
-    admins = admins or await bot.get_chat_administrators(curators_chat_id)
-    callback_query = update.callback_query
-    data = callback_query.data
-    if data is None:
-        return
-
-    vote, proposal_id, kind = data.split(":")
-    proposal_class = get_proposal_class_by_kind(kind)
-    proposal = proposal_class.load(proposal_id)
-    required_votes = get_required_votes()
+    admins = admins or await bot.get_chat_administrators(config.curators_chat_id)
 
     if callback_query.from_user.id not in [a.user.id for a in admins]:
         await callback_query.answer(
             f"Tener una silla en el consejo no te hace maestro cuñao, {Phrase.get_random_phrase()}"
         )
         return
+
+    vote, proposal_id, kind = data.split(":")
+    proposal_class = get_proposal_class_by_kind(kind)
+    proposal = proposal_class.load(proposal_id)
 
     if proposal is None:
         await callback_query.answer(
@@ -138,9 +161,13 @@ async def handle_callback_query(update: Update, context: CallbackContext):
 
     await _add_vote(proposal, vote, callback_query)
 
+    required_votes = get_required_votes()
     if len(proposal.liked_by) >= required_votes:
         await _approve_proposal(proposal, callback_query, bot)
-    elif len(proposal.disliked_by) >= required_votes:
+        return
+
+    if len(proposal.disliked_by) >= required_votes:
         await _dismiss_proposal(proposal, callback_query, bot)
-    else:
-        await _update_proposal_text(proposal, callback_query)
+        return
+
+    await _update_proposal_text(proposal, callback_query)

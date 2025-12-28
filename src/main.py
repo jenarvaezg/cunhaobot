@@ -1,6 +1,8 @@
 import json
 import logging
 import os
+from dataclasses import dataclass
+from typing import Any
 
 import requests
 import tweepy
@@ -24,26 +26,73 @@ from utils import normalize_str, verify_telegram_auth
 # Enable logging
 logging.basicConfig(format="%(message)s", level=logging.INFO)
 
-required_env_vars = [
-    "TG_TOKEN",
-    "BASE_URL",
-    "SLACK_CLIENT_ID",
-    "SLACK_CLIENT_SECRET",
-    "SESSION_SECRET",
-    "OWNER_ID",
-]
-missing_vars = [var for var in required_env_vars if var not in os.environ]
-if missing_vars:  # pragma: no cover
-    logging.error(f"Missing required environment variables: {', '.join(missing_vars)}")
-    # In production we might want to exit, but locally we might want to continue for some tests
-    if os.environ.get("GAE_ENV") == "standard":
-        exit(1)  # pragma: no cover
 
-TG_TOKEN = os.environ.get("TG_TOKEN", "dummy_token")
-BASE_URL = os.environ.get("BASE_URL", "http://localhost:5050")
-PORT = int(os.environ.get("PORT", 5050))
-SESSION_SECRET = os.environ.get("SESSION_SECRET", "a-very-secret-key-of-32-chars-!!")
-OWNER_ID = os.environ.get("OWNER_ID")
+class ConfigError(Exception):
+    """Raised when required environment variables are missing."""
+
+
+@dataclass
+class Config:
+    tg_token: str
+    base_url: str
+    port: int
+    session_secret: str
+    owner_id: str
+    slack_client_id: str
+    slack_client_secret: str
+    is_gae: bool
+
+    @classmethod
+    def from_env(cls) -> "Config":
+        required = [
+            "TG_TOKEN",
+            "SLACK_CLIENT_ID",
+            "SLACK_CLIENT_SECRET",
+            "SESSION_SECRET",
+            "OWNER_ID",
+        ]
+        missing = [var for var in required if var not in os.environ]
+
+        is_gae = os.environ.get("GAE_ENV") == "standard"
+        if missing and is_gae:
+            raise ConfigError(f"Missing environment variables: {', '.join(missing)}")
+
+        return cls(
+            tg_token=os.environ.get("TG_TOKEN", "dummy_token"),
+            base_url=os.environ.get("BASE_URL", "http://localhost:5050"),
+            port=int(os.environ.get("PORT", 5050)),
+            session_secret=os.environ.get(
+                "SESSION_SECRET", "a-very-secret-key-of-32-chars-!!"
+            ),
+            owner_id=os.environ.get("OWNER_ID", ""),
+            slack_client_id=os.environ.get("SLACK_CLIENT_ID", ""),
+            slack_client_secret=os.environ.get("SLACK_CLIENT_SECRET", ""),
+            is_gae=is_gae,
+        )
+
+
+config = Config.from_env()
+
+
+def get_proposals_context(request: Request) -> dict[str, Any]:
+    filters = {k: v for k, v in request.query_params.items() if k not in ["search"]}
+    search_query = request.query_params.get("search", "")
+
+    all_short = Proposal.get_proposals(search=search_query, **filters)
+    all_long = LongProposal.get_proposals(search=search_query, **filters)
+
+    short_texts = {normalize_str(p.text) for p in Phrase.get_phrases()}
+    long_texts = {normalize_str(p.text) for p in LongPhrase.get_phrases()}
+
+    pending_short = [p for p in all_short if normalize_str(p.text) not in short_texts]
+    pending_long = [p for p in all_long if normalize_str(p.text) not in long_texts]
+
+    return {
+        "pending_short": pending_short,
+        "pending_long": pending_long,
+        "user": request.session.get("user"),
+        "owner_id": config.owner_id,
+    }
 
 
 @get("/", sync_to_thread=False)
@@ -58,99 +107,71 @@ def index(request: Request) -> Template:
             ),
             "long_phrases": sorted(long_phrases, key=lambda x: x.usages, reverse=True),
             "user": request.session.get("user"),
-            "owner_id": OWNER_ID,
+            "owner_id": config.owner_id,
         },
     )
 
 
 @get("/proposals", sync_to_thread=False)
 def proposals(request: Request) -> Template:
-    # Get all filters from query params
-    filters = {k: v for k, v in request.query_params.items() if k not in ["search"]}
-    search_query = request.query_params.get("search", "")
-
-    all_short_proposals = Proposal.get_proposals(search=search_query, **filters)
-    all_long_proposals = LongProposal.get_proposals(search=search_query, **filters)
-
-    short_phrases_texts = {normalize_str(p.text) for p in Phrase.get_phrases()}
-    long_phrases_texts = {normalize_str(p.text) for p in LongPhrase.get_phrases()}
-
-    pending_short = [
-        p
-        for p in all_short_proposals
-        if normalize_str(p.text) not in short_phrases_texts
-    ]
-    pending_long = [
-        p for p in all_long_proposals if normalize_str(p.text) not in long_phrases_texts
-    ]
-
     return Template(
         template_name="proposals.html",
-        context={
-            "pending_short": pending_short,
-            "pending_long": pending_long,
-            "user": request.session.get("user"),
-            "owner_id": OWNER_ID,
-        },
+        context=get_proposals_context(request),
     )
+
+
+async def _handle_proposal_web_action(
+    request: Request, kind: str, proposal_id: str, action: str
+) -> Response[str]:
+    user = request.session.get("user")
+    if not user or str(user.get("id")) != str(config.owner_id):
+        return Response("Unauthorized", status_code=401)
+
+    proposal_class = get_proposal_class_by_kind(kind)
+    proposal = proposal_class.load(proposal_id)
+    if not proposal:
+        return Response("Proposal not found", status_code=404)
+
+    application = get_tg_application()
+    await application.initialize()
+
+    if action == "approve":
+        await approve_proposal(proposal, application.bot)
+    else:
+        await dismiss_proposal(proposal, application.bot)
+
+    return Response(action.capitalize(), status_code=200)
 
 
 @post("/proposals/{kind:str}/{proposal_id:str}/approve")
 async def approve_proposal_web(
     request: Request, kind: str, proposal_id: str
 ) -> Response[str]:
-    user = request.session.get("user")
-    if not user or str(user.get("id")) != str(OWNER_ID):
-        return Response("Unauthorized", status_code=401)
-
-    proposal_class = get_proposal_class_by_kind(kind)
-    proposal = proposal_class.load(proposal_id)
-
-    if not proposal:
-        return Response("Proposal not found", status_code=404)
-
-    application = get_tg_application()
-    await application.initialize()
-    await approve_proposal(proposal, application.bot)
-
-    return Response("Approved", status_code=200)
+    return await _handle_proposal_web_action(request, kind, proposal_id, "approve")
 
 
 @post("/proposals/{kind:str}/{proposal_id:str}/reject")
 async def reject_proposal_web(
     request: Request, kind: str, proposal_id: str
 ) -> Response[str]:
-    user = request.session.get("user")
-    if not user or str(user.get("id")) != str(OWNER_ID):
-        return Response("Unauthorized", status_code=401)
-
-    proposal_class = get_proposal_class_by_kind(kind)
-    proposal = proposal_class.load(proposal_id)
-
-    if not proposal:
-        return Response("Proposal not found", status_code=404)
-
-    application = get_tg_application()
-    await application.initialize()
-    await dismiss_proposal(proposal, application.bot)
-
-    return Response("Rejected", status_code=200)
+    return await _handle_proposal_web_action(request, kind, proposal_id, "reject")
 
 
 @get("/auth/telegram", sync_to_thread=False)
 def auth_telegram(request: Request) -> Redirect:
-    if verify_telegram_auth(dict(request.query_params), TG_TOKEN):  # pragma: no cover
-        # Store user info in session
-        request.set_session(
-            {
-                "user": {
-                    "id": request.query_params.get("id"),
-                    "first_name": request.query_params.get("first_name"),
-                    "username": request.query_params.get("username"),
-                    "photo_url": request.query_params.get("photo_url"),
-                }
+    if not verify_telegram_auth(dict(request.query_params), config.tg_token):
+        return Redirect(path="/")
+
+    request.set_session(
+        {
+            "user": {
+                "id": request.query_params.get("id"),
+                "first_name": request.query_params.get("first_name"),
+                "username": request.query_params.get("username"),
+                "photo_url": request.query_params.get("photo_url"),
             }
-        )
+        }
+    )
     return Redirect(path="/")
 
 
@@ -162,47 +183,18 @@ def logout(request: Request) -> Redirect:
 
 @get("/proposals/search", sync_to_thread=False)
 def proposals_search(request: HTMXRequest) -> HTMXTemplate:
-    filters = {k: v for k, v in request.query_params.items() if k not in ["search"]}
-
-    search_query = request.query_params.get("search", "")
-
-    all_short_proposals = Proposal.get_proposals(search=search_query, **filters)
-
-    all_long_proposals = LongProposal.get_proposals(search=search_query, **filters)
-
-    short_phrases_texts = {normalize_str(p.text) for p in Phrase.get_phrases()}
-
-    long_phrases_texts = {normalize_str(p.text) for p in LongPhrase.get_phrases()}
-
-    pending_short = [
-        p
-        for p in all_short_proposals
-        if normalize_str(p.text) not in short_phrases_texts
-    ]
-
-    pending_long = [
-        p for p in all_long_proposals if normalize_str(p.text) not in long_phrases_texts
-    ]
-
     return HTMXTemplate(
         template_name="partials/proposals_list.html",
-        context={
-            "pending_short": pending_short,
-            "pending_long": pending_long,
-            "user": request.session.get("user"),
-            "owner_id": OWNER_ID,
-        },
+        context=get_proposals_context(request),
     )
 
 
 @get("/search", sync_to_thread=False)
 def search(request: HTMXRequest) -> HTMXTemplate:
     filters = {k: v for k, v in request.query_params.items() if k not in ["search"]}
-
     search_query = request.query_params.get("search", "")
 
     short_phrases = Phrase.get_phrases(search=search_query, **filters)
-
     long_phrases = LongPhrase.get_phrases(search=search_query, **filters)
 
     return HTMXTemplate(
@@ -221,7 +213,7 @@ def ping() -> str:
     return "I am alive"
 
 
-@post(path=f"/{TG_TOKEN}", status_code=200)
+@post(path=f"/{config.tg_token}", status_code=200)
 async def telegram_handler(request: Request) -> str:
     application = get_tg_application()
     await application.initialize()
@@ -232,7 +224,7 @@ async def telegram_handler(request: Request) -> str:
     return "Handled"
 
 
-@get(path=f"/{TG_TOKEN}/ping")
+@get(path=f"/{config.tg_token}/ping")
 async def telegram_ping_handler() -> str:
     application = get_tg_application()
     await application.initialize()
@@ -242,16 +234,18 @@ async def telegram_ping_handler() -> str:
 
 
 def auto_login_local(request: Request) -> None:
-    if os.environ.get("GAE_ENV") != "standard" and not request.session.get("user"):
-        request.set_session(
-            {
-                "user": {
-                    "id": OWNER_ID,
-                    "first_name": "Local",
-                    "username": "local_owner",
-                }
+    if config.is_gae or request.session.get("user"):
+        return
+
+    request.set_session(
+        {
+            "user": {
+                "id": config.owner_id,
+                "first_name": "Local",
+                "username": "local_owner",
             }
-        )
+        }
+    )
 
 
 @post(path="/slack", status_code=200)
@@ -259,10 +253,9 @@ async def slack_handler(request: Request) -> Response[str]:  # pragma: no cover
     data = await request.form()
     data_dict = dict(data)
 
-    if "payload" in data_dict:
-        data_payload = json.loads(str(data_dict["payload"]))
-    else:
-        data_payload = data_dict
+    data_payload = (
+        json.loads(str(data_dict["payload"])) if "payload" in data_dict else data_dict
+    )
 
     response = handle_slack(data_payload)
     if not response:
@@ -276,11 +269,9 @@ async def slack_handler(request: Request) -> Response[str]:  # pragma: no cover
 
 @get("/slack/auth", sync_to_thread=False)
 def slack_auth_handler() -> Redirect:
-    client_id = os.environ["SLACK_CLIENT_ID"]
     scopes = ["commands", "chat:write", "chat:write.public"]
-
     return Redirect(
-        path=f"https://slack.com/oauth/v2/authorize?client_id={client_id}&scope={','.join(scopes)}",
+        path=f"https://slack.com/oauth/v2/authorize?client_id={config.slack_client_id}&scope={','.join(scopes)}",
         status_code=302,
     )
 
@@ -291,15 +282,11 @@ async def slack_auth_redirect_handler(request: Request) -> str:
 
     request_body = {
         "code": code,
-        "client_id": os.environ["SLACK_CLIENT_ID"],
-        "client_secret": os.environ["SLACK_CLIENT_SECRET"],
+        "client_id": config.slack_client_id,
+        "client_secret": config.slack_client_secret,
     }
 
-    requests.post(
-        "https://slack.com/api/oauth.v2.access",
-        request_body,
-    )  # We dont want the token
-
+    requests.post("https://slack.com/api/oauth.v2.access", request_body)
     return ":)"
 
 
@@ -343,7 +330,7 @@ app = Litestar(
         create_static_files_router(directories=["src/static"], path="/static"),
     ],
     middleware=[
-        CookieBackendConfig(secret=SESSION_SECRET.encode()).middleware,
+        CookieBackendConfig(secret=config.session_secret.encode()).middleware,
     ],
     template_config=TemplateConfig(
         directory="src/templates",
@@ -357,6 +344,5 @@ app = Litestar(
 if __name__ == "__main__":  # pragma: no cover
     import uvicorn
 
-    print(TG_TOKEN)
-
-    uvicorn.run(app, host="0.0.0.0", port=PORT)
+    print(config.tg_token)
+    uvicorn.run(app, host="0.0.0.0", port=config.port)
