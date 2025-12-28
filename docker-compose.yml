@@ -1,0 +1,6 @@
+services:
+  datastore:
+    image: google/cloud-sdk:emulators
+    command: gcloud beta emulators datastore start --project=cunhaobot-local --host-port=0.0.0.0:8081 --no-store-on-disk
+    ports:
+      - "8081:8081"

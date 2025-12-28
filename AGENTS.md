@@ -96,6 +96,10 @@ The project uses the specialized Litestar HTMX plugin for web interactivity.
 ### Python Coding Standards
 *   **NEVER** use `# type: ignore` without specifying the specific error code (e.g., `# type: ignore[invalid-argument-type]`).
 
+### Local Development
+*   To run the project locally, use the `./dev.sh` script. This requires Docker for the Datastore emulator.
+*   Ensure a `.env` file exists (based on `.env.example`) with the necessary environment variables.
+
 ## CI/CD & Deployment
 
 ### Automated Deployment
