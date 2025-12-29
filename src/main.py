@@ -211,6 +211,63 @@ async def link_orphan_web(request: Request) -> Response[str]:
     return Response("Linked", status_code=200)
 
 
+@post("/orphans/manual-link")
+async def manual_link_orphan_web(request: Request) -> Response[str]:
+    from datetime import datetime
+
+    user = request.session.get("user")
+    if not user or str(user.get("id")) != str(config.owner_id):
+        return Response("Unauthorized", status_code=401)
+
+    data = await request.json()
+    phrase_text = data.get("phrase_text")
+    kind = data.get("kind")
+    creator_id = data.get("creator_id")
+    date_str = data.get("date")  # YYYY-MM-DD
+    chat_id = data.get("chat_id", "0")
+
+    if not all([phrase_text, kind, creator_id, date_str]):
+        return Response("Faltan datos", status_code=400)
+
+    try:
+        created_at = datetime.strptime(date_str, "%Y-%m-%d")
+    except ValueError:
+        return Response(
+            "Formato de fecha inválido (esperado YYYY-MM-DD)", status_code=400
+        )
+
+    # 1. Create Ghost Proposal
+    prop_id = f"manual-{int(created_at.timestamp())}-{creator_id}"
+    proposal_class = Proposal if kind == "Phrase" else LongProposal
+
+    new_proposal = proposal_class(
+        id=prop_id,
+        from_chat_id=int(chat_id),
+        from_message_id=0,
+        text=phrase_text,
+        user_id=int(creator_id),
+        voting_ended=True,
+        voting_ended_at=created_at,
+        created_at=created_at,
+    )
+    new_proposal.save()
+
+    # 2. Update Phrase
+    phrase_class = Phrase if kind == "Phrase" else LongPhrase
+    repo = phrase_class.get_repository()
+    all_phrases = repo.get_phrases()
+    phrase = next((p for p in all_phrases if p.text == phrase_text), None)
+
+    if phrase:
+        phrase.proposal_id = prop_id
+        phrase.user_id = int(creator_id)
+        phrase.chat_id = int(chat_id)
+        phrase.created_at = created_at
+        repo.save(phrase)
+
+    return Response("Linked", status_code=200)
+
+
 async def _handle_proposal_web_action(
     request: Request, kind: str, proposal_id: str, action: str
 ) -> Response[str]:
@@ -406,6 +463,7 @@ app = Litestar(
         proposals,
         orphans,
         link_orphan_web,
+        manual_link_orphan_web,
         approve_proposal_web,
         reject_proposal_web,
         auth_telegram,

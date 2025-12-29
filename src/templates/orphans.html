@@ -5,8 +5,8 @@
     <div class="col-lg-8 animate__animated animate__fadeIn">
         <h1 class="oswald hero-title mb-3">CASAMIENTO DE FRASES</h1>
         <p class="lead text-secondary fw-light mb-5">
-            Vincula las frases huérfanas con su propuesta original. <br class="d-none d-md-block">
-            El sistema sugiere las coincidencias más probables.
+            Vincula las frases huérfanas con su propuesta original o crea una nueva vinculación manual. <br class="d-none d-md-block">
+            El sistema sugiere las coincidencias más probables de la base de datos.
         </p>
     </div>
 </div>
@@ -22,6 +22,11 @@
                         <h4 class="fw-bold mb-0 {% if orphan.kind == 'Phrase' %}text-warning{% else %}text-info{% endif %}">
                             {{ orphan.text }}
                         </h4>
+
+                        <button class="btn btn-sm btn-outline-secondary mt-3 rounded-pill border-0"
+                                type="button" data-bs-toggle="collapse" data-bs-target="#manual-{{ loop.index }}">
+                            <i class="bi bi-pencil-square me-1"></i> Vinculación Manual
+                        </button>
                     </div>
 
                     <div class="col-md-7">
@@ -45,6 +50,37 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Formulario Manual (Colapsable) -->
+                <div class="collapse mt-4" id="manual-{{ loop.index }}">
+                    <div class="p-3 rounded bg-black bg-opacity-25 border border-warning border-opacity-25">
+                        <h6 class="text-warning small fw-bold mb-3 text-uppercase">Datos de la Propuesta Retroactiva</h6>
+                        <form hx-post="/orphans/manual-link"
+                              hx-ext="json-enc"
+                              hx-target="closest .animate__animated"
+                              hx-swap="delete"
+                              class="row g-2 align-items-end">
+                            <input type="hidden" name="phrase_text" value="{{ orphan.text }}">
+                            <input type="hidden" name="kind" value="{{ orphan.kind }}">
+
+                            <div class="col-md-4">
+                                <label class="form-label x-small text-secondary">ID Usuario Telegram</label>
+                                <input type="number" name="creator_id" class="form-control form-control-sm bg-dark border-secondary text-white" placeholder="Ej: 1234567" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label x-small text-secondary">Fecha Propuesta</label>
+                                <input type="date" name="date" class="form-control form-control-sm bg-dark border-secondary text-white" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label x-small text-secondary">ID Chat (Opcional)</label>
+                                <input type="number" name="chat_id" class="form-control form-control-sm bg-dark border-secondary text-white" value="0">
+                            </div>
+                            <div class="col-md-1">
+                                <button type="submit" class="btn btn-sm btn-warning w-100"><i class="bi bi-plus-lg"></i></button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
         {% endfor %}
@@ -55,6 +91,10 @@
         </div>
     {% endif %}
 </div>
+
+<style>
+    .x-small { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
+</style>
 
 <script src="https://unpkg.com/htmx-ext-json-enc@2.0.0/json-enc.js"></script>
 {% endblock %}
