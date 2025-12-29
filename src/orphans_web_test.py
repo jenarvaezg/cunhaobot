@@ -32,6 +32,8 @@ def test_orphans_page_authorized(client, auth_user, owner_id):
         patch("main.LongPhrase.get_phrases", return_value=[]),
         patch("main.Proposal.load_all", return_value=[]),
         patch("main.LongProposal.load_all", return_value=[]),
+        patch("main.User.load_all", return_value=[]),
+        patch("main.InlineUser.get_all", return_value=[]),
         patch("main.config.owner_id", owner_id),
         patch(
             "litestar.connection.base.ASGIConnection.session", new_callable=PropertyMock

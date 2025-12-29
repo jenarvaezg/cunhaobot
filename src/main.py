@@ -182,6 +182,22 @@ def orphans(request: Request) -> Template | Response:
     all_proposals = Proposal.load_all()
     all_long_proposals = LongProposal.load_all()
 
+    # Fetch all potential users for the dropdown
+    users = User.load_all()
+    inline_users = InlineUser.get_all()
+    unique_users: dict[int, str] = {}
+    for u in users:
+        if not u.is_group:
+            unique_users[u.chat_id] = u.name
+    for iu in inline_users:
+        unique_users[iu.user_id] = iu.name
+
+    # Sort users by name
+    sorted_known_users = [
+        {"id": uid, "name": name}
+        for uid, name in sorted(unique_users.items(), key=lambda x: x[1].lower())
+    ]
+
     def get_matches(text, proposals):
         from fuzzywuzzy import process
 
@@ -212,6 +228,7 @@ def orphans(request: Request) -> Template | Response:
         template_name="orphans.html",
         context={
             "orphans": orphan_data,
+            "known_users": sorted_known_users,
             "user": user,
             "owner_id": config.owner_id,
         },
@@ -500,7 +517,6 @@ app = Litestar(
         index,
         proposals,
         orphans,
-        users_options,
         link_orphan_web,
         manual_link_orphan_web,
         approve_proposal_web,

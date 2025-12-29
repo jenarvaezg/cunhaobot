@@ -63,18 +63,25 @@
                             <input type="hidden" name="phrase_text" value="{{ orphan.text }}">
                             <input type="hidden" name="kind" value="{{ orphan.kind }}">
 
-                            <div class="col-md-4">
-                                <label class="form-label x-small text-secondary">Autor (Curator)</label>
-                                <input type="text" name="creator_id" list="users-datalist-{{ loop.index }}"
-                                       hx-get="/users/options" hx-trigger="keyup changed delay:200ms, focus"
-                                       hx-target="#users-datalist-{{ loop.index }}"
-                                       hx-vals='js:{"q": event.target.value}'
-                                       class="form-control form-control-sm bg-dark border-secondary text-white"
-                                       placeholder="Busca por nombre..." required>
-                                <datalist id="users-datalist-{{ loop.index }}">
-                                    <!-- Options loaded via HTMX -->
-                                </datalist>
-                            </div>
+                                                        <div class="col-md-4">
+
+                                                            <label class="form-label x-small text-secondary">Autor (Curator)</label>
+
+                                                            <select name="creator_id" class="form-select form-select-sm bg-dark border-secondary text-white" required>
+
+                                                                <option value="" selected disabled>Selecciona autor...</option>
+
+                                                                {% for kuser in known_users %}
+
+                                                                <option value="{{ kuser.id }}">{{ kuser.name }}</option>
+
+                                                                {% endfor %}
+
+                                                            </select>
+
+                                                        </div>
+
+
                             <div class="col-md-4">
                                 <label class="form-label x-small text-secondary">Fecha Propuesta</label>
                                 <input type="date" name="date" class="form-control form-control-sm bg-dark border-secondary text-white" required>
