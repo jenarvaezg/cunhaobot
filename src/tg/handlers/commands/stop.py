@@ -7,7 +7,7 @@ from tg.decorators import log_update
 
 
 @log_update
-async def handle_stop(update: Update, context: CallbackContext):
+async def handle_stop(update: Update, context: CallbackContext) -> None:
     if (
         not update.effective_user
         or not update.effective_chat

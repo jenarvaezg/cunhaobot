@@ -1,79 +1,65 @@
-from typing import Optional
+from dataclasses import dataclass
+from typing import Optional, Protocol, ClassVar
 
 from google.cloud import datastore
 from telegram import Message, Update
 
-from models.phrase import get_datastore_client
+from utils.gcp import get_datastore_client
 
 
+@dataclass(unsafe_hash=True)
 class InlineUser:
-    kind = "InlineUser"
+    user_id: int
+    name: str
+    usages: int = 0
 
-    def __init__(self, user_id: int, name: str, usages: int = 0):
-        self.user_id = user_id
-        self.name = name
-        self.usages = usages
+    kind: ClassVar[str] = "InlineUser"
 
-    @property
-    def datastore_key(self) -> datastore.Key:
-        return get_datastore_client().key(self.kind, self.user_id)
+    @classmethod
+    def get_repository(cls) -> "InlineUserRepository":
+        return _inline_user_repository
 
     @classmethod
     def update_or_create_from_update(cls, update: Update) -> Optional["InlineUser"]:
         if not (update_user := update.effective_user):
             return None
 
-        datastore_client = get_datastore_client()
-        user = cls(update_user.id, update_user.name)
+        repo = cls.get_repository()
 
-        entity = datastore_client.get(user.datastore_key)
-        if entity:
-            user_from_entity = cls.from_entity(entity)
-            if user_from_entity.name != update_user.name:
-                user_from_entity.name = update_user.name
-                user_from_entity.save()
-            return user_from_entity
+        # Try to load existing
+        user = repo.load(update_user.id)
 
-        user.save()
+        if user:
+            if user.name != update_user.name:
+                user.name = update_user.name
+                repo.save(user)
+            return user
+
+        # Create new
+        user = cls(user_id=update_user.id, name=update_user.name)
+        repo.save(user)
         return user
 
     @classmethod
-    def from_entity(cls, entity: datastore.Entity) -> "InlineUser":
-        return cls(
-            entity["user_id"],
-            entity["name"],
-            entity["usages"],
-        )
-
-    @classmethod
     def get_all(cls) -> list["InlineUser"]:
-        datastore_client = get_datastore_client()
-        query = datastore_client.query(kind=cls.kind)
-        return [cls.from_entity(entity) for entity in query.fetch()]
+        return cls.get_repository().get_all()
 
     def add_usage(self) -> None:
         self.usages += 1
         self.save()
 
     def save(self) -> None:
-        datastore_client = get_datastore_client()
-        entity = datastore.Entity(key=self.datastore_key)
-
-        entity["user_id"] = self.user_id
-        entity["name"] = self.name
-        entity["usages"] = self.usages
-
-        datastore_client.put(entity)
+        self.get_repository().save(self)
 
 
+@dataclass(unsafe_hash=True)
 class User:
-    kind = "User"
+    chat_id: int
+    name: str
+    is_group: bool
+    gdpr: bool = False
 
-    def __init__(self, chat_id: int, name: str, is_group: bool, gdpr: bool = False):
-        self.chat_id = chat_id
-        self.name = name
-        self.is_group = is_group
-        self.gdpr = gdpr
+    kind: ClassVar[str] = "User"
 
     @staticmethod
     def _get_name_from_message(msg: Message) -> str:
@@ -86,67 +72,151 @@ class User:
         return msg.chat.title if msg.chat.title else "Unknown"
 
     @classmethod
+    def get_repository(cls) -> "UserRepository":
+        return _user_repository
+
+    @classmethod
     def update_or_create_from_update(cls, update: Update) -> Optional["User"]:
         message = update.effective_message
         if not message:
             return None
         chat_id = message.chat_id
         name = cls._get_name_from_message(message)
-        user = cls(chat_id, name, message.chat.type != message.chat.PRIVATE)
 
-        user_from_entity = cls.load(chat_id)
+        repo = cls.get_repository()
+        user_from_entity = repo.load(chat_id)
+
         if user_from_entity:
             user_from_entity.gdpr = False
             user_from_entity.name = name
-            user_from_entity.save()
+            repo.save(user_from_entity)
             return user_from_entity
 
-        user.save()
+        user = cls(chat_id, name, message.chat.type != message.chat.PRIVATE)
+        repo.save(user)
         return user
 
+    def save(self) -> None:
+        self.get_repository().save(self)
+
     @classmethod
-    def from_entity(cls, entity: datastore.Entity) -> "User":
-        return cls(
+    def load(cls, chat_id: int) -> Optional["User"]:
+        return cls.get_repository().load(chat_id)
+
+    @classmethod
+    def load_all(cls, ignore_gdpr: bool = False) -> list["User"]:
+        return cls.get_repository().load_all(ignore_gdpr=ignore_gdpr)
+
+    def delete(self, hard: bool = False) -> None:
+        if hard:
+            self.get_repository().delete(self.chat_id)
+        else:
+            self.gdpr = True
+            self.save()
+
+
+# --- Protocols ---
+
+
+class InlineUserRepository(Protocol):
+    def load(self, user_id: int) -> Optional[InlineUser]: ...
+    def save(self, user: InlineUser) -> None: ...
+    def get_all(self) -> list[InlineUser]: ...
+
+
+class UserRepository(Protocol):
+    def load(self, chat_id: int) -> Optional[User]: ...
+    def save(self, user: User) -> None: ...
+    def delete(self, chat_id: int) -> None: ...
+    def load_all(self, ignore_gdpr: bool = False) -> list[User]: ...
+
+
+# --- Implementations ---
+
+
+class DatastoreInlineUserRepository:
+    def __init__(self, model_class: type[InlineUser]):
+        self.model_class = model_class
+
+    @property
+    def client(self) -> datastore.Client:
+        return get_datastore_client()
+
+    def _entity_to_domain(self, entity: datastore.Entity) -> InlineUser:
+        return self.model_class(
+            user_id=entity["user_id"],
+            name=entity["name"],
+            usages=entity["usages"],
+        )
+
+    def load(self, user_id: int) -> Optional[InlineUser]:
+        key = self.client.key(self.model_class.kind, user_id)
+        entity = self.client.get(key)
+        if entity:
+            return self._entity_to_domain(entity)
+        return None
+
+    def save(self, user: InlineUser) -> None:
+        key = self.client.key(self.model_class.kind, user.user_id)
+        entity = datastore.Entity(key=key)
+        entity.update(
+            {"user_id": user.user_id, "name": user.name, "usages": user.usages}
+        )
+        self.client.put(entity)
+
+    def get_all(self) -> list[InlineUser]:
+        query = self.client.query(kind=self.model_class.kind)
+        return [self._entity_to_domain(entity) for entity in query.fetch()]
+
+
+class DatastoreUserRepository:
+    def __init__(self, model_class: type[User]):
+        self.model_class = model_class
+
+    @property
+    def client(self) -> datastore.Client:
+        return get_datastore_client()
+
+    def _entity_to_domain(self, entity: datastore.Entity) -> User:
+        return self.model_class(
             chat_id=entity["chat_id"],
             name=entity["name"],
             is_group=entity["is_group"],
             gdpr=entity["gdpr"],
         )
 
-    def save(self) -> None:
-        datastore_client = get_datastore_client()
-        key = datastore_client.key(self.kind, self.chat_id)
+    def load(self, chat_id: int) -> Optional[User]:
+        key = self.client.key(self.model_class.kind, chat_id)
+        entity = self.client.get(key)
+        if entity:
+            return self._entity_to_domain(entity)
+        return None
+
+    def save(self, user: User) -> None:
+        key = self.client.key(self.model_class.kind, user.chat_id)
         entity = datastore.Entity(key=key)
+        entity.update(
+            {
+                "chat_id": user.chat_id,
+                "name": user.name,
+                "is_group": user.is_group,
+                "gdpr": user.gdpr,
+            }
+        )
+        self.client.put(entity)
 
-        entity["chat_id"] = self.chat_id
-        entity["name"] = self.name
-        entity["is_group"] = self.is_group
-        entity["gdpr"] = self.gdpr
+    def delete(self, chat_id: int) -> None:
+        key = self.client.key(self.model_class.kind, chat_id)
+        self.client.delete(key)
 
-        datastore_client.put(entity)
-
-    @classmethod
-    def load(cls, chat_id: int) -> Optional["User"]:
-        datastore_client = get_datastore_client()
-        key = datastore_client.key(cls.kind, chat_id)
-
-        entity = datastore_client.get(key)
-
-        return cls.from_entity(entity) if entity else None
-
-    @classmethod
-    def load_all(cls, ignore_gdpr: bool = False) -> list["User"]:
-        datastore_client = get_datastore_client()
-        query = datastore_client.query(kind=cls.kind)
+    def load_all(self, ignore_gdpr: bool = False) -> list[User]:
+        query = self.client.query(kind=self.model_class.kind)
         if not ignore_gdpr:
             query.add_filter("gdpr", "=", False)
-        return [cls.from_entity(entity) for entity in query.fetch()]
+        return [self._entity_to_domain(entity) for entity in query.fetch()]
 
-    def delete(self, hard: bool = False) -> None:
-        if hard:
-            datastore_client = get_datastore_client()
-            key = datastore_client.key(self.kind, self.chat_id)
-            datastore_client.delete(key)
-        else:
-            self.gdpr = True
-            self.save()
+
+# --- Instances ---
+
+_inline_user_repository = DatastoreInlineUserRepository(InlineUser)
+_user_repository = DatastoreUserRepository(User)

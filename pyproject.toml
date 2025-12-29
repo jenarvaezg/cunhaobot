@@ -37,7 +37,7 @@ dev = [
 python-version = "3.14"
 
 [tool.ty.src]
-exclude = ["**/tests/**", "**/*_test.py"]
+exclude = ["**/tests/**", "**/*_test.py", "src/scripts/**"]
 
 [tool.ty.rules]
 possibly-missing-attribute = "warn"
@@ -55,6 +55,9 @@ invalid-argument-type = "warn"
 pythonpath = ["src"]
 python_files = "*_test.py"
 asyncio_mode = "auto"
+
+[tool.coverage.run]
+omit = ["src/scripts/*"]
 
 [tool.coverage.report]
 exclude_lines = [

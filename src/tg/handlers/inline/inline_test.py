@@ -19,8 +19,8 @@ class TestInlineQuery:
         self.mock_phrase = self.patcher_phrase.start()
         from models.phrase import Phrase, LongPhrase
 
-        Phrase.phrases_cache = [Phrase(text="p1")]
-        LongPhrase.phrases_cache = [LongPhrase(text="lp1")]
+        Phrase.get_repository()._cache = [Phrase(text="p1")]
+        LongPhrase.get_repository()._cache = [LongPhrase(text="lp1")]
         mock_datastore_client.reset_mock()
         # Ensure refresh_cache doesn't crash if called
         mock_datastore_client.query.return_value.fetch.return_value = []

@@ -57,7 +57,7 @@ thumbs = [
 ]
 
 
-def get_thumb():
+def get_thumb() -> str:
     return random.choice(thumbs)
 
 
@@ -68,37 +68,38 @@ def random_combination(iterable: Iterable, r: int) -> tuple:
     return tuple(pool[i] for i in indices)
 
 
-def remove_empty_from_dict(di):
+def remove_empty_from_dict(di: dict | list) -> dict | list:
     d = deepcopy(di)
-    if type(d) is dict:
-        return dict(
-            (k, remove_empty_from_dict(v))
+    if isinstance(d, dict):
+        return {
+            k: remove_empty_from_dict(v)
             for k, v in d.items()
             if v and remove_empty_from_dict(v)
-        )
-    elif type(d) is list:
+        }
+    if isinstance(d, list):
         return [remove_empty_from_dict(v) for v in d if v and remove_empty_from_dict(v)]
-    else:
-        return d
+    return d
 
 
-def normalize_str(s, remove_punctuation=True):
+def normalize_str(s: str, remove_punctuation: bool = True) -> str:
     """Returns a version of s without accents or specials characters such as ñ and lower-cased"""
     without_accents = "".join(
         c for c in unicodedata.normalize("NFD", s) if unicodedata.category(c) != "Mn"
     )
-    # breakpoint()
     if remove_punctuation:
         without_puntuations = "".join([i for i in without_accents if i.isalpha()])
         return without_puntuations.lower()
     return without_accents.lower()
 
 
-def improve_punctuation(s):
+def improve_punctuation(s: str) -> str:
     """Returns a version of s capitalized if the first character is a letter and a trailling dot if neccesary"""
+    if not s:
+        return s
+
     if s[0].isalpha():
         s = s[0].upper() + s[1:]
-    else:
+    elif len(s) > 1:
         s = s[0] + s[1].upper() + s[2:]
 
     if s[-1].isalpha():

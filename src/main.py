@@ -2,7 +2,7 @@ import json
 import logging
 import os
 from dataclasses import dataclass
-from typing import Any
+from typing import TypedDict, cast, Optional
 
 import requests
 import tweepy
@@ -74,7 +74,14 @@ class Config:
 config = Config.from_env()
 
 
-def get_proposals_context(request: Request) -> dict[str, Any]:
+class ProposalsContext(TypedDict):
+    pending_short: list[Proposal]
+    pending_long: list[LongProposal]
+    user: dict[str, str] | None
+    owner_id: str
+
+
+def get_proposals_context(request: Request) -> ProposalsContext:
     filters = {k: v for k, v in request.query_params.items() if k not in ["search"]}
     search_query = request.query_params.get("search", "")
 
@@ -87,10 +94,13 @@ def get_proposals_context(request: Request) -> dict[str, Any]:
     pending_short = [p for p in all_short if normalize_str(p.text) not in short_texts]
     pending_long = [p for p in all_long if normalize_str(p.text) not in long_texts]
 
+    # Explicitly cast to dict[str, str] | None to satisfy type checker
+    user_session = cast(Optional[dict[str, str]], request.session.get("user"))
+
     return {
         "pending_short": pending_short,
         "pending_long": pending_long,
-        "user": request.session.get("user"),
+        "user": user_session,
         "owner_id": config.owner_id,
     }
 

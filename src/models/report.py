@@ -1,55 +1,41 @@
+from dataclasses import dataclass
 from datetime import date
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar, Protocol, Optional
 
 from google.cloud import datastore
 
-from models.phrase import get_datastore_client
+from utils.gcp import get_datastore_client
 
 if TYPE_CHECKING:
     from models.phrase import LongPhrase, Phrase
     from models.user import InlineUser, User
 
 
+@dataclass(unsafe_hash=True)
 class Report:
-    kind = "Report"
+    longs: int
+    shorts: int
+    users: int
+    groups: int
+    inline_users: int
+    inline_usages: int
+    gdprs: int
+    chapas: int
+    top_long: str
+    top_short: str
+    day: int
+    month: int
+    year: int
 
-    def __init__(
-        self,
-        longs: int,
-        shorts: int,
-        users: int,
-        groups: int,
-        inline_users: int,
-        inline_usages: int,
-        gdprs: int,
-        chapas: int,
-        top_long: str,
-        top_short: str,
-        day: int,
-        month: int,
-        year: int,
-    ):
-        self.longs = longs
-        self.shorts = shorts
-        self.users = users
-        self.groups = groups
-        self.inline_users = inline_users
-        self.inline_usages = inline_usages
-        self.gdprs = gdprs
-        self.chapas = chapas
-        self.top_short = top_short
-        self.top_long = top_long
-        self.day = day
-        self.month = month
-        self.year = year
+    kind: ClassVar[str] = "Report"
 
     @classmethod
     def generate(
         cls,
-        long_phrases: list[LongPhrase],
-        short_phrases: list[Phrase],
-        users: list[User],
-        inline_users: list[InlineUser],
+        long_phrases: list["LongPhrase"],
+        short_phrases: list["Phrase"],
+        users: list["User"],
+        inline_users: list["InlineUser"],
         chapas: list,
         date: date,
     ) -> "Report":
@@ -67,13 +53,17 @@ class Report:
                 key=lambda p: p.daily_usages
                 + p.audio_daily_usages
                 + p.sticker_daily_usages,
-            ).text,
+            ).text
+            if long_phrases
+            else "",
             top_short=max(
                 short_phrases,
                 key=lambda p: p.daily_usages
                 + p.audio_daily_usages
                 + p.sticker_daily_usages,
-            ).text,
+            ).text
+            if short_phrases
+            else "",
             day=date.day,
             month=date.month,
             year=date.year,
@@ -86,8 +76,38 @@ class Report:
         return f"{self.year}/{self.month}/{self.day}"
 
     @classmethod
-    def from_entity(cls, entity: datastore.Entity) -> "Report":
-        return cls(
+    def get_repository(cls) -> "ReportRepository":
+        return _report_repository
+
+    def save(self) -> None:
+        self.get_repository().save(self)
+
+    @classmethod
+    def get_at(cls, dt: date) -> Optional["Report"]:
+        return cls.get_repository().get_at(dt)
+
+
+# --- Repository Protocol ---
+
+
+class ReportRepository(Protocol):
+    def save(self, report: Report) -> None: ...
+    def get_at(self, dt: date) -> Optional[Report]: ...
+
+
+# --- Datastore Implementation ---
+
+
+class DatastoreReportRepository:
+    def __init__(self, model_class: type[Report]):
+        self.model_class = model_class
+
+    @property
+    def client(self) -> datastore.Client:
+        return get_datastore_client()
+
+    def _entity_to_domain(self, entity: datastore.Entity) -> Report:
+        return self.model_class(
             longs=entity["longs"],
             shorts=entity["shorts"],
             users=entity["users"],
@@ -103,34 +123,39 @@ class Report:
             year=entity["year"],
         )
 
-    def save(self) -> None:
-        client = get_datastore_client()
-        key = client.key(self.kind, self.datastore_id)
+    def save(self, report: Report) -> None:
+        key = self.client.key(self.model_class.kind, report.datastore_id)
         entity = datastore.Entity(key=key)
+        entity.update(
+            {
+                "longs": report.longs,
+                "shorts": report.shorts,
+                "users": report.users,
+                "groups": report.groups,
+                "inline_users": report.inline_users,
+                "inline_usages": report.inline_usages,
+                "gdprs": report.gdprs,
+                "chapas": report.chapas,
+                "top_long": report.top_long,
+                "top_short": report.top_short,
+                "day": report.day,
+                "month": report.month,
+                "year": report.year,
+            }
+        )
+        self.client.put(entity)
 
-        entity["longs"] = self.longs
-        entity["shorts"] = self.shorts
-        entity["users"] = self.users
-        entity["groups"] = self.groups
-        entity["inline_users"] = self.inline_users
-        entity["inline_usages"] = self.inline_usages
-        entity["gdprs"] = self.gdprs
-        entity["chapas"] = self.chapas
-        entity["top_long"] = self.top_long
-        entity["top_short"] = self.top_short
-        entity["day"] = self.day
-        entity["month"] = self.month
-        entity["year"] = self.year
-
-        client.put(entity)
-
-    @classmethod
-    def get_at(cls, dt: date) -> "Report":
-        client = get_datastore_client()
-        query: datastore.Query = client.query(kind=cls.kind)
-
+    def get_at(self, dt: date) -> Optional[Report]:
+        query = self.client.query(kind=self.model_class.kind)
         query.add_filter("day", "=", dt.day)
         query.add_filter("month", "=", dt.month)
         query.add_filter("year", "=", dt.year)
-        reports = [r for r in query.fetch()]
-        return cls.from_entity(reports[0])
+        reports = list(query.fetch(limit=1))
+        if reports:
+            return self._entity_to_domain(reports[0])
+        return None
+
+
+# --- Instance ---
+
+_report_repository = DatastoreReportRepository(Report)

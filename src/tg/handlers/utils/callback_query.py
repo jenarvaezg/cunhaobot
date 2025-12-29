@@ -1,5 +1,6 @@
 import os
 from dataclasses import dataclass
+from typing import Any
 from telegram import (
     Bot,
     CallbackQuery,
@@ -108,10 +109,17 @@ async def _dismiss_proposal(
 async def _update_proposal_text(
     proposal: Proposal, callback_query: CallbackQuery
 ) -> None:
-    if not callback_query.message:
+    if not callback_query.message or not hasattr(
+        callback_query.message, "text_markdown"
+    ):
         return
 
-    text = callback_query.message.text_markdown
+    # Use cast or type check to satisfy ty check about MaybeInaccessibleMessage
+    message: Any = callback_query.message
+    if not hasattr(message, "text_markdown"):
+        return
+
+    text: str = message.text_markdown
     reply_markup = InlineKeyboardMarkup(build_vote_keyboard(proposal.id, proposal.kind))
     votes_text = "\n\n*Han votado ya:*\n"
     before_votes_text = text.split(votes_text)[0]

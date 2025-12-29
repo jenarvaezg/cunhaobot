@@ -36,8 +36,11 @@ MODE_HANDLERS = {
 
 
 @log_update
-async def handle_inline_query(update: Update, context: CallbackContext):
+async def handle_inline_query(update: Update, context: CallbackContext) -> None:
     """Handle the inline query."""
+    if not update.inline_query:
+        return
+
     mode, rest = get_query_mode(update.inline_query.query)
 
     results_func = MODE_HANDLERS.get(mode)

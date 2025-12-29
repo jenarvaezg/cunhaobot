@@ -1,23 +1,23 @@
 import random
 
-from telegram import Bot, Message, Update
+from telegram import Bot, Update, User as TGUser
 from telegram.ext import CallbackContext
 
 from models.phrase import Phrase
 from models.schedule import ScheduledTask
-from models.user import User
+from models.user import User as UserModel
 from tg.decorators import log_update
 
 
 def _on_kick(chat_id: int) -> None:
-    user = User.load(chat_id=chat_id)
+    user = UserModel.load(chat_id=chat_id)
     if user:
         user.delete()
     for task in ScheduledTask.get_tasks(chat_id=chat_id):
         task.delete()
 
 
-async def _on_other_kicked(bot: Bot, user: User, chat_id: int) -> None:
+async def _on_other_kicked(bot: Bot, user: TGUser, chat_id: int) -> None:
     await bot.send_message(
         chat_id, f"Vaya {Phrase.get_random_phrase()} el {user.name}, ya me jodería."
     )
@@ -31,7 +31,7 @@ async def _on_join(bot: Bot, chat_id: int) -> None:
     )
 
 
-async def _on_other_joined(bot: Bot, user: User, chat_id: int) -> None:
+async def _on_other_joined(bot: Bot, user: TGUser, chat_id: int) -> None:
     n_words = random.choice([2, 3, 4])
     phrases = [user.name] + [Phrase.get_random_phrase().text for _ in range(n_words)]
     words = ", ".join([p for p in phrases])
@@ -45,7 +45,7 @@ def _on_migrate(from_chat_id: int, to_chat_id: int) -> None:
         task.chat_id = to_chat_id
         task.save()
 
-    user = User.load(from_chat_id)
+    user = UserModel.load(from_chat_id)
     if user:
         user.delete(hard=True)
         user.chat_id = to_chat_id
@@ -53,13 +53,15 @@ def _on_migrate(from_chat_id: int, to_chat_id: int) -> None:
 
 
 @log_update
-async def handle_fallback_message(update: Update, context: CallbackContext):
+async def handle_fallback_message(update: Update, context: CallbackContext) -> None:
     """This is here to handle the rest of messages, mainly service messages"""
-    message: Message = update.effective_message
-    bot: Bot = context.bot
+    if not (message := update.effective_message):
+        return
 
+    bot: Bot = context.bot
     me = await bot.get_me()
     my_username = me.username
+
     if message.left_chat_member:
         if message.left_chat_member.username == my_username:
             _on_kick(message.chat_id)

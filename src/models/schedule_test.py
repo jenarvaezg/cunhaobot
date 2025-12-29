@@ -3,6 +3,19 @@ from unittest.mock import MagicMock
 from models.schedule import ScheduledTask
 
 
+def create_mock_entity(data):
+    m = MagicMock()
+    m.__getitem__.side_effect = data.__getitem__
+    m.get.side_effect = data.get
+
+    def setitem(key, value):
+        data[key] = value
+
+    m.__setitem__.side_effect = setitem
+    m.update.side_effect = data.update
+    return m
+
+
 class TestScheduledTask:
     @pytest.fixture(autouse=True)
     def setup(self, mock_datastore_client):
@@ -25,17 +38,16 @@ class TestScheduledTask:
         mock_query = MagicMock()
         self.mock_client.query.return_value = mock_query
 
-        # from_entity expects a dict-like or entity object
-        mock_query.fetch.return_value = [
-            {
-                "chat_id": 123,
-                "hour": 10,
-                "minute": 30,
-                "query": "q",
-                "service": "s",
-                "type": "t",
-            }
-        ]
+        data = {
+            "chat_id": 123,
+            "hour": 10,
+            "minute": 30,
+            "query": "q",
+            "service": "s",
+            "type": "t",
+        }
+        e = create_mock_entity(data)
+        mock_query.fetch.return_value = [e]
 
         tasks = ScheduledTask.get_tasks(chat_id=123)
         assert len(tasks) == 1

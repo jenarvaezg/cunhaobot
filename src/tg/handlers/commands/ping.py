@@ -23,10 +23,13 @@ async def _send_chapas(bot: Bot, tasks: Iterable[ScheduledTask]) -> None:
     for task in tasks:
         try:
             query_mode, rest = get_query_mode(task.query)
-            resuls_fn = MODE_HANDLERS.get(query_mode)
-            if not resuls_fn:
+            results_fn = MODE_HANDLERS.get(query_mode)
+
+            if not results_fn:
                 continue
-            result = next(iter(resuls_fn(rest)), None)
+
+            result = next(iter(results_fn(rest)), None)
+
             if result is None or "-bad-search-" in result.id:
                 await bot.send_message(
                     task.chat_id,
@@ -37,36 +40,45 @@ async def _send_chapas(bot: Bot, tasks: Iterable[ScheduledTask]) -> None:
                     task.chat_id, LongPhrase.get_random_phrase().text
                 )
                 continue
-            if query_mode == AUDIO_MODE:
-                await bot.send_voice(task.chat_id, result.voice_url)
-            elif query_mode == STICKER_MODE:
-                await bot.send_sticker(task.chat_id, result.sticker_file_id)
-            else:
-                await bot.send_message(
-                    task.chat_id, result.input_message_content.message_text
-                )
+
+            match query_mode:
+                case s if s == AUDIO_MODE:
+                    await bot.send_voice(task.chat_id, result.voice_url)
+                case s if s == STICKER_MODE:
+                    await bot.send_sticker(task.chat_id, result.sticker_file_id)
+                case _:
+                    await bot.send_message(
+                        task.chat_id, result.input_message_content.message_text
+                    )
         except Exception as e:
             logger.exception("Error sending chapa")
             errors.append((task.datastore_id, e, str(e)))
 
-    if errors:
-        await bot.send_message(
-            curators_chat_id,
-            f"{Phrase.get_random_phrase()}s, mandando chapas he tenido estos errores: {errors}.",
-        )
+    if not errors:
+        return
+
+    await bot.send_message(
+        curators_chat_id,
+        f"{Phrase.get_random_phrase()}s, mandando chapas he tenido estos errores: {errors}.",
+    )
 
 
 def _generate_report(now: date) -> None:
     # Shuffle so in case of draw for usage of the day it's not always the same
-    long_phrases: list[LongPhrase] = random.sample(
-        LongPhrase.refresh_cache(), len(LongPhrase.get_phrases())
-    )  # type: ignore[invalid-argument-type]
-    short_phrases: list[Phrase] = random.sample(
-        Phrase.refresh_cache(), len(Phrase.get_phrases())
+    all_long = LongPhrase.get_phrases()
+    long_phrases: list[LongPhrase] = (
+        random.sample(LongPhrase.refresh_cache(), len(all_long)) if all_long else []
     )
+
+    all_short = Phrase.get_phrases()
+    short_phrases: list[Phrase] = (
+        random.sample(Phrase.refresh_cache(), len(all_short)) if all_short else []
+    )
+
     users = User.load_all(ignore_gdpr=True)
     chapas = ScheduledTask.get_tasks(type="chapa")
     inline_users = InlineUser.get_all()
+
     Report.generate(long_phrases, short_phrases, users, inline_users, chapas, now)
     Phrase.remove_daily_usages()
     LongPhrase.remove_daily_usages()
@@ -75,10 +87,12 @@ def _generate_report(now: date) -> None:
 async def _send_report(bot: Bot, now: date) -> None:
     yesterday = now - timedelta(days=1)
     bef_yesterday = yesterday - timedelta(days=1)
-    today_report, yesterday_report = (
-        Report.get_at(yesterday),
-        Report.get_at(bef_yesterday),
-    )
+
+    today_report = Report.get_at(yesterday)
+    yesterday_report = Report.get_at(bef_yesterday)
+
+    if not today_report or not yesterday_report:
+        return
 
     longs, longs_delta = today_report.longs, today_report.longs - yesterday_report.longs
     shorts, shorts_delta = (
@@ -125,7 +139,7 @@ async def _send_report(bot: Bot, now: date) -> None:
     )
 
 
-async def handle_ping(bot: Bot):
+async def handle_ping(bot: Bot) -> None:
     madrid_timezone = pytz.timezone("Europe/Madrid")
     now = datetime.now().astimezone(madrid_timezone)
 
@@ -135,7 +149,9 @@ async def handle_ping(bot: Bot):
             hour=now.hour, minute=now.minute, service="telegram", type="chapa"
         ),
     )
-    if now.hour == 23 and now.minute == 59:
-        _generate_report(now.date())
-    elif now.hour == 7 and now.minute == 0:
-        await _send_report(bot, now.date())
+
+    match (now.hour, now.minute):
+        case (23, 59):
+            _generate_report(now.date())
+        case (7, 0):
+            await _send_report(bot, now.date())

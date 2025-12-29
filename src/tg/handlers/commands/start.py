@@ -6,7 +6,7 @@ from tg.decorators import log_update
 
 
 @log_update
-async def handle_start(update: Update, context: CallbackContext):
+async def handle_start(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /start is issued."""
     if not update.effective_message:
         return

@@ -1,4 +1,4 @@
-from telegram import Chat, Message, Update
+from telegram import Message, Update
 from telegram.ext import CallbackContext
 
 from models.phrase import Phrase
@@ -7,6 +7,8 @@ from tg.decorators import log_update, only_admins
 
 
 async def usage(update: Update) -> Message:
+    if not update.effective_message:
+        raise ValueError("No effective message")
     return await update.effective_message.reply_text(
         f"Para borrar chapas, {Phrase.get_random_phrase()}, tienes que escribir /borrachapa X, donde X es el numero de "
         f"la chapa que quieras borrar, {Phrase.get_random_phrase()}\n"
@@ -17,21 +19,28 @@ async def usage(update: Update) -> Message:
 
 @only_admins
 @log_update
-async def handle_delete_chapas(update: Update, context: CallbackContext):
-    chat: Chat = update.effective_chat
-    message: Message = update.effective_message
+async def handle_delete_chapas(update: Update, context: CallbackContext) -> None:
+    if (
+        not (chat := update.effective_chat)
+        or not (message := update.effective_message)
+        or not message.text
+    ):
+        return
+
     if len(message.text.split(" ")) > 1:
-        return await message.reply_text(
+        await message.reply_text(
             f"Creo que lo que quieres hacer es /borrarchapa, {Phrase.get_random_phrase()}.",
             do_quote=True,
         )
+        return
 
     tasks = ScheduledTask.get_tasks(chat_id=chat.id)
     if not tasks:
-        return await message.reply_text(
+        await message.reply_text(
             f"¡Pero si no te estoy dando la chapa, {Phrase.get_random_phrase()}!",
             do_quote=True,
         )
+        return
 
     for task in tasks:
         task.delete()
@@ -44,7 +53,7 @@ async def handle_delete_chapas(update: Update, context: CallbackContext):
 
 @only_admins
 @log_update
-async def handle_delete_chapa(update: Update, context: CallbackContext):
+async def handle_delete_chapa(update: Update, context: CallbackContext) -> None:
     if not (message := update.effective_message) or not message.text:
         return
 
@@ -52,16 +61,18 @@ async def handle_delete_chapa(update: Update, context: CallbackContext):
     try:
         chapa_id = int(tokens[1]) - 1
     except (IndexError, ValueError):
-        return await usage(update)
+        await usage(update)
+        return
 
     if not update.effective_chat:
         return
 
     tasks = ScheduledTask.get_tasks(chat_id=update.effective_chat.id)
     if not tasks:
-        return await message.reply_text(
+        await message.reply_text(
             f"¡Pero si no te estoy dando la chapa, {Phrase.get_random_phrase()}!"
         )
+        return
 
     try:
         task = tasks[chapa_id]

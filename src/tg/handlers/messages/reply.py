@@ -1,4 +1,4 @@
-from telegram import Bot, Message, Update
+from telegram import Bot, Update
 from telegram.ext import CallbackContext
 
 from models.phrase import LongPhrase, Phrase
@@ -9,22 +9,25 @@ from ..commands.submit import submit_handling
 
 
 @log_update
-async def handle_reply(update: Update, context: CallbackContext):
-    message: Message = update.effective_message
-    reply_to: Message = message.reply_to_message
-    bot: Bot = context.bot
-
-    me = await bot.get_me()
-    if (
-        reply_to.from_user.username != me.username
-        or "dice que deberiamos" in reply_to.text
+async def handle_reply(update: Update, context: CallbackContext) -> None:
+    if not (message := update.effective_message) or not (
+        reply_to := message.reply_to_message
     ):
-        return  # Dont handle
+        return
 
-    if Phrase.name in reply_to.text:
-        return await submit_handling(bot, update, Proposal, Phrase, text=message.text)
+    bot: Bot = context.bot
+    me = await bot.get_me()
 
-    if LongPhrase.name in reply_to.text:
-        return await submit_handling(
-            bot, update, LongProposal, LongPhrase, text=message.text
-        )
+    if not reply_to.from_user or reply_to.from_user.username != me.username:
+        return
+
+    if not reply_to.text or "dice que deberiamos" in reply_to.text:
+        return
+
+    match reply_to.text:
+        case t if Phrase.name in t:
+            await submit_handling(bot, update, Proposal, Phrase, text=message.text)
+        case t if LongPhrase.name in t:
+            await submit_handling(
+                bot, update, LongProposal, LongPhrase, text=message.text
+            )

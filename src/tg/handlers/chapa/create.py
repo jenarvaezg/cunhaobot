@@ -8,6 +8,8 @@ from tg.handlers.inline.inline_query.base import MODE_HANDLERS, get_query_mode
 
 
 async def usage(update: Update) -> Message:
+    if not update.effective_message:
+        raise ValueError("No effective message")
     return await update.effective_message.reply_text(
         "Para usar el servicio de chapas, tienes que decirme la hora a la que quieres la chapa y, opcionalmente, "
         "puedes añadir parámetros. Ejemplos:\n'/chapa 1100' <- Saludo aleatorio a las 11 como "
@@ -46,14 +48,17 @@ def split_time(time_s: str) -> tuple[int, int]:
 
 @only_admins
 @log_update
-async def handle_create_chapa(update: Update, context: CallbackContext):
+async def handle_create_chapa(update: Update, context: CallbackContext) -> None:
     if not (message := update.effective_message) or not message.text:
         return
 
     text = " ".join(message.text.split())
     tokens = text.split(" ")
+
     if len(tokens) == 1:
-        return await usage(update)
+        await usage(update)
+        return
+
     time, query = tokens[1], " ".join(tokens[2:])
 
     try:
@@ -61,16 +66,17 @@ async def handle_create_chapa(update: Update, context: CallbackContext):
         hour, minute = split_time(time)
     except (KeyError, ValueError, IndexError) as e:
         await message.reply_text(str(e), do_quote=True)
-        return await usage(update)
+        await usage(update)
+        return
 
     if not update.effective_chat:
         return
 
     ScheduledTask(
-        update.effective_chat.id,
-        hour,
-        minute,
-        query,
+        chat_id=update.effective_chat.id,
+        hour=hour,
+        minute=minute,
+        query=query,
         service="telegram",
         task_type="chapa",
     ).save()

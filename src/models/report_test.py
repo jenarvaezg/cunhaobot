@@ -1,9 +1,22 @@
 import pytest
 from datetime import date
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from models.report import Report
 from models.phrase import Phrase, LongPhrase
 from models.user import User, InlineUser
+
+
+def create_mock_entity(data):
+    m = MagicMock()
+    m.__getitem__.side_effect = data.__getitem__
+    m.get.side_effect = data.get
+
+    def setitem(key, value):
+        data[key] = value
+
+    m.__setitem__.side_effect = setitem
+    m.update.side_effect = data.update
+    return m
 
 
 class TestReport:
@@ -64,7 +77,7 @@ class TestReport:
             assert report.day == 28
 
     def test_from_entity(self):
-        entity = {
+        data = {
             "longs": 1,
             "shorts": 2,
             "users": 3,
@@ -79,7 +92,9 @@ class TestReport:
             "month": 12,
             "year": 2025,
         }
-        report = Report.from_entity(entity)
+        entity = create_mock_entity(data)
+        repo = Report.get_repository()
+        report = repo._entity_to_domain(entity)
         assert report.longs == 1
         assert report.top_long == "TL"
 
@@ -90,23 +105,23 @@ class TestReport:
         self.mock_client.put.assert_called()
 
     def test_get_at(self):
-        self.mock_client.query.return_value.fetch.return_value = [
-            {
-                "longs": 1,
-                "shorts": 2,
-                "users": 3,
-                "groups": 4,
-                "inline_users": 5,
-                "inline_usages": 6,
-                "gdprs": 7,
-                "chapas": 8,
-                "top_long": "TL",
-                "top_short": "TS",
-                "day": 28,
-                "month": 12,
-                "year": 2025,
-            }
-        ]
+        data = {
+            "longs": 1,
+            "shorts": 2,
+            "users": 3,
+            "groups": 4,
+            "inline_users": 5,
+            "inline_usages": 6,
+            "gdprs": 7,
+            "chapas": 8,
+            "top_long": "TL",
+            "top_short": "TS",
+            "day": 28,
+            "month": 12,
+            "year": 2025,
+        }
+        e = create_mock_entity(data)
+        self.mock_client.query.return_value.fetch.return_value = [e]
         report = Report.get_at(date(2025, 12, 28))
         assert report.longs == 1
         assert self.mock_client.query.return_value.add_filter.call_count == 3
