@@ -5,6 +5,9 @@ from tg.text_router import LONG_MODE, SHORT_MODE, get_query_mode
 from utils.gcp import get_audio_url
 
 
+from .long_mode import get_long_mode_results  # noqa: F401
+from .short_mode import get_short_mode_results  # noqa: F401
+
 phrase_t = Phrase | LongPhrase
 
 

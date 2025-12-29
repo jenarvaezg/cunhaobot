@@ -130,6 +130,87 @@ def proposals(request: Request) -> Template:
     )
 
 
+@get("/orphans", sync_to_thread=False)
+def orphans(request: Request) -> Template | Response:
+    user = request.session.get("user")
+    if not user or str(user.get("id")) != str(config.owner_id):
+        return Response("Unauthorized", status_code=401)
+
+    # Fetch orphan phrases
+    orphan_short = [p for p in Phrase.get_phrases() if not p.proposal_id]
+    orphan_long = [p for p in LongPhrase.get_phrases() if not p.proposal_id]
+
+    # Fetch all proposals once to avoid repeated DB calls
+    all_proposals = Proposal.load_all()
+    all_long_proposals = LongProposal.load_all()
+
+    def get_matches(text, proposals):
+        from fuzzywuzzy import process
+
+        choices = {p.id: p.text for p in proposals}
+        matches = process.extract(text, choices, limit=3)
+        return [{"id": m[2], "text": m[0], "score": m[1]} for m in matches]
+
+    orphan_data = []
+    for p in orphan_short[:20]:  # Limit to 20 per page for performance
+        orphan_data.append(
+            {
+                "text": p.text,
+                "kind": "Phrase",
+                "matches": get_matches(p.text, all_proposals),
+            }
+        )
+
+    for p in orphan_long[:20]:
+        orphan_data.append(
+            {
+                "text": p.text,
+                "kind": "LongPhrase",
+                "matches": get_matches(p.text, all_long_proposals),
+            }
+        )
+
+    return Template(
+        template_name="orphans.html",
+        context={
+            "orphans": orphan_data,
+            "user": user,
+            "owner_id": config.owner_id,
+        },
+    )
+
+
+@post("/orphans/link")
+async def link_orphan_web(request: Request) -> Response[str]:
+    user = request.session.get("user")
+    if not user or str(user.get("id")) != str(config.owner_id):
+        return Response("Unauthorized", status_code=401)
+
+    data = await request.json()
+    phrase_text = data.get("phrase_text")
+    kind = data.get("kind")
+    proposal_id = data.get("proposal_id")
+
+    if not all([phrase_text, kind, proposal_id]):
+        return Response("Missing data", status_code=400)
+
+    # Update phrase
+    phrase_class = Phrase if kind == "Phrase" else LongPhrase
+    # Phrases are indexed by text in my current repo implementation
+    repo = phrase_class.get_repository()
+    # Need to find the actual phrase object
+    all_phrases = repo.get_phrases()
+    phrase = next((p for p in all_phrases if p.text == phrase_text), None)
+
+    if not phrase:
+        return Response("Phrase not found", status_code=404)
+
+    phrase.proposal_id = proposal_id
+    repo.save(phrase)
+
+    return Response("Linked", status_code=200)
+
+
 async def _handle_proposal_web_action(
     request: Request, kind: str, proposal_id: str, action: str
 ) -> Response[str]:
