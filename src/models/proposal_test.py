@@ -184,10 +184,7 @@ class TestProposal:
         with patch.object(Proposal.get_repository(), "load_all", return_value=[p1, p2]):
             assert Proposal.get_proposals("fo") == [p1]
             assert Proposal.get_proposals(user_id=1) == [p1]
-            assert Proposal.get_proposals(user_id=0) == [
-                p1,
-                p2,
-            ]  # skips because 0 is falsy
+            assert Proposal.get_proposals(user_id=0) == [p2]
             assert Proposal.get_proposals(id="__EMPTY__") == []
 
 

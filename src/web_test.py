@@ -22,11 +22,12 @@ def test_index_page(client):
     ):
         rv = client.get("/")
         assert rv.status_code == HTTP_200_OK
-        assert "El Archivo del Cuñao" in rv.text
+        assert "EL ARCHIVO DEL CUÑAO" in rv.text
         assert "p1" in rv.text
         assert "Esto es una prueba." in rv.text
-        assert "Usos: 10" in rv.text
-        assert "Usos: 5" in rv.text
+        # In the new design, usages are in a stat-badge
+        assert '<span class="fw-bold">10</span>' in rv.text
+        assert '<span class="fw-bold">5</span>' in rv.text
 
 
 def test_search_endpoint(client):
@@ -71,7 +72,7 @@ def test_proposals(client):
     ):
         rv = client.get("/proposals")
         assert rv.status_code == HTTP_200_OK
-        assert "Propuestas en el Horno" in rv.text
+        assert "PROPUESTAS EN EL HORNO" in rv.text
 
 
 def test_proposals_search(client):
@@ -83,7 +84,7 @@ def test_proposals_search(client):
     ):
         rv = client.get("/proposals/search", headers={"HX-Request": "true"})
         assert rv.status_code == HTTP_200_OK
-        assert "Palabras Poderosas Pendientes" in rv.text
+        assert "Apelativos en Espera" in rv.text
 
 
 @patch("main.handle_slack")
