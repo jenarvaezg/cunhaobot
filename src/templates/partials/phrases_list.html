@@ -1,55 +1,86 @@
-<div class="row">
-    <div class="col-md-6">
-        <h2 class="h4 mb-4 text-primary fw-bold d-flex align-items-center">
-            <span class="me-2">⚡</span> Palabras Poderosas
-        </h2>
-        {% for phrase in short_phrases %}
-        <div class="card mb-4 phrase-card shadow border-0 animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index0 * 0.1 }}s">
-            <div class="card-body p-4">
-                <h5 class="card-title fw-bold mb-3" style="color: var(--primary-color);">{{ phrase.text }}</h5>
-                <div class="d-flex flex-wrap gap-2 mb-3">
-                    <span class="badge bg-dark border border-primary text-primary badge-usage">Usos: {{ phrase.usages }}</span>
-                    <span class="badge bg-dark border border-info text-info badge-usage">🔊 {{ phrase.audio_usages }}</span>
-                    <span class="badge bg-dark border border-warning text-warning badge-usage">🖼️ {{ phrase.sticker_usages }}</span>
-                </div>
-                {% if phrase.created_at %}
-                <div class="text-muted d-flex align-items-center" style="font-size: 0.7rem; opacity: 0.6;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-calendar3 me-1" viewBox="0 0 16 16">
-                        <path d="M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM1 3.857C1 3.384 1.448 3 2 3h12c.552 0 1 .384 1 .857v10.286c0 .473-.448.857-1 .857H2c-.552 0-1-.384-1-.857V3.857z"/>
-                        <path d="M6.5 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
-                    </svg>
-                    Añadida el {{ phrase.created_at.strftime('%d/%m/%Y') }}
-                </div>
-                {% endif %}
+<div class="row g-4">
+    <!-- Short Phrases / Apelativos -->
+    <div class="col-lg-6">
+        <div class="d-flex align-items-center mb-4 gap-3 animate__animated animate__fadeInLeft">
+            <div class="bg-warning text-dark rounded-circle p-2 d-flex align-items-center justify-content-center shadow-gold" style="width: 45px; height: 45px;">
+                <i class="bi bi-lightning-fill fs-4"></i>
             </div>
+            <h2 class="oswald h3 mb-0">Palabras Poderosas</h2>
+            <span class="badge rounded-pill bg-dark border border-secondary text-secondary ms-auto">{{ short_phrases|length }} total</span>
         </div>
-        {% endfor %}
+
+        <div class="row row-cols-1 g-3">
+            {% for phrase in short_phrases %}
+            <div class="col animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index0 * 0.05 }}s">
+                <div class="glass-card h-100 p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="fw-bold mb-0 text-warning">{{ phrase.text }}</h5>
+                        <div class="stat-badge">
+                            <i class="bi bi-graph-up-arrow text-success"></i>
+                            <span class="fw-bold">{{ phrase.usages }}</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-3">
+                        <div class="small text-secondary d-flex align-items-center gap-1">
+                            <i class="bi bi-volume-up text-info"></i> {{ phrase.audio_usages }}
+                        </div>
+                        <div class="small text-secondary d-flex align-items-center gap-1">
+                            <i class="bi bi-sticky text-warning"></i> {{ phrase.sticker_usages }}
+                        </div>
+                        {% if phrase.created_at %}
+                        <div class="small text-secondary d-flex align-items-center gap-1 ms-auto" style="font-size: 0.75rem; opacity: 0.5;">
+                            <i class="bi bi-calendar3"></i> {{ phrase.created_at.strftime('%d/%m/%y') }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
     </div>
 
-    <div class="col-md-6">
-        <h2 class="h4 mb-4 text-success fw-bold d-flex align-items-center">
-            <span class="me-2">📜</span> Frases / Dichos
-        </h2>
-        {% for phrase in long_phrases %}
-        <div class="card mb-4 phrase-card shadow border-0 border-start border-4 border-success animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index0 * 0.1 }}s">
-            <div class="card-body p-4">
-                <p class="card-text fs-5 mb-3 italic" style="font-style: italic; color: #e2e8f0;">"{{ phrase.text }}"</p>
-                <div class="d-flex flex-wrap gap-2 mb-3">
-                    <span class="badge bg-dark border border-success text-success badge-usage">Usos: {{ phrase.usages }}</span>
-                    <span class="badge bg-dark border border-info text-info badge-usage">🔊 {{ phrase.audio_usages }}</span>
-                    <span class="badge bg-dark border border-warning text-warning badge-usage">🖼️ {{ phrase.sticker_usages }}</span>
-                </div>
-                {% if phrase.created_at %}
-                <div class="text-muted d-flex align-items-center" style="font-size: 0.7rem; opacity: 0.6;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-calendar3 me-1" viewBox="0 0 16 16">
-                        <path d="M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM1 3.857C1 3.384 1.448 3 2 3h12c.552 0 1 .384 1 .857v10.286c0 .473-.448.857-1 .857H2c-.552 0-1-.384-1-.857V3.857z"/>
-                        <path d="M6.5 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
-                    </svg>
-                    Añadida el {{ phrase.created_at.strftime('%d/%m/%Y') }}
-                </div>
-                {% endif %}
+    <!-- Long Phrases / Dichos -->
+    <div class="col-lg-6">
+        <div class="d-flex align-items-center mb-4 gap-3 animate__animated animate__fadeInRight">
+            <div class="bg-info text-dark rounded-circle p-2 d-flex align-items-center justify-content-center shadow-info" style="width: 45px; height: 45px;">
+                <i class="bi bi-chat-quote-fill fs-4"></i>
             </div>
+            <h2 class="oswald h3 mb-0">Frases y Dichos</h2>
+            <span class="badge rounded-pill bg-dark border border-secondary text-secondary ms-auto">{{ long_phrases|length }} total</span>
         </div>
-        {% endfor %}
+
+        <div class="row row-cols-1 g-3">
+            {% for phrase in long_phrases %}
+            <div class="col animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index0 * 0.05 }}s">
+                <div class="glass-card h-100 p-3 border-start border-info border-4">
+                    <p class="card-text mb-3" style="color: #e2e8f0; line-height: 1.4;">"{{ phrase.text }}"</p>
+
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-badge py-1">
+                            <i class="bi bi-graph-up text-info"></i>
+                            <span class="fw-bold">{{ phrase.usages }}</span>
+                        </div>
+                        <div class="small text-secondary d-flex align-items-center gap-1">
+                            <i class="bi bi-volume-up text-info"></i> {{ phrase.audio_usages }}
+                        </div>
+                        <div class="small text-secondary d-flex align-items-center gap-1">
+                            <i class="bi bi-sticky text-warning"></i> {{ phrase.sticker_usages }}
+                        </div>
+                        {% if phrase.created_at %}
+                        <div class="small text-secondary d-flex align-items-center gap-1 ms-auto" style="font-size: 0.75rem; opacity: 0.5;">
+                            <i class="bi bi-calendar3"></i> {{ phrase.created_at.strftime('%d/%m/%y') }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
     </div>
 </div>
+
+<style>
+    .shadow-gold { box-shadow: 0 0 15px rgba(255, 193, 7, 0.3); }
+    .shadow-info { box-shadow: 0 0 15px rgba(13, 202, 240, 0.3); }
+</style>

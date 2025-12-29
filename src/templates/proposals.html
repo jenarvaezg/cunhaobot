@@ -1,58 +1,50 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row hero-section animate__animated animate__fadeIn">
-    <div class="col-12 text-center mb-5">
-        <h1 class="display-3 fw-black animate__animated animate__zoomIn">Propuestas en el Horno</h1>
-        <p class="lead text-info animate__animated animate__fadeInUp animate__delay-1s">
-            Aquí se está cocinando la sabiduría del mañana. Vota en Telegram, máquina.
+<div class="row mb-5 justify-content-center text-center">
+    <div class="col-lg-8 animate__animated animate__fadeIn">
+        <h1 class="oswald hero-title mb-3">PROPUESTAS EN EL HORNO</h1>
+        <p class="lead text-secondary fw-light mb-5">
+            Aquí se cocina la sabiduría del mañana. <br class="d-none d-md-block">
+            Vota las mejores aportaciones directamente en Telegram.
         </p>
-    </div>
-</div>
 
-<div class="row mb-5 animate__animated animate__fadeInUp animate__delay-1s">
-    <div class="col-md-10 offset-md-1">
-        <form hx-get="/proposals/search"
-              hx-trigger="keyup changed delay:400ms from:input, change from:select"
-              hx-target="#proposals-container"
-              hx-indicator="#search-indicator"
-              class="position-relative">
-
-            <div class="row g-3">
-                <div class="col-md-8">
-                    <input type="text" name="search" class="form-control search-input"
-                           placeholder="Busca en el texto de las propuestas...">
-                </div>
-                <div class="col-md-4">
-                    <button class="btn btn-outline-info w-100 h-100 rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#advancedFilters">
-                        ⚙️ Filtros Avanzados
-                    </button>
-                </div>
+        <div class="search-wrapper d-flex align-items-center mb-4 mx-auto" style="max-width: 600px;">
+            <i class="bi bi-funnel ms-4 text-secondary"></i>
+            <form hx-get="/proposals/search"
+                  hx-trigger="keyup changed delay:300ms from:input, change from:select"
+                  hx-target="#proposals-container"
+                  hx-indicator="#proposal-search-indicator"
+                  class="flex-grow-1">
+                <input type="text" name="search" class="form-control search-input w-100"
+                       placeholder="Filtrar propuestas..." autocomplete="off">
+            </form>
+            <div id="proposal-search-indicator" class="htmx-indicator me-3">
+                <div class="spinner-border spinner-border-sm text-info" role="status"></div>
             </div>
+            <button class="btn btn-outline-info rounded-pill border-0 me-2" type="button" data-bs-toggle="collapse" data-bs-target="#proposalFilters">
+                <i class="bi bi-gear-fill"></i>
+            </button>
+        </div>
 
-            <div class="collapse mt-3" id="advancedFilters">
-                <div class="card card-body bg-dark border-secondary p-4 rounded-4">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label text-info small fw-bold">User ID</label>
-                            <input type="text" name="user_id" class="form-control bg-dark text-white border-secondary" placeholder="ID del proponente...">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label text-info small fw-bold">ID Propuesta</label>
-                            <input type="text" name="id" class="form-control bg-dark text-white border-secondary" placeholder="ID técnico...">
-                        </div>
+        <div class="collapse mb-4" id="proposalFilters">
+            <div class="glass-card p-4 text-start">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-secondary text-uppercase">User ID Proponente</label>
+                        <input type="text" name="user_id" class="form-control bg-dark border-secondary text-white rounded-pill" placeholder="ID usuario...">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-secondary text-uppercase">ID Técnico</label>
+                        <input type="text" name="id" class="form-control bg-dark border-secondary text-white rounded-pill" placeholder="ID propuesta...">
                     </div>
                 </div>
             </div>
-
-            <div id="search-indicator" class="htmx-indicator position-absolute end-0 top-0 translate-middle-y mt-4 me-5" style="z-index: 10;">
-                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
-<div id="proposals-container" class="animate__animated animate__fadeIn animate__delay-2s">
+<div id="proposals-container" class="animate__animated animate__fadeInUp">
     {% include "partials/proposals_list.html" %}
 </div>
 {% endblock %}

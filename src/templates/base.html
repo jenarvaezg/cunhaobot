@@ -1,142 +1,231 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CuñaoBot - El archivo definitivo</title>
+    <title>CuñaoBot - La Sabiduría Definitiva</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
+
+    <!-- CSS Dependencies -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Oswald:wght@700&display=swap" rel="stylesheet">
+
+    <!-- JS Dependencies -->
     <script src="https://unpkg.com/htmx.org@2.0.0"></script>
+
     <style>
         :root {
-            --primary-color: #ffcc00;
-            --secondary-color: #1a1a1a;
-            --accent-color: #00ffcc;
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
+            --primary-gold: #ffc107;
+            --primary-gold-rgb: 255, 193, 7;
+            --dark-blue: #0f172a;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
         }
+
         body {
-            background-color: var(--bg-color);
+            background-color: var(--dark-blue);
+            background-image:
+                radial-gradient(at 0% 0%, rgba(var(--primary-gold-rgb), 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(var(--primary-gold-rgb), 0.05) 0px, transparent 50%);
             color: #f8fafc;
             font-family: 'Inter', sans-serif;
-            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
+
+        .oswald { font-family: 'Oswald', sans-serif; text-transform: uppercase; }
+
+        /* Navbar Refinement */
         .navbar {
-            background: rgba(15, 23, 42, 0.8) !important;
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
+            background: var(--glass-bg) !important;
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1rem 0;
         }
+
         .navbar-brand {
-            font-weight: 900;
-            letter-spacing: -1px;
-            color: var(--primary-color) !important;
+            font-size: 1.5rem;
+            color: var(--primary-gold) !important;
+            letter-spacing: 1px;
         }
-        .phrase-card {
-            background: var(--card-bg);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            color: #f8fafc;
-        }
-        .phrase-card:hover {
-            transform: translateY(-5px) scale(1.02);
-            border-color: var(--primary-color);
-            box-shadow: 0 10px 30px -10px rgba(255, 204, 0, 0.3);
-        }
-        .badge-usage {
+
+        .nav-link {
             font-weight: 600;
-            padding: 0.5em 0.8em;
-            border-radius: 8px;
+            transition: color 0.3s;
         }
-        .hero-section {
-            padding: 80px 0 60px;
-            background: radial-gradient(circle at 50% 50%, rgba(255, 204, 0, 0.1) 0%, rgba(15, 23, 42, 0) 70%);
+
+        .nav-link:hover {
+            color: var(--primary-gold) !important;
         }
+
+        /* Glassmorphism Components */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(var(--primary-gold-rgb), 0.4);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Hero Section */
+        .hero-title {
+            font-size: 4.5rem;
+            line-height: 1;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #fff 0%, var(--primary-gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Search Input */
+        .search-wrapper {
+            background: var(--glass-bg);
+            border-radius: 50px;
+            padding: 5px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
         .search-input {
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: transparent !important;
+            border: none !important;
             color: white !important;
-            border-radius: 12px;
-            padding: 15px 25px;
+            padding: 12px 25px;
+            font-size: 1.1rem;
+        }
+
+        .search-input::placeholder {
+            color: rgba(255,255,255,0.4);
+        }
+
+        /* Buttons */
+        .btn-gold {
+            background: var(--primary-gold);
+            color: var(--dark-blue);
+            font-weight: 800;
+            border-radius: 50px;
+            padding: 10px 25px;
+            border: none;
             transition: all 0.3s;
         }
-        .search-input:focus {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: var(--primary-color);
-            box-shadow: 0 0 20px rgba(255, 204, 0, 0.2);
-            outline: none;
+
+        .btn-gold:hover {
+            background: #ffdb4d;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(var(--primary-gold-rgb), 0.4);
         }
+
+        /* Stats & Badges */
+        .stat-badge {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+
+        /* Footer */
         .footer {
-            background: transparent !important;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 40px 0;
+            margin-top: auto;
+            padding: 3rem 0;
+            border-top: 1px solid var(--glass-border);
+            opacity: 0.8;
         }
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 10px;
-        }
-        ::-webkit-scrollbar-track {
-            background: var(--bg-color);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 5px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
-        }
-        .htmx-added {
-            animation: fadeInUp 0.5s;
-        }
+
+        /* Animations */
+        .htmx-indicator { opacity: 0; transition: opacity 200ms ease-in; }
+        .htmx-request .htmx-indicator { opacity: 1; }
+        .htmx-request.htmx-indicator { opacity: 1; }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-dark mb-4">
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container">
-            <a class="navbar-brand animate__animated animate__fadeInLeft" href="/">
-                <img src="/static/favicon.png" alt="Logo" width="30" height="30" class="d-inline-block align-text-top me-2">
-                CUÑAOBOT
+            <a class="navbar-brand oswald animate__animated animate__fadeIn" href="/">
+                <i class="bi bi-robot me-2"></i>CUÑAOBOT
             </a>
-            <div class="navbar-nav flex-row gap-3 align-items-center">
-                <a class="nav-link" href="/">Archivo</a>
-                <a class="nav-link" href="/proposals">Propuestas</a>
-                {% if user %}
-                <div class="dropdown">
-                    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown">
-                        {% if user.photo_url %}
-                        <img src="{{ user.photo_url }}" alt="Profile" width="30" height="30" class="rounded-circle border border-primary">
-                        {% endif %}
-                        <span class="small text-info fw-bold">{{ user.first_name }}</span>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end border-secondary shadow">
-                        <li><a class="dropdown-item small" href="/logout">Cerrar Sesión</a></li>
-                    </ul>
+
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4 gap-2">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="bi bi-archive me-1"></i> Archivo</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/proposals"><i class="bi bi-lightbulb me-1"></i> Propuestas</a>
+                    </li>
+                </ul>
+
+                <div class="d-flex align-items-center gap-3">
+                    {% if user %}
+                    <div class="dropdown">
+                        <button class="btn btn-link nav-link dropdown-toggle d-flex align-items-center gap-2 p-0 border-0" type="button" data-bs-toggle="dropdown">
+                            {% if user.photo_url %}
+                            <img src="{{ user.photo_url }}" alt="Profile" width="32" height="32" class="rounded-circle border border-warning">
+                            {% else %}
+                            <i class="bi bi-person-circle fs-4"></i>
+                            {% endif %}
+                            <span class="fw-bold">{{ user.first_name }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark shadow-lg border-secondary">
+                            {% if user.id == owner_id %}
+                            <li><h6 class="dropdown-header text-warning">Modo Maestro</h6></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href="/logout"><i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión</a></li>
+                        </ul>
+                    </div>
+                    {% else %}
+                    <div id="telegram-login-container" class="animate__animated animate__fadeIn">
+                        <script async src="https://telegram.org/js/telegram-widget.js?22"
+                                data-telegram-login="cunhaobot"
+                                data-size="medium"
+                                data-auth-url="/auth/telegram"
+                                data-request-access="write"></script>
+                    </div>
+                    {% endif %}
                 </div>
-                {% else %}
-                <div id="telegram-login-container" class="animate__animated animate__fadeIn">
-                    <script async src="https://telegram.org/js/telegram-widget.js?22"
-                            data-telegram-login="cunhaobot"
-                            data-size="medium"
-                            data-auth-url="/auth/telegram"
-                            data-request-access="write"></script>
-                </div>
-                {% endif %}
             </div>
         </div>
     </nav>
 
-    <div class="container">
-        {% block content %}{% endblock %}
-    </div>
-
-    <footer class="footer mt-5 text-center">
+    <main class="flex-shrink-0 py-5">
         <div class="container">
-            <span class="text-muted animate__animated animate__fadeInUp">Hecho con ❤️ para todos los máquinas del mundo.</span>
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer class="footer mt-auto bg-transparent">
+        <div class="container text-center">
+            <div class="row align-items-center">
+                <div class="col-md-4 text-md-start mb-3 mb-md-0">
+                    <span class="text-muted small">© 2025 CuñaoBot OS.</span>
+                </div>
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="https://github.com/jenarvaezg/cunhaobot" class="text-muted fs-4"><i class="bi bi-github"></i></a>
+                        <a href="#" class="text-muted fs-4"><i class="bi bi-telegram"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <span class="text-muted small">Hecho con <i class="bi bi-heart-fill text-danger mx-1"></i> para auténticos máquinas.</span>
+                </div>
+            </div>
         </div>
     </footer>
 

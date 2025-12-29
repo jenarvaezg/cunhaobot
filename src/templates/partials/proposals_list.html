@@ -1,85 +1,124 @@
-<div class="row">
-    <div class="col-md-6">
-        <h2 class="h4 mb-4 text-primary fw-bold d-flex align-items-center">
-            <span class="me-2">⚡</span> Palabras Poderosas Pendientes
-        </h2>
-        {% if pending_short %}
-            {% for proposal in pending_short %}
-            <div class="card mb-4 phrase-card shadow border-0 animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index0 * 0.1 }}s">
-                <div class="card-body p-4">
-                    <h5 class="card-title fw-bold mb-3" style="color: var(--primary-color);">{{ proposal.text }}</h5>
-                    <div class="d-flex flex-wrap gap-2">
-                        <span class="badge bg-dark border border-success text-success badge-usage">👍 Votos a favor: {{ proposal.liked_by|length }}</span>
-                        <span class="badge bg-dark border border-danger text-danger badge-usage">👎 Votos en contra: {{ proposal.disliked_by|length }}</span>
-                    </div>
-                    <div class="mt-2 text-muted" style="font-size: 0.7rem;">
-                        ID: {{ proposal.id }} | User: {{ proposal.user_id }}
-                    </div>
-                    {% if user and user.id|string == owner_id|string %}
-                    <div class="d-flex gap-2 mt-3">
-                        <button hx-post="/proposals/{{ proposal.kind }}/{{ proposal.id }}/approve"
-                                hx-confirm="¿Seguro que quieres aprobar esta propuesta cuñada por tus santos huevos?"
-                                hx-target="closest .card"
-                                hx-swap="delete"
-                                class="btn btn-sm btn-success flex-grow-1 fw-bold">
-                            🚀 Super Aprobar
-                        </button>
-                        <button hx-post="/proposals/{{ proposal.kind }}/{{ proposal.id }}/reject"
-                                hx-confirm="¿Seguro que quieres MANDAR A LA MIERDA esta propuesta?"
-                                hx-target="closest .card"
-                                hx-swap="delete"
-                                class="btn btn-sm btn-danger flex-grow-1 fw-bold">
-                            🗑️ Super Rechazar
-                        </button>
-                    </div>
-                    {% endif %}
-                </div>
+<div class="row g-4">
+    <!-- Pending Short Phrases -->
+    <div class="col-lg-6">
+        <div class="d-flex align-items-center mb-4 gap-3 animate__animated animate__fadeInLeft">
+            <div class="bg-primary text-white rounded-circle p-2 d-flex align-items-center justify-content-center shadow-primary" style="width: 45px; height: 45px;">
+                <i class="bi bi-hourglass-split fs-4"></i>
             </div>
-            {% endfor %}
+            <h2 class="oswald h3 mb-0">Apelativos en Espera</h2>
+        </div>
+
+        {% if pending_short %}
+            <div class="row row-cols-1 g-3">
+                {% for proposal in pending_short %}
+                <div class="col animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index0 * 0.05 }}s">
+                    <div class="glass-card p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="fw-bold mb-0 text-primary">{{ proposal.text }}</h5>
+                            <div class="small text-secondary font-monospace" style="font-size: 0.7rem;">ID: {{ proposal.id }}</div>
+                        </div>
+
+                        <div class="d-flex gap-3 mb-4">
+                            <div class="stat-badge py-1 border-success text-success">
+                                <i class="bi bi-hand-thumbs-up-fill"></i> {{ proposal.liked_by|length }}
+                            </div>
+                            <div class="stat-badge py-1 border-danger text-danger">
+                                <i class="bi bi-hand-thumbs-down-fill"></i> {{ proposal.disliked_by|length }}
+                            </div>
+                            <div class="stat-badge py-1 ms-auto">
+                                <i class="bi bi-person-fill text-secondary"></i> {{ proposal.user_id }}
+                            </div>
+                        </div>
+
+                        {% if user and user.id|string == owner_id|string %}
+                        <div class="d-grid gap-2 d-md-flex mt-2">
+                            <button hx-post="/proposals/{{ proposal.kind }}/{{ proposal.id }}/approve"
+                                    hx-confirm="¿Aprobar este monumento a la sabiduría?"
+                                    hx-target="closest .col"
+                                    hx-swap="delete"
+                                    class="btn btn-gold btn-sm flex-grow-1">
+                                <i class="bi bi-check-circle-fill me-2"></i>Aprobar
+                            </button>
+                            <button hx-post="/proposals/{{ proposal.kind }}/{{ proposal.id }}/reject"
+                                    hx-confirm="¿Seguro que quieres ignorar esta joya?"
+                                    hx-target="closest .col"
+                                    hx-swap="delete"
+                                    class="btn btn-outline-danger btn-sm rounded-pill border-0 flex-grow-1">
+                                <i class="bi bi-trash3-fill me-2"></i>Descartar
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
         {% else %}
-            <p class="text-muted italic">No hay palabras poderosas que coincidan con los filtros.</p>
+            <div class="text-center p-5 glass-card">
+                <i class="bi bi-check2-circle fs-1 text-secondary opacity-25"></i>
+                <p class="text-secondary mt-3">Todo limpio por aquí, jefe.</p>
+            </div>
         {% endif %}
     </div>
 
-    <div class="col-md-6">
-        <h2 class="h4 mb-4 text-success fw-bold d-flex align-items-center">
-            <span class="me-2">📜</span> Frases / Dichos Pendientes
-        </h2>
-        {% if pending_long %}
-            {% for proposal in pending_long %}
-            <div class="card mb-4 phrase-card shadow border-0 border-start border-4 border-success animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index0 * 0.1 }}s">
-                <div class="card-body p-4">
-                    <p class="card-text fs-5 mb-3 italic" style="font-style: italic; color: #e2e8f0;">"{{ proposal.text }}"</p>
-                    <div class="d-flex flex-wrap gap-2">
-                        <span class="badge bg-dark border border-success text-success badge-usage">👍 Votos a favor: {{ proposal.liked_by|length }}</span>
-                        <span class="badge bg-dark border border-danger text-danger badge-usage">👎 Votos en contra: {{ proposal.disliked_by|length }}</span>
-                    </div>
-                    <div class="mt-2 text-muted" style="font-size: 0.7rem;">
-                        ID: {{ proposal.id }} | User: {{ proposal.user_id }}
-                    </div>
-                    {% if user and user.id|string == owner_id|string %}
-                    <div class="d-flex gap-2 mt-3">
-                        <button hx-post="/proposals/{{ proposal.kind }}/{{ proposal.id }}/approve"
-                                hx-confirm="¿Seguro que quieres aprobar esta propuesta cuñada por tus santos huevos?"
-                                hx-target="closest .card"
-                                hx-swap="delete"
-                                class="btn btn-sm btn-success flex-grow-1 fw-bold">
-                            🚀 Super Aprobar
-                        </button>
-                        <button hx-post="/proposals/{{ proposal.kind }}/{{ proposal.id }}/reject"
-                                hx-confirm="¿Seguro que quieres MANDAR A LA MIERDA esta propuesta?"
-                                hx-target="closest .card"
-                                hx-swap="delete"
-                                class="btn btn-sm btn-danger flex-grow-1 fw-bold">
-                            🗑️ Super Rechazar
-                        </button>
-                    </div>
-                    {% endif %}
-                </div>
+    <!-- Pending Long Phrases -->
+    <div class="col-lg-6">
+        <div class="d-flex align-items-center mb-4 gap-3 animate__animated animate__fadeInRight">
+            <div class="bg-info text-dark rounded-circle p-2 d-flex align-items-center justify-content-center shadow-info" style="width: 45px; height: 45px;">
+                <i class="bi bi-chat-left-dots-fill fs-4"></i>
             </div>
-            {% endfor %}
+            <h2 class="oswald h3 mb-0">Dichos Pendientes</h2>
+        </div>
+
+        {% if pending_long %}
+            <div class="row row-cols-1 g-3">
+                {% for proposal in pending_long %}
+                <div class="col animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index0 * 0.05 }}s">
+                    <div class="glass-card p-4 border-start border-info border-4">
+                        <p class="card-text mb-4 text-white-50" style="line-height: 1.5; font-style: italic;">"{{ proposal.text }}"</p>
+
+                        <div class="d-flex gap-3 mb-4">
+                            <div class="stat-badge py-1 border-success text-success">
+                                <i class="bi bi-hand-thumbs-up-fill"></i> {{ proposal.liked_by|length }}
+                            </div>
+                            <div class="stat-badge py-1 border-danger text-danger">
+                                <i class="bi bi-hand-thumbs-down-fill"></i> {{ proposal.disliked_by|length }}
+                            </div>
+                            <div class="stat-badge py-1 ms-auto">
+                                <i class="bi bi-person-fill text-secondary"></i> {{ proposal.user_id }}
+                            </div>
+                        </div>
+
+                        {% if user and user.id|string == owner_id|string %}
+                        <div class="d-grid gap-2 d-md-flex mt-2">
+                            <button hx-post="/proposals/{{ proposal.kind }}/{{ proposal.id }}/approve"
+                                    hx-confirm="¿Aprobar esta frase mítica?"
+                                    hx-target="closest .col"
+                                    hx-swap="delete"
+                                    class="btn btn-gold btn-sm flex-grow-1">
+                                <i class="bi bi-check-circle-fill me-2"></i>Aprobar
+                            </button>
+                            <button hx-post="/proposals/{{ proposal.kind }}/{{ proposal.id }}/reject"
+                                    hx-confirm="¿Mandar a la papelera de reciclaje?"
+                                    hx-target="closest .col"
+                                    hx-swap="delete"
+                                    class="btn btn-outline-danger btn-sm rounded-pill border-0 flex-grow-1">
+                                <i class="bi bi-trash3-fill me-2"></i>Descartar
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
         {% else %}
-            <p class="text-muted italic">No hay frases pendientes que coincidan con los filtros.</p>
+            <div class="text-center p-5 glass-card">
+                <i class="bi bi-stars fs-1 text-secondary opacity-25"></i>
+                <p class="text-secondary mt-3">Nada pendiente. ¡A descansar, máquina!</p>
+            </div>
         {% endif %}
     </div>
 </div>
+
+<style>
+    .shadow-primary { box-shadow: 0 0 15px rgba(13, 110, 253, 0.3); }
+</style>
