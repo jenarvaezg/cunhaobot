@@ -170,6 +170,11 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/proposals"><i class="bi bi-lightbulb me-1"></i> Propuestas</a>
                     </li>
+                    {% if user and user.id|string == owner_id|string %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/orphans"><i class="bi bi-link-45deg me-1"></i> Huérfanas</a>
+                    </li>
+                    {% endif %}
                 </ul>
 
                 <div class="d-flex align-items-center gap-3">
