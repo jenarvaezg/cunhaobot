@@ -11,4 +11,4 @@ fi
 unset DATASTORE_EMULATOR_HOST
 
 echo "🚀 Iniciando cunhaobot contra DATOS DE PRODUCCIÓN..."
-uv run src/main.py
+uv run uvicorn main:app --reload --host 0.0.0.0 --port 5050 --app-dir src

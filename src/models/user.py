@@ -219,9 +219,11 @@ class DatastoreUserRepository:
 
     def load_all(self, ignore_gdpr: bool = False) -> list[User]:
         query = self.client.query(kind=self.model_class.kind)
+        # We don't filter in the query to avoid missing entities where 'gdpr' field is not set
+        results = [self._entity_to_domain(entity) for entity in query.fetch()]
         if not ignore_gdpr:
-            query.add_filter("gdpr", "=", False)
-        return [self._entity_to_domain(entity) for entity in query.fetch()]
+            results = [u for u in results if not u.gdpr]
+        return results
 
 
 # --- Instances ---

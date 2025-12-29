@@ -2,8 +2,10 @@ import json
 import logging
 import os
 from dataclasses import dataclass
-from typing import TypedDict, cast
+from datetime import datetime, timedelta
+from typing import TypedDict, cast, Any
 
+import asyncio
 import requests
 import tweepy
 from litestar import Litestar, Request, get, post
@@ -14,6 +16,7 @@ from litestar.plugins.htmx import HTMXRequest, HTMXTemplate
 from litestar.middleware.session.client_side import CookieBackendConfig
 from litestar.static_files import create_static_files_router
 from telegram import Update
+from telegram.error import BadRequest, TelegramError
 
 from models.phrase import LongPhrase, Phrase
 from models.proposal import LongProposal, Proposal, get_proposal_class_by_kind
@@ -22,7 +25,7 @@ from slack.handlers import handle_slack
 from tg import get_tg_application
 from tg.handlers import handle_ping as handle_telegram_ping
 from tg.handlers.utils.callback_query import approve_proposal, dismiss_proposal
-from utils import normalize_str, verify_telegram_auth
+from utils import verify_telegram_auth
 
 # Enable logging
 logging.basicConfig(format="%(message)s", level=logging.INFO)
@@ -54,7 +57,6 @@ class Config:
             "OWNER_ID",
         ]
         missing = [var for var in required if var not in os.environ]
-
         is_gae = os.environ.get("GAE_ENV") == "standard"
         if missing and is_gae:
             raise ConfigError(f"Missing environment variables: {', '.join(missing)}")
@@ -76,40 +78,9 @@ class Config:
 
 config = Config.from_env()
 
-
-@get("/users/options", sync_to_thread=False)
-def users_options(request: Request) -> str:
-    user = request.session.get("user")
-    if not user or str(user.get("id")) != str(config.owner_id):
-        return ""
-
-    q = request.query_params.get("q", "").lower()
-
-    # Load all potential users from DB
-    users = User.load_all()
-    inline_users = InlineUser.get_all()
-
-    # Use a dict to deduplicate by ID
-    unique_users: dict[int, str] = {}
-    for u in users:
-        if not u.is_group:
-            unique_users[u.chat_id] = u.name
-    for iu in inline_users:
-        unique_users[iu.user_id] = iu.name
-
-    options = []
-    count = 0
-    # Sort and filter
-    sorted_users = sorted(unique_users.items(), key=lambda x: x[1].lower())
-    for uid, name in sorted_users:
-        if q and q not in name.lower() and q not in str(uid):
-            continue
-        options.append(f'<option value="{uid}">{name}</option>')
-        count += 1
-        if count >= 50:
-            break
-
-    return "".join(options)
+# Global cache for curators to avoid hitting Telegram API limits
+_CURATORS_CACHE: dict[int, str] = {}
+_LAST_CURATORS_UPDATE: datetime | None = None
 
 
 class ProposalsContext(TypedDict):
@@ -123,30 +94,29 @@ def get_proposals_context(request: Request) -> ProposalsContext:
     filters = {k: v for k, v in request.query_params.items() if k not in ["search"]}
     search_query = request.query_params.get("search", "")
 
-    all_short = Proposal.get_proposals(search=search_query, **filters)
-    all_long = LongProposal.get_proposals(search=search_query, **filters)
+    # Default to only showing active proposals
+    if "voting_ended" not in filters:
+        filters["voting_ended"] = False
 
-    short_texts = {normalize_str(p.text) for p in Phrase.get_phrases()}
-    long_texts = {normalize_str(p.text) for p in LongPhrase.get_phrases()}
+    # Apply limit to avoid huge DOM rendering
+    all_short = Proposal.get_proposals(search=search_query, limit=50, **filters)
+    all_long = LongProposal.get_proposals(search=search_query, limit=50, **filters)
 
-    pending_short = [p for p in all_short if normalize_str(p.text) not in short_texts]
-    pending_long = [p for p in all_long if normalize_str(p.text) not in long_texts]
-
-    # Explicitly cast to dict[str, str] | None to satisfy type checker
     user_session = cast(dict[str, str] | None, request.session.get("user"))
-
     return {
-        "pending_short": pending_short,
-        "pending_long": pending_long,
+        "pending_short": all_short,
+        "pending_long": all_long,
         "user": user_session,
         "owner_id": config.owner_id,
     }
 
 
-@get("/", sync_to_thread=False)
+@get("/", sync_to_thread=True)
 def index(request: Request) -> Template:
-    short_phrases = Phrase.get_phrases()
-    long_phrases = LongPhrase.get_phrases()
+    # Limit initial phrases to 50 top used ones
+    short_phrases = Phrase.get_phrases(limit=50)
+    long_phrases = LongPhrase.get_phrases(limit=50)
+
     return Template(
         template_name="index.html",
         context={
@@ -160,69 +130,85 @@ def index(request: Request) -> Template:
     )
 
 
-@get("/proposals", sync_to_thread=False)
+@get("/proposals", sync_to_thread=True)
 def proposals(request: Request) -> Template:
     return Template(
         template_name="proposals.html",
-        context=get_proposals_context(request),
+        context=cast(dict[str, Any], get_proposals_context(request)),
     )
 
 
-@get("/orphans", sync_to_thread=False)
-def orphans(request: Request) -> Template | Response:
+@get("/orphans")
+async def orphans(request: Request) -> Template | Response:
+    global _CURATORS_CACHE, _LAST_CURATORS_UPDATE
     user = request.session.get("user")
     if not user or str(user.get("id")) != str(config.owner_id):
         return Response("Unauthorized", status_code=401)
 
-    # Fetch orphan phrases
     orphan_short = [p for p in Phrase.get_phrases() if not p.proposal_id]
     orphan_long = [p for p in LongPhrase.get_phrases() if not p.proposal_id]
-
-    # Fetch all proposals once to avoid repeated DB calls
     all_proposals = Proposal.load_all()
     all_long_proposals = LongProposal.load_all()
 
-    # Fetch all potential users for the dropdown
-    users = User.load_all()
-    inline_users = InlineUser.get_all()
-    unique_users: dict[int, str] = {}
-    for u in users:
-        if not u.is_group:
-            unique_users[u.chat_id] = u.name
-    for iu in inline_users:
-        unique_users[iu.user_id] = iu.name
+    now = datetime.now()
+    if not _LAST_CURATORS_UPDATE or (now - _LAST_CURATORS_UPDATE) > timedelta(
+        minutes=10
+    ):
+        application = get_tg_application()
+        await application.initialize()
+        bot = application.bot
+        new_cache = {}
+        try:
+            admins = await bot.get_chat_administrators(chat_id=config.mod_chat_id)
+            for admin in admins:
+                if not admin.user.is_bot:
+                    new_cache[admin.user.id] = admin.user.name or admin.user.first_name
 
-    # Sort users by name
-    sorted_known_users = [
-        {"id": uid, "name": name}
-        for uid, name in sorted(unique_users.items(), key=lambda x: x[1].lower())
-    ]
+            active_ids = set()
+            for p in all_proposals + all_long_proposals:
+                active_ids.add(p.user_id)
+                active_ids.update(p.liked_by)
+                active_ids.update(p.disliked_by)
 
-    def get_matches(text, proposals):
-        from fuzzywuzzy import process
+            ids_to_check = active_ids - set(new_cache.keys()) - {0}
 
-        choices = {p.id: p.text for p in proposals}
-        matches = process.extract(text, choices, limit=3)
-        return [{"id": m[2], "text": m[0], "score": m[1]} for m in matches]
+            async def check_user(uid):
+                try:
+                    m = await bot.get_chat_member(
+                        chat_id=config.mod_chat_id, user_id=uid
+                    )
+                    if m.status in ["member", "administrator", "creator"]:
+                        return uid
+                except (BadRequest, TelegramError):
+                    pass
+                return None
+
+            check_tasks = [check_user(uid) for uid in list(ids_to_check)[:100]]
+            member_ids = await asyncio.gather(*check_tasks)
+
+            users_db = {u.chat_id: u.name for u in User.load_all() if not u.is_group}
+            inline_db = {u.user_id: u.name for u in InlineUser.get_all()}
+            db_names = {**users_db, **inline_db}
+
+            for mid in member_ids:
+                if mid and mid not in new_cache:
+                    new_cache[mid] = db_names.get(mid, f"User {mid}")
+
+            _CURATORS_CACHE = new_cache
+            _LAST_CURATORS_UPDATE = now
+        except Exception as e:
+            logging.error(f"Error updating curators: {e}")
+
+    sorted_known_users = sorted(
+        [{"id": str(uid), "name": name} for uid, name in _CURATORS_CACHE.items()],
+        key=lambda x: x["name"].lower(),
+    )
 
     orphan_data = []
-    for p in orphan_short[:20]:  # Limit to 20 per page for performance
-        orphan_data.append(
-            {
-                "text": p.text,
-                "kind": "Phrase",
-                "matches": get_matches(p.text, all_proposals),
-            }
-        )
-
-    for p in orphan_long[:20]:
-        orphan_data.append(
-            {
-                "text": p.text,
-                "kind": "LongPhrase",
-                "matches": get_matches(p.text, all_long_proposals),
-            }
-        )
+    for p in orphan_short[:50]:
+        orphan_data.append({"text": p.text, "kind": "Phrase"})
+    for p in orphan_long[:50]:
+        orphan_data.append({"text": p.text, "kind": "LongPhrase"})
 
     return Template(
         template_name="orphans.html",
@@ -240,82 +226,84 @@ async def link_orphan_web(request: Request) -> Response[str]:
     user = request.session.get("user")
     if not user or str(user.get("id")) != str(config.owner_id):
         return Response("Unauthorized", status_code=401)
-
     data = await request.json()
-    phrase_text = data.get("phrase_text")
-    kind = data.get("kind")
-    proposal_id = data.get("proposal_id")
-
+    phrase_text, kind, proposal_id = (
+        data.get("phrase_text"),
+        data.get("kind"),
+        data.get("proposal_id"),
+    )
     if not all([phrase_text, kind, proposal_id]):
         return Response("Missing data", status_code=400)
-
-    # Update phrase
     phrase_class = Phrase if kind == "Phrase" else LongPhrase
-    # Phrases are indexed by text in my current repo implementation
     repo = phrase_class.get_repository()
-    # Need to find the actual phrase object
-    all_phrases = repo.get_phrases()
-    phrase = next((p for p in all_phrases if p.text == phrase_text), None)
-
+    phrase = next((p for p in repo.get_phrases() if p.text == phrase_text), None)
     if not phrase:
         return Response("Phrase not found", status_code=404)
-
     phrase.proposal_id = proposal_id
     repo.save(phrase)
-
     return Response("Linked", status_code=200)
 
 
 @post("/orphans/manual-link")
 async def manual_link_orphan_web(request: Request) -> Response[str]:
-    from datetime import datetime
-
     user = request.session.get("user")
     if not user or str(user.get("id")) != str(config.owner_id):
         return Response("Unauthorized", status_code=401)
-
     data = await request.json()
     phrase_text = data.get("phrase_text")
     kind = data.get("kind")
     creator_id = data.get("creator_id")
-    date_str = data.get("date")  # YYYY-MM-DD
+    username = data.get("username")
+    date_str = data.get("date")
     chat_id = data.get("chat_id", "0")
 
-    if not all([phrase_text, kind, creator_id, date_str]):
-        return Response("Faltan datos", status_code=400)
+    if not all([phrase_text, kind, date_str]) or not (creator_id or username):
+        return Response("Faltan datos (se requiere Autor o Username)", status_code=400)
+
+    # 1. Resolve Creator ID if not provided directly
+    final_creator_id = 0
+    if creator_id:
+        final_creator_id = int(creator_id)
+    elif username:
+        # Search in DB for this name/username
+        clean_name = username.removeprefix("@").lower()
+        users_db = User.load_all(ignore_gdpr=True)
+        inline_db = InlineUser.get_all()
+
+        # Exact match first, then partial
+        found = None
+        for u in users_db:
+            if not u.is_group and clean_name in u.name.lower():
+                found = u.chat_id
+                break
+        if not found:
+            for iu in inline_db:
+                if clean_name in iu.name.lower():
+                    found = iu.user_id
+                    break
+
+        if not found:
+            return Response(
+                f"Usuario '{username}' no encontrado en la base de datos",
+                status_code=404,
+            )
+        final_creator_id = found
 
     try:
         created_at = datetime.strptime(date_str, "%Y-%m-%d")
     except ValueError:
-        return Response(
-            "Formato de fecha inválido (esperado YYYY-MM-DD)", status_code=400
-        )
+        return Response("Formato de fecha inválido", status_code=400)
 
-    # 1. Create Ghost Proposal
-    prop_id = f"manual-{int(created_at.timestamp())}-{creator_id}"
-    proposal_class = Proposal if kind == "Phrase" else LongProposal
-
-    new_proposal = proposal_class(
-        id=prop_id,
-        from_chat_id=int(chat_id),
-        from_message_id=0,
-        text=phrase_text,
-        user_id=int(creator_id),
-        voting_ended=True,
-        voting_ended_at=created_at,
-        created_at=created_at,
-    )
-    new_proposal.save()
-
-    # 2. Update Phrase
+    # 2. Update Phrase directly without creating a ghost proposal
     phrase_class = Phrase if kind == "Phrase" else LongPhrase
     repo = phrase_class.get_repository()
-    all_phrases = repo.get_phrases()
-    phrase = next((p for p in all_phrases if p.text == phrase_text), None)
+    phrase = next((p for p in repo.get_phrases() if p.text == phrase_text), None)
 
     if phrase:
-        phrase.proposal_id = prop_id
-        phrase.user_id = int(creator_id)
+        phrase.proposal_id = (
+            ""  # Ensure it's explicitly empty for manually linked phrases
+        )
+        phrase.user_id = final_creator_id
         phrase.chat_id = int(chat_id)
         phrase.created_at = created_at
         repo.save(phrase)
@@ -329,21 +317,20 @@ async def _handle_proposal_web_action(
     user = request.session.get("user")
     if not user or str(user.get("id")) != str(config.owner_id):
         return Response("Unauthorized", status_code=401)
-
     proposal_class = get_proposal_class_by_kind(kind)
     proposal = proposal_class.load(proposal_id)
     if not proposal:
         return Response("Proposal not found", status_code=404)
-
     application = get_tg_application()
     await application.initialize()
-
     if action == "approve":
         await approve_proposal(proposal, application.bot)
     else:
         await dismiss_proposal(proposal, application.bot)
 
-    return Response(action.capitalize(), status_code=200)
+    return Response(
+        action.capitalize(), status_code=200, headers={"HX-Trigger": "refreshProposals"}
+    )
 
 
 @post("/proposals/{kind:str}/{proposal_id:str}/approve")
@@ -360,11 +347,10 @@ async def reject_proposal_web(
     return await _handle_proposal_web_action(request, kind, proposal_id, "reject")
 
 
-@get("/auth/telegram", sync_to_thread=False)
+@get("/auth/telegram", sync_to_thread=True)
 def auth_telegram(request: Request) -> Redirect:
     if not verify_telegram_auth(dict(request.query_params), config.tg_token):
         return Redirect(path="/")
-
     request.set_session(
         {
             "user": {
@@ -378,13 +364,13 @@ def auth_telegram(request: Request) -> Redirect:
     return Redirect(path="/")
 
 
-@get("/logout", sync_to_thread=False)
+@get("/logout", sync_to_thread=True)
 def logout(request: Request) -> Redirect:
     request.clear_session()
     return Redirect(path="/")
 
 
-@get("/proposals/search", sync_to_thread=False)
+@get("/proposals/search", sync_to_thread=True)
 def proposals_search(request: HTMXRequest) -> HTMXTemplate:
     return HTMXTemplate(
         template_name="partials/proposals_list.html",
@@ -392,14 +378,12 @@ def proposals_search(request: HTMXRequest) -> HTMXTemplate:
     )
 
 
-@get("/search", sync_to_thread=False)
+@get("/search", sync_to_thread=True)
 def search(request: HTMXRequest) -> HTMXTemplate:
     filters = {k: v for k, v in request.query_params.items() if k not in ["search"]}
     search_query = request.query_params.get("search", "")
-
     short_phrases = Phrase.get_phrases(search=search_query, **filters)
     long_phrases = LongPhrase.get_phrases(search=search_query, **filters)
-
     return HTMXTemplate(
         template_name="partials/phrases_list.html",
         context={
@@ -411,7 +395,7 @@ def search(request: HTMXRequest) -> HTMXTemplate:
     )
 
 
-@get("/ping", sync_to_thread=False)
+@get("/ping", sync_to_thread=True)
 def ping() -> str:
     return "I am alive"
 
@@ -420,7 +404,6 @@ def ping() -> str:
 async def telegram_handler(request: Request) -> str:
     application = get_tg_application()
     await application.initialize()
-
     body = await request.json()
     update = Update.de_json(body, application.bot)
     await application.process_update(update)
@@ -431,7 +414,6 @@ async def telegram_handler(request: Request) -> str:
 async def telegram_ping_handler() -> str:
     application = get_tg_application()
     await application.initialize()
-
     await handle_telegram_ping(application.bot)
     return "OK"
 
@@ -439,7 +421,6 @@ async def telegram_ping_handler() -> str:
 def auto_login_local(request: Request) -> None:
     if config.is_gae or request.session.get("user"):
         return
-
     request.set_session(
         {
             "user": {
@@ -455,15 +436,12 @@ def auto_login_local(request: Request) -> None:
 async def slack_handler(request: Request) -> Response[str]:  # pragma: no cover
     data = await request.form()
     data_dict = dict(data)
-
     data_payload = (
         json.loads(str(data_dict["payload"])) if "payload" in data_dict else data_dict
     )
-
     response = handle_slack(data_payload)
     if not response:
         return Response("", status_code=200)
-
     requests.post(
         data_payload["response_url"], json=response["indirect"]
     )  # pragma: no cover
@@ -482,13 +460,11 @@ def slack_auth_handler() -> Redirect:
 @get("/slack/auth/redirect")
 async def slack_auth_redirect_handler(request: Request) -> str:
     code = request.query_params.get("code")
-
     request_body = {
         "code": code,
         "client_id": config.slack_client_id,
         "client_secret": config.slack_client_secret,
     }
-
     requests.post("https://slack.com/api/oauth.v2.access", request_body)
     return ":)"
 
@@ -506,9 +482,7 @@ def twitter_ping_handler() -> str:  # pragma: no cover
         access_token=os.environ["TWITTER_ACCESS_TOKEN"],
         access_token_secret=os.environ["TWITTER_ACCESS_TOKEN_SECRET"],
     )
-
     client.create_tweet(text=LongPhrase.get_random_phrase().text)
-
     return ""
 
 
@@ -535,20 +509,16 @@ app = Litestar(
         twitter_ping_handler,
         create_static_files_router(directories=["src/static"], path="/static"),
     ],
-    middleware=[
-        CookieBackendConfig(secret=config.session_secret.encode()).middleware,
-    ],
+    middleware=[CookieBackendConfig(secret=config.session_secret.encode()).middleware],
     template_config=TemplateConfig(
-        directory="src/templates",
-        engine=JinjaTemplateEngine,  # type: ignore[invalid-argument-type]
-    ),
+        directory="src/templates", engine=JinjaTemplateEngine
+    ),  # type: ignore[invalid-argument-type]
     request_class=HTMXRequest,
     before_request=auto_login_local,
 )
-
 
 if __name__ == "__main__":  # pragma: no cover
     import uvicorn
 
     print(config.tg_token)
-    uvicorn.run(app, host="0.0.0.0", port=config.port)
+    uvicorn.run("main:app", host="0.0.0.0", port=config.port, reload=not config.is_gae)

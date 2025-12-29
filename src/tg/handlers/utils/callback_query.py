@@ -1,3 +1,4 @@
+import logging
 import os
 from dataclasses import dataclass
 from typing import Any
@@ -17,6 +18,8 @@ from models.proposal import Proposal, get_proposal_class_by_kind
 from tg.constants import LIKE
 from tg.decorators import log_update
 from tg.markup.keyboards import build_vote_keyboard
+
+logger = logging.getLogger(__name__)
 
 
 class ConfigError(Exception):
@@ -73,11 +76,17 @@ async def approve_proposal(
             f"{get_vote_summary(proposal)}",
             disable_web_page_preview=True,
         )
-    await bot.send_message(
-        proposal.from_chat_id,
-        f"Tu propuesta '{proposal.text}' ha sido aprobada, felicidades, {Phrase.get_random_phrase()}",
-        reply_to_message_id=proposal.from_message_id,
-    )
+
+    if proposal.from_chat_id > 0:
+        try:
+            await bot.send_message(
+                proposal.from_chat_id,
+                f"Tu propuesta '{proposal.text}' ha sido aprobada, felicidades, {Phrase.get_random_phrase()}",
+                reply_to_message_id=proposal.from_message_id or None,
+            )
+        except Exception as e:
+            logger.error(f"Error enviando notificación de aprobación: {e}")
+
     await proposal.phrase_class.upload_from_proposal(proposal, bot)
 
 
@@ -95,11 +104,16 @@ async def dismiss_proposal(
             disable_web_page_preview=True,
         )
 
-    await bot.send_message(
-        proposal.from_chat_id,
-        f"Tu propuesta '{proposal.text}' ha sido rechazada, lo siento {Phrase.get_random_phrase()}",
-        reply_to_message_id=proposal.from_message_id,
-    )
+    if proposal.from_chat_id > 0:
+        try:
+            await bot.send_message(
+                proposal.from_chat_id,
+                f"Tu propuesta '{proposal.text}' ha sido rechazada, lo siento {Phrase.get_random_phrase()}",
+                reply_to_message_id=proposal.from_message_id or None,
+            )
+        except Exception as e:
+            logger.error(f"Error enviando notificación de rechazo: {e}")
+
     proposal.delete()
 
 
@@ -125,10 +139,9 @@ async def _update_proposal_text(
 
     # Use cast or type check to satisfy ty check about MaybeInaccessibleMessage
     message: Any = callback_query.message
-    if not hasattr(message, "text_markdown"):
+    text = getattr(message, "text_markdown", "")
+    if not isinstance(text, str):
         return
-
-    text: str = message.text_markdown
     reply_markup = InlineKeyboardMarkup(build_vote_keyboard(proposal.id, proposal.kind))
     votes_text = "\n\n*Han votado ya:*\n"
     before_votes_text = text.split(votes_text)[0]

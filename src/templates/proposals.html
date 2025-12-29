@@ -44,7 +44,11 @@
     </div>
 </div>
 
-<div id="proposals-container" class="animate__animated animate__fadeInUp">
+<div id="proposals-container"
+     class="animate__animated animate__fadeInUp"
+     hx-get="/proposals/search"
+     hx-trigger="refreshProposals from:body"
+     hx-include="[name='search'], [name='user_id'], [name='id']">
     {% include "partials/proposals_list.html" %}
 </div>
 {% endblock %}

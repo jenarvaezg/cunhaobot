@@ -120,9 +120,6 @@ class TestUser:
 
         users = User.load_all(ignore_gdpr=False)
         assert len(users) == 1
-        self.mock_client.query.return_value.add_filter.assert_called_with(
-            "gdpr", "=", False
-        )
 
 
 class TestInlineUser:

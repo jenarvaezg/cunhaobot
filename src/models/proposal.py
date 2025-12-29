@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import ClassVar, Generic, Protocol, TypeVar, cast
+from typing import ClassVar, Generic, Optional, Protocol, TypeVar, cast
 
 from google.cloud import datastore
 from telegram import Message, Update
@@ -22,7 +22,7 @@ class Proposal:
     disliked_by: list[int] = field(default_factory=list)
     user_id: int = 0
     voting_ended: bool = False
-    voting_ended_at: datetime | None = None
+    voting_ended_at: Optional[datetime] = None
     created_at: datetime = field(default_factory=datetime.now)
 
     kind: ClassVar[str] = "Proposal"
@@ -135,6 +135,7 @@ class ProposalRepository(Generic[T], Protocol):
 class DatastoreProposalRepository(Generic[T]):
     def __init__(self, model_class: type[T]):
         self.model_class = model_class
+        self._cache: list[T] = []
 
     @property
     def client(self) -> datastore.Client:
@@ -142,7 +143,7 @@ class DatastoreProposalRepository(Generic[T]):
 
     def _entity_to_domain(self, entity: datastore.Entity) -> T:
         return self.model_class(
-            id=entity.key.name,
+            id=cast(str, entity.key.name),
             from_chat_id=entity["from_chat_id"],
             from_message_id=entity["from_message_id"],
             text=entity["text"],
@@ -176,11 +177,14 @@ class DatastoreProposalRepository(Generic[T]):
         key = client.key(self.model_class.kind, proposal.id)
         entity = self._domain_to_entity(proposal, key)
         client.put(entity)
+        # Clear cache on save to ensure next load gets fresh data
+        self._cache = []
 
     def delete(self, proposal_id: str) -> None:
         client = self.client
         key = client.key(self.model_class.kind, proposal_id)
         client.delete(key)
+        self._cache = []
 
     def load(self, proposal_id: str) -> "T | None":
         client = self.client
@@ -191,9 +195,13 @@ class DatastoreProposalRepository(Generic[T]):
         return self._entity_to_domain(entity)
 
     def load_all(self) -> list[T]:
+        if self._cache:
+            return self._cache
+
         client = self.client
         query = client.query(kind=self.model_class.kind)
-        return [self._entity_to_domain(entity) for entity in query.fetch()]
+        self._cache = [self._entity_to_domain(entity) for entity in query.fetch()]
+        return self._cache
 
     def get_proposals(
         self, search: str = "", limit: int = 0, offset: int = 0, **filters

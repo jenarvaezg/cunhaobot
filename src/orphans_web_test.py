@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, MagicMock, PropertyMock
+from unittest.mock import patch, MagicMock, PropertyMock, AsyncMock
 from litestar.status_codes import HTTP_200_OK, HTTP_404_NOT_FOUND
 from models.phrase import Phrase
 
@@ -26,6 +26,11 @@ def test_orphans_page_unauthorized(client):
 
 def test_orphans_page_authorized(client, auth_user, owner_id):
     p1 = Phrase(text="Orphan", proposal_id="")
+
+    mock_app = MagicMock()
+    mock_app.initialize = AsyncMock()
+    mock_app.bot.get_chat_administrators = AsyncMock(return_value=[])
+
     # Forzamos que config.owner_id coincida con auth_user['id']
     with (
         patch("main.Phrase.get_phrases", return_value=[p1]),
@@ -35,6 +40,7 @@ def test_orphans_page_authorized(client, auth_user, owner_id):
         patch("main.User.load_all", return_value=[]),
         patch("main.InlineUser.get_all", return_value=[]),
         patch("main.config.owner_id", owner_id),
+        patch("main.get_tg_application", return_value=mock_app),
         patch(
             "litestar.connection.base.ASGIConnection.session", new_callable=PropertyMock
         ) as mock_session,
@@ -85,3 +91,37 @@ def test_link_orphan_web_phrase_not_found(client, auth_user, owner_id):
 
         rv = client.post("/orphans/link", json=payload)
         assert rv.status_code == HTTP_404_NOT_FOUND
+
+
+def test_manual_link_orphan_web_success(client, auth_user, owner_id):
+    p1 = Phrase(text="ManualOrphan", proposal_id="")
+    mock_repo = MagicMock()
+
+    with (
+        patch("main.Phrase.get_repository", return_value=mock_repo),
+        patch("main.config.owner_id", owner_id),
+        patch(
+            "litestar.connection.base.ASGIConnection.session",
+            new_callable=PropertyMock,
+        ) as mock_session,
+    ):
+        mock_repo.get_phrases.return_value = [p1]
+        mock_session.return_value = {"user": auth_user}
+
+        payload = {
+            "phrase_text": "ManualOrphan",
+            "kind": "Phrase",
+            "creator_id": 999,
+            "date": "2025-01-01",
+            "chat_id": 123,
+        }
+
+        rv = client.post("/orphans/manual-link", json=payload)
+        assert rv.status_code == HTTP_200_OK
+        assert rv.text == "Linked"
+        # Check phrase update
+        assert p1.proposal_id == ""
+        assert p1.user_id == 999
+        assert p1.chat_id == 123
+        assert p1.created_at.year == 2025
+        mock_repo.save.assert_called_once_with(p1)
