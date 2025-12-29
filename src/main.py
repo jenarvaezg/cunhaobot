@@ -515,6 +515,7 @@ app = Litestar(
     ),  # type: ignore[invalid-argument-type]
     request_class=HTMXRequest,
     before_request=auto_login_local,
+    debug=not config.is_gae,
 )
 
 if __name__ == "__main__":  # pragma: no cover
