@@ -130,6 +130,8 @@ class TestCallbackQuery:
         p.text = "test"
         p.from_chat_id = 123
         p.from_message_id = 456
+        p.liked_by = []
+        p.disliked_by = []
         p.phrase_class.upload_from_proposal = AsyncMock()
 
         cb = MagicMock()
@@ -137,9 +139,30 @@ class TestCallbackQuery:
         bot = MagicMock()
         bot.send_message = AsyncMock()
 
-        await _approve_proposal(p, cb, bot)
+        with patch("tg.handlers.utils.callback_query.admins", [MagicMock()]):
+            await _approve_proposal(p, cb, bot)
+
         cb.edit_message_text.assert_called_once()
         bot.send_message.assert_called_once()
+        p.phrase_class.upload_from_proposal.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_approve_proposal_from_web(self):
+        p = MagicMock(spec=Proposal)
+        p.text = "test"
+        p.from_chat_id = 123
+        p.from_message_id = 456
+        p.liked_by = []
+        p.disliked_by = []
+        p.phrase_class.upload_from_proposal = AsyncMock()
+
+        bot = MagicMock()
+        bot.send_message = AsyncMock()
+
+        with patch("tg.handlers.utils.callback_query.admins", [MagicMock()]):
+            await _approve_proposal(p, None, bot)
+
+        assert bot.send_message.call_count == 2
         p.phrase_class.upload_from_proposal.assert_called_once()
 
     @pytest.mark.asyncio
@@ -148,13 +171,17 @@ class TestCallbackQuery:
         p.text = "test"
         p.from_chat_id = 123
         p.from_message_id = 456
+        p.liked_by = []
+        p.disliked_by = []
 
         cb = MagicMock()
         cb.edit_message_text = AsyncMock()
         bot = MagicMock()
         bot.send_message = AsyncMock()
 
-        await _dismiss_proposal(p, cb, bot)
+        with patch("tg.handlers.utils.callback_query.admins", [MagicMock()]):
+            await _dismiss_proposal(p, cb, bot)
+
         cb.edit_message_text.assert_called_once()
         bot.send_message.assert_called_once()
         p.delete.assert_called_once()

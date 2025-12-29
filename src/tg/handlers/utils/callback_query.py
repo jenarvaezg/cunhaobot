@@ -63,19 +63,38 @@ async def _add_vote(
     await callback_query.answer(f"Tu voto: {vote} ha sido añadido.")
 
 
+async def _ensure_admins(bot: Bot) -> None:
+    global admins
+    if not admins:
+        try:
+            admins = await bot.get_chat_administrators(config.curators_chat_id)
+        except Exception as e:
+            logger.warning(f"Could not fetch admins: {e}")
+
+
 async def approve_proposal(
     proposal: Proposal, bot: Bot, callback_query: CallbackQuery | None = None
 ) -> None:
+    await _ensure_admins(bot)
+
     proposal.voting_ended = True
     proposal.voting_ended_at = datetime.now()
     proposal.save()
 
+    msg_text = (
+        f"La propuesta '{proposal.text}' queda formalmente aprobada y añadida a la lista.\n\n"
+        f"{get_vote_summary(proposal)}"
+    )
+
     if callback_query:
-        await callback_query.edit_message_text(
-            f"La propuesta '{proposal.text}' queda formalmente aprobada y añadida a la lista.\n\n"
-            f"{get_vote_summary(proposal)}",
-            disable_web_page_preview=True,
-        )
+        await callback_query.edit_message_text(msg_text, disable_web_page_preview=True)
+    else:
+        try:
+            await bot.send_message(
+                config.curators_chat_id, f"✅ APROBADA DESDE WEB\n\n{msg_text}"
+            )
+        except Exception as e:
+            logger.error(f"Error sending web approval notification: {e}")
 
     if proposal.from_chat_id > 0:
         try:
@@ -93,16 +112,26 @@ async def approve_proposal(
 async def dismiss_proposal(
     proposal: Proposal, bot: Bot, callback_query: CallbackQuery | None = None
 ) -> None:
+    await _ensure_admins(bot)
+
     proposal.voting_ended = True
     proposal.voting_ended_at = datetime.now()
     proposal.save()
 
+    msg_text = (
+        f"La propuesta '{proposal.text}' queda formalmente rechazada.\n\n"
+        f"{get_vote_summary(proposal)}"
+    )
+
     if callback_query:
-        await callback_query.edit_message_text(
-            f"La propuesta '{proposal.text}' queda formalmente rechazada.\n\n"
-            f"{get_vote_summary(proposal)}",
-            disable_web_page_preview=True,
-        )
+        await callback_query.edit_message_text(msg_text, disable_web_page_preview=True)
+    else:
+        try:
+            await bot.send_message(
+                config.curators_chat_id, f"❌ RECHAZADA DESDE WEB\n\n{msg_text}"
+            )
+        except Exception as e:
+            logger.error(f"Error sending web dismissal notification: {e}")
 
     if proposal.from_chat_id > 0:
         try:
