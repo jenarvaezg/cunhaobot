@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import TypedDict, cast, Any
@@ -486,11 +487,77 @@ def twitter_ping_handler() -> str:  # pragma: no cover
     return ""
 
 
+@get("/metrics", sync_to_thread=True)
+def metrics(request: Request) -> Template:
+    # 1. Load Data
+    phrases = Phrase.get_phrases() + LongPhrase.get_phrases()
+    pending_proposals = [p for p in Proposal.load_all() if not p.voting_ended] + [
+        p for p in LongProposal.load_all() if not p.voting_ended
+    ]
+
+    # 2. User Name Resolution
+    user_map: dict[int, str] = {}
+
+    # Load Inline Users first
+    for u in InlineUser.get_all():
+        user_map[u.user_id] = u.name
+
+    # Load Standard Users (override if exists, usually more accurate/up-to-date from chat)
+    for u in User.load_all(ignore_gdpr=True):
+        if not u.is_group:
+            user_map[u.chat_id] = u.name
+
+    # 3. Aggregation
+    stats: dict[int, dict[str, Any]] = defaultdict(
+        lambda: {"approved": 0, "pending": 0, "score": 0, "name": "Anónimo"}
+    )
+
+    for p in phrases:
+        if p.user_id == 0:
+            continue
+        s = stats[p.user_id]
+        s["approved"] += 1
+        # Simple score: 10 points per approved phrase + usages
+        s["score"] += 10 + p.usages + p.audio_usages
+        if p.user_id in user_map:
+            s["name"] = user_map[p.user_id]
+
+    for p in pending_proposals:
+        if p.user_id == 0:
+            continue
+        s = stats[p.user_id]
+        s["pending"] += 1
+        if p.user_id in user_map:
+            s["name"] = user_map[p.user_id]
+
+    # 4. Sorting & Formatting
+    # Filter out users with 0 activity (shouldn't happen due to loop, but safe check)
+    # Sort by Score DESC, then Approved DESC
+    sorted_stats = sorted(
+        stats.values(), key=lambda x: (x["score"], x["approved"]), reverse=True
+    )
+
+    top_contributor = sorted_stats[0]["name"] if sorted_stats else "Nadie"
+
+    return Template(
+        template_name="metrics.html",
+        context={
+            "user": request.session.get("user"),
+            "owner_id": config.owner_id,
+            "total_phrases": len(phrases),
+            "total_pending": len(pending_proposals),
+            "top_contributor": top_contributor,
+            "user_stats": sorted_stats,
+        },
+    )
+
+
 app = Litestar(
     route_handlers=[
         index,
         proposals,
         orphans,
+        metrics,
         link_orphan_web,
         manual_link_orphan_web,
         approve_proposal_web,

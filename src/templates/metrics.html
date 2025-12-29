@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-5 animate__animated animate__fadeIn">
+    <div class="col-lg-8">
+        <h1 class="oswald hero-title mb-3">MÉTRICAS DE CUÑADISMO</h1>
+        <p class="lead text-secondary fw-light mb-5">
+            Ranking oficial de contribuidores al acervo cultural cuñadíl. <br class="d-none d-md-block">
+            Datos agregados de todas las propuestas y frases aprobadas.
+        </p>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-4 mb-5 animate__animated animate__fadeInUp">
+    <div class="col-md-4">
+        <div class="glass-card p-4 text-center h-100">
+            <div class="display-4 fw-bold text-warning mb-2">{{ total_phrases }}</div>
+            <div class="text-uppercase small text-secondary fw-bold letter-spacing-2">Frases Aprobadas</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="glass-card p-4 text-center h-100">
+            <div class="display-4 fw-bold text-info mb-2">{{ total_pending }}</div>
+            <div class="text-uppercase small text-secondary fw-bold letter-spacing-2">Propuestas Pendientes</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="glass-card p-4 text-center h-100">
+            <div class="display-4 fw-bold text-success mb-2">{{ top_contributor }}</div>
+            <div class="text-uppercase small text-secondary fw-bold letter-spacing-2">Máquina Absoluta</div>
+        </div>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="glass-card p-4 animate__animated animate__fadeInUp" style="animation-delay: 0.1s;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="oswald mb-0">Ranking de Contribuidores</h4>
+        <!-- Search could go here -->
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-dark table-hover align-middle mb-0" style="--bs-table-bg: transparent;">
+            <thead>
+                <tr class="text-secondary text-uppercase x-small border-bottom border-secondary">
+                    <th scope="col" class="ps-4">#</th>
+                    <th scope="col">Usuario</th>
+                    <th scope="col" class="text-center">Aprobadas</th>
+                    <th scope="col" class="text-center">En Votación</th>
+                    <th scope="col" class="text-center">Puntuación</th>
+                    <th scope="col" class="text-end pe-4">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stat in user_stats %}
+                <tr class="border-bottom border-secondary border-opacity-25">
+                    <td class="ps-4 text-secondary fw-bold">{{ loop.index }}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center fw-bold text-dark" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                {{ stat.name[:2].upper() }}
+                            </div>
+                            <span class="fw-bold text-white">{{ stat.name }}</span>
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-warning text-dark rounded-pill px-3">{{ stat.approved }}</span>
+                    </td>
+                    <td class="text-center">
+                        {% if stat.pending > 0 %}
+                        <span class="badge bg-info text-dark rounded-pill px-3">{{ stat.pending }}</span>
+                        {% else %}
+                        <span class="text-secondary opacity-50">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center fw-bold text-gold">
+                        {{ stat.score }}
+                    </td>
+                    <td class="text-end pe-4">
+                        {% if loop.index == 1 %}
+                        <i class="bi bi-trophy-fill text-warning" title="Top 1"></i>
+                        {% elif loop.index <= 3 %}
+                        <i class="bi bi-award-fill text-light opacity-75" title="Top 3"></i>
+                        {% else %}
+                        <i class="bi bi-person-fill text-secondary opacity-50"></i>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
