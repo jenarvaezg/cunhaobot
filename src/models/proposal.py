@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import ClassVar, Generic, Optional, Protocol, TypeVar, cast
+from typing import ClassVar, Generic, Protocol, TypeVar, cast
 
 from google.cloud import datastore
 from telegram import Message, Update
@@ -22,7 +22,7 @@ class Proposal:
     disliked_by: list[int] = field(default_factory=list)
     user_id: int = 0
     voting_ended: bool = False
-    voting_ended_at: Optional[datetime] = None
+    voting_ended_at: datetime | None = None
     created_at: datetime = field(default_factory=datetime.now)
 
     kind: ClassVar[str] = "Proposal"
@@ -94,7 +94,7 @@ class Proposal:
         self.get_repository().delete(self.id)
 
     @classmethod
-    def load(cls: type[T], id: str) -> Optional[T]:
+    def load(cls: type[T], id: str) -> "T | None":
         return cls.get_repository().load(id)
 
     @classmethod
@@ -122,7 +122,7 @@ class LongProposal(Proposal):
 class ProposalRepository(Generic[T], Protocol):
     def save(self, proposal: T) -> None: ...
     def delete(self, proposal_id: str) -> None: ...
-    def load(self, proposal_id: str) -> Optional[T]: ...
+    def load(self, proposal_id: str) -> "T | None": ...
     def load_all(self) -> list[T]: ...
     def get_proposals(
         self, search: str = "", limit: int = 0, offset: int = 0, **filters
@@ -182,7 +182,7 @@ class DatastoreProposalRepository(Generic[T]):
         key = client.key(self.model_class.kind, proposal_id)
         client.delete(key)
 
-    def load(self, proposal_id: str) -> Optional[T]:
+    def load(self, proposal_id: str) -> "T | None":
         client = self.client
         key = client.key(self.model_class.kind, proposal_id)
         entity = client.get(key)

@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, Protocol, ClassVar
+from typing import Protocol, ClassVar
 
 from google.cloud import datastore
 from telegram import Message, Update
@@ -22,7 +22,7 @@ class InlineUser:
         return _inline_user_repository
 
     @classmethod
-    def update_or_create_from_update(cls, update: Update) -> Optional["InlineUser"]:
+    def update_or_create_from_update(cls, update: Update) -> "InlineUser | None":
         if not (update_user := update.effective_user):
             return None
 
@@ -76,7 +76,7 @@ class User:
         return _user_repository
 
     @classmethod
-    def update_or_create_from_update(cls, update: Update) -> Optional["User"]:
+    def update_or_create_from_update(cls, update: Update) -> "User | None":
         message = update.effective_message
         if not message:
             return None
@@ -100,7 +100,7 @@ class User:
         self.get_repository().save(self)
 
     @classmethod
-    def load(cls, chat_id: int) -> Optional["User"]:
+    def load(cls, chat_id: int) -> "User | None":
         return cls.get_repository().load(chat_id)
 
     @classmethod
@@ -119,13 +119,13 @@ class User:
 
 
 class InlineUserRepository(Protocol):
-    def load(self, user_id: int) -> Optional[InlineUser]: ...
+    def load(self, user_id: int) -> "InlineUser | None": ...
     def save(self, user: InlineUser) -> None: ...
     def get_all(self) -> list[InlineUser]: ...
 
 
 class UserRepository(Protocol):
-    def load(self, chat_id: int) -> Optional[User]: ...
+    def load(self, chat_id: int) -> "User | None": ...
     def save(self, user: User) -> None: ...
     def delete(self, chat_id: int) -> None: ...
     def load_all(self, ignore_gdpr: bool = False) -> list[User]: ...
@@ -150,7 +150,7 @@ class DatastoreInlineUserRepository:
             created_at=entity.get("created_at", datetime.now()),
         )
 
-    def load(self, user_id: int) -> Optional[InlineUser]:
+    def load(self, user_id: int) -> "InlineUser | None":
         key = self.client.key(self.model_class.kind, user_id)
         entity = self.client.get(key)
         if entity:
@@ -192,7 +192,7 @@ class DatastoreUserRepository:
             created_at=entity.get("created_at", datetime.now()),
         )
 
-    def load(self, chat_id: int) -> Optional[User]:
+    def load(self, chat_id: int) -> "User | None":
         key = self.client.key(self.model_class.kind, chat_id)
         entity = self.client.get(key)
         if entity:

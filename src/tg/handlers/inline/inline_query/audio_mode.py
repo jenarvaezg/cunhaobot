@@ -1,63 +1,44 @@
-from typing import Optional
+from telegram import InlineQueryResultVoice
 
-from telegram import InlineQueryResultArticle, InlineQueryResultVoice
-
+from models.phrase import LongPhrase, Phrase
 from tg.text_router import LONG_MODE, SHORT_MODE, get_query_mode
-from utils import normalize_str
 from utils.gcp import get_audio_url
 
-from .long_mode import get_long_mode_results
-from .short_mode import get_short_mode_results
+
+phrase_t = Phrase | LongPhrase
 
 
-def short_result_to_audio_result(
-    result: InlineQueryResultArticle,
-) -> Optional[InlineQueryResultVoice]:
-    title = result.title
-    clean_title = title.replace(",", "").replace(" ", "")
-    audio_url = get_audio_url(clean_title)
+def _phrase_to_inline_audio(
+    phrase: phrase_t, result_type: str
+) -> InlineQueryResultVoice | None:
+    file_name = f"{result_type}-{phrase.text}"
+    audio_url = get_audio_url(file_name)
     if not audio_url:
         return None
 
-    result_id = f"audio-{result.id}"
+    result_id = f"audio-{result_type}-{phrase.text}"
     return InlineQueryResultVoice(
-        result_id[:63],
-        audio_url,
-        title,
+        id=result_id[:63],
+        voice_url=audio_url,
+        title=phrase.text,
     )
 
 
-def long_result_to_audio_result(
-    result: InlineQueryResultArticle,
-) -> Optional[InlineQueryResultVoice]:
-    title = result.title
-    audio_url = get_audio_url(title)
-    if not audio_url:
-        return None
-
-    result_id = normalize_str(f"audio-{result.id}")
-    return InlineQueryResultVoice(
-        result_id[:63],
-        audio_url,
-        title,
-    )
-
-
-def get_audio_mode_results(input: str) -> list:
+def get_audio_mode_results(input: str) -> list[InlineQueryResultVoice]:
     mode, rest = get_query_mode(input)
 
     results = []
     if mode == SHORT_MODE:
         results = [
-            short_result_to_audio_result(result)
-            for result in get_short_mode_results(rest)[:5]
-            if result.title
+            res
+            for p in Phrase.get_phrases()
+            if (res := _phrase_to_inline_audio(p, "short"))
         ]
     elif mode == LONG_MODE:
         results = [
-            long_result_to_audio_result(result)
-            for result in get_long_mode_results(rest)
+            res
+            for p in LongPhrase.get_phrases()
+            if (res := _phrase_to_inline_audio(p, "long"))
         ]
 
-    # Filter out None results where audio was not found
-    return [r for r in results if r is not None]
+    return results

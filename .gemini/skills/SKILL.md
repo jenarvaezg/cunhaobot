@@ -17,6 +17,7 @@ allowed-tools: Read, Bash, Grep, Glob
    - Python 3.14 has lazy annotations by default
    - Use Protocol for structural typing (duck typing)
    - Avoid Any—use concrete types or generics
+   - **NEVER** use `typing.Optional`. Use `Type | None` instead (e.g., `str | None`).
 
 3. **Protocol Over ABC**
    - Protocol for implicit interface satisfaction

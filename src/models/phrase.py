@@ -28,6 +28,7 @@ class Phrase:
     user_id: int = 0
     chat_id: int = 0
     created_at: datetime | None = None
+    proposal_id: str = ""
 
     # Constants
     kind: ClassVar[str] = "Phrase"
@@ -85,6 +86,7 @@ class Phrase:
             user_id=proposal.user_id,
             chat_id=proposal.from_chat_id,
             created_at=datetime.now(),
+            proposal_id=proposal.id,
         )
         await phrase.generate_sticker(bot)
         phrase.save()
@@ -190,6 +192,7 @@ class DatastorePhraseRepository(Generic[T]):
             user_id=entity.get("user_id", 0),
             chat_id=entity.get("chat_id", 0),
             created_at=entity.get("created_at"),
+            proposal_id=entity.get("proposal_id", ""),
         )
 
     def _domain_to_entity(self, phrase: T, key: datastore.Key) -> datastore.Entity:
@@ -207,6 +210,7 @@ class DatastorePhraseRepository(Generic[T]):
                 "user_id": phrase.user_id,
                 "chat_id": phrase.chat_id,
                 "created_at": phrase.created_at,
+                "proposal_id": phrase.proposal_id,
             }
         )
         return entity

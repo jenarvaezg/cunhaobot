@@ -2,7 +2,7 @@ import json
 import logging
 import os
 from dataclasses import dataclass
-from typing import TypedDict, cast, Optional
+from typing import TypedDict, cast
 
 import requests
 import tweepy
@@ -95,7 +95,7 @@ def get_proposals_context(request: Request) -> ProposalsContext:
     pending_long = [p for p in all_long if normalize_str(p.text) not in long_texts]
 
     # Explicitly cast to dict[str, str] | None to satisfy type checker
-    user_session = cast(Optional[dict[str, str]], request.session.get("user"))
+    user_session = cast(dict[str, str] | None, request.session.get("user"))
 
     return {
         "pending_short": pending_short,

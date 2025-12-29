@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
-from datetime import datetime, date
-from typing import TYPE_CHECKING, ClassVar, Protocol, Optional
+from datetime import date, datetime
+from typing import TYPE_CHECKING, ClassVar, Protocol
 
 from google.cloud import datastore
 
@@ -81,7 +81,7 @@ class Report:
         self.get_repository().save(self)
 
     @classmethod
-    def get_at(cls, dt: date) -> Optional["Report"]:
+    def get_at(cls, dt: date) -> "Report | None":
         return cls.get_repository().get_at(dt)
 
 
@@ -90,7 +90,7 @@ class Report:
 
 class ReportRepository(Protocol):
     def save(self, report: Report) -> None: ...
-    def get_at(self, dt: date) -> Optional[Report]: ...
+    def get_at(self, dt: date) -> "Report | None": ...
 
 
 # --- Datastore Implementation ---
@@ -139,7 +139,7 @@ class DatastoreReportRepository:
         )
         self.client.put(entity)
 
-    def get_at(self, dt: date) -> Optional[Report]:
+    def get_at(self, dt: date) -> "Report | None":
         # Search by created_at range (start and end of day)
         start_dt = datetime.combine(dt, datetime.min.time())
         end_dt = datetime.combine(dt, datetime.max.time())
