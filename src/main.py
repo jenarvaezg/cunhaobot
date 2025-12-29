@@ -330,7 +330,8 @@ async def _handle_proposal_web_action(
         await dismiss_proposal(proposal, application.bot)
 
     return Response(
-        action.capitalize(), status_code=200, headers={"HX-Trigger": "refreshProposals"}
+        action.capitalize(),
+        status_code=200,
     )
 
 
@@ -513,8 +514,6 @@ def metrics(request: Request) -> Template:
     )
 
     for p in phrases:
-        if p.user_id == 0:
-            continue
         s = stats[p.user_id]
         s["approved"] += 1
         # Simple score: 10 points per approved phrase + usages
