@@ -1,15 +1,6 @@
-import pytest
 from litestar.status_codes import HTTP_200_OK
-from litestar.testing import TestClient
 from unittest.mock import patch
-from main import app
 from models.phrase import Phrase, LongPhrase
-
-
-@pytest.fixture
-def client():
-    with TestClient(app=app) as client:
-        yield client
 
 
 def test_index_page(client):

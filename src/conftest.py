@@ -33,3 +33,12 @@ import pytest  # noqa: E402
 @pytest.fixture
 def mock_datastore_client():
     return mock_datastore.Client.return_value
+
+
+@pytest.fixture
+def client():
+    from litestar.testing import TestClient
+    from main import app
+
+    with TestClient(app=app) as client:
+        yield client

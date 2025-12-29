@@ -166,7 +166,7 @@ pytest --cov=src --cov-fail-under=100
 
 ## Guidelines
 
-- **Mandatory Workflow**: ALWAYS run the full test suite (`uv run pytest src/`) and ensure all tests pass before making a commit.
+- **Mandatory Workflow**: ALWAYS run the full test suite (`uv run pytest`) and ensure all tests pass 100% before making a commit. If any test fails, the commit is blocked.
 - **100% Coverage**: ALWAYS ensure the test coverage remains at 100%. Run coverage with `uv run pytest --cov=src src/`.
 - One assertion per test (when practical)
 - Descriptive test names (prefix with test_)

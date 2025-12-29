@@ -404,6 +404,8 @@ app = Litestar(
     route_handlers=[
         index,
         proposals,
+        orphans,
+        link_orphan_web,
         approve_proposal_web,
         reject_proposal_web,
         auth_telegram,
