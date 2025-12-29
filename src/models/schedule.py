@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime
 from typing import ClassVar, Protocol
 
 from google.cloud import datastore
@@ -13,33 +14,17 @@ class ScheduledTask:
     minute: int
     query: str
     service: str
-    type: str
+    task_type: str
+    created_at: datetime = field(default_factory=datetime.now)
 
     kind: ClassVar[str] = "ScheduledTask"
 
-    def __init__(
-        self,
-        chat_id: int,
-        hour: int,
-        minute: int,
-        query: str,
-        service: str,
-        type: str = "",
-        task_type: str = "",
-    ):
-        self.chat_id = chat_id
-        self.hour = hour
-        self.minute = minute
-        self.query = query
-        self.service = service
-        self.type = type or task_type
-
     def __str__(self) -> str:
-        return f"{self.type.capitalize()} a las {self.hour}:{self.minute:02} con parametros '{self.query}'"
+        return f"{self.task_type.capitalize()} a las {self.hour}:{self.minute:02} con parametros '{self.query}'"
 
     @property
     def datastore_id(self) -> str:
-        return f"{self.type}-{self.chat_id}-{self.hour}:{self.minute}-{self.query}"
+        return f"{self.task_type}-{self.chat_id}-{self.hour}:{self.minute}-{self.query}"
 
     @classmethod
     def get_repository(cls) -> "ScheduledTaskRepository":
@@ -83,7 +68,8 @@ class DatastoreScheduledTaskRepository:
             minute=entity["minute"],
             query=entity["query"],
             service=entity["service"],
-            type=entity["type"],
+            task_type=entity.get("task_type") or entity.get("type", "chapa"),
+            created_at=entity.get("created_at", datetime.now()),
         )
 
     def save(self, task: ScheduledTask) -> None:
@@ -96,7 +82,8 @@ class DatastoreScheduledTaskRepository:
                 "minute": task.minute,
                 "query": task.query,
                 "service": task.service,
-                "type": task.type,
+                "task_type": task.task_type,
+                "created_at": task.created_at,
             }
         )
         self.client.put(entity)
@@ -106,6 +93,10 @@ class DatastoreScheduledTaskRepository:
         self.client.delete(key)
 
     def get_tasks(self, **kwargs) -> list[ScheduledTask]:
+        # Handle the rename in filters too
+        if "type" in kwargs:
+            kwargs["task_type"] = kwargs.pop("type")
+
         query = self.client.query(kind=self.model_class.kind)
         for k, v in kwargs.items():
             query.add_filter(k, "=", v)

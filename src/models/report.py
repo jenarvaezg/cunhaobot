@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from datetime import date
+from dataclasses import dataclass, field
+from datetime import datetime, date
 from typing import TYPE_CHECKING, ClassVar, Protocol, Optional
 
 from google.cloud import datastore
@@ -23,9 +23,7 @@ class Report:
     chapas: int
     top_long: str
     top_short: str
-    day: int
-    month: int
-    year: int
+    created_at: datetime = field(default_factory=datetime.now)
 
     kind: ClassVar[str] = "Report"
 
@@ -37,8 +35,10 @@ class Report:
         users: list["User"],
         inline_users: list["InlineUser"],
         chapas: list,
-        date: date,
+        report_date: date,
     ) -> "Report":
+        # report_date is used to set the time to midnight of that day
+        created_at = datetime.combine(report_date, datetime.min.time())
         report = cls(
             longs=len(long_phrases),
             shorts=len(short_phrases),
@@ -64,16 +64,14 @@ class Report:
             ).text
             if short_phrases
             else "",
-            day=date.day,
-            month=date.month,
-            year=date.year,
+            created_at=created_at,
         )
         report.save()
         return report
 
     @property
     def datastore_id(self) -> str:
-        return f"{self.year}/{self.month}/{self.day}"
+        return self.created_at.strftime("%Y/%m/%d")
 
     @classmethod
     def get_repository(cls) -> "ReportRepository":
@@ -118,9 +116,7 @@ class DatastoreReportRepository:
             chapas=entity["chapas"],
             top_long=entity.get("top_long", ""),
             top_short=entity.get("top_short", ""),
-            day=entity["day"],
-            month=entity["month"],
-            year=entity["year"],
+            created_at=entity.get("created_at", datetime.now()),
         )
 
     def save(self, report: Report) -> None:
@@ -138,18 +134,20 @@ class DatastoreReportRepository:
                 "chapas": report.chapas,
                 "top_long": report.top_long,
                 "top_short": report.top_short,
-                "day": report.day,
-                "month": report.month,
-                "year": report.year,
+                "created_at": report.created_at,
             }
         )
         self.client.put(entity)
 
     def get_at(self, dt: date) -> Optional[Report]:
+        # Search by created_at range (start and end of day)
+        start_dt = datetime.combine(dt, datetime.min.time())
+        end_dt = datetime.combine(dt, datetime.max.time())
+
         query = self.client.query(kind=self.model_class.kind)
-        query.add_filter("day", "=", dt.day)
-        query.add_filter("month", "=", dt.month)
-        query.add_filter("year", "=", dt.year)
+        query.add_filter("created_at", ">=", start_dt)
+        query.add_filter("created_at", "<=", end_dt)
+
         reports = list(query.fetch(limit=1))
         if reports:
             return self._entity_to_domain(reports[0])

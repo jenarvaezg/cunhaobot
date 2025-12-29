@@ -1,5 +1,5 @@
 import pytest
-from datetime import date
+from datetime import date, datetime
 from unittest.mock import patch, MagicMock
 from models.report import Report
 from models.phrase import Phrase, LongPhrase
@@ -26,6 +26,7 @@ class TestReport:
         self.mock_client.reset_mock()
 
     def test_init(self):
+        created_at = datetime(2025, 1, 1)
         report = Report(
             longs=10,
             shorts=20,
@@ -37,12 +38,10 @@ class TestReport:
             chapas=1,
             top_long="L",
             top_short="S",
-            day=1,
-            month=1,
-            year=2025,
+            created_at=created_at,
         )
         assert report.longs == 10
-        assert report.datastore_id == "2025/1/1"
+        assert report.datastore_id == "2025/01/01"
 
     def test_generate(self):
         long_phrases = [LongPhrase(text="Long 1"), LongPhrase(text="Long 2")]
@@ -74,9 +73,12 @@ class TestReport:
             assert report.inline_users == 1
             assert report.inline_usages == 5
             assert report.chapas == 3
-            assert report.day == 28
+            assert report.created_at.year == 2025
+            assert report.created_at.month == 12
+            assert report.created_at.day == 28
 
     def test_from_entity(self):
+        created_at = datetime(2025, 12, 28)
         data = {
             "longs": 1,
             "shorts": 2,
@@ -88,23 +90,24 @@ class TestReport:
             "chapas": 8,
             "top_long": "TL",
             "top_short": "TS",
-            "day": 28,
-            "month": 12,
-            "year": 2025,
+            "created_at": created_at,
         }
         entity = create_mock_entity(data)
         repo = Report.get_repository()
         report = repo._entity_to_domain(entity)
         assert report.longs == 1
         assert report.top_long == "TL"
+        assert report.created_at == created_at
 
     def test_save(self):
-        report = Report(1, 2, 3, 4, 5, 6, 7, 8, "TL", "TS", 28, 12, 2025)
+        created_at = datetime(2025, 12, 28)
+        report = Report(1, 2, 3, 4, 5, 6, 7, 8, "TL", "TS", created_at)
         report.save()
         self.mock_client.key.assert_called_with("Report", "2025/12/28")
         self.mock_client.put.assert_called()
 
     def test_get_at(self):
+        created_at = datetime(2025, 12, 28)
         data = {
             "longs": 1,
             "shorts": 2,
@@ -116,12 +119,11 @@ class TestReport:
             "chapas": 8,
             "top_long": "TL",
             "top_short": "TS",
-            "day": 28,
-            "month": 12,
-            "year": 2025,
+            "created_at": created_at,
         }
         e = create_mock_entity(data)
         self.mock_client.query.return_value.fetch.return_value = [e]
         report = Report.get_at(date(2025, 12, 28))
+        assert report is not None
         assert report.longs == 1
-        assert self.mock_client.query.return_value.add_filter.call_count == 3
+        assert self.mock_client.query.return_value.add_filter.call_count == 2

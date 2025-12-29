@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Optional, Protocol, ClassVar
 
 from google.cloud import datastore
@@ -12,6 +13,7 @@ class InlineUser:
     user_id: int
     name: str
     usages: int = 0
+    created_at: datetime = field(default_factory=datetime.now)
 
     kind: ClassVar[str] = "InlineUser"
 
@@ -25,8 +27,6 @@ class InlineUser:
             return None
 
         repo = cls.get_repository()
-
-        # Try to load existing
         user = repo.load(update_user.id)
 
         if user:
@@ -35,7 +35,6 @@ class InlineUser:
                 repo.save(user)
             return user
 
-        # Create new
         user = cls(user_id=update_user.id, name=update_user.name)
         repo.save(user)
         return user
@@ -58,6 +57,7 @@ class User:
     name: str
     is_group: bool
     gdpr: bool = False
+    created_at: datetime = field(default_factory=datetime.now)
 
     kind: ClassVar[str] = "User"
 
@@ -146,7 +146,8 @@ class DatastoreInlineUserRepository:
         return self.model_class(
             user_id=entity["user_id"],
             name=entity["name"],
-            usages=entity["usages"],
+            usages=entity.get("usages", 0),
+            created_at=entity.get("created_at", datetime.now()),
         )
 
     def load(self, user_id: int) -> Optional[InlineUser]:
@@ -160,7 +161,12 @@ class DatastoreInlineUserRepository:
         key = self.client.key(self.model_class.kind, user.user_id)
         entity = datastore.Entity(key=key)
         entity.update(
-            {"user_id": user.user_id, "name": user.name, "usages": user.usages}
+            {
+                "user_id": user.user_id,
+                "name": user.name,
+                "usages": user.usages,
+                "created_at": user.created_at,
+            }
         )
         self.client.put(entity)
 
@@ -182,7 +188,8 @@ class DatastoreUserRepository:
             chat_id=entity["chat_id"],
             name=entity["name"],
             is_group=entity["is_group"],
-            gdpr=entity["gdpr"],
+            gdpr=entity.get("gdpr", False),
+            created_at=entity.get("created_at", datetime.now()),
         )
 
     def load(self, chat_id: int) -> Optional[User]:
@@ -201,6 +208,7 @@ class DatastoreUserRepository:
                 "name": user.name,
                 "is_group": user.is_group,
                 "gdpr": user.gdpr,
+                "created_at": user.created_at,
             }
         )
         self.client.put(entity)

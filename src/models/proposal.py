@@ -23,6 +23,7 @@ class Proposal:
     user_id: int = 0
     voting_ended: bool = False
     voting_ended_at: Optional[datetime] = None
+    created_at: datetime = field(default_factory=datetime.now)
 
     kind: ClassVar[str] = "Proposal"
     phrase_class: ClassVar[type[Phrase]] = Phrase
@@ -150,6 +151,7 @@ class DatastoreProposalRepository(Generic[T]):
             user_id=entity.get("user_id", 0),
             voting_ended=entity.get("voting_ended", False),
             voting_ended_at=entity.get("voting_ended_at"),
+            created_at=entity.get("created_at", datetime.now()),
         )
 
     def _domain_to_entity(self, proposal: T, key: datastore.Key) -> datastore.Entity:
@@ -164,6 +166,7 @@ class DatastoreProposalRepository(Generic[T]):
                 "user_id": proposal.user_id,
                 "voting_ended": proposal.voting_ended,
                 "voting_ended_at": proposal.voting_ended_at,
+                "created_at": proposal.created_at,
             }
         )
         return entity

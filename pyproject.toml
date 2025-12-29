@@ -51,6 +51,9 @@ invalid-raise = "warn"
 unknown-argument = "error"
 invalid-argument-type = "warn"
 
+[tool.ruff]
+exclude = ["src/scripts"]
+
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 python_files = "*_test.py"
