@@ -9,6 +9,7 @@ from fuzzywuzzy import fuzz
 from google.cloud import datastore
 
 from utils import improve_punctuation, normalize_str
+from utils.gcp import get_datastore_client
 
 logger = logging.getLogger(__name__)
 
@@ -177,7 +178,7 @@ class DatastorePhraseRepository(Generic[T]):
 
     @property
     def client(self) -> datastore.Client:
-        return datastore.Client()
+        return get_datastore_client()
 
     def _entity_to_domain(self, entity: datastore.Entity) -> T:
         return self.model_class(
