@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import ClassVar, Generic, Optional, Protocol, TypeVar, cast
 
 from google.cloud import datastore
@@ -20,6 +21,8 @@ class Proposal:
     liked_by: list[int] = field(default_factory=list)
     disliked_by: list[int] = field(default_factory=list)
     user_id: int = 0
+    voting_ended: bool = False
+    voting_ended_at: Optional[datetime] = None
 
     kind: ClassVar[str] = "Proposal"
     phrase_class: ClassVar[type[Phrase]] = Phrase
@@ -98,8 +101,12 @@ class Proposal:
         return cls.get_repository().load_all()
 
     @classmethod
-    def get_proposals(cls: type[T], search: str = "", **filters) -> list[T]:
-        return cls.get_repository().get_proposals(search=search, **filters)
+    def get_proposals(
+        cls: type[T], search: str = "", limit: int = 0, offset: int = 0, **filters
+    ) -> list[T]:
+        return cls.get_repository().get_proposals(
+            search=search, limit=limit, offset=offset, **filters
+        )
 
 
 @dataclass(unsafe_hash=True)
@@ -116,7 +123,9 @@ class ProposalRepository(Generic[T], Protocol):
     def delete(self, proposal_id: str) -> None: ...
     def load(self, proposal_id: str) -> Optional[T]: ...
     def load_all(self) -> list[T]: ...
-    def get_proposals(self, search: str = "", **filters) -> list[T]: ...
+    def get_proposals(
+        self, search: str = "", limit: int = 0, offset: int = 0, **filters
+    ) -> list[T]: ...
 
 
 # --- Datastore Implementation ---
@@ -139,6 +148,8 @@ class DatastoreProposalRepository(Generic[T]):
             liked_by=list(entity.get("liked_by", [])),
             disliked_by=list(entity.get("disliked_by", [])),
             user_id=entity.get("user_id", 0),
+            voting_ended=entity.get("voting_ended", False),
+            voting_ended_at=entity.get("voting_ended_at"),
         )
 
     def _domain_to_entity(self, proposal: T, key: datastore.Key) -> datastore.Entity:
@@ -151,6 +162,8 @@ class DatastoreProposalRepository(Generic[T]):
                 "liked_by": proposal.liked_by,
                 "disliked_by": proposal.disliked_by,
                 "user_id": proposal.user_id,
+                "voting_ended": proposal.voting_ended,
+                "voting_ended_at": proposal.voting_ended_at,
             }
         )
         return entity
@@ -179,7 +192,9 @@ class DatastoreProposalRepository(Generic[T]):
         query = client.query(kind=self.model_class.kind)
         return [self._entity_to_domain(entity) for entity in query.fetch()]
 
-    def get_proposals(self, search: str = "", **filters) -> list[T]:
+    def get_proposals(
+        self, search: str = "", limit: int = 0, offset: int = 0, **filters
+    ) -> list[T]:
         results = self.load_all()
 
         if search:
@@ -187,17 +202,27 @@ class DatastoreProposalRepository(Generic[T]):
             results = [p for p in results if normalized_search in normalize_str(p.text)]
 
         for field_name, value in filters.items():
-            if not value:
+            if value is None or value == "":
                 continue
 
             if value == "__EMPTY__":
                 results = [p for p in results if not getattr(p, field_name, None)]
             else:
+                # Handle boolean strings from query params
+                if isinstance(value, str):
+                    if value.lower() == "true":
+                        value = True
+                    elif value.lower() == "false":
+                        value = False
+
                 results = [
                     p
                     for p in results
                     if str(getattr(p, field_name, None)) == str(value)
                 ]
+
+        if limit > 0:
+            return results[offset : offset + limit]
 
         return results
 

@@ -1,6 +1,7 @@
 import os
 from dataclasses import dataclass
 from typing import Any
+from datetime import datetime
 from telegram import (
     Bot,
     CallbackQuery,
@@ -62,6 +63,10 @@ async def _add_vote(
 async def approve_proposal(
     proposal: Proposal, bot: Bot, callback_query: CallbackQuery | None = None
 ) -> None:
+    proposal.voting_ended = True
+    proposal.voting_ended_at = datetime.now()
+    proposal.save()
+
     if callback_query:
         await callback_query.edit_message_text(
             f"La propuesta '{proposal.text}' queda formalmente aprobada y añadida a la lista.\n\n"
@@ -79,6 +84,10 @@ async def approve_proposal(
 async def dismiss_proposal(
     proposal: Proposal, bot: Bot, callback_query: CallbackQuery | None = None
 ) -> None:
+    proposal.voting_ended = True
+    proposal.voting_ended_at = datetime.now()
+    proposal.save()
+
     if callback_query:
         await callback_query.edit_message_text(
             f"La propuesta '{proposal.text}' queda formalmente rechazada.\n\n"
