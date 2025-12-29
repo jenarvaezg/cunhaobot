@@ -64,8 +64,16 @@
                             <input type="hidden" name="kind" value="{{ orphan.kind }}">
 
                             <div class="col-md-4">
-                                <label class="form-label x-small text-secondary">ID Usuario Telegram</label>
-                                <input type="number" name="creator_id" class="form-control form-control-sm bg-dark border-secondary text-white" placeholder="Ej: 1234567" required>
+                                <label class="form-label x-small text-secondary">Autor (Curator)</label>
+                                <input type="text" name="creator_id" list="users-datalist-{{ loop.index }}"
+                                       hx-get="/users/options" hx-trigger="keyup changed delay:200ms, focus"
+                                       hx-target="#users-datalist-{{ loop.index }}"
+                                       hx-vals='js:{"q": event.target.value}'
+                                       class="form-control form-control-sm bg-dark border-secondary text-white"
+                                       placeholder="Busca por nombre..." required>
+                                <datalist id="users-datalist-{{ loop.index }}">
+                                    <!-- Options loaded via HTMX -->
+                                </datalist>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label x-small text-secondary">Fecha Propuesta</label>

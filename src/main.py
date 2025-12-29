@@ -17,6 +17,7 @@ from telegram import Update
 
 from models.phrase import LongPhrase, Phrase
 from models.proposal import LongProposal, Proposal, get_proposal_class_by_kind
+from models.user import InlineUser, User
 from slack.handlers import handle_slack
 from tg import get_tg_application
 from tg.handlers import handle_ping as handle_telegram_ping
@@ -40,6 +41,7 @@ class Config:
     owner_id: str
     slack_client_id: str
     slack_client_secret: str
+    mod_chat_id: str
     is_gae: bool
 
     @classmethod
@@ -67,11 +69,47 @@ class Config:
             owner_id=os.environ.get("OWNER_ID", ""),
             slack_client_id=os.environ.get("SLACK_CLIENT_ID", ""),
             slack_client_secret=os.environ.get("SLACK_CLIENT_SECRET", ""),
+            mod_chat_id=os.environ.get("MOD_CHAT_ID", ""),
             is_gae=is_gae,
         )
 
 
 config = Config.from_env()
+
+
+@get("/users/options", sync_to_thread=False)
+def users_options(request: Request) -> str:
+    user = request.session.get("user")
+    if not user or str(user.get("id")) != str(config.owner_id):
+        return ""
+
+    q = request.query_params.get("q", "").lower()
+
+    # Load all potential users from DB
+    users = User.load_all()
+    inline_users = InlineUser.get_all()
+
+    # Use a dict to deduplicate by ID
+    unique_users: dict[int, str] = {}
+    for u in users:
+        if not u.is_group:
+            unique_users[u.chat_id] = u.name
+    for iu in inline_users:
+        unique_users[iu.user_id] = iu.name
+
+    options = []
+    count = 0
+    # Sort and filter
+    sorted_users = sorted(unique_users.items(), key=lambda x: x[1].lower())
+    for uid, name in sorted_users:
+        if q and q not in name.lower() and q not in str(uid):
+            continue
+        options.append(f'<option value="{uid}">{name}</option>')
+        count += 1
+        if count >= 50:
+            break
+
+    return "".join(options)
 
 
 class ProposalsContext(TypedDict):
@@ -462,6 +500,7 @@ app = Litestar(
         index,
         proposals,
         orphans,
+        users_options,
         link_orphan_web,
         manual_link_orphan_web,
         approve_proposal_web,
