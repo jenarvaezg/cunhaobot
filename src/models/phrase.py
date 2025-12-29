@@ -98,8 +98,10 @@ class Phrase:
         return cls.get_repository().refresh_cache()
 
     @classmethod
-    def get_phrases(cls: type[T], search: str = "", **filters) -> list[T]:
-        return cls.get_repository().get_phrases(search=search, **filters)
+    def get_phrases(
+        cls: type[T], search: str = "", limit: int = 0, **filters
+    ) -> list[T]:
+        return cls.get_repository().get_phrases(search=search, limit=limit, **filters)
 
     @classmethod
     def get_random_phrase(cls: type[T]) -> T:
@@ -163,7 +165,7 @@ class PhraseRepository(Generic[T], Protocol):
     def save(self, phrase: T) -> None: ...
     def delete(self, phrase_text: str) -> None: ...
     def refresh_cache(self) -> list[T]: ...
-    def get_phrases(self, search: str = "", **filters) -> list[T]: ...
+    def get_phrases(self, search: str = "", limit: int = 0, **filters) -> list[T]: ...
     def add_usage_by_result_id(self, result_id: str) -> None: ...
     def remove_daily_usages(self) -> None: ...
 
@@ -221,7 +223,7 @@ class DatastorePhraseRepository(Generic[T]):
         self._cache = [self._entity_to_domain(entity) for entity in query.fetch()]
         return self._cache
 
-    def get_phrases(self, search: str = "", **filters) -> list[T]:
+    def get_phrases(self, search: str = "", limit: int = 0, **filters) -> list[T]:
         if not self._cache:
             self.refresh_cache()
 
@@ -247,6 +249,9 @@ class DatastorePhraseRepository(Generic[T]):
                     for p in results
                     if str(getattr(p, field_name, None)) == str(value)
                 ]
+
+        if limit > 0:
+            return results[:limit]
 
         return results
 
