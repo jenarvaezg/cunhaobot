@@ -112,13 +112,12 @@ def test_slack_auth(client):
     assert rv.status_code == 302
     assert "slack.com/oauth/v2/authorize" in rv.headers["location"]
 
-
-def test_slack_auth_redirect(client):
-    with patch("requests.post") as mock_post:
-        rv = client.get("/slack/auth/redirect", params={"code": "123"})
-        assert rv.status_code == HTTP_200_OK
-        assert rv.text == ":)"
-        mock_post.assert_called()
+    def test_slack_auth_redirect(client):
+        with patch("requests.post") as mock_post:
+            rv = client.get("/slack/auth/redirect", params={"code": "123"})
+            assert rv.status_code == HTTP_200_OK
+            assert "Instalación completada" in rv.text
+            mock_post.assert_called()
 
 
 def test_twitter_auth_redirect(client):
