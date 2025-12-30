@@ -113,17 +113,42 @@ class WebController(Controller):
         inline_user_repo: Annotated[Any, Dependency()],
     ) -> Template:
         from collections import defaultdict
+        import json
 
         p_repo: PhraseRepository = phrase_repo
         lp_repo: LongPhraseRepository = long_phrase_repo
         prop_repo: ProposalRepository = proposal_repo
         l_prop_repo: LongProposalRepository = long_proposal_repo
 
+        # Top phrases
         phrases = p_repo.get_phrases() + lp_repo.get_phrases()
-        pending_proposals = [p for p in prop_repo.load_all() if not p.voting_ended] + [
-            p for p in l_prop_repo.load_all() if not p.voting_ended
+        top_phrases = sorted(
+            phrases,
+            key=lambda p: p.usages + p.audio_usages,
+            reverse=True,
+        )[:10]
+
+        # Proposal stats
+        proposals = prop_repo.load_all() + l_prop_repo.load_all()
+        pending_proposals = [p for p in proposals if not p.voting_ended]
+        ended_proposals = [p for p in proposals if p.voting_ended]
+
+        # This is a simplification. A proposal is approved if a phrase is created from it.
+        # For this metric, we'll assume likes > dislikes means approved.
+        approved_proposals = [
+            p for p in ended_proposals if len(p.liked_by) > len(p.disliked_by)
+        ]
+        rejected_proposals = [
+            p for p in ended_proposals if len(p.liked_by) <= len(p.disliked_by)
         ]
 
+        proposal_stats = {
+            "pending": len(pending_proposals),
+            "approved": len(approved_proposals),
+            "rejected": len(rejected_proposals),
+        }
+
+        # User stats
         user_map: dict[int, str] = {}
         for u in inline_user_repo.load_all():
             user_map[u.user_id] = u.name
@@ -155,14 +180,23 @@ class WebController(Controller):
         )
         top_contributor = sorted_stats[0]["name"] if sorted_stats else "Nadie"
 
+        # Chart data
+        top_5_phrases_chart = {
+            "labels": [p.text for p in top_phrases[:5]],
+            "data": [p.usages + p.audio_usages for p in top_phrases[:5]],
+        }
+
         return Template(
             template_name="metrics.html",
             context={
                 "user": request.session.get("user"),
                 "owner_id": config.owner_id,
                 "total_phrases": len(phrases),
-                "total_pending": len(pending_proposals),
+                "proposal_stats": proposal_stats,
                 "top_contributor": top_contributor,
                 "user_stats": sorted_stats,
+                "top_phrases": top_phrases,
+                "proposal_stats_json": json.dumps(proposal_stats),
+                "top_5_phrases_chart_json": json.dumps(top_5_phrases_chart),
             },
         )

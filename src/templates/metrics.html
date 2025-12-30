@@ -5,7 +5,7 @@
     <div class="col-lg-8">
         <h1 class="oswald hero-title mb-3">MÉTRICAS DE CUÑADISMO</h1>
         <p class="lead text-secondary fw-light mb-5">
-            Ranking oficial de contribuidores al acervo cultural cuñadíl. <br class="d-none d-md-block">
+            Ranking oficial de contribuidores y análisis del acervo cultural cuñadíl. <br class="d-none d-md-block">
             Datos agregados de todas las propuestas y frases aprobadas.
         </p>
     </div>
@@ -13,31 +13,86 @@
 
 <!-- Summary Cards -->
 <div class="row g-4 mb-5 animate__animated animate__fadeInUp">
-    <div class="col-md-4">
+    <div class="col-lg-3 col-md-6">
         <div class="glass-card p-4 text-center h-100">
             <div class="display-4 fw-bold text-warning mb-2">{{ total_phrases }}</div>
-            <div class="text-uppercase small text-secondary fw-bold letter-spacing-2">Frases Aprobadas</div>
+            <div class="text-uppercase small text-secondary fw-bold letter-spacing-2">Frases Totales</div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-lg-3 col-md-6">
         <div class="glass-card p-4 text-center h-100">
-            <div class="display-4 fw-bold text-info mb-2">{{ total_pending }}</div>
+            <div class="display-4 fw-bold text-success mb-2">{{ proposal_stats.approved }}</div>
+            <div class="text-uppercase small text-secondary fw-bold letter-spacing-2">Propuestas Aprobadas</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="glass-card p-4 text-center h-100">
+            <div class="display-4 fw-bold text-danger mb-2">{{ proposal_stats.rejected }}</div>
+            <div class="text-uppercase small text-secondary fw-bold letter-spacing-2">Propuestas Rechazadas</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="glass-card p-4 text-center h-100">
+            <div class="display-4 fw-bold text-info mb-2">{{ proposal_stats.pending }}</div>
             <div class="text-uppercase small text-secondary fw-bold letter-spacing-2">Propuestas Pendientes</div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="glass-card p-4 text-center h-100">
-            <div class="display-4 fw-bold text-success mb-2">{{ top_contributor }}</div>
-            <div class="text-uppercase small text-secondary fw-bold letter-spacing-2">Máquina Absoluta</div>
         </div>
     </div>
 </div>
 
+<!-- Charts -->
+<div class="row g-4 mb-5">
+    <!-- Proposal Stats Chart -->
+    <div class="col-lg-4 animate__animated animate__fadeInUp" style="animation-delay: 0.1s;">
+        <div class="glass-card p-4 h-100">
+            <h5 class="oswald mb-4 text-center">Estado de las Propuestas</h5>
+            <canvas id="proposalChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Top Phrases Chart -->
+    <div class="col-lg-8 animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
+        <div class="glass-card p-4 h-100">
+            <h5 class="oswald mb-4 text-center">Top 5 Frases Más Usadas</h5>
+            <canvas id="topPhrasesChart"></canvas>
+        </div>
+    </div>
+</div>
+
+
+<!-- Top 10 Phrases Table -->
+<div class="glass-card p-4 animate__animated animate__fadeInUp mb-5" style="animation-delay: 0.3s;">
+    <h4 class="oswald mb-4">Top 10 Frases de Oro</h4>
+    <div class="table-responsive">
+        <table class="table table-dark table-hover align-middle mb-0" style="--bs-table-bg: transparent;">
+            <thead>
+                <tr class="text-secondary text-uppercase x-small border-bottom border-secondary">
+                    <th scope="col" class="ps-4">#</th>
+                    <th scope="col">Frase</th>
+                    <th scope="col" class="text-center">Usos Totales</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for phrase in top_phrases %}
+                <tr class="border-bottom border-secondary border-opacity-25">
+                    <td class="ps-4 text-secondary fw-bold">{{ loop.index }}</td>
+                    <td class="text-white">{{ phrase.text }}</td>
+                    <td class="text-center fw-bold text-gold">{{ phrase.usages + phrase.audio_usages }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
 <!-- Users Table -->
-<div class="glass-card p-4 animate__animated animate__fadeInUp" style="animation-delay: 0.1s;">
+<div class="glass-card p-4 animate__animated animate__fadeInUp" style="animation-delay: 0.4s;">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="oswald mb-0">Ranking de Contribuidores</h4>
-        <!-- Search could go here -->
+        <div class="stat-badge">
+            <i class="bi bi-person-check-fill text-success"></i>
+            <span>Máquina del Año: <strong class="text-warning">{{ top_contributor }}</strong></span>
+        </div>
     </div>
 
     <div class="table-responsive">
@@ -92,4 +147,95 @@
         </table>
     </div>
 </div>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const proposalData = JSON.parse('{{ proposal_stats_json|safe }}');
+    const topPhrasesData = JSON.parse('{{ top_5_phrases_chart_json|safe }}');
+
+    // Chart Global Config
+    Chart.defaults.color = 'rgba(255, 255, 255, 0.7)';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+
+    // Proposal Chart (Doughnut)
+    const proposalCtx = document.getElementById('proposalChart').getContext('2d');
+    new Chart(proposalCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Aprobadas', 'Rechazadas', 'Pendientes'],
+            datasets: [{
+                label: 'Estado de Propuestas',
+                data: [proposalData.approved, proposalData.rejected, proposalData.pending],
+                backgroundColor: [
+                    'rgba(25, 135, 84, 0.8)',   // Success
+                    'rgba(220, 53, 69, 0.8)',   // Danger
+                    'rgba(13, 202, 240, 0.8)'   // Info
+                ],
+                borderColor: [
+                    'rgba(25, 135, 84, 1)',
+                    'rgba(220, 53, 69, 1)',
+                    'rgba(13, 202, 240, 1)'
+                ],
+                borderWidth: 1,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20
+                    }
+                }
+            }
+        }
+    });
+
+    // Top Phrases Chart (Bar)
+    const topPhrasesCtx = document.getElementById('topPhrasesChart').getContext('2d');
+    new Chart(topPhrasesCtx, {
+        type: 'bar',
+        data: {
+            labels: topPhrasesData.labels,
+            datasets: [{
+                label: 'Usos Totales',
+                data: topPhrasesData.data,
+                backgroundColor: 'rgba(255, 193, 7, 0.6)',
+                borderColor: 'rgba(255, 193, 7, 1)',
+                borderWidth: 1,
+                borderRadius: 5
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                y: {
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+});
+</script>
 {% endblock %}
