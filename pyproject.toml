@@ -22,7 +22,6 @@ dependencies = [
     "cryptography>=46.0.3",
     "google-genai>=1.56.0",
     "pydantic>=2.10.0",
-    "slack-sdk",
 ]
 
 [dependency-groups]

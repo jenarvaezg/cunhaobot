@@ -4,7 +4,6 @@ import requests
 from litestar import Controller, Request, get, post, Response
 from litestar.response import Redirect
 from litestar.params import Dependency
-from slack_sdk.web.client import WebClient
 from slack.handlers import handle_slack
 from services.phrase_service import PhraseService
 from core.config import config
@@ -38,11 +37,9 @@ class SlackController(Controller):
             )
 
         # Pass service to handler
-        slack_client = WebClient(token=config.slack_bot_token)
         response = handle_slack(
             slack_data=data_payload,
             phrase_service=phrase_service,
-            slack_client=slack_client,
         )
 
         if not response:

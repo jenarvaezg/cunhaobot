@@ -1,11 +1,10 @@
+import requests
 from services.phrase_service import PhraseService
 from utils.image_utils import generate_png
-from slack_sdk.web.client import WebClient
+from core.config import config
 
 
-def handle_sticker(
-    slack_data: dict, phrase_service: PhraseService, slack_client: WebClient
-) -> dict:
+def handle_sticker(slack_data: dict, phrase_service: PhraseService) -> dict:
     text = slack_data["text"]
 
     if text:
@@ -36,12 +35,26 @@ def handle_sticker(
     sticker_image = generate_png(phrase.text)
 
     try:
-        slack_client.files_upload_v2(
-            channel=slack_data["channel_id"],
-            content=sticker_image.getvalue(),
-            filename="sticker.png",
-            initial_comment=f'Aquí tienes tu sticker con la frase: "{phrase.text}"',
+        # Use requests to upload the file to Slack
+        response = requests.post(
+            "https://slack.com/api/files.upload",
+            params={
+                "token": config.slack_bot_token,
+                "channels": slack_data["channel_id"],
+                "initial_comment": f'Aquí tienes tu sticker con la frase: "{phrase.text}"',
+            },
+            files={"file": ("sticker.png", sticker_image.getvalue(), "image/png")},
+            timeout=10,
         )
+        if not response.json().get("ok"):
+            print(f"Error uploading file to slack: {response.json()}")
+            return {
+                "indirect": {
+                    "text": "Hubo un error al generar tu sticker en Slack. Revisa los permisos del bot."
+                },
+                "direct": "",
+            }
+
         # Register usage after successful upload
         phrase_service.register_sticker_usage(phrase)
     except Exception as e:
