@@ -1,5 +1,5 @@
-from src.services.phrase_service import PhraseService
-from src.utils.image_utils import generate_png
+from services.phrase_service import PhraseService
+from utils.image_utils import generate_png
 from slack_sdk.web.client import WebClient
 
 

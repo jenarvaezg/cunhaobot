@@ -24,7 +24,7 @@ class PhraseService:
         self.long_repo = long_phrase_repo
 
     def create_sticker_image(self, phrase: Phrase | LongPhrase) -> bytes:
-        from src.utils.image_utils import generate_png
+        from utils.image_utils import generate_png
 
         is_long = isinstance(phrase, LongPhrase)
         text = phrase.text if is_long else f"¿Qué pasa, {phrase.text}?"

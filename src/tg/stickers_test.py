@@ -1,9 +1,11 @@
 import pytest
 from unittest.mock import MagicMock, patch, AsyncMock
 from tg.stickers import (
-    generate_png,
     upload_sticker,
     delete_sticker,
+)
+from utils.image_utils import (
+    generate_png,
     _text_wrap,
     _draw_text_with_border,
 )
@@ -35,23 +37,8 @@ class TestStickers:
         generate_png("a" * 100)
 
     def test_generate_png_font_none(self):
-        # Trigger line 78 in stickers.py
-        # We need truetype to return a valid font for the whole loop, then return None for the last check?
-        # No, the code does:
-        # for font_size in range(80, 1, -1):
-        #     font = ImageFont.truetype(...)
-        #     ...
-        #     if ...: break
-        # if font is None: raise ValueError
-
-        # If the loop finishes, font will be the last one assigned (size 2).
-        # To hit line 78, the loop must NOT assign to font, or we force it.
-
-        # The only way to hit line 78 is if range(80, 1, -1) is empty (it's not)
-        # or if we mock the loop or something.
-
         # Actually, let's just mock the loop to not run by mocking range
-        with patch("tg.stickers.range", return_value=[]):
+        with patch("utils.image_utils.range", return_value=[]):
             with pytest.raises(ValueError, match="Could not calculate font size"):
                 generate_png("test")
 
