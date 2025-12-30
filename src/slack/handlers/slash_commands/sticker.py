@@ -11,17 +11,21 @@ def handle_sticker(
     if text:
         phrases = phrase_service.get_phrases(search=text, long=True)
         if not phrases:
-            return {
-                "indirect": {
-                    "text": f'No tengo ninguna frase que encaje con la busqueda "{text}".'
-                },
-                "direct": "",
-            }
-        import random
+            # Try fuzzy search if no exact contains match
+            phrase, score = phrase_service.find_most_similar(text, long=True)
+            if score < 60:  # Threshold for similarity
+                return {
+                    "indirect": {
+                        "text": f'No tengo ninguna frase que encaje con "{text}". ¿Querías decir algo como "{phrase.text}"?'
+                    },
+                    "direct": "",
+                }
+        else:
+            import random
 
-        phrase = random.choice(phrases)
+            phrase = random.choice(phrases)
     else:
-        phrase = phrase_service.get_random()
+        phrase = phrase_service.get_random(long=True)
 
     if not phrase:
         return {
@@ -38,6 +42,8 @@ def handle_sticker(
             filename="sticker.png",
             initial_comment=f'Aquí tienes tu sticker con la frase: "{phrase.text}"',
         )
+        # Register usage after successful upload
+        phrase_service.register_sticker_usage(phrase)
     except Exception as e:
         # Log the error, maybe return a message to the user
         print(f"Error uploading file to slack: {e}")

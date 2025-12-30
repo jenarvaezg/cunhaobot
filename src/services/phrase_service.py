@@ -79,6 +79,16 @@ class PhraseService:
             key=lambda x: x[1],
         )
 
+    def register_sticker_usage(self, phrase: Phrase | LongPhrase) -> None:
+        """Increments sticker usage counters for a phrase."""
+        phrase.usages += 1
+        phrase.sticker_usages += 1
+        phrase.daily_usages += 1
+        phrase.sticker_daily_usages += 1
+
+        repo = self.long_repo if isinstance(phrase, LongPhrase) else self.phrase_repo
+        repo.save(phrase)
+
     def add_usage_by_id(self, result_id: str) -> None:
         """Increments usage count based on inline result ID."""
         is_audio = result_id.startswith("audio-")

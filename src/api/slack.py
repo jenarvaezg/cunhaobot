@@ -16,7 +16,7 @@ class SlackController(Controller):
     @post("/", status_code=200)
     async def handler(
         self, request: Request, phrase_service: Annotated[PhraseService, Dependency()]
-    ) -> Response[str]:
+    ) -> Response:
         # Check content type to parse appropriately
         content_type = request.headers.get("content-type", "")
         if "application/json" in content_type:
