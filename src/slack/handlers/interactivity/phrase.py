@@ -1,10 +1,10 @@
 import random
+from typing import Any
 
-from models.phrase import LongPhrase
 from slack.attachments import build_phrase_attachments
 
 
-def _handle_send(slack_data: dict) -> dict:
+def _handle_send(slack_data: dict, phrase_service: Any = None) -> dict:
     value = slack_data["actions"][0]["value"]
     text = "-".join(value.split("-")[1:])
     return {
@@ -24,10 +24,17 @@ def _handle_send(slack_data: dict) -> dict:
     }
 
 
-def _handle_shuffle(slack_data: dict) -> dict:
+def _handle_shuffle(slack_data: dict, phrase_service: Any = None) -> dict:
     value = slack_data["actions"][0]["value"]
     search = "-".join(value.split("-")[1:])
-    new_phrase = random.choice(LongPhrase.get_phrases(search=search))
+    phrases = (
+        phrase_service.get_phrases(search=search, long=True) if phrase_service else []
+    )
+    if not phrases:
+        # Fallback if no phrases found during shuffle
+        return _handle_cancel(slack_data)
+
+    new_phrase = random.choice(phrases)
     return {
         "indirect": "",
         "direct": {
@@ -38,7 +45,7 @@ def _handle_shuffle(slack_data: dict) -> dict:
     }
 
 
-def _handle_cancel(slack_data: dict) -> dict:
+def _handle_cancel(slack_data: dict, phrase_service: Any = None) -> dict:
     return {
         "direct": {
             "delete_original": True,
@@ -54,12 +61,12 @@ command_router = {
 }
 
 
-def handle_phrase(slack_data: dict) -> dict | None:
+def handle_phrase(slack_data: dict, phrase_service: Any = None) -> dict | None:
     actions = slack_data["actions"]
     action = actions[0]
     value, *_ = action["value"].split("-")
     handler = command_router.get(value)
     if handler:
-        return handler(slack_data)
+        return handler(slack_data, phrase_service=phrase_service)
 
     return None

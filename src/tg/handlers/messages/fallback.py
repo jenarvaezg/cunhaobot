@@ -1,79 +1,79 @@
 import random
-
-from telegram import Bot, Update, User as TGUser
+import logging
+from telegram import Update, User as TGUser, Bot
 from telegram.ext import CallbackContext
-
-from models.phrase import Phrase
-from models.schedule import ScheduledTask
-from models.user import User as UserModel
+from services import phrase_service, user_repo, schedule_repo
 from tg.decorators import log_update
+
+logger = logging.getLogger(__name__)
 
 
 def _on_kick(chat_id: int) -> None:
-    user = UserModel.load(chat_id=chat_id)
+    user = user_repo.load(chat_id)
     if user:
-        user.delete()
-    for task in ScheduledTask.get_tasks(chat_id=chat_id):
-        task.delete()
+        user.gdpr = True
+        user_repo.save(user)
+
+    tasks = schedule_repo.get_schedules(chat_id=chat_id)
+    for task in tasks:
+        schedule_repo.delete(task.id)
 
 
 async def _on_other_kicked(bot: Bot, user: TGUser, chat_id: int) -> None:
+    p = phrase_service.get_random().text
     await bot.send_message(
-        chat_id, f"Vaya {Phrase.get_random_phrase()} el {user.name}, ya me jodería."
+        chat_id, f"Vaya {p} el {user.name or user.first_name}, ya me jodería."
     )
 
 
 async def _on_join(bot: Bot, chat_id: int) -> None:
+    p = phrase_service.get_random().text
     await bot.send_message(
         chat_id,
-        "¡Muchas gracias por meterme en el grupo! Te recomiendo usar /help para explicarte que puedo hacer, "
-        f"{Phrase.get_random_phrase()}.",
+        "¡Muchas gracias por meterme en el grupo! Te recomiendo usar /help para explicarte qué puedo hacer, "
+        f"{p}.",
     )
 
 
 async def _on_other_joined(bot: Bot, user: TGUser, chat_id: int) -> None:
     n_words = random.choice([2, 3, 4])
-    phrases = [user.name] + [Phrase.get_random_phrase().text for _ in range(n_words)]
-    words = ", ".join([p for p in phrases])
-    await bot.send_message(chat_id, f"¿Qué pasa, {words}?")
+    phrases = [user.name or user.first_name] + [
+        phrase_service.get_random().text for _ in range(n_words)
+    ]
+    await bot.send_message(chat_id, ", ".join(phrases) + "!")
 
 
 def _on_migrate(from_chat_id: int, to_chat_id: int) -> None:
-    tasks = ScheduledTask.get_tasks(chat_id=from_chat_id)
+    tasks = schedule_repo.get_schedules(chat_id=from_chat_id)
     for task in tasks:
-        task.delete()
         task.chat_id = to_chat_id
-        task.save()
-
-    user = UserModel.load(from_chat_id)
-    if user:
-        user.delete(hard=True)
-        user.chat_id = to_chat_id
-        user.save()
+        schedule_repo.save(task)
+        schedule_repo.delete(f"{from_chat_id}_{task.hour}_{task.minute}")
 
 
 @log_update
 async def handle_fallback_message(update: Update, context: CallbackContext) -> None:
-    """This is here to handle the rest of messages, mainly service messages"""
     if not (message := update.effective_message):
         return
 
-    bot: Bot = context.bot
+    bot = context.bot
     me = await bot.get_me()
-    my_username = me.username
 
     if message.left_chat_member:
-        if message.left_chat_member.username == my_username:
+        if message.left_chat_member.username == me.username:
             _on_kick(message.chat_id)
         else:
             await _on_other_kicked(bot, message.left_chat_member, message.chat_id)
 
-    if message.new_chat_members:
+    elif message.new_chat_members:
         for user in message.new_chat_members:
-            if user.username == my_username:
+            if user.username == me.username:
                 await _on_join(bot, message.chat_id)
             else:
                 await _on_other_joined(bot, user, message.chat_id)
 
-    if message.migrate_from_chat_id:
+    elif message.migrate_to_chat_id:
+        _on_migrate(message.chat_id, message.migrate_to_chat_id)
+
+    elif message.migrate_from_chat_id:
         _on_migrate(message.migrate_from_chat_id, message.chat_id)

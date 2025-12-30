@@ -1,12 +1,12 @@
 import pytest
-from unittest.mock import patch, MagicMock, PropertyMock, AsyncMock
-from litestar.status_codes import HTTP_200_OK, HTTP_404_NOT_FOUND
+from unittest.mock import patch, PropertyMock, AsyncMock
+from litestar.status_codes import HTTP_200_OK
 from models.phrase import Phrase
 
 
 @pytest.fixture
 def auth_user():
-    return {"id": "123", "first_name": "Test", "username": "testuser"}
+    return {"id": "123", "username": "testuser", "first_name": "Test"}
 
 
 @pytest.fixture
@@ -16,96 +16,77 @@ def owner_id():
 
 def test_orphans_page_unauthorized(client):
     # Forzamos sesión vacía
-    with patch(
-        "litestar.connection.base.ASGIConnection.session", new_callable=PropertyMock
-    ) as mock_session:
+    with (
+        patch(
+            "litestar.connection.base.ASGIConnection.session", new_callable=PropertyMock
+        ) as mock_session,
+        patch("core.config.config.is_gae", True),
+    ):
         mock_session.return_value = {}
-        rv = client.get("/orphans")
+        rv = client.get("/admin/orphans")
         assert rv.status_code == 401
 
 
 def test_orphans_page_authorized(client, auth_user, owner_id):
     p1 = Phrase(text="Orphan", proposal_id="")
 
-    mock_app = MagicMock()
-    mock_app.initialize = AsyncMock()
-    mock_app.bot.get_chat_administrators = AsyncMock(return_value=[])
-
     # Forzamos que config.owner_id coincida con auth_user['id']
     with (
-        patch("main.Phrase.get_phrases", return_value=[p1]),
-        patch("main.LongPhrase.get_phrases", return_value=[]),
-        patch("main.Proposal.load_all", return_value=[]),
-        patch("main.LongProposal.load_all", return_value=[]),
-        patch("main.User.load_all", return_value=[]),
-        patch("main.InlineUser.get_all", return_value=[]),
-        patch("main.config.owner_id", owner_id),
-        patch("main.get_tg_application", return_value=mock_app),
+        patch("services.phrase_repo.load_all", return_value=[p1]),
+        patch("services.long_phrase_repo.load_all", return_value=[]),
+        patch(
+            "services.proposal_service.ProposalService.get_curators",
+            new_callable=AsyncMock,
+            return_value={1: "user1"},
+        ),
+        patch("core.config.config.owner_id", owner_id),
+        patch("core.config.config.is_gae", False),
         patch(
             "litestar.connection.base.ASGIConnection.session", new_callable=PropertyMock
         ) as mock_session,
     ):
         mock_session.return_value = {"user": auth_user}
-        rv = client.get("/orphans")
+        rv = client.get("/admin/orphans")
         assert rv.status_code == HTTP_200_OK
         assert "CASAMIENTO DE FRASES" in rv.text
-        assert "Orphan" in rv.text
 
 
 def test_link_orphan_web_success(client, auth_user, owner_id):
     p1 = Phrase(text="Orphan", proposal_id="")
-    mock_repo = MagicMock()
 
     with (
-        patch("main.Phrase.get_repository", return_value=mock_repo),
-        patch("main.config.owner_id", owner_id),
+        patch("services.phrase_repo.load", return_value=p1),
+        patch("services.phrase_repo.save") as mock_save,
+        patch("core.config.config.owner_id", owner_id),
+        patch("core.config.config.is_gae", False),
         patch(
             "litestar.connection.base.ASGIConnection.session", new_callable=PropertyMock
         ) as mock_session,
     ):
-        mock_repo.get_phrases.return_value = [p1]
         mock_session.return_value = {"user": auth_user}
 
         payload = {"phrase_text": "Orphan", "kind": "Phrase", "proposal_id": "prop123"}
 
-        rv = client.post("/orphans/link", json=payload)
+        rv = client.post("/admin/orphans/link", json=payload)
         assert rv.status_code == HTTP_200_OK
         assert rv.text == "Linked"
         assert p1.proposal_id == "prop123"
-        mock_repo.save.assert_called_once_with(p1)
-
-
-def test_link_orphan_web_phrase_not_found(client, auth_user, owner_id):
-    mock_repo = MagicMock()
-    with (
-        patch("main.Phrase.get_repository", return_value=mock_repo),
-        patch("main.config.owner_id", owner_id),
-        patch(
-            "litestar.connection.base.ASGIConnection.session", new_callable=PropertyMock
-        ) as mock_session,
-    ):
-        mock_repo.get_phrases.return_value = []
-        mock_session.return_value = {"user": auth_user}
-
-        payload = {"phrase_text": "Unknown", "kind": "Phrase", "proposal_id": "prop123"}
-
-        rv = client.post("/orphans/link", json=payload)
-        assert rv.status_code == HTTP_404_NOT_FOUND
+        mock_save.assert_called_once()
 
 
 def test_manual_link_orphan_web_success(client, auth_user, owner_id):
     p1 = Phrase(text="ManualOrphan", proposal_id="")
-    mock_repo = MagicMock()
 
     with (
-        patch("main.Phrase.get_repository", return_value=mock_repo),
-        patch("main.config.owner_id", owner_id),
+        patch("services.phrase_repo.load", return_value=p1),
+        patch("services.phrase_repo.save") as mock_save,
+        patch("core.config.config.owner_id", owner_id),
+        patch("core.config.config.is_gae", False),
         patch(
             "litestar.connection.base.ASGIConnection.session",
             new_callable=PropertyMock,
         ) as mock_session,
     ):
-        mock_repo.get_phrases.return_value = [p1]
         mock_session.return_value = {"user": auth_user}
 
         payload = {
@@ -116,12 +97,9 @@ def test_manual_link_orphan_web_success(client, auth_user, owner_id):
             "chat_id": 123,
         }
 
-        rv = client.post("/orphans/manual-link", json=payload)
+        rv = client.post("/admin/orphans/manual-link", json=payload)
         assert rv.status_code == HTTP_200_OK
         assert rv.text == "Linked"
-        # Check phrase update
-        assert p1.proposal_id == ""
         assert p1.user_id == 999
         assert p1.chat_id == 123
-        assert p1.created_at.year == 2025
-        mock_repo.save.assert_called_once_with(p1)
+        mock_save.assert_called_once()

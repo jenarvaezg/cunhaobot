@@ -1,88 +1,19 @@
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
-from tg.handlers.messages.fallback import (
-    handle_fallback_message,
-    _on_kick,
-    _on_join,
-    _on_migrate,
-)
+from unittest.mock import MagicMock, AsyncMock, patch
+from tg.handlers.messages.fallback import handle_fallback_message, _on_kick, _on_migrate
+from models.user import User
+from models.schedule import Schedule
 
 
 class TestFallbackHandlers:
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        self.patcher_phrase = patch(
-            "models.phrase.Phrase.get_random_phrase",
-            return_value=MagicMock(text="cuñao"),
-        )
-        self.mock_phrase = self.patcher_phrase.start()
-        # Mock ScheduledTask.get_tasks globally for fallback tests to avoid KeyErrors
-        self.patcher_tasks = patch(
-            "models.schedule.ScheduledTask.get_tasks", return_value=[]
-        )
-        self.patcher_tasks.start()
-        yield
-        self.patcher_phrase.stop()
-        self.patcher_tasks.stop()
-
-    @pytest.mark.asyncio
-    async def test_handle_fallback_kick_self(self):
-        update = MagicMock()
-        update.effective_message.left_chat_member.username = "me"
-        update.effective_message.chat_id = 456
-
-        bot = MagicMock()
-        bot.get_me = AsyncMock(return_value=MagicMock(username="me"))
-        context = MagicMock()
-        context.bot = bot
-
-        with patch("tg.handlers.messages.fallback._on_kick") as mock_kick:
-            await handle_fallback_message(update, context)
-            mock_kick.assert_called_once_with(456)
-
-    @pytest.mark.asyncio
-    async def test_handle_fallback_kick_other(self):
-        update = MagicMock()
-        update.effective_message.left_chat_member.username = "other"
-        update.effective_message.left_chat_member.name = "other_name"
-        update.effective_message.chat_id = 456
-
-        bot = MagicMock()
-        bot.get_me = AsyncMock(return_value=MagicMock(username="me"))
-        bot.send_message = AsyncMock()
-        context = MagicMock()
-        context.bot = bot
-
-        await handle_fallback_message(update, context)
-        bot.send_message.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_handle_fallback_join_self(self):
-        update = MagicMock()
-        update.effective_message.left_chat_member = None
-        new_user = MagicMock()
-        new_user.username = "me"
-        update.effective_message.new_chat_members = [new_user]
-        update.effective_message.chat_id = 456
-
-        bot = MagicMock()
-        bot.get_me = AsyncMock(return_value=MagicMock(username="me"))
-        bot.send_message = AsyncMock()
-        context = MagicMock()
-        context.bot = bot
-
-        await handle_fallback_message(update, context)
-        bot.send_message.assert_called_once()
-
     @pytest.mark.asyncio
     async def test_handle_fallback_join_other(self):
         update = MagicMock()
         update.effective_message.left_chat_member = None
         new_user = MagicMock()
         new_user.username = "other"
-        new_user.name = "other_name"
+        new_user.name = "@other"
         update.effective_message.new_chat_members = [new_user]
-        update.effective_message.chat_id = 456
 
         bot = MagicMock()
         bot.get_me = AsyncMock(return_value=MagicMock(username="me"))
@@ -90,57 +21,172 @@ class TestFallbackHandlers:
         context = MagicMock()
         context.bot = bot
 
-        await handle_fallback_message(update, context)
-        bot.send_message.assert_called_once()
+        mock_phrase = MagicMock()
+        mock_phrase.text = "cuñao"
+
+        with (
+            patch(
+                "tg.handlers.messages.fallback.phrase_service.get_random",
+                return_value=mock_phrase,
+            ),
+            patch("tg.decorators.user_service.update_or_create_user"),
+        ):
+            await handle_fallback_message(update, context)
+            bot.send_message.assert_called_once()
+            args, _ = bot.send_message.call_args
+            assert "@other" in args[1]
 
     @pytest.mark.asyncio
-    async def test_on_join(self):
+    async def test_handle_fallback_join_me(self):
+        update = MagicMock()
+        me_user = MagicMock()
+        me_user.username = "me"
+        update.effective_message.new_chat_members = [me_user]
+        update.effective_message.left_chat_member = None
+
         bot = MagicMock()
+        bot.get_me = AsyncMock(return_value=MagicMock(username="me"))
         bot.send_message = AsyncMock()
-        await _on_join(bot, 123)
-        bot.send_message.assert_called_once()
+        context = MagicMock()
+        context.bot = bot
+
+        mock_phrase = MagicMock()
+        mock_phrase.text = "cuñao"
+
+        with (
+            patch(
+                "tg.handlers.messages.fallback.phrase_service.get_random",
+                return_value=mock_phrase,
+            ),
+            patch("tg.decorators.user_service.update_or_create_user"),
+        ):
+            await handle_fallback_message(update, context)
+            bot.send_message.assert_called_once()
+            assert (
+                "Ayuda" in bot.send_message.call_args[0][1]
+                or "/help" in bot.send_message.call_args[0][1]
+            )
+
+    @pytest.mark.asyncio
+    async def test_handle_fallback_kick_me(self):
+        update = MagicMock()
+        me_user = MagicMock()
+        me_user.username = "me"
+        update.effective_message.left_chat_member = me_user
+        update.effective_message.new_chat_members = []
+
+        bot = MagicMock()
+        bot.get_me = AsyncMock(return_value=MagicMock(username="me"))
+        context = MagicMock()
+        context.bot = bot
+
+        with (
+            patch("tg.handlers.messages.fallback._on_kick") as mock_kick,
+            patch("tg.decorators.user_service.update_or_create_user"),
+        ):
+            await handle_fallback_message(update, context)
+            mock_kick.assert_called_once_with(update.effective_message.chat_id)
+
+    @pytest.mark.asyncio
+    async def test_handle_fallback_kick_other(self):
+        update = MagicMock()
+        other_user = MagicMock()
+        other_user.username = "other"
+        other_user.name = "Paco"
+        update.effective_message.left_chat_member = other_user
+        update.effective_message.new_chat_members = []
+
+        bot = MagicMock()
+        bot.get_me = AsyncMock(return_value=MagicMock(username="me"))
+        bot.send_message = AsyncMock()
+        context = MagicMock()
+        context.bot = bot
+
+        mock_phrase = MagicMock()
+        mock_phrase.text = "maestro"
+
+        with (
+            patch(
+                "tg.handlers.messages.fallback.phrase_service.get_random",
+                return_value=mock_phrase,
+            ),
+            patch("tg.decorators.user_service.update_or_create_user"),
+        ):
+            await handle_fallback_message(update, context)
+            bot.send_message.assert_called_once()
+            assert "Paco" in bot.send_message.call_args[0][1]
+
+    @pytest.mark.asyncio
+    async def test_handle_fallback_migrate_to(self):
+        update = MagicMock()
+        update.effective_message.migrate_to_chat_id = 456
+        update.effective_message.migrate_from_chat_id = None
+        update.effective_message.left_chat_member = None
+        update.effective_message.new_chat_members = None
+
+        bot = MagicMock()
+        bot.get_me = AsyncMock(return_value=MagicMock(username="me"))
+        context = MagicMock()
+        context.bot = bot
+
+        with (
+            patch("tg.handlers.messages.fallback._on_migrate") as mock_mig,
+            patch("tg.decorators.user_service.update_or_create_user"),
+        ):
+            await handle_fallback_message(update, context)
+            mock_mig.assert_called_once_with(update.effective_message.chat_id, 456)
+
+    @pytest.mark.asyncio
+    async def test_handle_fallback_migrate_from(self):
+        update = MagicMock()
+        update.effective_message.migrate_from_chat_id = 123
+        update.effective_message.migrate_to_chat_id = None
+        update.effective_message.left_chat_member = None
+        update.effective_message.new_chat_members = None
+
+        bot = MagicMock()
+        bot.get_me = AsyncMock(return_value=MagicMock(username="me"))
+        context = MagicMock()
+        context.bot = bot
+
+        with (
+            patch("tg.handlers.messages.fallback._on_migrate") as mock_mig,
+            patch("tg.decorators.user_service.update_or_create_user"),
+        ):
+            await handle_fallback_message(update, context)
+            mock_mig.assert_called_once_with(123, update.effective_message.chat_id)
 
     def test_on_kick(self):
         with (
-            patch("models.user.User.load") as mock_load,
-            patch("models.schedule.ScheduledTask.get_tasks") as mock_tasks,
+            patch("services.user_repo.load", return_value=User(chat_id=123)),
+            patch("services.user_repo.save") as mock_save,
+            patch(
+                "services.schedule_repo.get_schedules",
+                return_value=[MagicMock(id="id1")],
+            ),
+            patch("services.schedule_repo.delete") as mock_delete,
         ):
-            mock_user = MagicMock()
-            mock_load.return_value = mock_user
-
-            mock_task = MagicMock()
-            mock_tasks.return_value = [mock_task]
-
             _on_kick(123)
-            mock_user.delete.assert_called_once()
-            mock_task.delete.assert_called_once()
+            mock_save.assert_called_once()
+            mock_delete.assert_called_once_with("id1")
+
+    def test_on_kick_no_user(self):
+        with (
+            patch("services.user_repo.load", return_value=None),
+            patch("services.user_repo.save") as mock_save,
+            patch("services.schedule_repo.get_schedules", return_value=[]),
+        ):
+            _on_kick(123)
+            mock_save.assert_not_called()
 
     def test_on_migrate(self):
+        task = Schedule(id="123_10_30", chat_id=123, hour=10, minute=30)
         with (
-            patch("models.user.User.load") as mock_load,
-            patch("models.schedule.ScheduledTask.get_tasks") as mock_tasks,
+            patch("services.schedule_repo.get_schedules", return_value=[task]),
+            patch("services.schedule_repo.save") as mock_save,
+            patch("services.schedule_repo.delete") as mock_delete,
         ):
-            mock_user = MagicMock()
-            mock_load.return_value = mock_user
-
-            mock_task = MagicMock()
-            mock_tasks.return_value = [mock_task]
-
             _on_migrate(123, 456)
-            mock_user.save.assert_called_once()
-            assert mock_user.chat_id == 456
-            mock_task.save.assert_called_once()
-            assert mock_task.chat_id == 456
-
-    def test_on_migrate_full(self):
-        # Hit fallback.py 44-46
-        with (
-            patch("models.user.User.load") as mock_load,
-            patch("models.schedule.ScheduledTask.get_tasks", return_value=[]),
-        ):
-            mock_user = MagicMock()
-            mock_load.return_value = mock_user
-            _on_migrate(123, 456)
-            mock_user.delete.assert_called_with(hard=True)
-            assert mock_user.chat_id == 456
-            mock_user.save.assert_called()
+            assert task.chat_id == 456
+            mock_save.assert_called_once_with(task)
+            mock_delete.assert_called_once_with("123_10_30")

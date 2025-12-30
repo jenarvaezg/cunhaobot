@@ -1,87 +1,31 @@
-from telegram import Message, Update
+from telegram import Update
 from telegram.ext import CallbackContext
 
-from models.phrase import Phrase
-from models.schedule import ScheduledTask
+from services import phrase_service, schedule_repo
 from tg.decorators import log_update, only_admins
-
-
-async def usage(update: Update) -> Message:
-    if not update.effective_message:
-        raise ValueError("No effective message")
-    return await update.effective_message.reply_text(
-        f"Para borrar chapas, {Phrase.get_random_phrase()}, tienes que escribir /borrachapa X, donde X es el numero de "
-        f"la chapa que quieras borrar, {Phrase.get_random_phrase()}\n"
-        "Tambien puedes usar /borrarchapas y me lo cargo todo.",
-        do_quote=True,
-    )
-
-
-@only_admins
-@log_update
-async def handle_delete_chapas(update: Update, context: CallbackContext) -> None:
-    if (
-        not (chat := update.effective_chat)
-        or not (message := update.effective_message)
-        or not message.text
-    ):
-        return
-
-    if len(message.text.split(" ")) > 1:
-        await message.reply_text(
-            f"Creo que lo que quieres hacer es /borrarchapa, {Phrase.get_random_phrase()}.",
-            do_quote=True,
-        )
-        return
-
-    tasks = ScheduledTask.get_tasks(chat_id=chat.id)
-    if not tasks:
-        await message.reply_text(
-            f"¡Pero si no te estoy dando la chapa, {Phrase.get_random_phrase()}!",
-            do_quote=True,
-        )
-        return
-
-    for task in tasks:
-        task.delete()
-
-    await message.reply_text(
-        f"Ya no te daré más chapas, ({len(tasks)} borradas) {Phrase.get_random_phrase()}.",
-        do_quote=True,
-    )
 
 
 @only_admins
 @log_update
 async def handle_delete_chapa(update: Update, context: CallbackContext) -> None:
-    if not (message := update.effective_message) or not message.text:
+    if not update.effective_chat or not update.effective_message:
         return
 
-    tokens = message.text.split(" ")
-    try:
-        chapa_id = int(tokens[1]) - 1
-    except (IndexError, ValueError):
-        await usage(update)
-        return
+    tasks = schedule_repo.get_schedules(
+        chat_id=update.effective_chat.id, task_type="chapa"
+    )
 
-    if not update.effective_chat:
-        return
-
-    tasks = ScheduledTask.get_tasks(chat_id=update.effective_chat.id)
     if not tasks:
-        await message.reply_text(
-            f"¡Pero si no te estoy dando la chapa, {Phrase.get_random_phrase()}!"
+        p = phrase_service.get_random().text
+        await update.effective_message.reply_text(
+            f"No hay ninguna chapa configurada en este chat, {p}.", do_quote=True
         )
         return
 
-    try:
-        task = tasks[chapa_id]
-        task.delete()
-    except IndexError:
-        await message.reply_text(
-            f"Te has pasado con el número, {Phrase.get_random_phrase()}.", do_quote=True
-        )
-    else:
-        await message.reply_text(
-            f"Ya no te daré esa chapa, {Phrase.get_random_phrase()}.", do_quote=True
-        )
+    # Delete all chapas in this chat for simplicity, or we could ask which one
+    for task in tasks:
+        schedule_repo.delete(task.id)
+
+    await update.effective_message.reply_text(
+        "Todas las chapas de este chat han sido eliminadas.", do_quote=True
+    )

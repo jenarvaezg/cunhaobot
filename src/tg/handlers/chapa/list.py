@@ -1,8 +1,7 @@
 from telegram import Update
 from telegram.ext import CallbackContext
 
-from models.phrase import Phrase
-from models.schedule import ScheduledTask
+from services import phrase_service, schedule_repo
 from tg.decorators import log_update
 
 
@@ -11,17 +10,19 @@ async def handle_list_chapas(update: Update, context: CallbackContext) -> None:
     if not update.effective_chat or not update.effective_message:
         return
 
-    tasks = ScheduledTask.get_tasks(chat_id=update.effective_chat.id)
+    tasks = schedule_repo.get_schedules(
+        chat_id=update.effective_chat.id, task_type="chapa"
+    )
+
     if not tasks:
+        p = phrase_service.get_random().text
         await update.effective_message.reply_text(
-            f"No has configurado chapas, {Phrase.get_random_phrase()}, puedes hacerlo con /chapa.",
-            do_quote=True,
+            f"No hay ninguna chapa configurada en este chat, {p}.", do_quote=True
         )
         return
 
-    tasks_str = "\n".join([f"{pos + 1} -> {task}" for pos, task in enumerate(tasks)])
+    text = "Chapas configuradas:\n"
+    for task in tasks:
+        text += f"- {task.hour:02}:{task.minute:02} (Parámetros: '{task.query}')\n"
 
-    await update.effective_message.reply_text(
-        f"Estas son las chapas que tienes configuradas, {Phrase.get_random_phrase()}:\n{tasks_str}.",
-        do_quote=True,
-    )
+    await update.effective_message.reply_text(text, do_quote=True)

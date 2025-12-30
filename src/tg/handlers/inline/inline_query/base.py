@@ -1,5 +1,4 @@
 import logging
-
 from telegram import (
     InlineQueryResultArticle,
     InlineQueryResultsButton,
@@ -8,8 +7,7 @@ from telegram import (
 )
 from telegram.ext import CallbackContext
 
-from models.phrase import Phrase
-from models.user import InlineUser
+from services import phrase_service, user_service
 from tg.decorators import log_update
 from tg.handlers.inline.inline_query.sticker_mode import get_sticker_mode_results
 from tg.text_router import (
@@ -45,13 +43,14 @@ async def handle_inline_query(update: Update, context: CallbackContext) -> None:
 
     results_func = MODE_HANDLERS.get(mode)
     if not results_func:
+        p = phrase_service.get_random().text
         await update.inline_query.answer(
             [
                 InlineQueryResultArticle(
                     id="Dont know how to use",
                     title="No sabes usarme :(, hablame por privado y escribe /help",
                     input_message_content=InputTextMessageContent(
-                        f"Soy un {Phrase.get_random_phrase()} y no se usar el CuñaoBot"
+                        f"Soy un {p} y no se usar el CuñaoBot"
                     ),
                     thumbnail_url=get_thumb(),
                 )
@@ -75,4 +74,4 @@ async def handle_inline_query(update: Update, context: CallbackContext) -> None:
         ),
     )
 
-    InlineUser.update_or_create_from_update(update)
+    user_service.update_or_create_inline_user(update)

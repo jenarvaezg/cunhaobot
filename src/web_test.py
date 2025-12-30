@@ -1,6 +1,12 @@
-from litestar.status_codes import HTTP_200_OK
-from unittest.mock import patch
+from litestar.status_codes import (
+    HTTP_200_OK,
+    HTTP_401_UNAUTHORIZED,
+    HTTP_500_INTERNAL_SERVER_ERROR,
+)
+from unittest.mock import patch, AsyncMock, PropertyMock
 from models.phrase import Phrase, LongPhrase
+from models.proposal import Proposal, LongProposal
+from models.user import User, InlineUser
 
 
 def test_index_page(client):
@@ -8,15 +14,14 @@ def test_index_page(client):
     lp1 = LongPhrase(text="esto es una prueba", usages=5)
 
     with (
-        patch("main.Phrase.get_phrases", return_value=[p1]),
-        patch("main.LongPhrase.get_phrases", return_value=[lp1]),
+        patch("services.phrase_repo.get_phrases", return_value=[p1]),
+        patch("services.long_phrase_repo.get_phrases", return_value=[lp1]),
     ):
         rv = client.get("/")
         assert rv.status_code == HTTP_200_OK
         assert "EL ARCHIVO DEL CUÑAO" in rv.text
         assert "p1" in rv.text
-        assert "Esto es una prueba." in rv.text
-        # In the new design, usages are in a stat-badge
+        assert "esto es una prueba" in rv.text
         assert '<span class="fw-bold">10</span>' in rv.text
         assert '<span class="fw-bold">5</span>' in rv.text
 
@@ -25,13 +30,12 @@ def test_search_endpoint(client):
     p1 = Phrase(text="match", usages=10)
 
     with (
-        patch("main.Phrase.get_phrases", return_value=[p1]),
-        patch("main.LongPhrase.get_phrases", return_value=[]),
+        patch("services.phrase_repo.get_phrases", return_value=[p1]),
+        patch("services.long_phrase_repo.get_phrases", return_value=[]),
     ):
         rv = client.get("/search", params={"search": "match"})
         assert rv.status_code == HTTP_200_OK
         assert "match" in rv.text
-        # Check that it returns the partial, not the full layout
         assert "El Archivo del Cuñao" not in rv.text
         assert "Palabras Poderosas" in rv.text
 
@@ -43,23 +47,29 @@ def test_ping(client):
 
 
 def test_auth_telegram_fail(client):
-    rv = client.get("/auth/telegram", params={"hash": "wrong"})
-    assert rv.status_code == HTTP_200_OK  # Redirects to /
-    assert rv.url.path == "/"
+    with (
+        patch("services.phrase_repo.get_phrases", return_value=[]),
+        patch("services.long_phrase_repo.get_phrases", return_value=[]),
+    ):
+        rv = client.get("/auth/telegram", params={"hash": "wrong"})
+        assert rv.status_code == HTTP_200_OK  # After redirect to /
+        assert rv.url.path == "/"
 
 
 def test_logout(client):
-    rv = client.get("/logout")
-    assert rv.status_code == HTTP_200_OK
-    assert rv.url.path == "/"
+    with (
+        patch("services.phrase_repo.get_phrases", return_value=[]),
+        patch("services.long_phrase_repo.get_phrases", return_value=[]),
+    ):
+        rv = client.get("/logout")
+        assert rv.status_code == HTTP_200_OK  # After redirect to /
+        assert rv.url.path == "/"
 
 
 def test_proposals(client):
     with (
-        patch("main.Proposal.get_proposals", return_value=[]),
-        patch("main.LongProposal.get_proposals", return_value=[]),
-        patch("main.Phrase.get_phrases", return_value=[]),
-        patch("main.LongPhrase.get_phrases", return_value=[]),
+        patch("services.proposal_repo.get_proposals", return_value=[]),
+        patch("services.long_proposal_repo.get_proposals", return_value=[]),
     ):
         rv = client.get("/proposals")
         assert rv.status_code == HTTP_200_OK
@@ -68,44 +78,109 @@ def test_proposals(client):
 
 def test_proposals_search(client):
     with (
-        patch("main.Proposal.get_proposals", return_value=[]),
-        patch("main.LongProposal.get_proposals", return_value=[]),
-        patch("main.Phrase.get_phrases", return_value=[]),
-        patch("main.LongPhrase.get_phrases", return_value=[]),
+        patch("services.proposal_repo.get_proposals", return_value=[]),
+        patch("services.long_proposal_repo.get_proposals", return_value=[]),
     ):
         rv = client.get("/proposals/search", headers={"HX-Request": "true"})
         assert rv.status_code == HTTP_200_OK
         assert "Apelativos en Espera" in rv.text
 
 
-@patch("main.handle_slack")
-@patch("requests.post")
-def test_slack_handler(mock_post, mock_handle_slack, client):
-    mock_handle_slack.return_value = {
-        "direct": "direct_msg",
-        "indirect": {"text": "indirect_msg"},
-    }
-    rv = client.post(
-        "/slack", data={"payload": '{"response_url": "http://example.com"}'}
-    )
-    assert rv.status_code == HTTP_200_OK
-    assert rv.text == "direct_msg"
+# Missing tests for WebController:
+# generate_ai_phrases (unauthorized, authorized success, authorized exception)
+# metrics (various scenarios to cover branches and data population)
 
 
-def test_slack_auth(client):
-    with patch.dict("os.environ", {"SLACK_CLIENT_ID": "test_id"}):
-        rv = client.get("/slack/auth", follow_redirects=False)
-        assert rv.status_code == 302
-        assert "slack.com/oauth/v2/authorize" in rv.headers["location"]
+def test_generate_ai_phrases_unauthorized(client):
+    with patch("core.config.config.is_gae", True):
+        rv = client.post("/ai/generate")
+        assert rv.status_code == HTTP_401_UNAUTHORIZED
+        assert rv.json() == {"error": "Unauthorized"}
 
 
-@patch("requests.post")
-def test_slack_auth_redirect(mock_post, client):
-    with patch.dict(
-        "os.environ",
-        {"SLACK_CLIENT_ID": "test_id", "SLACK_CLIENT_SECRET": "test_secret"},
+def test_generate_ai_phrases_authorized_success(client):
+    with (
+        patch("core.config.config.is_gae", False),
+        patch("core.config.config.owner_id", "123"),
+        patch(
+            "services.ai_service.AIService.generate_cunhao_phrases",
+            new_callable=AsyncMock,
+            return_value=["phrase1", "phrase2"],
+        ),
     ):
-        rv = client.get("/slack/auth/redirect", params={"code": "test_code"})
+        # Simulate authorized user session
+        with patch(
+            "litestar.connection.base.ASGIConnection.session", new_callable=PropertyMock
+        ) as mock_session:
+            mock_session.return_value = {"user": {"id": "123"}}
+            rv = client.post("/ai/generate")
+            assert rv.status_code == HTTP_200_OK
+            assert rv.json() == {"phrases": ["phrase1", "phrase2"]}
+
+
+def test_generate_ai_phrases_authorized_exception(client):
+    with (
+        patch("core.config.config.is_gae", False),
+        patch("core.config.config.owner_id", "123"),
+        patch(
+            "services.ai_service.AIService.generate_cunhao_phrases",
+            new_callable=AsyncMock,
+            side_effect=Exception("AI Error"),
+        ),
+    ):
+        # Simulate authorized user session
+        with patch(
+            "litestar.connection.base.ASGIConnection.session", new_callable=PropertyMock
+        ) as mock_session:
+            mock_session.return_value = {"user": {"id": "123"}}
+            rv = client.post("/ai/generate")
+            assert rv.status_code == HTTP_500_INTERNAL_SERVER_ERROR
+            assert rv.json() == {"error": "AI Error"}
+
+
+def test_metrics_page_empty_data(client):
+    with (
+        patch("services.phrase_repo.get_phrases", return_value=[]),
+        patch("services.long_phrase_repo.get_phrases", return_value=[]),
+        patch("services.proposal_repo.load_all", return_value=[]),
+        patch("services.long_proposal_repo.load_all", return_value=[]),
+        patch("services.user_repo.load_all", return_value=[]),
+        patch("services.inline_user_repo.load_all", return_value=[]),
+    ):
+        rv = client.get("/metrics")
         assert rv.status_code == HTTP_200_OK
-        assert rv.text == ":)"
-        mock_post.assert_called_once()
+        # Check text content because context might not be directly accessible when template is rendered
+        assert "Nadie" in rv.text
+        assert "0" in rv.text  # total_phrases and total_pending
+        assert "Frases Aprobadas" in rv.text
+        assert "Propuestas Pendientes" in rv.text
+
+
+def test_metrics_page_with_data(client):
+    p1 = Phrase(text="p1", usages=10, user_id=1)
+    lp1 = LongPhrase(text="lp1", usages=5, user_id=2)
+
+    prop1 = Proposal(id="1", user_id=1, voting_ended=False, text="prop1")
+    lprop1 = LongProposal(id="2", user_id=3, voting_ended=False, text="lprop1")
+
+    user1 = User(chat_id=1, name="User One")
+    user2 = User(chat_id=2, name="User Two")
+    inline_user1 = InlineUser(user_id=3, name="Inline User Three")
+
+    with (
+        patch("services.phrase_repo.get_phrases", return_value=[p1]),
+        patch("services.long_phrase_repo.get_phrases", return_value=[lp1]),
+        patch("services.proposal_repo.load_all", return_value=[prop1]),
+        patch("services.long_proposal_repo.load_all", return_value=[lprop1]),
+        patch("services.user_repo.load_all", return_value=[user1, user2]),
+        patch("services.inline_user_repo.load_all", return_value=[inline_user1]),
+    ):
+        rv = client.get("/metrics")
+        assert rv.status_code == HTTP_200_OK
+        assert "2" in rv.text  # total_phrases
+        assert "2" in rv.text  # total_pending
+        assert "User One" in rv.text  # top_contributor
+        assert "Ranking de Contribuidores" in rv.text
+        assert "User One" in rv.text
+        assert "User Two" in rv.text
+        assert "Inline User Three" in rv.text

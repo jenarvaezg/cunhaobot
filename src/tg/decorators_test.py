@@ -30,7 +30,9 @@ class TestDecorators:
         update.effective_user.id = 2
         update.effective_message.reply_text = AsyncMock()
 
-        with patch("models.phrase.Phrase.get_random_phrase", return_value="cuñao"):
+        mock_phrase = MagicMock()
+        mock_phrase.text = "cuñao"
+        with patch("tg.decorators.phrase_service.get_random", return_value=mock_phrase):
             await decorated(update, MagicMock())
             update.effective_message.reply_text.assert_called_once()
 
@@ -50,7 +52,10 @@ class TestDecorators:
         update.effective_user = None
         update.effective_message = MagicMock()
         update.effective_message.reply_text = AsyncMock()
-        with patch("models.phrase.Phrase.get_random_phrase", return_value="cuñao"):
+
+        mock_phrase = MagicMock()
+        mock_phrase.text = "cuñao"
+        with patch("tg.decorators.phrase_service.get_random", return_value=mock_phrase):
             assert await decorated(update, MagicMock()) is None
             update.effective_message.reply_text.assert_called_once()
 
@@ -70,15 +75,18 @@ class TestDecorators:
         decorated = log_update(dummy_func)
         update = MagicMock()
         update.effective_chat = None
-        assert await decorated(update, MagicMock()) == "ok"
+        # update_or_create_user is called, we should mock it
+        with patch("tg.decorators.user_service.update_or_create_user"):
+            assert await decorated(update, MagicMock()) == "ok"
 
     @pytest.mark.asyncio
     async def test_log_update_no_user(self):
         decorated = log_update(dummy_func)
         update = MagicMock()
         update.to_dict.return_value = {}
-        with patch("models.user.User.update_or_create_from_update", return_value=None):
+        with patch("tg.decorators.user_service.update_or_create_user") as mock_update:
             assert await decorated(update, MagicMock()) == "ok"
+            mock_update.assert_called_once_with(update)
 
     @pytest.mark.asyncio
     async def test_log_update_success(self):
@@ -86,9 +94,7 @@ class TestDecorators:
         update = MagicMock()
         update.to_dict.return_value = {"a": 1}
 
-        with patch("models.user.User.update_or_create_from_update") as mock_user_get:
-            mock_user = MagicMock()
-            mock_user_get.return_value = mock_user
+        with patch("tg.decorators.user_service.update_or_create_user") as mock_update:
             res = await decorated(update, MagicMock())
             assert res == "ok"
-            mock_user.save.assert_called_once()
+            mock_update.assert_called_once_with(update)

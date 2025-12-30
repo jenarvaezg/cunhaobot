@@ -49,10 +49,13 @@ class TestUtils:
         res = normalize_str(s, remove_punctuation=False)
         assert res == "¡hola, mundo!"
 
-    def test_improve_punctuation_non_alpha_start(self):
-        s = "¿hola"
-        res = improve_punctuation(s)
-        assert res == "¿Hola."
+
+def test_improve_punctuation():
+    assert improve_punctuation("hola") == "Hola."
+    assert improve_punctuation("¡hola") == "¡Hola."
+    assert improve_punctuation("123") == "123"
+    assert improve_punctuation("") == ""
+    assert improve_punctuation("A") == "A."
 
     def test_get_thumb(self):
         assert get_thumb().startswith("http")

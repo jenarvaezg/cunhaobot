@@ -1,13 +1,10 @@
 import logging
 from functools import wraps
-
+from typing import Any, Callable, TypeVar, cast
 from telegram import Chat, Update
 
-from models.phrase import Phrase
-from models.user import User
+from services import phrase_service, user_service
 from utils import remove_empty_from_dict
-
-from typing import Any, Callable, TypeVar, cast
 
 logger = logging.getLogger("cunhaobot")
 
@@ -27,8 +24,9 @@ def only_admins(f: F) -> F:
         admin_ids = [admin.user.id for admin in admins]
         if not update.effective_user or update.effective_user.id not in admin_ids:
             if update.effective_message:
+                p = phrase_service.get_random().text
                 await update.effective_message.reply_text(
-                    f"Esto solo lo pueden hacer administradores, {Phrase.get_random_phrase()}.",
+                    f"Esto solo lo pueden hacer administradores, {p}.",
                     do_quote=True,
                 )
             return
@@ -41,9 +39,8 @@ def only_admins(f: F) -> F:
 def log_update(f: F) -> F:
     @wraps(f)
     async def wrapper(update: Update, *args: Any, **kwargs: Any) -> Any:
-        u = User.update_or_create_from_update(update)
-        if u:
-            u.save()
+        # Actualizar o crear usuario usando el servicio
+        user_service.update_or_create_user(update)
 
         update_dict = cast(dict[str, Any], remove_empty_from_dict(update.to_dict()))
         update_dict["method"] = f.__name__

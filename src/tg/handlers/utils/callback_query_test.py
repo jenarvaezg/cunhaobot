@@ -1,27 +1,31 @@
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
-import sys
+from unittest.mock import MagicMock, AsyncMock, patch
 from tg.handlers.utils.callback_query import (
     handle_callback_query,
-    _approve_proposal,
-    _dismiss_proposal,
-    _update_proposal_text,
-    get_vote_summary,
+    approve_proposal,
+    dismiss_proposal,
+    _ensure_admins,
 )
-from models.proposal import Proposal
-from tg.constants import LIKE
+from tg.handlers.utils import callback_query as cb_query
+from models.proposal import Proposal, LongProposal
+
+
+@pytest.fixture(autouse=True)
+def clear_admins():
+    cb_query.admins = []
+    yield
+    cb_query.admins = []
 
 
 class TestCallbackQuery:
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        # Mock Phrase.get_random_phrase
-        self.patcher_phrase = patch("models.phrase.Phrase.get_random_phrase")
-        self.mock_phrase = self.patcher_phrase.start()
-        self.mock_phrase.return_value = "cuñao"
+    @pytest.mark.asyncio
+    async def test_ensure_admins_success(self):
+        bot = MagicMock()
+        admin = MagicMock()
+        bot.get_chat_administrators = AsyncMock(return_value=[admin])
 
-        yield
-        self.patcher_phrase.stop()
+        await _ensure_admins(bot)
+        assert cb_query.admins == [admin]
 
     @pytest.mark.asyncio
     async def test_handle_callback_query_not_admin(self):
@@ -29,19 +33,23 @@ class TestCallbackQuery:
         update.callback_query.data = "LIKE:123:Proposal"
         update.callback_query.from_user.id = 999
         update.callback_query.answer = AsyncMock()
-        context = MagicMock()
 
-        admin_member = MagicMock()
-        admin_member.user.id = 1
-        context.bot.get_chat_administrators = AsyncMock(return_value=[admin_member])
+        context = MagicMock()
+        admin = MagicMock()
+        admin.user.id = 1
+        context.bot.get_chat_administrators = AsyncMock(return_value=[admin])
 
         with (
-            patch("tg.handlers.utils.callback_query.admins", []),
-            patch("models.proposal.Proposal.load", return_value=MagicMock()),
+            patch(
+                "tg.handlers.utils.callback_query.phrase_service.get_random"
+            ) as mock_random,
+            patch("tg.decorators.user_service.update_or_create_user"),
         ):
+            mock_random.return_value.text = "cuñao"
             await handle_callback_query(update, context)
-
-        update.callback_query.answer.assert_called()
+            update.callback_query.answer.assert_called_with(
+                "Tener una silla en el consejo no te hace maestro cuñao, cuñao"
+            )
 
     @pytest.mark.asyncio
     async def test_handle_callback_query_proposal_not_found(self):
@@ -49,227 +57,235 @@ class TestCallbackQuery:
         update.callback_query.data = "LIKE:123:Proposal"
         update.callback_query.from_user.id = 1
         update.callback_query.answer = AsyncMock()
-        context = MagicMock()
 
-        admin_member = MagicMock()
-        admin_member.user.id = 1
-        context.bot.get_chat_administrators = AsyncMock(return_value=[admin_member])
+        context = MagicMock()
+        admin = MagicMock()
+        admin.user.id = 1
+        cb_query.admins = [admin]
 
         with (
-            patch("tg.handlers.utils.callback_query.admins", [admin_member]),
-            patch("models.proposal.Proposal.load", return_value=None),
+            patch("services.proposal_repo.load", return_value=None),
+            patch(
+                "tg.handlers.utils.callback_query.phrase_service.get_random"
+            ) as mock_random,
+            patch("tg.decorators.user_service.update_or_create_user"),
         ):
+            mock_random.return_value.text = "cuñao"
             await handle_callback_query(update, context)
-            update.callback_query.answer.assert_called()
+            update.callback_query.answer.assert_called_with(
+                "Esa propuesta ha muerto, cuñao"
+            )
 
     @pytest.mark.asyncio
-    async def test_handle_callback_query_approve(self):
+    async def test_handle_callback_query_vote_and_approve(self):
         update = MagicMock()
-        update.callback_query.data = f"{LIKE}:123:Proposal"
+        update.callback_query.data = "LIKE:123:Proposal"
         update.callback_query.from_user.id = 1
         update.callback_query.answer = AsyncMock()
+
         context = MagicMock()
+        admin = MagicMock()
+        admin.user.id = 1
+        admin.user.name = "Admin"
+        cb_query.admins = [admin]  # 1 admin -> 1 vote required
 
-        admin_member = MagicMock()
-        admin_member.user.id = 1
-
-        mock_proposal = MagicMock(spec=Proposal)
-        mock_proposal.liked_by = [1, 2, 3]
-        mock_proposal.disliked_by = []
-        mock_proposal.kind = "Proposal"
+        p = Proposal(id="123", text="test", from_chat_id=1)
 
         with (
-            patch("tg.handlers.utils.callback_query.admins", [admin_member]),
-            patch("models.proposal.Proposal.load", return_value=mock_proposal),
-            patch("tg.handlers.utils.callback_query._add_vote", new_callable=AsyncMock),
+            patch("services.proposal_repo.load", return_value=p),
             patch(
-                "tg.handlers.utils.callback_query.get_required_votes", return_value=1
-            ),
+                "tg.handlers.utils.callback_query.proposal_service.vote"
+            ) as mock_vote,
             patch(
-                "tg.handlers.utils.callback_query._approve_proposal",
+                "tg.handlers.utils.callback_query.approve_proposal",
                 new_callable=AsyncMock,
             ) as mock_approve,
+            patch("tg.decorators.user_service.update_or_create_user"),
         ):
+            # Mock vote behavior (manually add to p since we mock the service)
+            def side_effect(prop, user_id, pos):
+                prop.liked_by.append(user_id)
+
+            mock_vote.side_effect = side_effect
+
             await handle_callback_query(update, context)
-            mock_approve.assert_called_once()
+
+            mock_vote.assert_called_once()
+            mock_approve.assert_called_once_with(p, context.bot, update.callback_query)
 
     @pytest.mark.asyncio
-    async def test_handle_callback_query_dismiss(self):
+    async def test_handle_callback_query_vote_and_dismiss(self):
         update = MagicMock()
-        update.callback_query.data = "DISLIKE:123:Proposal"
+        update.callback_query.data = "DISLIKE:123:LongProposal"
         update.callback_query.from_user.id = 1
         update.callback_query.answer = AsyncMock()
+
         context = MagicMock()
+        admin = MagicMock()
+        admin.user.id = 1
+        cb_query.admins = [admin]
 
-        admin_member = MagicMock()
-        admin_member.user.id = 1
-
-        mock_proposal = MagicMock(spec=Proposal)
-        mock_proposal.liked_by = []
-        mock_proposal.disliked_by = [1, 2, 3]
-        mock_proposal.kind = "Proposal"
+        p = LongProposal(id="123", text="test")
 
         with (
-            patch("tg.handlers.utils.callback_query.admins", [admin_member]),
-            patch("models.proposal.Proposal.load", return_value=mock_proposal),
-            patch("tg.handlers.utils.callback_query._add_vote", new_callable=AsyncMock),
+            patch("services.long_proposal_repo.load", return_value=p),
             patch(
-                "tg.handlers.utils.callback_query.get_required_votes", return_value=1
-            ),
+                "tg.handlers.utils.callback_query.proposal_service.vote"
+            ) as mock_vote,
             patch(
-                "tg.handlers.utils.callback_query._dismiss_proposal",
+                "tg.handlers.utils.callback_query.dismiss_proposal",
                 new_callable=AsyncMock,
             ) as mock_dismiss,
+            patch("tg.decorators.user_service.update_or_create_user"),
         ):
+
+            def side_effect(prop, user_id, pos):
+                prop.disliked_by.append(user_id)
+
+            mock_vote.side_effect = side_effect
+
             await handle_callback_query(update, context)
             mock_dismiss.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_approve_proposal(self):
-        p = MagicMock(spec=Proposal)
-        p.text = "test"
-        p.from_chat_id = 123
-        p.from_message_id = 456
-        p.liked_by = []
-        p.disliked_by = []
-        p.phrase_class.upload_from_proposal = AsyncMock()
-
-        cb = MagicMock()
-        cb.edit_message_text = AsyncMock()
+    async def test_approve_proposal_web(self):
+        p = Proposal(id="123", text="test", from_chat_id=123)
         bot = MagicMock()
         bot.send_message = AsyncMock()
 
-        with patch("tg.handlers.utils.callback_query.admins", [MagicMock()]):
-            await _approve_proposal(p, cb, bot)
-
-        cb.edit_message_text.assert_called_once()
-        bot.send_message.assert_called_once()
-        p.phrase_class.upload_from_proposal.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_approve_proposal_from_web(self):
-        p = MagicMock(spec=Proposal)
-        p.text = "test"
-        p.from_chat_id = 123
-        p.from_message_id = 456
-        p.liked_by = []
-        p.disliked_by = []
-        p.phrase_class.upload_from_proposal = AsyncMock()
-
-        bot = MagicMock()
-        bot.send_message = AsyncMock()
-
-        with patch("tg.handlers.utils.callback_query.admins", [MagicMock()]):
-            await _approve_proposal(p, None, bot)
-
-        assert bot.send_message.call_count == 2
-        p.phrase_class.upload_from_proposal.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_dismiss_proposal(self):
-        p = MagicMock(spec=Proposal)
-        p.text = "test"
-        p.from_chat_id = 123
-        p.from_message_id = 456
-        p.liked_by = []
-        p.disliked_by = []
-
-        cb = MagicMock()
-        cb.edit_message_text = AsyncMock()
-        bot = MagicMock()
-        bot.send_message = AsyncMock()
-
-        with patch("tg.handlers.utils.callback_query.admins", [MagicMock()]):
-            await _dismiss_proposal(p, cb, bot)
-
-        cb.edit_message_text.assert_called_once()
-        bot.send_message.assert_called_once()
-        p.delete.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_update_proposal_text(self):
-        p = MagicMock(spec=Proposal)
-        p.id = "123"
-        p.kind = "Proposal"
-        p.liked_by = [1]
-        p.disliked_by = []
-
-        cb = MagicMock()
-        cb.message.text_markdown = "Original text"
-        cb.edit_message_text = AsyncMock()
-
-        mock_admin = MagicMock()
-        mock_admin.user.id = 1
-        mock_admin.user.name = "Admin1"
+        cb_query.admins = []
 
         with (
-            patch("tg.handlers.utils.callback_query.admins", [mock_admin]),
             patch(
-                "tg.handlers.utils.callback_query.build_vote_keyboard", return_value=[]
-            ),
-        ):
-            await _update_proposal_text(p, cb)
-            cb.edit_message_text.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_handle_callback_query_vote(self):
-        update = MagicMock()
-        update.callback_query.data = f"{LIKE}:123:Proposal"
-        update.callback_query.from_user.id = 1
-        update.callback_query.answer = AsyncMock()
-        context = MagicMock()
-
-        admin_member = MagicMock()
-        admin_member.user.id = 1
-
-        mock_proposal = MagicMock(spec=Proposal)
-        mock_proposal.liked_by = []
-        mock_proposal.disliked_by = []
-        mock_proposal.kind = "Proposal"
-
-        with (
-            patch("tg.handlers.utils.callback_query.admins", [admin_member]),
-            patch("models.proposal.Proposal.load", return_value=mock_proposal),
-            patch(
-                "tg.handlers.utils.callback_query.get_required_votes", return_value=5
-            ),
-            patch(
-                "tg.handlers.utils.callback_query._update_proposal_text",
+                "tg.handlers.utils.callback_query._ensure_admins",
                 new_callable=AsyncMock,
             ),
+            patch("services.proposal_repo.save"),
+            patch("tg.handlers.utils.callback_query.phrase_service") as mock_ph_svc,
+            patch(
+                "tg.handlers.utils.callback_query.get_vote_summary",
+                return_value="summary",
+            ),
         ):
-            await handle_callback_query(update, context)
+            mock_ph_svc.get_random.return_value.text = "cuñao"
+            mock_ph_svc.create_from_proposal = AsyncMock()
 
-            mock_proposal.add_vote.assert_called()
-            mock_proposal.save.assert_called()
-            update.callback_query.answer.assert_called()
+            await approve_proposal(p, bot)
+
+            # Should send 2 messages: one to mod chat, one to proposer
+            assert bot.send_message.call_count == 2
+            mock_ph_svc.create_from_proposal.assert_called_once_with(p, bot)
 
     @pytest.mark.asyncio
-    async def test_handle_callback_query_no_data(self):
-        update = MagicMock()
-        update.callback_query.data = None
-        context = MagicMock()
-        context.bot.get_chat_administrators = AsyncMock()
-        await handle_callback_query(update, context)
+    async def test_dismiss_proposal_web(self):
+        p = Proposal(id="123", text="test", from_chat_id=123)
+        bot = MagicMock()
+        bot.send_message = AsyncMock()
 
-    def test_get_vote_summary(self):
-        p = MagicMock()
-        p.liked_by = [1]
-        p.disliked_by = [2]
+        with (
+            patch(
+                "tg.handlers.utils.callback_query._ensure_admins",
+                new_callable=AsyncMock,
+            ),
+            patch("services.proposal_repo.save"),
+            patch("services.proposal_repo.delete") as mock_delete,
+            patch("tg.handlers.utils.callback_query.phrase_service") as mock_ph_svc,
+            patch(
+                "tg.handlers.utils.callback_query.get_vote_summary",
+                return_value="summary",
+            ),
+        ):
+            mock_ph_svc.get_random.return_value.text = "cuñao"
 
-        mock_admin1 = MagicMock()
-        mock_admin1.user.id = 1
-        mock_admin1.user.name = "A1"
-        mock_admin2 = MagicMock()
-        mock_admin2.user.id = 2
-        mock_admin2.user.name = "A2"
+            await dismiss_proposal(p, bot)
 
-        # Use sys.modules to patch the actual module's global
-        sys.modules["tg.handlers.utils.callback_query"].admins = [
-            mock_admin1,
-            mock_admin2,
-        ]
+            assert bot.send_message.call_count == 2
+            mock_delete.assert_called_once_with("123")
 
+    @pytest.mark.asyncio
+    async def test_update_proposal_text_equal(self):
+        from tg.handlers.utils.callback_query import _update_proposal_text
+
+        p = Proposal(id="123", text="test", liked_by=[1])
+        callback_query = MagicMock()
+        callback_query.message.text_markdown = "Original text\n\n*Han votado ya:*\nNew"
+        callback_query.edit_message_text = AsyncMock()
+
+        admin = MagicMock()
+        admin.user.id = 1
+        admin.user.name = "New"
+        cb_query.admins = [admin]
+
+        await _update_proposal_text(p, callback_query)
+        # Should NOT call edit_message_text because text is already same
+        callback_query.edit_message_text.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_get_vote_summary_with_dislikers(self):
+        from tg.handlers.utils.callback_query import get_vote_summary
+
+        admin = MagicMock()
+        admin.user.id = 1
+        admin.user.name = "Admin"
+        cb_query.admins = [admin]
+
+        p = Proposal(text="test", disliked_by=[1])
         summary = get_vote_summary(p)
-        assert "A1" in summary
-        assert "A2" in summary
+        assert "Han votado que no: Admin" in summary
+
+    @pytest.mark.asyncio
+    async def test_ensure_admins_error(self):
+        bot = MagicMock()
+        bot.get_chat_administrators = AsyncMock(side_effect=Exception("Fail"))
+        await _ensure_admins(bot)
+        assert cb_query.admins == []
+
+    @pytest.mark.asyncio
+    async def test_approve_proposal_errors(self):
+        p = Proposal(id="123", text="test", from_chat_id=123)
+        bot = MagicMock()
+        bot.send_message = AsyncMock(side_effect=Exception("Fail"))
+
+        with (
+            patch(
+                "tg.handlers.utils.callback_query._ensure_admins",
+                new_callable=AsyncMock,
+            ),
+            patch("services.proposal_repo.save"),
+            patch("tg.handlers.utils.callback_query.phrase_service") as mock_ph_svc,
+            patch(
+                "tg.handlers.utils.callback_query.get_vote_summary",
+                return_value="summary",
+            ),
+        ):
+            mock_ph_svc.get_random.return_value.text = "cuñao"
+            mock_ph_svc.create_from_proposal = AsyncMock()
+
+            # Should not raise exception
+            await approve_proposal(p, bot)
+            assert bot.send_message.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_dismiss_proposal_errors(self):
+        p = Proposal(id="123", text="test", from_chat_id=123)
+        bot = MagicMock()
+        bot.send_message = AsyncMock(side_effect=Exception("Fail"))
+
+        with (
+            patch(
+                "tg.handlers.utils.callback_query._ensure_admins",
+                new_callable=AsyncMock,
+            ),
+            patch("services.proposal_repo.save"),
+            patch("services.proposal_repo.delete"),
+            patch("tg.handlers.utils.callback_query.phrase_service") as mock_ph_svc,
+            patch(
+                "tg.handlers.utils.callback_query.get_vote_summary",
+                return_value="summary",
+            ),
+        ):
+            mock_ph_svc.get_random.return_value.text = "cuñao"
+
+            # Should not raise exception
+            await dismiss_proposal(p, bot)
+            assert bot.send_message.call_count == 2

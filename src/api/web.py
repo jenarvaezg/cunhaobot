@@ -1,0 +1,168 @@
+from typing import Any, Annotated, cast
+from litestar import Controller, Request, get, post
+from litestar.response import Response, Template
+from litestar.plugins.htmx import HTMXTemplate
+from litestar.params import Dependency
+
+from infrastructure.protocols import (
+    PhraseRepository,
+    LongPhraseRepository,
+    ProposalRepository,
+    LongProposalRepository,
+)
+from services.ai_service import AIService
+from core.config import config
+
+
+class WebController(Controller):
+    @get("/", sync_to_thread=True)
+    def index(
+        self,
+        request: Request,
+        phrase_repo: Annotated[Any, Dependency()],
+        long_phrase_repo: Annotated[Any, Dependency()],
+    ) -> Template:
+        # Cast to protocol for internal type safety
+        p_repo: PhraseRepository = phrase_repo
+        lp_repo: LongPhraseRepository = long_phrase_repo
+
+        short_phrases = p_repo.get_phrases(limit=50)
+        long_phrases = lp_repo.get_phrases(limit=50)
+
+        return Template(
+            template_name="index.html",
+            context={
+                "short_phrases": sorted(
+                    short_phrases, key=lambda x: x.usages, reverse=True
+                ),
+                "long_phrases": sorted(
+                    long_phrases, key=lambda x: x.usages, reverse=True
+                ),
+                "user": request.session.get("user"),
+                "owner_id": config.owner_id,
+            },
+        )
+
+    @get("/proposals", sync_to_thread=True)
+    def proposals(
+        self,
+        request: Request,
+        proposal_repo: Annotated[Any, Dependency()],
+        long_proposal_repo: Annotated[Any, Dependency()],
+    ) -> Template:
+        from .utils import get_proposals_context
+
+        return Template(
+            template_name="proposals.html",
+            context=cast(
+                dict[str, Any],
+                get_proposals_context(request, proposal_repo, long_proposal_repo),
+            ),
+        )
+
+    @get("/search", sync_to_thread=True)
+    def search(
+        self,
+        phrase_repo: Annotated[Any, Dependency()],
+        long_phrase_repo: Annotated[Any, Dependency()],
+        search: str = "",
+        **filters: Any,
+    ) -> HTMXTemplate:
+        p_repo: PhraseRepository = phrase_repo
+        lp_repo: LongPhraseRepository = long_phrase_repo
+
+        short_phrases = p_repo.get_phrases(search=search, **filters)
+        long_phrases = lp_repo.get_phrases(search=search, **filters)
+        return HTMXTemplate(
+            template_name="partials/phrases_list.html",
+            context={
+                "short_phrases": sorted(
+                    short_phrases, key=lambda x: x.usages, reverse=True
+                ),
+                "long_phrases": sorted(
+                    long_phrases, key=lambda x: x.usages, reverse=True
+                ),
+            },
+        )
+
+    @post("/ai/generate")
+    async def generate_ai_phrases(
+        self, request: Request, ai_service: Annotated[Any, Dependency()]
+    ) -> Response[dict[str, Any]]:
+        user = request.session.get("user")
+        if not user or str(user.get("id")) != str(config.owner_id):
+            return Response({"error": "Unauthorized"}, status_code=401)
+
+        try:
+            # Type safety via casting
+            service: AIService = ai_service
+            phrases = await service.generate_cunhao_phrases(count=5)
+            return Response({"phrases": phrases}, status_code=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status_code=500)
+
+    @get("/metrics", sync_to_thread=True)
+    def metrics(
+        self,
+        request: Request,
+        phrase_repo: Annotated[Any, Dependency()],
+        long_phrase_repo: Annotated[Any, Dependency()],
+        proposal_repo: Annotated[Any, Dependency()],
+        long_proposal_repo: Annotated[Any, Dependency()],
+        user_repo: Annotated[Any, Dependency()],
+        inline_user_repo: Annotated[Any, Dependency()],
+    ) -> Template:
+        from collections import defaultdict
+
+        p_repo: PhraseRepository = phrase_repo
+        lp_repo: LongPhraseRepository = long_phrase_repo
+        prop_repo: ProposalRepository = proposal_repo
+        l_prop_repo: LongProposalRepository = long_proposal_repo
+
+        phrases = p_repo.get_phrases() + lp_repo.get_phrases()
+        pending_proposals = [p for p in prop_repo.load_all() if not p.voting_ended] + [
+            p for p in l_prop_repo.load_all() if not p.voting_ended
+        ]
+
+        user_map: dict[int, str] = {}
+        for u in inline_user_repo.load_all():
+            user_map[u.user_id] = u.name
+        for u in user_repo.load_all(ignore_gdpr=True):
+            if not u.is_group:
+                user_map[u.chat_id] = u.name
+
+        stats: dict[int, dict[str, Any]] = defaultdict(
+            lambda: {"approved": 0, "pending": 0, "score": 0, "name": "Anónimo"}
+        )
+
+        for p in phrases:
+            s = stats[p.user_id]
+            s["approved"] += 1
+            s["score"] += 10 + p.usages + p.audio_usages
+            if p.user_id in user_map:
+                s["name"] = user_map[p.user_id]
+
+        for p in pending_proposals:
+            if p.user_id == 0:
+                continue
+            s = stats[p.user_id]
+            s["pending"] += 1
+            if p.user_id in user_map:
+                s["name"] = user_map[p.user_id]
+
+        sorted_stats = sorted(
+            stats.values(), key=lambda x: (x["score"], x["approved"]), reverse=True
+        )
+        top_contributor = sorted_stats[0]["name"] if sorted_stats else "Nadie"
+
+        return Template(
+            template_name="metrics.html",
+            context={
+                "user": request.session.get("user"),
+                "owner_id": config.owner_id,
+                "total_phrases": len(phrases),
+                "total_pending": len(pending_proposals),
+                "top_contributor": top_contributor,
+                "user_stats": sorted_stats,
+            },
+        )

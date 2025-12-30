@@ -1,33 +1,29 @@
-from telegram import Bot, Update
+from telegram import Update
 from telegram.ext import CallbackContext
-
-from models.phrase import LongPhrase, Phrase
-from models.proposal import LongProposal, Proposal
-from tg.decorators import log_update
-
-from ..commands.submit import submit_handling
+from models.phrase import Phrase, LongPhrase
+from .text_message import handle_message
 
 
-@log_update
 async def handle_reply(update: Update, context: CallbackContext) -> None:
-    if not (message := update.effective_message) or not (
-        reply_to := message.reply_to_message
-    ):
+    if not (msg := update.effective_message) or not msg.reply_to_message:
         return
 
-    bot: Bot = context.bot
-    me = await bot.get_me()
+    # Check if they are replying to a bot message that was a prompt for a proposal
+    bot_msg = msg.reply_to_message
+    if bot_msg.from_user and bot_msg.from_user.username == context.bot.username:
+        bot_text = bot_msg.text or ""
 
-    if not reply_to.from_user or reply_to.from_user.username != me.username:
-        return
+        # Determine if it's a short or long phrase proposal
+        if f"¿Qué {Phrase.display_name} quieres proponer?" in bot_text:
+            from ..commands.submit import submit_handling
 
-    if not reply_to.text or "dice que deberiamos" in reply_to.text:
-        return
+            await submit_handling(context.bot, update, is_long=False, text=msg.text)
+            return
+        elif f"¿Qué {LongPhrase.display_name} quieres proponer?" in bot_text:
+            from ..commands.submit import submit_handling
 
-    match reply_to.text:
-        case t if Phrase.name in t:
-            await submit_handling(bot, update, Proposal, Phrase, text=message.text)
-        case t if LongPhrase.name in t:
-            await submit_handling(
-                bot, update, LongProposal, LongPhrase, text=message.text
-            )
+            await submit_handling(context.bot, update, is_long=True, text=msg.text)
+            return
+
+    # Default to normal message handling
+    await handle_message(update, context)

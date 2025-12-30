@@ -1,6 +1,4 @@
 import logging
-import os
-from dataclasses import dataclass
 from typing import Any
 from datetime import datetime
 from telegram import (
@@ -13,33 +11,16 @@ from telegram import (
 )
 from telegram.ext import CallbackContext
 
-from models.phrase import Phrase
-from models.proposal import Proposal, get_proposal_class_by_kind
+from models.proposal import Proposal, LongProposal
+from services import proposal_service, phrase_service, proposal_repo, long_proposal_repo
 from tg.constants import LIKE
 from tg.decorators import log_update
 from tg.markup.keyboards import build_vote_keyboard
+from core.config import config
 
 logger = logging.getLogger(__name__)
 
-
-class ConfigError(Exception):
-    """Raised when required environment variables are missing."""
-
-
-@dataclass
-class TGConfig:
-    curators_chat_id: int
-
-    @classmethod
-    def from_env(cls) -> "TGConfig":
-        try:
-            return cls(curators_chat_id=int(os.environ["MOD_CHAT_ID"]))
-        except (KeyError, ValueError) as e:
-            raise ConfigError(f"Invalid or missing MOD_CHAT_ID: {e}") from e
-
-
-config = TGConfig.from_env()
-admins: list[ChatMember] = []  # Cool global var to cache stuff
+admins: list[ChatMember] = []  # Global cache
 
 
 def get_required_votes() -> int:
@@ -56,10 +37,9 @@ def get_vote_summary(proposal: Proposal) -> str:
 
 
 async def _add_vote(
-    proposal: Proposal, vote: str, callback_query: CallbackQuery
+    proposal: Proposal | LongProposal, vote: str, callback_query: CallbackQuery
 ) -> None:
-    proposal.add_vote(vote == LIKE, callback_query.from_user.id)
-    proposal.save()
+    proposal_service.vote(proposal, callback_query.from_user.id, vote == LIKE)
     await callback_query.answer(f"Tu voto: {vote} ha sido añadido.")
 
 
@@ -67,20 +47,25 @@ async def _ensure_admins(bot: Bot) -> None:
     global admins
     if not admins:
         try:
-            admins = await bot.get_chat_administrators(config.curators_chat_id)
+            admins = list(await bot.get_chat_administrators(config.mod_chat_id))
         except Exception as e:
             logger.warning(f"Could not fetch admins: {e}")
 
 
 async def approve_proposal(
-    proposal: Proposal, bot: Bot, callback_query: CallbackQuery | None = None
+    proposal: Proposal | LongProposal,
+    bot: Bot,
+    callback_query: CallbackQuery | None = None,
 ) -> None:
     await _ensure_admins(bot)
 
     proposal.voting_ended = True
     proposal.voting_ended_at = datetime.now()
-    proposal.save()
 
+    repo = long_proposal_repo if isinstance(proposal, LongProposal) else proposal_repo
+    repo.save(proposal)
+
+    p_random = phrase_service.get_random().text
     msg_text = (
         f"La propuesta '{proposal.text}' queda formalmente aprobada y añadida a la lista.\n\n"
         f"{get_vote_summary(proposal)}"
@@ -91,7 +76,7 @@ async def approve_proposal(
     else:
         try:
             await bot.send_message(
-                config.curators_chat_id, f"✅ APROBADA DESDE WEB\n\n{msg_text}"
+                config.mod_chat_id, f"✅ APROBADA DESDE WEB\n\n{msg_text}"
             )
         except Exception as e:
             logger.error(f"Error sending web approval notification: {e}")
@@ -100,24 +85,30 @@ async def approve_proposal(
         try:
             await bot.send_message(
                 proposal.from_chat_id,
-                f"Tu propuesta '{proposal.text}' ha sido aprobada, felicidades, {Phrase.get_random_phrase()}",
+                f"Tu propuesta '{proposal.text}' ha sido aprobada, felicidades, {p_random}",
                 reply_to_message_id=proposal.from_message_id or None,
             )
         except Exception as e:
             logger.error(f"Error enviando notificación de aprobación: {e}")
 
-    await proposal.phrase_class.upload_from_proposal(proposal, bot)
+    # Delegar creación de la frase al servicio
+    await phrase_service.create_from_proposal(proposal, bot)
 
 
 async def dismiss_proposal(
-    proposal: Proposal, bot: Bot, callback_query: CallbackQuery | None = None
+    proposal: Proposal | LongProposal,
+    bot: Bot,
+    callback_query: CallbackQuery | None = None,
 ) -> None:
     await _ensure_admins(bot)
 
     proposal.voting_ended = True
     proposal.voting_ended_at = datetime.now()
-    proposal.save()
 
+    repo = long_proposal_repo if isinstance(proposal, LongProposal) else proposal_repo
+    repo.save(proposal)
+
+    p_random = phrase_service.get_random().text
     msg_text = (
         f"La propuesta '{proposal.text}' queda formalmente rechazada.\n\n"
         f"{get_vote_summary(proposal)}"
@@ -128,7 +119,7 @@ async def dismiss_proposal(
     else:
         try:
             await bot.send_message(
-                config.curators_chat_id, f"❌ RECHAZADA DESDE WEB\n\n{msg_text}"
+                config.mod_chat_id, f"❌ RECHAZADA DESDE WEB\n\n{msg_text}"
             )
         except Exception as e:
             logger.error(f"Error sending web dismissal notification: {e}")
@@ -137,40 +128,28 @@ async def dismiss_proposal(
         try:
             await bot.send_message(
                 proposal.from_chat_id,
-                f"Tu propuesta '{proposal.text}' ha sido rechazada, lo siento {Phrase.get_random_phrase()}",
+                f"Tu propuesta '{proposal.text}' ha sido rechazada, lo siento {p_random}",
                 reply_to_message_id=proposal.from_message_id or None,
             )
         except Exception as e:
             logger.error(f"Error enviando notificación de rechazo: {e}")
 
-    proposal.delete()
-
-
-async def _approve_proposal(
-    proposal: Proposal, callback_query: CallbackQuery, bot: Bot
-) -> None:
-    await approve_proposal(proposal, bot, callback_query)
-
-
-async def _dismiss_proposal(
-    proposal: Proposal, callback_query: CallbackQuery, bot: Bot
-) -> None:
-    await dismiss_proposal(proposal, bot, callback_query)
+    repo.delete(proposal.id)
 
 
 async def _update_proposal_text(
-    proposal: Proposal, callback_query: CallbackQuery
+    proposal: Proposal | LongProposal, callback_query: CallbackQuery
 ) -> None:
     if not callback_query.message or not hasattr(
         callback_query.message, "text_markdown"
     ):
         return
 
-    # Use cast or type check to satisfy ty check about MaybeInaccessibleMessage
     message: Any = callback_query.message
     text = getattr(message, "text_markdown", "")
     if not isinstance(text, str):
         return
+
     reply_markup = InlineKeyboardMarkup(build_vote_keyboard(proposal.id, proposal.kind))
     votes_text = "\n\n*Han votado ya:*\n"
     before_votes_text = text.split(votes_text)[0]
@@ -200,33 +179,33 @@ async def handle_callback_query(update: Update, context: CallbackContext) -> Non
         return
 
     bot: Bot = context.bot
-    admins = admins or await bot.get_chat_administrators(config.curators_chat_id)
+    admins = admins or list(await bot.get_chat_administrators(config.mod_chat_id))
 
     if callback_query.from_user.id not in [a.user.id for a in admins]:
+        p = phrase_service.get_random().text
         await callback_query.answer(
-            f"Tener una silla en el consejo no te hace maestro cuñao, {Phrase.get_random_phrase()}"
+            f"Tener una silla en el consejo no te hace maestro cuñao, {p}"
         )
         return
 
     vote, proposal_id, kind = data.split(":")
-    proposal_class = get_proposal_class_by_kind(kind)
-    proposal = proposal_class.load(proposal_id)
+    repo = long_proposal_repo if kind == LongProposal.kind else proposal_repo
+    proposal = repo.load(proposal_id)
 
     if proposal is None:
-        await callback_query.answer(
-            f"Esa propuesta ha muerto, {Phrase.get_random_phrase()}"
-        )
+        p = phrase_service.get_random().text
+        await callback_query.answer(f"Esa propuesta ha muerto, {p}")
         return
 
     await _add_vote(proposal, vote, callback_query)
 
     required_votes = get_required_votes()
     if len(proposal.liked_by) >= required_votes:
-        await _approve_proposal(proposal, callback_query, bot)
+        await approve_proposal(proposal, bot, callback_query)
         return
 
     if len(proposal.disliked_by) >= required_votes:
-        await _dismiss_proposal(proposal, callback_query, bot)
+        await dismiss_proposal(proposal, bot, callback_query)
         return
 
     await _update_proposal_text(proposal, callback_query)

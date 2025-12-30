@@ -13,7 +13,6 @@ from .commands.cancel import handle_cancel
 from .chapa import (
     handle_create_chapa,
     handle_delete_chapa,
-    handle_delete_chapas,
     handle_list_chapas,
 )
 from .inline.chosen_inine_result import handle_chosen_inline_result
@@ -41,7 +40,7 @@ handlers = [
     CommandHandler("chapa", handle_create_chapa),
     CommandHandler("chapas", handle_list_chapas),
     CommandHandler("borrarchapa", handle_delete_chapa),
-    CommandHandler("borrarchapas", handle_delete_chapas),
+    CommandHandler("borrarchapas", handle_delete_chapa),  # Apuntar ambos al mismo
     MessageHandler(filters.REPLY, handle_reply),
     MessageHandler(filters.TEXT, handle_message),
     InlineQueryHandler(handle_inline_query),

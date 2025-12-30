@@ -1,12 +1,13 @@
+from typing import Any
 from .interactivity import handle_interactivity
 from .slash_commands import handle_slash
 
 
-def handle_slack(slack_data: dict) -> dict | None:
+def handle_slack(slack_data: dict, phrase_service: Any = None) -> dict | None:
     if "command" in slack_data:
-        return handle_slash(slack_data)
+        return handle_slash(slack_data, phrase_service=phrase_service)
 
     if "type" in slack_data and slack_data["type"] == "interactive_message":
-        return handle_interactivity(slack_data)
+        return handle_interactivity(slack_data, phrase_service=phrase_service)
 
     return None

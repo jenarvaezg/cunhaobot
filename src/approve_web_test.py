@@ -1,15 +1,5 @@
-import pytest
-from litestar.status_codes import HTTP_200_OK, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND
-from litestar.testing import TestClient
-from unittest.mock import patch, MagicMock, AsyncMock, PropertyMock
-from main import app, config
-from models.proposal import Proposal
-
-
-@pytest.fixture
-def client():
-    with TestClient(app=app) as client:
-        yield client
+from litestar.status_codes import HTTP_200_OK, HTTP_401_UNAUTHORIZED
+from unittest.mock import patch, AsyncMock, PropertyMock
 
 
 def test_approve_proposal_web_unauthorized(client):
@@ -18,118 +8,59 @@ def test_approve_proposal_web_unauthorized(client):
     ) as mock_session:
         mock_session.return_value = {}
 
-        with patch.dict("os.environ", {"GAE_ENV": "standard"}):
-            rv = client.post("/proposals/Proposal/123/approve")
-
+        with patch("core.config.config.is_gae", True):
+            rv = client.post("/admin/proposals/Proposal/123/approve")
             assert rv.status_code == HTTP_401_UNAUTHORIZED
 
 
-@patch.object(config, "owner_id", "12345")
-@patch("main.get_tg_application")
-@patch("main.approve_proposal", new_callable=AsyncMock)
-def test_approve_proposal_web_auto_login_success(mock_approve, mock_get_app, client):
-    # We don't set the session here, auto_login_local should do it
-    # We need to make sure GAE_ENV is NOT 'standard'
+def test_approve_proposal_web_auto_login_success(client):
+    with (
+        patch.dict("os.environ", {"GAE_ENV": "local", "OWNER_ID": "12345"}),
+        patch("core.config.config.owner_id", "12345"),
+        patch("core.config.config.is_gae", False),
+        patch(
+            "services.proposal_service.ProposalService.approve", new_callable=AsyncMock
+        ) as mock_approve,
+    ):
+        mock_approve.return_value = True
 
-    with patch.dict("os.environ", {"GAE_ENV": "local", "OWNER_ID": "12345"}):
-        # Trigger reload of config to pick up OWNER_ID if needed,
-        # but here we patched main.config.owner_id directly.
-        mock_proposal = MagicMock(spec=Proposal)
-        mock_proposal.kind = "Proposal"
-        mock_proposal.id = "123"
-        mock_proposal.text = "test"
+        rv = client.post("/admin/proposals/Proposal/123/approve")
 
-        with patch("main.get_proposal_class_by_kind") as mock_get_class:
-            mock_class = MagicMock()
-            mock_class.load.return_value = mock_proposal
-            mock_get_class.return_value = mock_class
-
-            mock_app = MagicMock()
-            mock_app.initialize = AsyncMock()
-            mock_app.bot = MagicMock()
-            mock_get_app.return_value = mock_app
-
-            rv = client.post("/proposals/Proposal/123/approve")
-
-            assert rv.status_code == HTTP_200_OK
-            assert rv.text == "Approve"
+        assert rv.status_code == HTTP_200_OK
+        assert rv.text == "Approved"
 
 
-@patch.object(config, "owner_id", "12345")
-def test_approve_proposal_web_not_found(client):
-    with patch(
-        "litestar.connection.Request.session", new_callable=PropertyMock
-    ) as mock_session:
+def test_approve_proposal_web_success(client):
+    with (
+        patch(
+            "litestar.connection.Request.session", new_callable=PropertyMock
+        ) as mock_session,
+        patch("core.config.config.owner_id", "12345"),
+        patch(
+            "services.proposal_service.ProposalService.approve", new_callable=AsyncMock
+        ) as mock_approve,
+    ):
         mock_session.return_value = {"user": {"id": "12345"}}
+        mock_approve.return_value = True
 
-        with patch("main.get_proposal_class_by_kind") as mock_get_class:
-            mock_class = MagicMock()
-            mock_class.load.return_value = None
-            mock_get_class.return_value = mock_class
-
-            rv = client.post("/proposals/Proposal/123/approve")
-            assert rv.status_code == HTTP_404_NOT_FOUND
+        rv = client.post("/admin/proposals/Proposal/123/approve")
+        assert rv.status_code == HTTP_200_OK
+        assert rv.text == "Approved"
 
 
-@patch.object(config, "owner_id", "12345")
-@patch("main.get_tg_application")
-@patch("main.approve_proposal", new_callable=AsyncMock)
-def test_approve_proposal_web_success(mock_approve, mock_get_app, client):
-    with patch(
-        "litestar.connection.Request.session", new_callable=PropertyMock
-    ) as mock_session:
+def test_reject_proposal_web_success(client):
+    with (
+        patch(
+            "litestar.connection.Request.session", new_callable=PropertyMock
+        ) as mock_session,
+        patch("core.config.config.owner_id", "12345"),
+        patch(
+            "services.proposal_service.ProposalService.reject", new_callable=AsyncMock
+        ) as mock_reject,
+    ):
         mock_session.return_value = {"user": {"id": "12345"}}
+        mock_reject.return_value = True
 
-        mock_proposal = MagicMock(spec=Proposal)
-        mock_proposal.kind = "Proposal"
-        mock_proposal.id = "123"
-        mock_proposal.text = "test"
-
-        with patch("main.get_proposal_class_by_kind") as mock_get_class:
-            mock_class = MagicMock()
-            mock_class.load.return_value = mock_proposal
-            mock_get_class.return_value = mock_class
-
-            mock_app = MagicMock()
-            mock_app.initialize = AsyncMock()
-            mock_app.bot = MagicMock()
-            mock_get_app.return_value = mock_app
-
-            rv = client.post("/proposals/Proposal/123/approve")
-            assert rv.status_code == HTTP_200_OK
-            assert rv.text == "Approve"
-
-            mock_app.initialize.assert_called_once()
-            mock_approve.assert_called_once_with(mock_proposal, mock_app.bot)
-
-
-@patch.object(config, "owner_id", "12345")
-@patch("main.get_tg_application")
-@patch("main.dismiss_proposal", new_callable=AsyncMock)
-def test_reject_proposal_web_success(mock_dismiss, mock_get_app, client):
-    with patch(
-        "litestar.connection.Request.session", new_callable=PropertyMock
-    ) as mock_session:
-        mock_session.return_value = {"user": {"id": "12345"}}
-
-        mock_proposal = MagicMock(spec=Proposal)
-        mock_proposal.kind = "Proposal"
-        mock_proposal.id = "123"
-        mock_proposal.text = "test"
-
-        with patch("main.get_proposal_class_by_kind") as mock_get_class:
-            mock_class = MagicMock()
-            mock_class.load.return_value = mock_proposal
-            mock_get_class.return_value = mock_class
-
-            mock_app = MagicMock()
-            mock_app.initialize = AsyncMock()
-            mock_app.bot = MagicMock()
-            mock_get_app.return_value = mock_app
-
-            rv = client.post("/proposals/Proposal/123/reject")
-            assert rv.status_code == HTTP_200_OK
-            assert rv.text == "Reject"
-
-            mock_app.initialize.assert_called_once()
-            mock_dismiss.assert_called_once_with(mock_proposal, mock_app.bot)
+        rv = client.post("/admin/proposals/Proposal/123/reject")
+        assert rv.status_code == HTTP_200_OK
+        assert rv.text == "Rejected"

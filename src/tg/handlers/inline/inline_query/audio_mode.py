@@ -28,19 +28,21 @@ def _phrase_to_inline_audio(
 
 
 def get_audio_mode_results(input: str) -> list[InlineQueryResultVoice]:
+    from services import phrase_repo, long_phrase_repo
+
     mode, rest = get_query_mode(input)
 
     results = []
     if mode == SHORT_MODE:
         results = [
             res
-            for p in Phrase.get_phrases()
+            for p in phrase_repo.load_all()
             if (res := _phrase_to_inline_audio(p, "short"))
         ]
     elif mode == LONG_MODE:
         results = [
             res
-            for p in LongPhrase.get_phrases()
+            for p in long_phrase_repo.load_all()
             if (res := _phrase_to_inline_audio(p, "long"))
         ]
 

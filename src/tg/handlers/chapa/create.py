@@ -1,8 +1,8 @@
 from telegram import Message, Update
 from telegram.ext import CallbackContext
 
-from models.phrase import Phrase
-from models.schedule import ScheduledTask
+from models.schedule import Schedule
+from services import phrase_service, schedule_repo
 from tg.decorators import log_update, only_admins
 from tg.handlers.inline.inline_query.base import MODE_HANDLERS, get_query_mode
 
@@ -10,10 +10,12 @@ from tg.handlers.inline.inline_query.base import MODE_HANDLERS, get_query_mode
 async def usage(update: Update) -> Message:
     if not update.effective_message:
         raise ValueError("No effective message")
+
+    p = phrase_service.get_random().text
     return await update.effective_message.reply_text(
         "Para usar el servicio de chapas, tienes que decirme la hora a la que quieres la chapa y, opcionalmente, "
         "puedes añadir parámetros. Ejemplos:\n'/chapa 1100' <- Saludo aleatorio a las 11 como "
-        f"¿Qué pasa, {Phrase.get_random_phrase()}?\n'/chapa 2030 frase' <- Frase aleatoria a las 20:30 (8:30PM)\n"
+        f"¿Qué pasa, {p}?\n'/chapa 2030 frase' <- Frase aleatoria a las 20:30 (8:30PM)\n"
         f"'/chapa 1515 frase mujer' <- Frase aleatoria que incluya 'mujer' a las 15:15 (3:15PM).",
         do_quote=True,
     )
@@ -21,27 +23,29 @@ async def usage(update: Update) -> Message:
 
 def require_valid_query(query: str) -> None:
     query_mode, rest = get_query_mode(query)
-    handler = MODE_HANDLERS.get(query_mode)  # Raise KeyError if not here
+    handler = MODE_HANDLERS.get(query_mode)
     if handler is None:
-        raise KeyError(
-            f"No entiendo esos parametros: '{query}', {Phrase.get_random_phrase()}."
-        )
+        p = phrase_service.get_random().text
+        raise KeyError(f"No entiendo esos parametros: '{query}', {p}.")
 
 
 def split_time(time_s: str) -> tuple[int, int]:
     try:
         time = int(time_s.replace(":", ""))
     except ValueError:
+        p = phrase_service.get_random().text
         raise ValueError(
-            f"La hora me la das con puntos o sin ellos, pero sin basura, {Phrase.get_random_phrase()}."
+            f"La hora me la das con puntos o sin ellos, pero sin basura, {p}."
         ) from None
 
     minute = time % 100
     hour = time // 100
     if minute > 60 or minute < 0:
-        raise ValueError(f"Mal valor de minutos, {Phrase.get_random_phrase()}.")
+        p = phrase_service.get_random().text
+        raise ValueError(f"Mal valor de minutos, {p}.")
     if hour > 24 or hour < 0:
-        raise ValueError(f"Mal valor de horas, {Phrase.get_random_phrase()}.")
+        p = phrase_service.get_random().text
+        raise ValueError(f"Mal valor de horas, {p}.")
 
     return hour % 24, minute
 
@@ -69,17 +73,19 @@ async def handle_create_chapa(update: Update, context: CallbackContext) -> None:
         await usage(update)
         return
 
-    if not update.effective_chat:
+    if not update.effective_chat or not update.effective_user:
         return
 
-    ScheduledTask(
+    schedule = Schedule(
         chat_id=update.effective_chat.id,
+        user_id=update.effective_user.id,
         hour=hour,
         minute=minute,
         query=query,
         service="telegram",
         task_type="chapa",
-    ).save()
+    )
+    schedule_repo.save(schedule)
 
     await message.reply_text(
         f"Configurada chapa a las {hour:02}:{minute:02}. Puedes eliminarla en cualquier momento usando /borrarchapa.",

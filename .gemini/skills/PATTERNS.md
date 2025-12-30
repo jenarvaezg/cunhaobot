@@ -1,17 +1,36 @@
 # Python Patterns Reference
 
+## Project Architecture (Senior)
+
+Follow a modular structure with clear separation of concerns:
+
+- **`src/api/`**: Controllers and route handlers. Purely for handling HTTP/IO and delegating to services.
+- **`src/services/`**: Business logic and use cases. Orchestrates models and infrastructure.
+- **`src/models/`**: Domain entities and basic persistence logic (Data Classes).
+- **`src/core/`**: Centralized configuration and core constants.
+- **`src/infrastructure/`**: Low-level external integrations (e.g., Datastore, Storage).
+- **`src/utils/`**: Atomic, stateless utility functions grouped by topic (text, security, ui).
+
+### Controller Pattern (API Layer)
+Keep controllers lean. They should only:
+1. Parse/Validate input.
+2. Call a service method.
+3. Return a response or template.
+
+### Service Pattern (Business Logic)
+Services encapsulate complex operations that involve multiple models or external APIs.
+Prefer singleton instances or dependency injection.
+
 ## Project Structure
 
 ```
 src/
-└── mypackage/
-    ├── __init__.py
-    ├── __main__.py      # CLI entry
-    ├── domain/          # Business logic
-    ├── services/        # Operations
-    └── adapters/        # External integrations
-tests/
-pyproject.toml
+├── api/             # Web & Bot Controllers
+├── services/        # Business Logic (ProposalService, AIService)
+├── models/          # Domain Entities
+├── core/            # Config, Constants
+├── infrastructure/  # GCP, Repositories
+└── utils/           # Stateless Helpers (text, security, ui)
 ```
 
 ## Protocol-Based Interfaces

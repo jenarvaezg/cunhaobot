@@ -7,9 +7,9 @@
 The core application is written in **Python**, utilizing **Litestar** to handle webhooks.
 
 ## Tech Stack
-
 *   **Runtime:** Python 3.14 (Google App Engine Standard Environment)
 *   **Web Framework:** Litestar
+*   **Validation & Settings:** Pydantic v2
 *   **Database:** Google Cloud Datastore (NoSQL)
 *   **Bot APIs:**
     *   `python-telegram-bot` (Telegram)
@@ -127,3 +127,13 @@ gcloud app deploy
 *   `deploy.sh`: Automated deployment script.
 *   `pyproject.toml`: Project configuration, dependencies, and `ty` configuration.
 *   `requirements.txt`: Frozen dependencies for App Engine deployment.
+
+## Agent Guidelines (MANDATORY)
+
+**TODOS los agentes que trabajen en este repositorio DEBEN leer y seguir estrictamente las guías definidas en:**
+*   `.gemini/skills/SKILL.md`: Filosofía Core Python 3.14+.
+*   `.gemini/skills/PATTERNS.md`: Patrones de diseño y arquitectura.
+*   `.gemini/skills/TESTING.md`: Estándares de testing.
+*   `.gemini/skills/CLI.md`: Patrones para herramientas de CLI.
+
+**INSTRUCCIÓN CRÍTICA:** No asumas nada. Si una guía dice "No Any", significa "No Any". Si dice "Inyección de Dependencias", úsala. Si dice "Pydantic", no uses `msgspec` ni `dataclasses` para modelos de dominio.

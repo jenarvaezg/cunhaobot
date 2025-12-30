@@ -1,0 +1,8 @@
+# Files to ignore for Gemini interactions
+# Add files/directories that Gemini should not read or modify.
+
+# Test files created by Gemini
+src/api/slack_test.py
+
+# Architecture documentation created by Gemini
+ARCHITECTURE.md

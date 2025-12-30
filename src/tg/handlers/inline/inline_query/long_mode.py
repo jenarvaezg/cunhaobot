@@ -1,14 +1,14 @@
 import random
-
 from telegram import InlineQueryResultArticle, InputTextMessageContent
-
-from models.phrase import LongPhrase
+from services import long_phrase_repo, phrase_service
 from utils import get_thumb, normalize_str
 
 
-def get_long_mode_results(input: str) -> list[InlineQueryResultArticle]:
+def get_long_mode_results(input_text: str) -> list[InlineQueryResultArticle]:
     max_results_number = 10
-    phrases = LongPhrase.get_phrases(search=input)
+    phrases = long_phrase_repo.get_phrases(search=input_text)
+
+    # Randomize results
     random.shuffle(phrases)
     results_number = min(len(phrases), max_results_number)
 
@@ -23,14 +23,13 @@ def get_long_mode_results(input: str) -> list[InlineQueryResultArticle]:
     ]
 
     if not results:
-        result_id = f"long-bad-search-{normalize_str(input)}"
+        result_id = f"long-bad-search-{normalize_str(input_text)}"
+        random_phrase = phrase_service.get_random(long=True).text
         results = [
             InlineQueryResultArticle(
                 id=result_id[:63],
                 title="No hay resultados con esa busqueda, toma una frase al azar",
-                input_message_content=InputTextMessageContent(
-                    LongPhrase.get_random_phrase().text
-                ),
+                input_message_content=InputTextMessageContent(random_phrase),
                 thumbnail_url=get_thumb(),
             )
         ]

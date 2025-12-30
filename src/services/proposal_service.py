@@ -1,0 +1,158 @@
+import asyncio
+import logging
+from datetime import datetime, timedelta
+from typing import Dict, Optional
+from telegram import Update
+from telegram.error import BadRequest, TelegramError
+
+from models.proposal import Proposal, LongProposal
+from infrastructure.protocols import (
+    ProposalRepository,
+    LongProposalRepository,
+    UserRepository,
+    InlineUserRepository,
+)
+from core.config import config
+
+logger = logging.getLogger(__name__)
+
+
+class ProposalService:
+    def __init__(
+        self,
+        repo: ProposalRepository,
+        long_repo: LongProposalRepository,
+        user_repo: UserRepository,
+        inline_repo: InlineUserRepository,
+    ):
+        self.repo = repo
+        self.long_repo = long_repo
+        self.user_repo = user_repo
+        self.inline_repo = inline_repo
+        self._curators_cache: Dict[int, str] = {}
+        self._last_update: Optional[datetime] = None
+
+    def create_from_update(
+        self, update: Update, is_long: bool = False, text: str | None = None
+    ) -> Proposal:
+        if not (msg := update.effective_message) or not (user := update.effective_user):
+            raise ValueError("Invalid update")
+
+        proposal_id = str(msg.chat.id + msg.message_id)
+        klass = LongProposal if is_long else Proposal
+
+        if text is None:
+            raw = msg.text or ""
+            if raw.startswith("/"):
+                parts = raw.split(" ", 1)
+                text = parts[1].strip() if len(parts) > 1 else ""
+            else:
+                text = raw
+
+            if not text and msg.reply_to_message:
+                text = msg.reply_to_message.text or ""
+
+        return klass(
+            id=proposal_id,
+            from_chat_id=msg.chat.id,
+            from_message_id=msg.message_id,
+            text=text.strip() if text else "",
+            user_id=user.id,
+        )
+
+    def vote(self, proposal: Proposal, voter_id: int, positive: bool) -> None:
+        liked = set(proposal.liked_by)
+        disliked = set(proposal.disliked_by)
+
+        if positive:
+            disliked.discard(voter_id)
+            liked.add(voter_id)
+        else:
+            liked.discard(voter_id)
+            disliked.add(voter_id)
+
+        proposal.liked_by, proposal.disliked_by = list(liked), list(disliked)
+        repo = self.long_repo if isinstance(proposal, LongProposal) else self.repo
+        repo.save(proposal)
+
+    async def get_curators(self) -> Dict[int, str]:
+        now = datetime.now()
+        if not self._last_update or (now - self._last_update) > timedelta(minutes=10):
+            await self._update_curators_cache()
+        return self._curators_cache
+
+    async def _update_curators_cache(self):
+        from tg import get_tg_application
+
+        try:
+            application = get_tg_application()
+            await application.initialize()
+            bot = application.bot
+            new_cache = {}
+            admins = await bot.get_chat_administrators(chat_id=config.mod_chat_id)
+            for admin in admins:
+                if not admin.user.is_bot:
+                    new_cache[admin.user.id] = admin.user.name or admin.user.first_name
+
+            all_proposals = self.repo.load_all() + self.long_repo.load_all()
+            active_ids = {p.user_id for p in all_proposals}
+            for p in all_proposals:
+                active_ids.update(p.liked_by)
+                active_ids.update(p.disliked_by)
+
+            ids_to_check = active_ids - set(new_cache.keys()) - {0}
+
+            async def check_user(uid):
+                try:
+                    m = await bot.get_chat_member(
+                        chat_id=config.mod_chat_id, user_id=uid
+                    )
+                    if m.status in ["member", "administrator", "creator"]:
+                        return uid
+                except (BadRequest, TelegramError):
+                    pass
+                return None
+
+            check_tasks = [check_user(uid) for uid in list(ids_to_check)[:100]]
+            member_ids = await asyncio.gather(*check_tasks)
+
+            users_db = {
+                u.chat_id: u.name for u in self.user_repo.load_all() if not u.is_group
+            }
+            inline_db = {u.user_id: u.name for u in self.inline_repo.load_all()}
+            db_names = {**users_db, **inline_db}
+
+            for mid in member_ids:
+                if mid and mid not in new_cache:
+                    new_cache[mid] = db_names.get(mid, f"User {mid}")
+
+            self._curators_cache = new_cache
+            self._last_update = datetime.now()
+        except Exception as e:
+            logger.error(f"Error updating curators: {e}")
+
+    async def approve(self, proposal_kind: str, proposal_id: str) -> bool:
+        repo = self.long_repo if proposal_kind == LongProposal.kind else self.repo
+        proposal = repo.load(proposal_id)
+        if not proposal:
+            return False
+        from tg.handlers.utils.callback_query import approve_proposal
+        from tg import get_tg_application
+
+        app = get_tg_application()
+        await app.initialize()
+        await approve_proposal(proposal, app.bot)
+        return True
+
+    async def reject(self, proposal_kind: str, proposal_id: str) -> bool:
+        repo = self.long_repo if proposal_kind == LongProposal.kind else self.repo
+        proposal = repo.load(proposal_id)
+        if not proposal:
+            return False
+        from tg.handlers.utils.callback_query import dismiss_proposal
+        from tg import get_tg_application
+
+        app = get_tg_application()
+        await app.initialize()
+        await dismiss_proposal(proposal, app.bot)
+        return True
