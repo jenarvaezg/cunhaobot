@@ -18,12 +18,14 @@ class TestUserService:
         update.effective_message.chat.PRIVATE = ChatType.PRIVATE
         update.effective_message.chat.type = ChatType.PRIVATE
         update.effective_message.from_user.name = "New User"
+        update.effective_message.from_user.username = "new_user"
 
         service.user_repo.load.return_value = None
 
         user = service.update_or_create_user(update)
         assert user.chat_id == 123
         assert user.name == "New User"
+        assert user.username == "new_user"
         service.user_repo.save.assert_called_once()
 
     def test_update_or_create_user_update(self, service):
@@ -32,12 +34,14 @@ class TestUserService:
         update.effective_message.chat.PRIVATE = ChatType.PRIVATE
         update.effective_message.chat.type = ChatType.PRIVATE
         update.effective_message.from_user.name = "Updated User"
+        update.effective_message.from_user.username = "updated_user"
 
         existing = User(chat_id=123, name="Old", gdpr=True)
         service.user_repo.load.return_value = existing
 
         user = service.update_or_create_user(update)
         assert user.name == "Updated User"
+        assert user.username == "updated_user"
         assert user.gdpr is False
         service.user_repo.save.assert_called_once_with(existing)
 
@@ -47,6 +51,7 @@ class TestUserService:
         update.effective_message.chat.PRIVATE = ChatType.PRIVATE
         update.effective_message.chat.type = ChatType.GROUP
         update.effective_message.chat.title = "My Group"
+        update.effective_message.from_user = None
 
         service.user_repo.load.return_value = None
 
@@ -54,6 +59,7 @@ class TestUserService:
         assert user.chat_id == 456
         assert user.name == "My Group"
         assert user.is_group is True
+        assert user.username is None
 
     def test_update_or_create_user_no_message(self, service):
         update = MagicMock()
@@ -64,31 +70,36 @@ class TestUserService:
         update = MagicMock()
         update.effective_user.id = 789
         update.effective_user.name = "New Inline"
+        update.effective_user.username = "new_inline"
 
         service.inline_user_repo.load.return_value = None
 
         user = service.update_or_create_inline_user(update)
         assert user.user_id == 789
+        assert user.username == "new_inline"
         service.inline_user_repo.save.assert_called_once()
 
     def test_update_or_create_inline_user_update(self, service):
         update = MagicMock()
         update.effective_user.id = 789
         update.effective_user.name = "Updated Inline"
+        update.effective_user.username = "updated_inline"
 
         existing = InlineUser(user_id=789, name="Old")
         service.inline_user_repo.load.return_value = existing
 
         user = service.update_or_create_inline_user(update)
         assert user.name == "Updated Inline"
+        assert user.username == "updated_inline"
         service.inline_user_repo.save.assert_called_once_with(existing)
 
     def test_update_or_create_inline_user_no_change(self, service):
         update = MagicMock()
         update.effective_user.id = 789
         update.effective_user.name = "Same Name"
+        update.effective_user.username = None
 
-        existing = InlineUser(user_id=789, name="Same Name")
+        existing = InlineUser(user_id=789, name="Same Name", username=None)
         service.inline_user_repo.load.return_value = existing
 
         service.update_or_create_inline_user(update)

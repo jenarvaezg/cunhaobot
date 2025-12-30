@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 from telegram import Update, Message
 from models.user import User, InlineUser
@@ -7,6 +8,8 @@ from infrastructure.datastore.user import (
     UserDatastoreRepository,
     InlineUserDatastoreRepository,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class UserService:
@@ -25,12 +28,21 @@ class UserService:
         user = self.inline_user_repo.load(update_user.id)
 
         if user:
+            changed = False
             if user.name != update_user.name:
                 user.name = update_user.name
+                changed = True
+            if user.username != update_user.username:
+                user.username = update_user.username
+                changed = True
+
+            if changed:
                 self.inline_user_repo.save(user)
             return user
 
-        user = InlineUser(user_id=update_user.id, name=update_user.name)
+        user = InlineUser(
+            user_id=update_user.id, name=update_user.name, username=update_user.username
+        )
         self.inline_user_repo.save(user)
         return user
 
@@ -50,18 +62,21 @@ class UserService:
 
         chat_id = message.chat_id
         name = self._get_name_from_message(message)
+        username = message.from_user.username if message.from_user else None
 
         user = self.user_repo.load(chat_id)
 
         if user:
             user.gdpr = False
             user.name = name
+            user.username = username
             self.user_repo.save(user)
             return user
 
         user = User(
             chat_id=chat_id,
             name=name,
+            username=username,
             is_group=message.chat.type != message.chat.PRIVATE,
         )
         self.user_repo.save(user)
@@ -77,6 +92,22 @@ class UserService:
     def add_inline_usage(self, user: InlineUser) -> None:
         user.usages += 1
         self.inline_user_repo.save(user)
+
+    async def get_user_photo(self, user_id: int) -> bytes | None:
+        from tg import get_tg_application
+
+        try:
+            application = get_tg_application()
+            await application.initialize()
+            bot = application.bot
+            photos = await bot.get_user_profile_photos(user_id, limit=1)
+            if photos.total_count > 0:
+                file_id = photos.photos[0][-1].file_id
+                file = await bot.get_file(file_id)
+                return await file.download_as_bytearray()
+        except Exception as e:
+            logger.error(f"Error getting user photo for {user_id}: {e}")
+        return None
 
 
 # Singleton

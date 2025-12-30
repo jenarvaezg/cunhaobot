@@ -10,8 +10,10 @@ from infrastructure.protocols import (
     LongPhraseRepository,
     ProposalRepository,
     LongProposalRepository,
+    UserRepository,
+    InlineUserRepository,
 )
-from services import PhraseService
+from services import PhraseService, UserService
 from services.ai_service import AIService
 from core.config import config
 
@@ -52,22 +54,47 @@ class WebController(Controller):
         phrase_id: str,
         phrase_repo: Annotated[Any, Dependency()],
         long_phrase_repo: Annotated[Any, Dependency()],
+        inline_user_repo: Annotated[Any, Dependency()],
+        user_repo: Annotated[Any, Dependency()],
     ) -> Template:
         p_repo: PhraseRepository = phrase_repo
         lp_repo: LongPhraseRepository = long_phrase_repo
+        iu_repo: InlineUserRepository = inline_user_repo
+        u_repo: UserRepository = user_repo
 
         phrase = p_repo.load(phrase_id) or lp_repo.load(phrase_id)
 
         if not phrase:
             raise HTTPException(status_code=404, detail="Phrase not found")
 
+        contributor = None
+        if phrase.user_id:
+            contributor = iu_repo.load(phrase.user_id) or u_repo.load(phrase.user_id)
+
         return Template(
             template_name="phrase_detail.html",
             context={
                 "phrase": phrase,
+                "contributor": contributor,
                 "user": request.session.get("user"),
                 "owner_id": config.owner_id,
             },
+        )
+
+    @get("/user/{user_id:int}/photo.png")
+    async def user_photo(
+        self,
+        user_id: int,
+        user_service: Annotated[UserService, Dependency()],
+    ) -> Response:
+        photo_bytes = await user_service.get_user_photo(user_id)
+        if not photo_bytes:
+            raise HTTPException(status_code=404, detail="Photo not found")
+
+        return Response(
+            content=photo_bytes,
+            media_type="image/png",
+            headers={"Cache-Control": "public, max-age=3600"},
         )
 
     @get("/phrase/{phrase_id:str}/sticker.png", sync_to_thread=True)
