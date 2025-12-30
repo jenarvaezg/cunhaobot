@@ -94,15 +94,21 @@ class UserService:
         self.inline_user_repo.save(user)
 
     async def get_user_photo(self, user_id: int) -> bytes | None:
+        if not user_id or user_id <= 0:
+            return None
+
         from tg import get_tg_application
 
         try:
             application = get_tg_application()
-            await application.initialize()
+            if not application.running:
+                await application.initialize()
+
             bot = application.bot
             photos = await bot.get_user_profile_photos(user_id, limit=1)
             if photos.total_count > 0:
-                file_id = photos.photos[0][-1].file_id
+                # Get the smallest photo to be fast
+                file_id = photos.photos[0][0].file_id
                 file = await bot.get_file(file_id)
                 return await file.download_as_bytearray()
         except Exception as e:

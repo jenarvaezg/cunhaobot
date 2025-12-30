@@ -200,6 +200,8 @@ def test_phrase_detail_page(client):
     with (
         patch("services.phrase_repo.load", return_value=p1),
         patch("services.long_phrase_repo.load", return_value=None),
+        patch("services.user_repo.load", return_value=None),
+        patch("services.inline_user_repo.load", return_value=None),
     ):
         rv = client.get("/phrase/test_key")
         assert rv.status_code == HTTP_200_OK

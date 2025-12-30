@@ -36,28 +36,34 @@
                     <div class="stat-card p-4 rounded-4 bg-dark bg-opacity-25 border border-secondary border-opacity-10">
                         <div class="text-secondary small text-uppercase fw-bold mb-2">Autoría Original</div>
                         {% if contributor %}
-                        <a href="{% if contributor.username %}https://t.me/{{ contributor.username }}{% else %}tg://user?id={{ contributor.user_id or contributor.chat_id }}{% endif %}"
-                           class="text-decoration-none d-flex align-items-center gap-3">
-                            <div class="rounded-circle border border-warning border-opacity-25 d-flex align-items-center justify-content-center fw-bold text-dark overflow-hidden"
-                                 style="width: 48px; height: 48px; background: var(--bs-secondary);">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle border border-warning border-opacity-25 d-flex align-items-center justify-content-center fw-bold text-dark overflow-hidden shadow-sm"
+                                 style="width: 56px; height: 56px; background: var(--bs-secondary);">
                                 <img src="/user/{{ contributor.user_id or contributor.chat_id }}/photo.png"
                                      alt="{{ contributor.name }}"
                                      class="img-fluid"
-                                     onerror="this.style.display='none'; this.parentElement.innerHTML='{{ contributor.name|first|upper }}'">
+                                     onerror="this.style.display='none'; this.parentElement.innerHTML='{{ contributor.name.lstrip('@')|first|upper }}'">
                             </div>
                             <div>
-                                <div class="fw-bold text-white">{{ contributor.name }}</div>
-                                <div class="small text-warning">{% if contributor.username %}@{{ contributor.username }}{% else %}ID: {{ contributor.user_id or contributor.chat_id }}{% endif %}</div>
+                                {% if contributor.username %}
+                                <a href="https://t.me/{{ contributor.username }}" class="text-decoration-none link-light">
+                                    <div class="fw-bold fs-5">{{ contributor.name }}</div>
+                                    <div class="small text-warning">@{{ contributor.username }}</div>
+                                </a>
+                                {% else %}
+                                <div class="fw-bold text-white fs-5">{{ contributor.name }}</div>
+                                <div class="small text-secondary">ID: {{ contributor.user_id or contributor.chat_id }}</div>
+                                {% endif %}
                             </div>
-                        </a>
+                        </div>
                         {% else %}
                         <div class="d-flex align-items-center gap-3">
-                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center fw-bold text-dark" style="width: 48px; height: 48px;">
-                                {{ phrase.user_id|string|first|upper if phrase.user_id else 'A' }}
+                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center fw-bold text-dark shadow-sm" style="width: 56px; height: 56px;">
+                                <i class="bi bi-person-fill fs-4"></i>
                             </div>
                             <div>
-                                <div class="fw-bold text-white">{{ phrase.user_id if phrase.user_id else 'Anónimo' }}</div>
-                                <div class="small text-secondary">ID Contribuidor</div>
+                                <div class="fw-bold text-white fs-5">{% if phrase.user_id and phrase.user_id != 0 %}{{ phrase.user_id }}{% else %}Anónimo{% endif %}</div>
+                                <div class="small text-secondary">Contribuidor</div>
                             </div>
                         </div>
                         {% endif %}
