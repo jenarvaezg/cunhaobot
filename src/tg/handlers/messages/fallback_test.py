@@ -2,7 +2,6 @@ import pytest
 from unittest.mock import MagicMock, AsyncMock, patch
 from tg.handlers.messages.fallback import handle_fallback_message, _on_kick, _on_migrate
 from models.user import User
-from models.schedule import Schedule
 
 
 class TestFallbackHandlers:
@@ -160,33 +159,17 @@ class TestFallbackHandlers:
         with (
             patch("services.user_repo.load", return_value=User(chat_id=123)),
             patch("services.user_repo.save") as mock_save,
-            patch(
-                "services.schedule_repo.get_schedules",
-                return_value=[MagicMock(id="id1")],
-            ),
-            patch("services.schedule_repo.delete") as mock_delete,
         ):
             _on_kick(123)
             mock_save.assert_called_once()
-            mock_delete.assert_called_once_with("id1")
 
     def test_on_kick_no_user(self):
         with (
             patch("services.user_repo.load", return_value=None),
             patch("services.user_repo.save") as mock_save,
-            patch("services.schedule_repo.get_schedules", return_value=[]),
         ):
             _on_kick(123)
             mock_save.assert_not_called()
 
     def test_on_migrate(self):
-        task = Schedule(id="123_10_30", chat_id=123, hour=10, minute=30)
-        with (
-            patch("services.schedule_repo.get_schedules", return_value=[task]),
-            patch("services.schedule_repo.save") as mock_save,
-            patch("services.schedule_repo.delete") as mock_delete,
-        ):
-            _on_migrate(123, 456)
-            assert task.chat_id == 456
-            mock_save.assert_called_once_with(task)
-            mock_delete.assert_called_once_with("123_10_30")
+        _on_migrate(123, 456)

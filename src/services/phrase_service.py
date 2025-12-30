@@ -83,8 +83,6 @@ class PhraseService:
         """Increments sticker usage counters for a phrase."""
         phrase.usages += 1
         phrase.sticker_usages += 1
-        phrase.daily_usages += 1
-        phrase.sticker_daily_usages += 1
 
         repo = self.long_repo if isinstance(phrase, LongPhrase) else self.phrase_repo
         repo.save(phrase)
@@ -129,12 +127,6 @@ class PhraseService:
                         p.audio_usages += 1
                     if is_sticker:
                         p.sticker_usages += 1
-
-                    p.daily_usages += 1
-                    if is_audio:
-                        p.audio_daily_usages += 1
-                    if is_sticker:
-                        p.sticker_daily_usages += 1
 
                     repo.save(p)
                     break  # Next text

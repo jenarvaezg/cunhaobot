@@ -10,11 +10,6 @@ from telegram.ext import (
 from .commands.about import handle_about
 from .utils.callback_query import handle_callback_query
 from .commands.cancel import handle_cancel
-from .chapa import (
-    handle_create_chapa,
-    handle_delete_chapa,
-    handle_list_chapas,
-)
 from .inline.chosen_inine_result import handle_chosen_inline_result
 from .utils.error import error_handler as error_handler
 from .messages.fallback import handle_fallback_message as handle_fallback_message
@@ -37,10 +32,6 @@ handlers = [
     CommandHandler("about", handle_about),
     CommandHandler("stop", handle_stop),
     CommandHandler("cancelar", handle_cancel),
-    CommandHandler("chapa", handle_create_chapa),
-    CommandHandler("chapas", handle_list_chapas),
-    CommandHandler("borrarchapa", handle_delete_chapa),
-    CommandHandler("borrarchapas", handle_delete_chapa),  # Apuntar ambos al mismo
     MessageHandler(filters.REPLY, handle_reply),
     MessageHandler(filters.TEXT, handle_message),
     InlineQueryHandler(handle_inline_query),

@@ -4,8 +4,6 @@ from infrastructure.datastore.proposal import (
     long_proposal_repository,
 )
 from infrastructure.datastore.user import user_repository, inline_user_repository
-from infrastructure.datastore.report import report_repository
-from infrastructure.datastore.schedule import schedule_repository
 
 # Alias
 phrase_repo = phrase_repository
@@ -14,28 +12,20 @@ proposal_repo = proposal_repository
 long_proposal_repo = long_proposal_repository
 user_repo = user_repository
 inline_user_repo = inline_user_repository
-report_repo = report_repository
-schedule_repo = schedule_repository
 
 from models.phrase import Phrase as Phrase, LongPhrase as LongPhrase  # noqa: E402
 from models.proposal import Proposal as Proposal, LongProposal as LongProposal  # noqa: E402
-from models.report import Report as Report  # noqa: E402
-from models.schedule import Schedule as Schedule  # noqa: E402
 
 from services.phrase_service import PhraseService  # noqa: E402
 from services.proposal_service import ProposalService  # noqa: E402
 from services.user_service import UserService  # noqa: E402
 from services.ai_service import ai_service  # noqa: E402
-from services.report_service import ReportService  # noqa: E402
 
 # Services
 phrase_service = PhraseService(phrase_repo, long_phrase_repo)
 user_service = UserService(user_repo, inline_user_repo)
 proposal_service = ProposalService(
     proposal_repo, long_proposal_repo, user_repo, inline_user_repo
-)
-report_service = ReportService(
-    report_repo, phrase_repo, long_phrase_repo, user_repo, inline_user_repo
 )
 
 __all__ = [
@@ -45,11 +35,8 @@ __all__ = [
     "long_proposal_repo",
     "user_repo",
     "inline_user_repo",
-    "report_repo",
-    "schedule_repo",
     "phrase_service",
     "user_service",
     "proposal_service",
     "ai_service",
-    "report_service",
 ]

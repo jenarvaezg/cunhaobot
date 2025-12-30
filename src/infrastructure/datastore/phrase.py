@@ -19,9 +19,6 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
             usages=entity.get("usages", 0),
             audio_usages=entity.get("audio_usages", 0),
             sticker_usages=entity.get("sticker_usages", 0),
-            daily_usages=entity.get("daily_usages", 0),
-            audio_daily_usages=entity.get("audio_daily_usages", 0),
-            sticker_daily_usages=entity.get("sticker_daily_usages", 0),
             user_id=entity.get("user_id", 0),
             chat_id=entity.get("chat_id", 0),
             created_at=entity.get("created_at"),
@@ -67,17 +64,6 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
                 ]
 
         return results[offset : offset + limit] if limit > 0 else results
-
-    def remove_daily_usages(self) -> None:
-        query = self.client.query(kind=self.kind)
-        entities = list(query.fetch())
-        for entity in entities:
-            entity["daily_usages"] = 0
-            entity["audio_daily_usages"] = 0
-            entity["sticker_daily_usages"] = 0
-        if entities:
-            self.client.put_multi(entities)
-            self._cache = []
 
 
 # Instances

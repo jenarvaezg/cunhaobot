@@ -2,7 +2,7 @@ import random
 import logging
 from telegram import Update, User as TGUser, Bot
 from telegram.ext import CallbackContext
-from services import phrase_service, user_repo, schedule_repo
+from services import phrase_service, user_repo
 from tg.decorators import log_update
 
 logger = logging.getLogger(__name__)
@@ -13,10 +13,6 @@ def _on_kick(chat_id: int) -> None:
     if user:
         user.gdpr = True
         user_repo.save(user)
-
-    tasks = schedule_repo.get_schedules(chat_id=chat_id)
-    for task in tasks:
-        schedule_repo.delete(task.id)
 
 
 async def _on_other_kicked(bot: Bot, user: TGUser, chat_id: int) -> None:
@@ -44,11 +40,7 @@ async def _on_other_joined(bot: Bot, user: TGUser, chat_id: int) -> None:
 
 
 def _on_migrate(from_chat_id: int, to_chat_id: int) -> None:
-    tasks = schedule_repo.get_schedules(chat_id=from_chat_id)
-    for task in tasks:
-        task.chat_id = to_chat_id
-        schedule_repo.save(task)
-        schedule_repo.delete(f"{from_chat_id}_{task.hour}_{task.minute}")
+    pass
 
 
 @log_update

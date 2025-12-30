@@ -1,6 +1,6 @@
 from telegram import Update
 from telegram.ext import CallbackContext
-from services import user_service, user_repo, schedule_repo, phrase_service
+from services import user_service, user_repo, phrase_service
 from tg.decorators import log_update
 
 
@@ -16,10 +16,6 @@ async def handle_stop(update: Update, context: CallbackContext) -> None:
     user = user_repo.load(update.effective_chat.id)
     if user:
         user_service.delete_user(user)
-
-    tasks = schedule_repo.get_schedules(chat_id=update.effective_chat.id)
-    for task in tasks:
-        schedule_repo.delete(task.id)
 
     p = phrase_service.get_random().text
     await update.effective_message.reply_text(

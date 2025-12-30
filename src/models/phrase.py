@@ -9,10 +9,7 @@ class Phrase(BaseModel):
     sticker_file_id: str = ""
     usages: int = 0
     audio_usages: int = 0
-    daily_usages: int = 0
-    audio_daily_usages: int = 0
     sticker_usages: int = 0
-    sticker_daily_usages: int = 0
     user_id: int = 0
     chat_id: int = 0
     created_at: datetime | None = None

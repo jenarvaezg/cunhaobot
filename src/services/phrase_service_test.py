@@ -140,7 +140,6 @@ class TestPhraseService:
         service.add_usage_by_id("short-foo")
 
         assert p1.usages == 1
-        assert p1.daily_usages == 1
         service.phrase_repo.save.assert_called_once_with(p1)
 
     def test_add_usage_by_id_short_combination(self, service):
@@ -162,7 +161,6 @@ class TestPhraseService:
 
         assert p1.usages == 1
         assert p1.audio_usages == 1
-        assert p1.audio_daily_usages == 1
         service.long_repo.save.assert_called_once_with(p1)
 
     def test_add_usage_by_id_short_sticker(self, service):
@@ -173,7 +171,6 @@ class TestPhraseService:
 
         assert p1.usages == 1
         assert p1.sticker_usages == 1
-        assert p1.sticker_daily_usages == 1
         service.phrase_repo.save.assert_called_once_with(p1)
 
     def test_add_usage_by_id_invalid(self, service):

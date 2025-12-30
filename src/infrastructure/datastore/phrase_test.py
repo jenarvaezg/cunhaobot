@@ -43,9 +43,6 @@ class TestPhraseRepository:
         assert phrase.sticker_file_id == ""
         assert phrase.audio_usages == 0
         assert phrase.sticker_usages == 0
-        assert phrase.daily_usages == 0
-        assert phrase.audio_daily_usages == 0
-        assert phrase.sticker_daily_usages == 0
         assert phrase.user_id == 0
         assert phrase.chat_id == 0
         assert phrase.created_at is None
@@ -59,9 +56,6 @@ class TestPhraseRepository:
             "usages": 10,
             "audio_usages": 5,
             "sticker_usages": 2,
-            "daily_usages": 1,
-            "audio_daily_usages": 1,
-            "sticker_daily_usages": 0,
             "user_id": 123,
             "chat_id": 456,
             "created_at": now,
@@ -74,9 +68,6 @@ class TestPhraseRepository:
         assert phrase.usages == 10
         assert phrase.audio_usages == 5
         assert phrase.sticker_usages == 2
-        assert phrase.daily_usages == 1
-        assert phrase.audio_daily_usages == 1
-        assert phrase.sticker_daily_usages == 0
         assert phrase.user_id == 123
         assert phrase.chat_id == 456
         assert phrase.created_at == now
@@ -166,11 +157,3 @@ class TestPhraseRepository:
         results = repo.get_phrases(proposal_id="123")
         assert len(results) == 1
         assert results[0].text == "foo"
-
-    def test_remove_daily_usages_empty(self, repo, mock_datastore_client):
-        mock_query = MagicMock()
-        mock_datastore_client.query.return_value = mock_query
-        mock_query.fetch.return_value = []  # No entities to remove daily usages from
-
-        repo.remove_daily_usages()
-        mock_datastore_client.put_multi.assert_not_called()

@@ -22,6 +22,5 @@ async def handle_help(update: Update, context: CallbackContext) -> None:
         'También puedes invocarme en cualquier chat escribiendo "@cunhaobot" (como el bot de gifs) '
         "para recibir frases de cuñao.\nPuedes pasarme argumentos como el número de palabras que encadenar.\n"
         f"Como mi creador es un {p2}, también te puedo dar audios "
-        'si escribes: "@cunhaobot audio"\n'
-        "Por último, tengo un servicio de chapas maravilloso, para más información escribe /chapa."
+        'si escribes: "@cunhaobot audio"'
     )
