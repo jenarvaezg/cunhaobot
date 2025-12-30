@@ -1,5 +1,6 @@
 from typing import Any, Annotated, cast
 from litestar import Controller, Request, get, post
+from litestar.exceptions import HTTPException
 from litestar.response import Response, Template
 from litestar.plugins.htmx import HTMXTemplate
 from litestar.params import Dependency
@@ -38,6 +39,31 @@ class WebController(Controller):
                 "long_phrases": sorted(
                     long_phrases, key=lambda x: x.usages, reverse=True
                 ),
+                "user": request.session.get("user"),
+                "owner_id": config.owner_id,
+            },
+        )
+
+    @get("/phrase/{phrase_id:str}", sync_to_thread=True)
+    def phrase_detail(
+        self,
+        request: Request,
+        phrase_id: str,
+        phrase_repo: Annotated[Any, Dependency()],
+        long_phrase_repo: Annotated[Any, Dependency()],
+    ) -> Template:
+        p_repo: PhraseRepository = phrase_repo
+        lp_repo: LongPhraseRepository = long_phrase_repo
+
+        phrase = p_repo.get_key(phrase_id) or lp_repo.get_key(phrase_id)
+
+        if not phrase:
+            raise HTTPException(status_code=404, detail="Phrase not found")
+
+        return Template(
+            template_name="phrase_detail.html",
+            context={
+                "phrase": phrase,
                 "user": request.session.get("user"),
                 "owner_id": config.owner_id,
             },

@@ -14,7 +14,9 @@
             <div class="col animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index0 * 0.05 }}s">
                 <div class="glass-card h-100 p-3">
                     <div class="d-flex justify-content-between align-items-start mb-3">
-                        <h5 class="fw-bold mb-0 text-warning">{{ phrase.text }}</h5>
+                        <a href="/phrase/{{ phrase.key }}" class="text-warning text-decoration-none">
+                            <h5 class="fw-bold mb-0">{{ phrase.text }}</h5>
+                        </a>
                         <div class="stat-badge">
                             <i class="bi bi-graph-up-arrow text-success"></i>
                             <span class="fw-bold">{{ phrase.usages }}</span>
@@ -54,7 +56,9 @@
             {% for phrase in long_phrases %}
             <div class="col animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index0 * 0.05 }}s">
                 <div class="glass-card h-100 p-3 border-start border-info border-4">
-                    <p class="card-text mb-3" style="color: #e2e8f0; line-height: 1.4;">"{{ phrase.text }}"</p>
+                    <a href="/phrase/{{ phrase.key }}" class="text-decoration-none" style="color: #e2e8f0; line-height: 1.4;">
+                        <p class="card-text mb-3">"{{ phrase.text }}"</p>
+                    </a>
 
                     <div class="d-flex align-items-center gap-3">
                         <div class="stat-badge py-1">
