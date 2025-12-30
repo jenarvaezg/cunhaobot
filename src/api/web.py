@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Annotated, cast
 from litestar import Controller, Request, get, post
 from litestar.exceptions import HTTPException
@@ -16,6 +17,8 @@ from infrastructure.protocols import (
 from services import PhraseService, UserService
 from services.ai_service import AIService
 from core.config import config
+
+logger = logging.getLogger(__name__)
 
 
 class WebController(Controller):
@@ -47,8 +50,8 @@ class WebController(Controller):
             },
         )
 
-    @get("/phrase/{phrase_id:str}", sync_to_thread=True)
-    def phrase_detail(
+    @get("/phrase/{phrase_id:str}")
+    async def phrase_detail(
         self,
         request: Request,
         phrase_id: str,
@@ -70,6 +73,28 @@ class WebController(Controller):
         contributor = None
         if phrase.user_id:
             contributor = iu_repo.load(phrase.user_id) or u_repo.load(phrase.user_id)
+
+            # If not in DB, try to fetch from Telegram
+            if not contributor:
+                from tg import get_tg_application
+                from models.user import InlineUser
+
+                try:
+                    application = get_tg_application()
+                    if not application.running:
+                        await application.initialize()
+                    chat = await application.bot.get_chat(phrase.user_id)
+                    contributor = InlineUser(
+                        user_id=chat.id,
+                        name=chat.full_name or chat.first_name or f"User {chat.id}",
+                        username=chat.username,
+                    )
+                    # Save for next time
+                    iu_repo.save(contributor)
+                except Exception as e:
+                    logger.warning(
+                        f"Could not fetch user info from Telegram for {phrase.user_id}: {e}"
+                    )
 
         return Template(
             template_name="phrase_detail.html",
