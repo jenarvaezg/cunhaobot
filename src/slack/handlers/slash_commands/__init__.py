@@ -1,7 +1,8 @@
 from typing import Any
 from .phrase import handle_phrase
+from .sticker import handle_sticker
 
-command_router = {"/cuñao": handle_phrase}
+command_router = {"/cuñao": handle_phrase, "/sticker": handle_sticker}
 
 
 def handle_slash(slack_data: dict, phrase_service: Any = None) -> dict | None:

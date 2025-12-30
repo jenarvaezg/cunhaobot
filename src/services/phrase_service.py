@@ -1,7 +1,9 @@
+from io import BytesIO
 import logging
 import random
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
+
 import telegram
 from fuzzywuzzy import fuzz
 from models.phrase import Phrase, LongPhrase
@@ -21,22 +23,16 @@ class PhraseService:
         self.phrase_repo = phrase_repo
         self.long_repo = long_phrase_repo
 
-    async def generate_sticker(
-        self, phrase: Phrase | LongPhrase, bot: telegram.Bot
-    ) -> str:
-        from tg.stickers import generate_png, upload_sticker
+    def create_sticker_image(self, phrase: Phrase | LongPhrase) -> bytes:
+        from utils.image_utils import generate_png
 
         is_long = isinstance(phrase, LongPhrase)
         text = phrase.text if is_long else f"¿Qué pasa, {phrase.text}?"
-        return await upload_sticker(
-            bot,
-            generate_png(text),
-            phrase.stickerset_template,
-            phrase.stickerset_title_template,
-        )
+        return generate_png(text).getvalue()
 
     async def create_from_proposal(self, proposal: Any, bot: telegram.Bot) -> None:
         from models.proposal import LongProposal
+        from tg.stickers import upload_sticker
 
         is_long = isinstance(proposal, LongProposal)
         model_class = LongPhrase if is_long else Phrase
@@ -50,7 +46,13 @@ class PhraseService:
             proposal_id=proposal.id,
         )
 
-        phrase.sticker_file_id = await self.generate_sticker(phrase, bot)
+        sticker_image = self.create_sticker_image(phrase)
+        phrase.sticker_file_id = await upload_sticker(
+            bot,
+            BytesIO(sticker_image),
+            phrase.stickerset_template,
+            phrase.stickerset_title_template,
+        )
         repo.save(phrase)
 
     def get_random(self, long: bool = False) -> Phrase:
@@ -59,6 +61,11 @@ class PhraseService:
         if not phrases:
             return LongPhrase(text="¡Cuñado!") if long else Phrase(text="¡Cuñado!")
         return random.choice(phrases)
+
+    def get_phrases(self, search: str, long: bool = False) -> list[Phrase | LongPhrase]:
+        repo = self.long_repo if long else self.phrase_repo
+        phrases = repo.load_all()
+        return [p for p in phrases if search.lower() in p.text.lower()]
 
     def find_most_similar(self, text: str, long: bool = False) -> tuple[Phrase, int]:
         repo = self.long_repo if long else self.phrase_repo
@@ -71,6 +78,16 @@ class PhraseService:
             [(p, fuzz.ratio(norm_text, normalize_str(p.text))) for p in phrases],
             key=lambda x: x[1],
         )
+
+    def register_sticker_usage(self, phrase: Phrase | LongPhrase) -> None:
+        """Increments sticker usage counters for a phrase."""
+        phrase.usages += 1
+        phrase.sticker_usages += 1
+        phrase.daily_usages += 1
+        phrase.sticker_daily_usages += 1
+
+        repo = self.long_repo if isinstance(phrase, LongPhrase) else self.phrase_repo
+        repo.save(phrase)
 
     def add_usage_by_id(self, result_id: str) -> None:
         """Increments usage count based on inline result ID."""
