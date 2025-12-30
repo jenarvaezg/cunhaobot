@@ -32,14 +32,14 @@
 
                         {% if user and user.id|string == owner_id|string %}
                         <div class="d-grid gap-2 d-md-flex mt-2">
-                            <button hx-post="/proposals/{{ proposal.kind }}/{{ proposal.id }}/approve"
+                            <button hx-post="/admin/proposals/{{ proposal.kind }}/{{ proposal.id }}/approve"
                                     hx-confirm="¿Aprobar este monumento a la sabiduría?"
                                     hx-target="closest .col"
                                     hx-swap="delete"
                                     class="btn btn-gold btn-sm flex-grow-1">
                                 <i class="bi bi-check-circle-fill me-2"></i>Aprobar
                             </button>
-                            <button hx-post="/proposals/{{ proposal.kind }}/{{ proposal.id }}/reject"
+                            <button hx-post="/admin/proposals/{{ proposal.kind }}/{{ proposal.id }}/reject"
                                     hx-confirm="¿Seguro que quieres ignorar esta joya?"
                                     hx-target="closest .col"
                                     hx-swap="delete"
@@ -90,14 +90,14 @@
 
                         {% if user and user.id|string == owner_id|string %}
                         <div class="d-grid gap-2 d-md-flex mt-2">
-                            <button hx-post="/proposals/{{ proposal.kind }}/{{ proposal.id }}/approve"
+                            <button hx-post="/admin/proposals/{{ proposal.kind }}/{{ proposal.id }}/approve"
                                     hx-confirm="¿Aprobar esta frase mítica?"
                                     hx-target="closest .col"
                                     hx-swap="delete"
                                     class="btn btn-gold btn-sm flex-grow-1">
                                 <i class="bi bi-check-circle-fill me-2"></i>Aprobar
                             </button>
-                            <button hx-post="/proposals/{{ proposal.kind }}/{{ proposal.id }}/reject"
+                            <button hx-post="/admin/proposals/{{ proposal.kind }}/{{ proposal.id }}/reject"
                                     hx-confirm="¿Mandar a la papelera de reciclaje?"
                                     hx-target="closest .col"
                                     hx-swap="delete"

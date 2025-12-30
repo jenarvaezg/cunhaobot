@@ -13,6 +13,7 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
 
     def _entity_to_domain(self, entity: datastore.Entity) -> Phrase:
         return self.model_class(
+            key=entity.key.name or str(entity.key.id),
             text=entity["text"],
             sticker_file_id=entity.get("sticker_file_id", ""),
             usages=entity.get("usages", 0),

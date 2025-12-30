@@ -1,47 +1,90 @@
 {% extends "base.html" %}
 
-{% block title %}Detalle de Frase{% endblock %}
-
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-        <div class="p-6">
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Detalle de Frase</h1>
-            <blockquote class="p-4 my-4 border-l-4 border-gray-300 dark:border-gray-500 bg-gray-50 dark:bg-gray-700">
-                <p class="text-xl italic font-medium leading-relaxed text-gray-900 dark:text-white">{{ phrase.text }}</p>
-            </blockquote>
-            <div class="mt-6">
-                <dl class="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
-                    <div class="sm:col-span-1">
-                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Autor</dt>
-                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">@{{ phrase.author }}</dd>
+<div class="row justify-content-center animate__animated animate__fadeIn">
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center mb-4 gap-3">
+            <a href="/" class="btn btn-outline-secondary rounded-pill border-0">
+                <i class="bi bi-arrow-left fs-4"></i>
+            </a>
+            <h1 class="oswald mb-0">Detalle de Sabiduría</h1>
+        </div>
+
+        <div class="glass-card p-5 mb-5 border-top border-warning border-4">
+            <div class="mb-4">
+                <span class="badge bg-warning text-dark text-uppercase letter-spacing-2 mb-3">
+                    {{ phrase.kind if phrase.kind == 'Phrase' else 'Dicho Cuñadil' }}
+                </span>
+                <blockquote class="display-5 fw-bold mb-0" style="line-height: 1.2;">
+                    "{{ phrase.text }}"
+                </blockquote>
+            </div>
+
+            <hr class="border-secondary border-opacity-25 my-5">
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="stat-card p-4 rounded-4 bg-dark bg-opacity-25 border border-secondary border-opacity-10">
+                        <div class="text-secondary small text-uppercase fw-bold mb-2">Impacto Total</div>
+                        <div class="d-flex align-items-baseline gap-2">
+                            <span class="display-6 fw-bold text-warning">{{ phrase.usages }}</span>
+                            <span class="text-secondary">intervenciones</span>
+                        </div>
                     </div>
-                    <div class="sm:col-span-1">
-                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Fecha de Creación</dt>
-                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ phrase.date.strftime('%d-%m-%Y') }}</dd>
+                </div>
+                <div class="col-md-6">
+                    <div class="stat-card p-4 rounded-4 bg-dark bg-opacity-25 border border-secondary border-opacity-10">
+                        <div class="text-secondary small text-uppercase fw-bold mb-2">Autoría Original</div>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center fw-bold text-dark" style="width: 40px; height: 40px;">
+                                {{ phrase.user_id|string|first|upper if phrase.user_id else 'A' }}
+                            </div>
+                            <div>
+                                <div class="fw-bold text-white">{{ phrase.user_id if phrase.user_id else 'Anónimo' }}</div>
+                                <div class="small text-secondary">ID Contribuidor</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="sm:col-span-1">
-                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Usos (Texto)</dt>
-                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ phrase.usages }}</dd>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center p-3">
+                        <i class="bi bi-volume-up text-info fs-3 mb-2 d-block"></i>
+                        <div class="fw-bold">{{ phrase.audio_usages }}</div>
+                        <div class="small text-secondary text-uppercase">Audios</div>
                     </div>
-                    <div class="sm:col-span-1">
-                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Usos (Audio)</dt>
-                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ phrase.audio_usages }}</dd>
+                </div>
+                <div class="col-md-4 border-start border-end border-secondary border-opacity-10">
+                    <div class="text-center p-3">
+                        <i class="bi bi-sticky text-warning fs-3 mb-2 d-block"></i>
+                        <div class="fw-bold">{{ phrase.sticker_usages }}</div>
+                        <div class="small text-secondary text-uppercase">Stickers</div>
                     </div>
-                    <div class="sm:col-span-1">
-                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Votos Positivos</dt>
-                        <dd class="mt-1 text-sm text-green-600 dark:text-green-400 font-semibold">{{ phrase.up_votes|length }}</dd>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center p-3">
+                        <i class="bi bi-calendar3 text-success fs-3 mb-2 d-block"></i>
+                        <div class="fw-bold">{{ phrase.created_at.strftime('%d/%m/%Y') if phrase.created_at else '---' }}</div>
+                        <div class="small text-secondary text-uppercase">Registrada</div>
                     </div>
-                    <div class="sm:col-span-1">
-                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Votos Negativos</dt>
-                        <dd class="mt-1 text-sm text-red-600 dark:text-red-400 font-semibold">{{ phrase.down_votes|length }}</dd>
-                    </div>
-                </dl>
+                </div>
             </div>
         </div>
-        <div class="bg-gray-50 dark:bg-gray-900 px-6 py-4">
-            <a href="/" class="text-blue-600 dark:text-blue-400 hover:underline">← Volver a la lista</a>
+
+        {% if phrase.sticker_file_id %}
+        <div class="glass-card p-4 text-center animate__animated animate__fadeInUp animate__delay-1s">
+            <h5 class="oswald mb-4">Sticker Oficial</h5>
+            <div class="sticker-preview mx-auto mb-3" style="width: 200px; height: 200px; background: rgba(255,255,255,0.05); border-radius: 20px; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-image text-secondary fs-1 opacity-25"></i>
+            </div>
+            <div class="small text-secondary font-monospace">{{ phrase.sticker_file_id }}</div>
         </div>
+        {% endif %}
     </div>
 </div>
+
+<style>
+    .letter-spacing-2 { letter-spacing: 2px; }
+    .stat-card { transition: all 0.3s; }
+    .stat-card:hover { background: rgba(255,255,255,0.05) !important; border-color: var(--primary-gold) !important; }
+</style>
 {% endblock %}

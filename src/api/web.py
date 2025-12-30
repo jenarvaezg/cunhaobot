@@ -55,7 +55,7 @@ class WebController(Controller):
         p_repo: PhraseRepository = phrase_repo
         lp_repo: LongPhraseRepository = long_phrase_repo
 
-        phrase = p_repo.get_key(phrase_id) or lp_repo.get_key(phrase_id)
+        phrase = p_repo.load(phrase_id) or lp_repo.load(phrase_id)
 
         if not phrase:
             raise HTTPException(status_code=404, detail="Phrase not found")

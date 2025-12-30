@@ -184,3 +184,35 @@ def test_metrics_page_with_data(client):
         assert "User One" in rv.text
         assert "User Two" in rv.text
         assert "Inline User Three" in rv.text
+
+
+def test_phrase_detail_page(client):
+    from datetime import datetime
+
+    p1 = Phrase(
+        key="test_key",
+        text="p1",
+        usages=10,
+        user_id=12345,
+        created_at=datetime.now(),
+    )
+
+    with (
+        patch("services.phrase_repo.load", return_value=p1),
+        patch("services.long_phrase_repo.load", return_value=None),
+    ):
+        rv = client.get("/phrase/test_key")
+        assert rv.status_code == HTTP_200_OK
+        assert "Detalle de Sabiduría" in rv.text
+        assert "p1" in rv.text
+        assert "12345" in rv.text
+        assert "10" in rv.text
+
+
+def test_phrase_detail_page_not_found(client):
+    with (
+        patch("services.phrase_repo.load", return_value=None),
+        patch("services.long_phrase_repo.load", return_value=None),
+    ):
+        rv = client.get("/phrase/non_existent_key")
+        assert rv.status_code == 404
