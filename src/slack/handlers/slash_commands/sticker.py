@@ -56,8 +56,8 @@ def handle_sticker(slack_data: dict, phrase_service: PhraseService) -> dict:
 
         response = requests.post(
             "https://slack.com/api/files.upload",
-            params={
-                "token": config.slack_bot_token,
+            headers={"Authorization": f"Bearer {config.slack_bot_token}"},
+            data={
                 "channels": channel_id,
                 "initial_comment": f'Aquí tienes tu sticker con la frase: "{phrase.text}"',
             },
