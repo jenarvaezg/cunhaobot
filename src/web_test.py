@@ -152,7 +152,7 @@ def test_metrics_page_empty_data(client):
         # Check text content because context might not be directly accessible when template is rendered
         assert "Nadie" in rv.text
         assert "0" in rv.text  # total_phrases and total_pending
-        assert "Frases Aprobadas" in rv.text
+        assert "Propuestas Aprobadas" in rv.text
         assert "Propuestas Pendientes" in rv.text
 
 
