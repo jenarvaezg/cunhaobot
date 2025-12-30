@@ -46,7 +46,13 @@ class SlackController(Controller):
 
     @get("/auth", sync_to_thread=False)
     def auth_handler(self) -> Redirect:
-        scopes = ["commands", "chat:write", "chat:write.public"]
+        scopes = [
+            "commands",
+            "chat:write",
+            "chat:write.public",
+            "chat:write.customize",
+            "files:write",
+        ]
         auth_url = (
             "https://slack.com/oauth/v2/authorize"
             f"?client_id={config.slack_client_id}"
