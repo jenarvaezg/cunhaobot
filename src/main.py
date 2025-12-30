@@ -61,7 +61,7 @@ def logout(request: Request) -> Redirect:
 
 @get("/proposals/search", sync_to_thread=True)
 def proposals_search(
-    request: HTMXRequest,
+    request: Request,
     proposal_repo: Annotated[ProposalRepository, Dependency()],
     long_proposal_repo: Annotated[LongProposalRepository, Dependency()],
 ) -> HTMXTemplate:

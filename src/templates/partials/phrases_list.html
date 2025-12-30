@@ -1,7 +1,7 @@
 <div class="row g-4">
     <!-- Short Phrases / Apelativos -->
     <div class="col-lg-6">
-        <div class="d-flex align-items-center mb-4 gap-3 animate__animated animate__fadeInLeft">
+        <div class="d-flex align-items-center mb-4 gap-3 {% if not is_htmx %}animate__animated animate__fadeInLeft{% endif %}">
             <div class="bg-warning text-dark rounded-circle p-2 d-flex align-items-center justify-content-center shadow-gold" style="width: 45px; height: 45px;">
                 <i class="bi bi-lightning-fill fs-4"></i>
             </div>
@@ -11,7 +11,7 @@
 
         <div class="row row-cols-1 g-3">
             {% for phrase in short_phrases %}
-            <div class="col animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index0 * 0.05 }}s">
+            <div class="col {% if not is_htmx %}animate__animated animate__fadeInUp{% endif %}" style="animation-delay: {{ loop.index0 * 0.05 }}s">
                 <div class="glass-card h-100 p-3">
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <a href="/phrase/{{ phrase.key }}" class="text-warning text-decoration-none">
@@ -44,7 +44,7 @@
 
     <!-- Long Phrases / Dichos -->
     <div class="col-lg-6">
-        <div class="d-flex align-items-center mb-4 gap-3 animate__animated animate__fadeInRight">
+        <div class="d-flex align-items-center mb-4 gap-3 {% if not is_htmx %}animate__animated animate__fadeInRight{% endif %}">
             <div class="bg-info text-dark rounded-circle p-2 d-flex align-items-center justify-content-center shadow-info" style="width: 45px; height: 45px;">
                 <i class="bi bi-chat-quote-fill fs-4"></i>
             </div>
@@ -54,7 +54,7 @@
 
         <div class="row row-cols-1 g-3">
             {% for phrase in long_phrases %}
-            <div class="col animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index0 * 0.05 }}s">
+            <div class="col {% if not is_htmx %}animate__animated animate__fadeInUp{% endif %}" style="animation-delay: {{ loop.index0 * 0.05 }}s">
                 <div class="glass-card h-100 p-3 border-start border-info border-4">
                     <a href="/phrase/{{ phrase.key }}" class="text-decoration-none" style="color: #e2e8f0; line-height: 1.4;">
                         <p class="card-text mb-3">"{{ phrase.text }}"</p>
