@@ -64,12 +64,12 @@ def link_phrases_to_proposals():
         linked_short = process_linking(phrases, proposals_by_text, "Phrase")
         linked_long = process_linking(long_phrases, long_proposals_by_text, "LongPhrase")
         
-        orphan_short = len(phrases) - linked_short
-        orphan_long = len(long_phrases) - linked_long
+        linked_total = linked_short + linked_long
+        total_phrases = len(phrases) + len(long_phrases)
         
         print(f"\n--- RESUMEN ---")
-        print(f"Frases vinculadas: {linked_short + linked_long}")
-        print(f"Frases huérfanas (sin propuesta): {orphan_short + orphan_long}")
+        print(f"Frases vinculadas: {linked_total}")
+        print(f"Frases sin propuesta: {total_phrases - linked_total}")
 
     except Exception as e:
         print(f"Error: {e}")
