@@ -25,6 +25,12 @@
             <button class="btn btn-outline-info rounded-pill border-0 me-2" type="button" data-bs-toggle="collapse" data-bs-target="#proposalFilters">
                 <i class="bi bi-gear-fill"></i>
             </button>
+            {% if user and user.id|string == owner_id|string %}
+            <button class="btn btn-gradient rounded-pill px-4 ms-2 shadow-sm" type="button"
+                    onclick="generateAIPhrases()" id="btn-generate-ai">
+                <i class="bi bi-cpu-fill me-2"></i>Generar con AI
+            </button>
+            {% endif %}
         </div>
 
         <div class="collapse mb-4" id="proposalFilters">
@@ -51,4 +57,108 @@
      hx-include="[name='search'], [name='user_id'], [name='id']">
     {% include "partials/proposals_list.html" %}
 </div>
+
+<!-- AI Phrasal Modal (Fuera del flujo principal) -->
+<div class="modal fade" id="aiModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-lg" style="background: #0f172a; border: 1px solid var(--primary-gold); border-radius: 24px; overflow: hidden;">
+            <div class="modal-header border-bottom border-secondary border-opacity-25 px-4 py-4" style="background: rgba(255, 193, 7, 0.05);">
+                <h5 class="modal-title oswald text-warning h2 mb-0">
+                    <i class="bi bi-stars me-2"></i>SABIDURÍA ARTIFICIAL
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 text-start">
+                <div id="ai-results-list">
+                    <!-- Results will be injected here -->
+                </div>
+            </div>
+            <div class="modal-footer border-top border-secondary border-opacity-25 px-4 py-3" style="background: rgba(0,0,0,0.2);">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-gradient rounded-pill px-4" onclick="generateAIPhrases()">
+                    <i class="bi bi-arrow-clockwise me-2"></i>Generar otras
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let aiModalInstance = null;
+
+    async function generateAIPhrases() {
+        const btn = document.getElementById('btn-generate-ai');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Cocinando...';
+
+        try {
+            const response = await fetch('/ai/generate', { method: 'POST' });
+            const data = await response.json();
+
+            if (data.phrases) {
+                const list = document.getElementById('ai-results-list');
+                list.innerHTML = '';
+                data.phrases.forEach((phrase, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'd-flex align-items-center justify-content-between p-4 mb-3 animate__animated animate__fadeInUp';
+                    item.style = `
+                        background: rgba(255,255,255,0.03);
+                        border: 1px solid rgba(255,255,255,0.1);
+                        border-radius: 16px;
+                        animation-delay: ${index * 0.1}s;
+                    `;
+
+                    const safePhrase = phrase.replace(/'/g, "\'வுகளை").replace(/"/g, '&quot;');
+
+                    item.innerHTML = `
+                        <div class="flex-grow-1 pe-3">
+                            <span class="fs-5 text-white fw-normal" style="font-family: 'Inter', sans-serif; line-height: 1.4;">${phrase}</span>
+                        </div>
+                        <button class="btn btn-gold rounded-pill px-4 flex-shrink-0 shadow-sm"
+                                style="font-size: 0.9rem; padding: 8px 20px;"
+                                onclick="copyToClipboard('${safePhrase}', this)">
+                            <i class="bi bi-clipboard me-2"></i>Copiar
+                        </button>
+                    `;
+                    list.appendChild(item);
+                });
+
+                if (!aiModalInstance) {
+                    aiModalInstance = new bootstrap.Modal(document.getElementById('aiModal'));
+                }
+                aiModalInstance.show();
+            }
+        } catch (error) {
+            console.error('Error generating AI phrases:', error);
+            alert('Error al conectar con la sabiduría artificial.');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+
+    function copyToClipboard(text, btn) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text.replace(/&quot;/g, '"').replace(/\'/g, "'");
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check2 me-2"></i>¡Copiado!';
+            btn.classList.remove('btn-gold');
+            btn.classList.add('btn-success');
+
+            setTimeout(() => {
+                btn.innerHTML = originalContent;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-gold');
+            }, 2000);
+        } catch (err) {
+            console.error('Fallback copy failed', err);
+        }
+        document.body.removeChild(textArea);
+    }
+</script>
 {% endblock %}

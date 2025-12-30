@@ -27,9 +27,11 @@ from tg import get_tg_application
 from tg.handlers import handle_ping as handle_telegram_ping
 from tg.handlers.utils.callback_query import approve_proposal, dismiss_proposal
 from utils import verify_telegram_auth
+from utils.ai import generate_cunhao_phrases
 
 # Enable logging
 logging.basicConfig(format="%(message)s", level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class ConfigError(Exception):
@@ -349,6 +351,20 @@ async def reject_proposal_web(
     return await _handle_proposal_web_action(request, kind, proposal_id, "reject")
 
 
+@post("/ai/generate")
+async def generate_ai_phrases(request: Request) -> Response[dict[str, Any]]:
+    user = request.session.get("user")
+    if not user or str(user.get("id")) != str(config.owner_id):
+        return Response({"error": "Unauthorized"}, status_code=401)
+
+    try:
+        phrases = await generate_cunhao_phrases(count=5)
+        return Response({"phrases": phrases}, status_code=200)
+    except Exception as e:
+        logger.error(f"Error generating AI phrases: {e}")
+        return Response({"error": str(e)}, status_code=500)
+
+
 @get("/auth/telegram", sync_to_thread=True)
 def auth_telegram(request: Request) -> Redirect:
     if not verify_telegram_auth(dict(request.query_params), config.tg_token):
@@ -561,6 +577,7 @@ app = Litestar(
         manual_link_orphan_web,
         approve_proposal_web,
         reject_proposal_web,
+        generate_ai_phrases,
         auth_telegram,
         logout,
         proposals_search,

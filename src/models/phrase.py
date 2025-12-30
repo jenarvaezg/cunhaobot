@@ -119,6 +119,16 @@ class Phrase:
         cls.get_repository().remove_daily_usages()
 
     @classmethod
+    async def rename(
+        cls: type[T], old_text: str, new_text: str, bot: telegram.Bot
+    ) -> bool:
+        phrase = cls.get_repository().get(old_text)
+        if phrase:
+            await phrase.edit_text(new_text, bot)
+            return True
+        return False
+
+    @classmethod
     def get_most_similar(cls: type[T], text: str) -> tuple[T, int]:
         phrases = cls.get_phrases()
         normalized_input_text = normalize_str(text)
@@ -145,6 +155,10 @@ class LongPhrase(Phrase):
     def __post_init__(self) -> None:
         self.text = improve_punctuation(self.text)
 
+    async def edit_text(self, new_text: str, bot: telegram.Bot) -> None:
+        new_text = improve_punctuation(new_text)
+        await super().edit_text(new_text, bot)
+
     async def generate_sticker(self, bot: telegram.Bot) -> None:
         from tg.stickers import generate_png, upload_sticker
 
@@ -162,6 +176,7 @@ class LongPhrase(Phrase):
 
 class PhraseRepository(Generic[T], Protocol):
     def get_all(self) -> list[T]: ...
+    def get(self, text: str) -> T | None: ...
     def save(self, phrase: T) -> None: ...
     def delete(self, phrase_text: str) -> None: ...
     def refresh_cache(self) -> list[T]: ...
@@ -222,6 +237,11 @@ class DatastorePhraseRepository(Generic[T]):
         query = self.client.query(kind=self.model_class.kind)
         self._cache = [self._entity_to_domain(entity) for entity in query.fetch()]
         return self._cache
+
+    def get(self, text: str) -> T | None:
+        if not self._cache:
+            self.refresh_cache()
+        return next((p for p in self._cache if p.text == text), None)
 
     def get_phrases(self, search: str = "", limit: int = 0, **filters) -> list[T]:
         if not self._cache:

@@ -125,6 +125,32 @@
             box-shadow: 0 0 20px rgba(var(--primary-gold-rgb), 0.4);
         }
 
+        .btn-gradient {
+            background: linear-gradient(135deg, var(--primary-gold) 0%, #f59e0b 100%);
+            color: var(--dark-blue);
+            font-weight: 800;
+            border: none;
+            transition: all 0.3s;
+        }
+
+        .btn-gradient:hover {
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn-outline-gold {
+            border: 1px solid var(--primary-gold);
+            color: var(--primary-gold);
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-outline-gold:hover {
+            background: var(--primary-gold);
+            color: var(--dark-blue);
+        }
+
         /* Stats & Badges */
         .stat-badge {
             background: rgba(255,255,255,0.05);
