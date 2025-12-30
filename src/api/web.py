@@ -3,7 +3,7 @@ from typing import Any, Annotated, cast
 from litestar import Controller, Request, get, post
 from litestar.exceptions import HTTPException
 from litestar.response import Response, Template
-from litestar.plugins.htmx import HTMXTemplate
+from litestar.plugins.htmx import HTMXTemplate, HTMXRequest
 from litestar.params import Dependency
 
 from infrastructure.protocols import (
@@ -25,7 +25,7 @@ class WebController(Controller):
     @get("/", sync_to_thread=True)
     def index(
         self,
-        request: Request,
+        request: HTMXRequest,
         phrase_repo: Annotated[Any, Dependency()],
         long_phrase_repo: Annotated[Any, Dependency()],
     ) -> Template:
@@ -47,6 +47,7 @@ class WebController(Controller):
                 ),
                 "user": request.session.get("user"),
                 "owner_id": config.owner_id,
+                "is_htmx": bool(request.htmx),
             },
         )
 
@@ -148,7 +149,7 @@ class WebController(Controller):
     @get("/proposals", sync_to_thread=True)
     def proposals(
         self,
-        request: Request,
+        request: HTMXRequest,
         proposal_repo: Annotated[Any, Dependency()],
         long_proposal_repo: Annotated[Any, Dependency()],
     ) -> Template:
@@ -165,6 +166,7 @@ class WebController(Controller):
     @get("/search", sync_to_thread=True)
     def search(
         self,
+        request: HTMXRequest,
         phrase_repo: Annotated[Any, Dependency()],
         long_phrase_repo: Annotated[Any, Dependency()],
         search: str = "",
@@ -184,6 +186,7 @@ class WebController(Controller):
                 "long_phrases": sorted(
                     long_phrases, key=lambda x: x.usages, reverse=True
                 ),
+                "is_htmx": bool(request.htmx),
             },
         )
 

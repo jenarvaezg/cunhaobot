@@ -21,9 +21,12 @@ def get_proposals_context(
     )
 
     user_session = cast(dict[str, str] | None, request.session.get("user"))
+    is_htmx = bool(getattr(request, "htmx", False))
+
     return {
         "pending_short": all_short,
         "pending_long": all_long,
         "user": user_session,
         "owner_id": config.owner_id,
+        "is_htmx": is_htmx,
     }

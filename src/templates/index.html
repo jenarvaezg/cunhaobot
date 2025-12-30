@@ -12,7 +12,7 @@
         <div class="search-wrapper d-flex align-items-center mb-4 mx-auto" style="max-width: 600px;">
             <i class="bi bi-search ms-4 text-secondary"></i>
             <form hx-get="/search"
-                  hx-trigger="keyup changed delay:300ms from:input, change from:select"
+                  hx-trigger="submit, keyup changed delay:300ms from:input, change from:select"
                   hx-target="#phrases-container"
                   hx-indicator="#search-indicator"
                   class="flex-grow-1">
@@ -51,7 +51,7 @@
     </div>
 </div>
 
-<div id="phrases-container" class="animate__animated animate__fadeInUp">
+<div id="phrases-container" class="{% if not is_htmx %}animate__animated animate__fadeInUp{% endif %}">
     {% include "partials/phrases_list.html" %}
 </div>
 {% endblock %}
