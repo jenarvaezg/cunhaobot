@@ -53,23 +53,49 @@ class SlackController(Controller):
             "chat:write.customize",
             "files:write",
         ]
+        redirect_uri = f"{config.base_url}/slack/auth/redirect"
         auth_url = (
             "https://slack.com/oauth/v2/authorize"
             f"?client_id={config.slack_client_id}"
             f"&scope={','.join(scopes)}"
+            f"&redirect_uri={redirect_uri}"
         )
         return Redirect(path=auth_url, status_code=302)
 
     @get("/auth/redirect")
     async def auth_redirect_handler(self, request: Request) -> str:
+        import logging
+
+        logger = logging.getLogger(__name__)
+
         code = request.query_params.get("code")
+        if not code:
+            logger.error("No code received in Slack redirect")
+            return "Error: No code received"
+
         request_body = {
             "code": code,
             "client_id": config.slack_client_id,
             "client_secret": config.slack_client_secret,
         }
-        # Consider moving this to a dedicated Slack service later
-        requests.post(
+
+        logger.info("Exchanging Slack code for access token...")
+        response = requests.post(
             "https://slack.com/api/oauth.v2.access", data=request_body, timeout=10
         )
-        return ":)"
+
+        resp_data = response.json()
+        if not resp_data.get("ok"):
+            logger.error(f"Slack OAuth error: {resp_data}")
+            return f"Error during installation: {resp_data.get('error')}"
+
+        # Here is where the bot token is!
+        # resp_data['access_token'] is the xoxb- token
+        logger.info(
+            f"Slack installation successful for team: {resp_data.get('team', {}).get('name')}"
+        )
+        logger.info(f"Bot User ID: {resp_data.get('bot_user_id')}")
+        # Log the token (be careful in production, but here we need to see it to configure it)
+        logger.info(f"ACCESS_TOKEN: {resp_data.get('access_token')}")
+
+        return "¡Instalación completada con éxito! Ya puedes cerrar esta ventana."
