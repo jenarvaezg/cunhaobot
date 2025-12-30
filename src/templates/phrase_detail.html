@@ -73,8 +73,8 @@
         {% if phrase.sticker_file_id %}
         <div class="glass-card p-4 text-center animate__animated animate__fadeInUp animate__delay-1s">
             <h5 class="oswald mb-4">Sticker Oficial</h5>
-            <div class="sticker-preview mx-auto mb-3" style="width: 200px; height: 200px; background: rgba(255,255,255,0.05); border-radius: 20px; display: flex; align-items: center; justify-content: center;">
-                <i class="bi bi-image text-secondary fs-1 opacity-25"></i>
+            <div class="sticker-preview mx-auto mb-3" style="width: 256px; height: 256px; background: rgba(255,255,255,0.05); border-radius: 20px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                <img src="/phrase/{{ phrase.key }}/sticker.png" alt="Sticker" class="img-fluid" style="max-height: 100%; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
             </div>
             <div class="small text-secondary font-monospace">{{ phrase.sticker_file_id }}</div>
         </div>

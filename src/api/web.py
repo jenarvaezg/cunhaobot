@@ -11,6 +11,7 @@ from infrastructure.protocols import (
     ProposalRepository,
     LongProposalRepository,
 )
+from services import PhraseService
 from services.ai_service import AIService
 from core.config import config
 
@@ -67,6 +68,29 @@ class WebController(Controller):
                 "user": request.session.get("user"),
                 "owner_id": config.owner_id,
             },
+        )
+
+    @get("/phrase/{phrase_id:str}/sticker.png", sync_to_thread=True)
+    def phrase_sticker(
+        self,
+        phrase_id: str,
+        phrase_repo: Annotated[Any, Dependency()],
+        long_phrase_repo: Annotated[Any, Dependency()],
+        phrase_service: Annotated[PhraseService, Dependency()],
+    ) -> Response:
+        p_repo: PhraseRepository = phrase_repo
+        lp_repo: LongPhraseRepository = long_phrase_repo
+
+        phrase = p_repo.load(phrase_id) or lp_repo.load(phrase_id)
+
+        if not phrase:
+            raise HTTPException(status_code=404, detail="Phrase not found")
+
+        sticker_bytes = phrase_service.create_sticker_image(phrase)
+        return Response(
+            content=sticker_bytes,
+            media_type="image/png",
+            headers={"Cache-Control": "public, max-age=31536000"},
         )
 
     @get("/proposals", sync_to_thread=True)

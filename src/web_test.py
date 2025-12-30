@@ -216,3 +216,22 @@ def test_phrase_detail_page_not_found(client):
     ):
         rv = client.get("/phrase/non_existent_key")
         assert rv.status_code == 404
+
+
+def test_phrase_sticker_route(client):
+    p1 = Phrase(key="test_key", text="p1", sticker_file_id="file123")
+    sticker_content = b"fake_png_content"
+
+    with (
+        patch("services.phrase_repo.load", return_value=p1),
+        patch("services.long_phrase_repo.load", return_value=None),
+        patch(
+            "services.phrase_service.PhraseService.create_sticker_image",
+            return_value=sticker_content,
+        ),
+    ):
+        rv = client.get("/phrase/test_key/sticker.png")
+        assert rv.status_code == 200
+        assert rv.content == sticker_content
+        assert rv.headers["content-type"] == "image/png"
+        assert "max-age=31536000" in rv.headers["cache-control"]
