@@ -75,15 +75,18 @@ class SlackController(Controller):
 
         request_body = {
             "code": code,
-            "client_id": config.slack_client_id,
-            "client_secret": config.slack_client_secret,
+            "redirect_uri": f"{config.base_url}/slack/auth/redirect",
         }
 
-        logger.info("Exchanging Slack code for access token...")
-        response = requests.post(
-            "https://slack.com/api/oauth.v2.access", data=request_body, timeout=10
+        logger.info(
+            f"Exchanging Slack code for access token using Client ID: {config.slack_client_id[:5]}..."
         )
-
+        response = requests.post(
+            "https://slack.com/api/oauth.v2.access",
+            data=request_body,
+            auth=(config.slack_client_id, config.slack_client_secret),
+            timeout=10,
+        )
         resp_data = response.json()
         if not resp_data.get("ok"):
             logger.error(f"Slack OAuth error: {resp_data}")
