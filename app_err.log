@@ -1,0 +1,10 @@
+/private/var/folders/kf/dc84h_sn3vl9h7j9bsrpk8jr0000gn/T/vibe-kanban/worktrees/c056-mejora-el-dise-o/cunhaobot/.venv/lib/python3.14/site-packages/litestar/plugins/pydantic/utils.py:28: UserWarning: Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+  from pydantic import v1 as pydantic_v1
+INFO:     Will watch for changes in these directories: ['/private/var/folders/kf/dc84h_sn3vl9h7j9bsrpk8jr0000gn/T/vibe-kanban/worktrees/c056-mejora-el-dise-o/cunhaobot']
+INFO:     Uvicorn running on http://0.0.0.0:5050 (Press CTRL+C to quit)
+INFO:     Started reloader process [10961] using StatReload
+/private/var/folders/kf/dc84h_sn3vl9h7j9bsrpk8jr0000gn/T/vibe-kanban/worktrees/c056-mejora-el-dise-o/cunhaobot/.venv/lib/python3.14/site-packages/litestar/plugins/pydantic/utils.py:28: UserWarning: Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+  from pydantic import v1 as pydantic_v1
+INFO:     Started server process [10963]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
