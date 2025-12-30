@@ -70,13 +70,6 @@ def test_telegram_ping_handler(client):
             mock_ping.assert_called_with(mock_app.bot)
 
 
-def test_slack_handler_invalid_token(client):
-    data = {"token": "wrong"}
-    rv = client.post("/slack/", json=data)
-    assert rv.status_code == 401
-    assert rv.json() == {"error": "invalid token"}
-
-
 def test_slack_handler_slash(client):
     with patch("api.slack.handle_slack") as mock_handle_slack:
         mock_handle_slack.return_value = {

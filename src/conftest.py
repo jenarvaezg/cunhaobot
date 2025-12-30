@@ -6,7 +6,6 @@ from unittest.mock import MagicMock
 os.environ["TG_TOKEN"] = "dummy_token"
 os.environ["SLACK_CLIENT_ID"] = "dummy_id"
 os.environ["SLACK_CLIENT_SECRET"] = "dummy_secret"
-os.environ["SLACK_VERIFICATION_TOKEN"] = "dummy_token"
 os.environ["MOD_CHAT_ID"] = "12345"
 os.environ["OWNER_ID"] = "12345"
 os.environ["GOOGLE_CLOUD_PROJECT"] = "dummy-project"

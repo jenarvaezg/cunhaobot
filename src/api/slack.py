@@ -28,14 +28,6 @@ class SlackController(Controller):
             if "payload" in data_dict:
                 data_payload = json.loads(str(data_dict["payload"]))
 
-        # Verify token
-        if data_payload.get("token") != config.slack_verification_token:
-            from litestar.status_codes import HTTP_401_UNAUTHORIZED
-
-            return Response(
-                {"error": "invalid token"}, status_code=HTTP_401_UNAUTHORIZED
-            )
-
         # Pass service to handler
         response = handle_slack(
             slack_data=data_payload,
