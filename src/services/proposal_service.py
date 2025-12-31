@@ -73,8 +73,7 @@ class ProposalService:
         repo = self.long_repo if isinstance(proposal, LongProposal) else self.repo
         repo.save(proposal)  # type: ignore[arg-type]
 
-        # Award points: 1 to voter, 1 to proposer
-        user_service.add_points(voter_id, 1)
+        # Award points: 1 to proposer
         user_service.add_points(proposal.user_id, 1)
 
     async def get_curators(self) -> Dict[int, str]:

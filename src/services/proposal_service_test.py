@@ -62,9 +62,8 @@ class TestProposalService:
             service.vote(p, voter_id=1, positive=True)
             assert p.liked_by == [1]
             self.repo.save.assert_called_once_with(p)
-            # Award points: 1 to voter, 1 to proposer
-            mock_user_service.add_points.assert_any_call(1, 1)
-            mock_user_service.add_points.assert_any_call(10, 1)
+            # Proposer (id=10) gets 1 point
+            mock_user_service.add_points.assert_called_once_with(10, 1)
 
     def test_vote_long(self, service):
         p = LongProposal(
@@ -73,8 +72,7 @@ class TestProposalService:
         with patch("services.proposal_service.user_service") as mock_user_service:
             service.vote(p, voter_id=1, positive=True)
             self.long_repo.save.assert_called_once_with(p)
-            mock_user_service.add_points.assert_any_call(1, 1)
-            mock_user_service.add_points.assert_any_call(10, 1)
+            mock_user_service.add_points.assert_called_once_with(10, 1)
 
     def test_vote_switch(self, service):
         p = Proposal(
