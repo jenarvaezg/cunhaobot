@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="glass-card p-5 animate__animated animate__fadeIn">
+            <h1 class="oswald hero-title mb-4">📢 Broadcast Maestro</h1>
+            <p class="text-muted mb-4">
+                Envía un mensaje a todos los cuñaos que tienen el bot activo.
+                Usa este poder con responsabilidad, no seas pesao.
+            </p>
+
+            <form action="/admin/broadcast" method="POST" id="broadcast-form" hx-boost="true" hx-target="#broadcast-result" hx-indicator="#broadcast-indicator">
+                <div class="mb-4">
+                    <label for="message" class="form-label fw-bold text-warning">Mensaje a difundir</label>
+                    <textarea class="form-control glass-card bg-transparent text-white border-secondary"
+                              id="message" name="message" rows="6"
+                              placeholder="Escribe aquí tu sabiduría..." required></textarea>
+                </div>
+
+                <div class="d-grid gap-3">
+                    <button type="submit" class="btn btn-gold btn-lg py-3">
+                        <i class="bi bi-send-fill me-2"></i> DIFUNDIR SABIDURÍA
+                    </button>
+                    <div id="broadcast-indicator" class="htmx-indicator text-center mt-2">
+                        <div class="spinner-border text-warning" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="text-warning mt-2 small fw-bold">Repartiendo conocimiento...</p>
+                    </div>
+                </div>
+            </form>
+
+            <div id="broadcast-result" class="mt-4">
+                <!-- Los resultados aparecerán aquí -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,9 @@
+<div class="animate__animated animate__fadeInUp">
+    <div class="alert {% if error %}alert-danger{% else %}alert-success{% endif %} glass-card border-0 shadow-lg p-4">
+        <div class="d-flex align-items-center mb-3">
+            <i class="bi {% if error %}bi-exclamation-triangle-fill text-danger{% else %}bi-check-circle-fill text-success{% endif %} fs-2 me-3"></i>
+            <h4 class="oswald mb-0">{% if error %}¡Houston, tenemos un problema!{% else %}¡Misión cumplida, jefe!{% endif %}</h4>
+        </div>
+        <p class="mb-0 fs-5">"{{ message }}"</p>
+    </div>
+</div>
