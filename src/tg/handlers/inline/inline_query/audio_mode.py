@@ -1,3 +1,4 @@
+import random
 from telegram import InlineQueryResultVoice
 
 from models.phrase import LongPhrase, Phrase
@@ -32,18 +33,22 @@ def get_audio_mode_results(input: str) -> list[InlineQueryResultVoice]:
 
     mode, rest = get_query_mode(input)
 
-    results = []
+    phrases = []
     if mode == SHORT_MODE:
-        results = [
-            res
-            for p in phrase_repo.load_all()
-            if (res := _phrase_to_inline_audio(p, "short"))
-        ]
+        all_phrases = phrase_repo.load_all()
+        random.shuffle(all_phrases)
+        phrases = all_phrases[:10]  # Limit to 10 phrases
     elif mode == LONG_MODE:
-        results = [
-            res
-            for p in long_phrase_repo.load_all()
-            if (res := _phrase_to_inline_audio(p, "long"))
-        ]
+        all_phrases = long_phrase_repo.load_all()
+        random.shuffle(all_phrases)
+        phrases = all_phrases[:10]  # Limit to 10 phrases
 
+    results = []
+    for p in phrases:
+        if mode == SHORT_MODE:
+            if res := _phrase_to_inline_audio(p, "short"):
+                results.append(res)
+        elif mode == LONG_MODE:
+            if res := _phrase_to_inline_audio(p, "long"):
+                results.append(res)
     return results
