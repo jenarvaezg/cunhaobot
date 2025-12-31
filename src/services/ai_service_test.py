@@ -1,6 +1,6 @@
 import pytest
-from unittest.mock import MagicMock, patch
-from services.ai_service import AIService
+from unittest.mock import MagicMock, patch, AsyncMock
+from services.ai_service import AIService, phrase_generator_agent
 
 
 class TestAIService:
@@ -28,29 +28,36 @@ class TestAIService:
     @pytest.mark.asyncio
     async def test_generate_cunhao_phrases_success(self):
         """Test generation success."""
-        with patch("google.genai.Client") as mock_client_cls:
-            mock_client_instance = mock_client_cls.return_value
-            mock_response = MagicMock()
-            mock_response.text = "Frase 1\nFrase 2\nFrase 3"
-            mock_client_instance.models.generate_content.return_value = mock_response
+        with (
+            patch.object(
+                phrase_generator_agent, "run", new_callable=AsyncMock
+            ) as mock_run,
+            patch("services.phrase_service", create=True) as mock_phrase_service,
+        ):
+            mock_phrase_service.get_phrases.return_value = []
+
+            mock_result = MagicMock()
+            mock_result.output.phrases = ["Frase 1", "Frase 2", "Frase 3"]
+            mock_run.return_value = mock_result
 
             service = AIService(api_key="valid_key")
             phrases = await service.generate_cunhao_phrases(count=2)
 
             assert phrases == ["Frase 1", "Frase 2"]
-            mock_client_instance.models.generate_content.assert_called_once()
-            args, kwargs = mock_client_instance.models.generate_content.call_args
-            assert kwargs["model"] == "gemini-2.5-flash"
+            mock_run.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_generate_cunhao_phrases_quota_error(self):
         """Test handling of 429 error."""
-        with patch("google.genai.Client") as mock_client_cls:
-            mock_client_instance = mock_client_cls.return_value
-            # Simulate 429
-            mock_client_instance.models.generate_content.side_effect = Exception(
-                "429 Resource Exhausted"
-            )
+        with (
+            patch.object(
+                phrase_generator_agent, "run", new_callable=AsyncMock
+            ) as mock_run,
+            patch("services.phrase_service", create=True) as mock_phrase_service,
+        ):
+            mock_phrase_service.get_phrases.return_value = []
+            # Simulate 429 in a way that shows up in the exception string
+            mock_run.side_effect = Exception("429 Resource Exhausted")
 
             service = AIService(api_key="valid_key")
             phrases = await service.generate_cunhao_phrases(count=5)
@@ -61,10 +68,39 @@ class TestAIService:
     @pytest.mark.asyncio
     async def test_generate_cunhao_phrases_other_error(self):
         """Test handling of other errors."""
-        with patch("google.genai.Client") as mock_client_cls:
-            mock_client_instance = mock_client_cls.return_value
-            mock_client_instance.models.generate_content.side_effect = Exception("Boom")
+        with (
+            patch.object(
+                phrase_generator_agent, "run", new_callable=AsyncMock
+            ) as mock_run,
+            patch("services.phrase_service", create=True) as mock_phrase_service,
+        ):
+            mock_phrase_service.get_phrases.return_value = []
+            mock_run.side_effect = Exception("Boom")
 
             service = AIService(api_key="valid_key")
             with pytest.raises(Exception, match="Boom"):
                 await service.generate_cunhao_phrases(count=5)
+
+    @pytest.mark.asyncio
+    async def test_generate_cunhao_phrases_with_context(self):
+        """Test generation with explicitly provided context phrases."""
+        with (
+            patch.object(
+                phrase_generator_agent, "run", new_callable=AsyncMock
+            ) as mock_run,
+            patch("services.phrase_service", create=True) as mock_phrase_service,
+        ):
+            mock_result = MagicMock()
+            mock_result.output.phrases = ["Gen 1", "Gen 2"]
+            mock_run.return_value = mock_result
+
+            service = AIService(api_key="valid_key")
+            context = ["Context 1", "Context 2"]
+            phrases = await service.generate_cunhao_phrases(
+                count=2, context_phrases=context
+            )
+
+            assert phrases == ["Gen 1", "Gen 2"]
+            mock_run.assert_called_once()
+            # Verify phrase_service was NOT used
+            mock_phrase_service.get_phrases.assert_not_called()

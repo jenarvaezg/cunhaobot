@@ -1,9 +1,39 @@
 import logging
 import os
+import random
+from typing import List
 from google import genai
+from pydantic import BaseModel
+from pydantic_ai import Agent
 from core.config import config
 
 logger = logging.getLogger(__name__)
+
+
+class GeneratedPhrases(BaseModel):
+    """Model for the generated cuñao phrases."""
+
+    phrases: List[str]
+
+
+# Ensure API key is set for pydantic-ai (it looks for GOOGLE_API_KEY)
+# Using a dummy key for tests if not provided
+os.environ.setdefault("GOOGLE_API_KEY", config.gemini_api_key or "dummy_key_for_tests")
+
+phrase_generator_agent = Agent(
+    "google-gla:gemini-2.5-flash",
+    output_type=GeneratedPhrases,
+    system_prompt=(
+        "Actúa como un 'cuñao' español de manual en una barra de bar. "
+        "Genera frases lapidarias, cortas y directas. "
+        "REGLAS CRÍTICAS: "
+        "1. CADA FRASE DEBE TENER UNA SOLA IDEA O CONCEPTO (No mezcles temas). "
+        "2. BREVEDAD: Máximo 15-20 palabras por frase. Que sean 'perlas' rápidas. "
+        "3. TONO: Sentando cátedra, rancio, nostálgico, escéptico y políticamente incorrecto. "
+        "4. TEMAS: Odio a lo moderno, el diésel, la mili, negacionismo climático de bar, chuletón, "
+        "los jóvenes no quieren trabajar, nacionalismo rancio, machismo rancio."
+    ),
+)
 
 
 class AIService:
@@ -25,50 +55,48 @@ class AIService:
         return self._client
 
     async def generate_cunhao_phrases(
-        self, count: int = 5, context_phrases: list[str] | None = None
-    ) -> list[str]:
-        """Generates cuñao-style phrases using Gemini."""
-        context_str = ""
-        if context_phrases:
-            context_list = "\n".join([f"- {p}" for p in context_phrases])
-            context_str = f"Aquí tienes ejemplos de tu 'repertorio' habitual para que te inspires en el estilo, tono y vocabulario:\n{context_list}\n"
+        self,
+        count: int = 5,
+        context_phrases: List[str] | None = None,
+    ) -> List[str]:
+        """Generates cuñao-style phrases using pydantic-ai, with database context."""
 
-        prompt = f"""
-        Actúa como un "cuñao" español de manual en una barra de bar.
-        {context_str}
-        Genera {count} frases lapidarias, cortas y directas.
+        existing_phrases = context_phrases if context_phrases is not None else []
 
-        REGLAS CRÍTICAS:
-        1. CADA FRASE DEBE TENER UNA SOLA IDEA O CONCEPTO (No mezcles temas).
-        2. BREVEDAD: Máximo 15-20 palabras por frase. Que sean "perlas" rápidas.
-        3. TONO: Sentando cátedra, rancio, nostálgico, escéptico y políticamente incorrecto.
+        if not existing_phrases:
+            from services import phrase_service
 
-        Tópicos de ejemplo (elige uno distinto por frase):
-        - Odio al lenguaje inclusivo o "moderneces".
-        - El coche diésel/manual es lo único que vale.
-        - La mili te hacía hombre.
-        - El cambio climático es mentira porque hoy hace frío.
-        - El chuletón/jamón cura cualquier tontería.
-        - Los jóvenes no quieren trabajar.
-        - Nacionalismo rancio o prejuicios sobre inmigración/paguitas.
-        - Machismo rancio o prejuicios sobre género.
+            try:
+                # Get a sample of existing phrases to avoid repetition and set style
+                all_short = phrase_service.get_phrases("", long=False)
+                all_long = phrase_service.get_phrases("", long=True)
 
-        IMPORTANTE: Devuelve SOLO las frases, una por línea, sin numeración ni explicaciones.
-        """
+                sample_short = random.sample(all_short, min(len(all_short), 10))
+                sample_long = random.sample(all_long, min(len(all_long), 10))
+
+                existing_phrases = [p.text for p in sample_short + sample_long]
+            except Exception as e:
+                logger.warning(f"Could not fetch phrases for context: {e}")
+
+        context_msg = ""
+        if existing_phrases:
+            # Limit context if it's too huge, though likely fine
+            sample_context = (
+                existing_phrases[:20]
+                if len(existing_phrases) > 20
+                else existing_phrases
+            )
+            context_str = "\n".join([f"- {p}" for p in sample_context])
+            context_msg = f"\nAquí tienes ejemplos de frases que ya existen (ÚSALAS COMO INSPIRACIÓN PERO NO LAS REPITAS):\n{context_str}"
+
+        prompt = f"Genera {count} frases nuevas e inspiradas.{context_msg}"
 
         try:
-            client = self.client
-            response = client.models.generate_content(
-                model="gemini-2.5-flash", contents=prompt
-            )
-            phrases = [
-                line.strip()
-                for line in response.text.strip().split("\n")
-                if line.strip()
-            ]
-            return phrases[:count]
+            result = await phrase_generator_agent.run(prompt)
+            return result.output.phrases[:count]
+
         except Exception as e:
-            logger.exception("Error generating cuñao phrases:")
+            logger.exception("Error generating cuñao phrases with pydantic-ai:")
             if "429" in str(e):
                 return [
                     "⚠️ Quota de AI agotada. ¡Paco no puede más con el calor! Reintenta en un momento."
@@ -79,12 +107,12 @@ class AIService:
         """Generates an image from a phrase using the nanobanana pattern (Gemini 2.5 Flash Image)."""
         model_name = os.getenv("NANOBANANA_MODEL", "gemini-2.5-flash-image")
         prompt = f"""
-        A high-quality, satirical and funny illustration of a stereotypical Spanish 'cuñado'
-        (a middle-aged man with a mustache, wearing a classic polo shirt or a vest)
-        acting out or representing this phrase: "{phrase}".
-        The style should be a modern comic or a realistic but slightly caricatured digital painting.
-        Set the scene in a typical Spanish bar with a wooden counter and beer tapas.
-        """
+A high-quality, satirical and funny illustration of a stereotypical Spanish 'cuñado'
+(a middle-aged man with a mustache, wearing a classic polo shirt or a vest)
+acting out or representing this phrase: "{phrase}".
+The style should be a modern comic or a realistic but slightly caricatured digital painting.
+Set the scene in a typical Spanish bar with a wooden counter and beer tapas.
+"""
         try:
             # Following nanobanana pattern: use generate_content with gemini-2.5-flash-image
             response = self.client.models.generate_content(

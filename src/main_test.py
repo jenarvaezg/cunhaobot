@@ -51,6 +51,32 @@ def test_telegram_handler(client):
             mock_app.process_update.assert_called_with(mock_update)
 
 
+def test_telegram_handler_get_me(client):
+    token = config.tg_token
+
+    with patch("api.bot.get_tg_application") as mock_get_app:
+        mock_app = MagicMock()
+        mock_get_app.return_value = mock_app
+        mock_app.bot = MagicMock()
+        mock_app.bot.username = None  # Force username to be None
+        mock_app.bot.get_me = AsyncMock()  # get_me is async
+        mock_app.initialize = AsyncMock()
+        mock_app.process_update = AsyncMock()
+
+        with patch("telegram.Update.de_json") as mock_de_json:
+            mock_update = MagicMock()
+            mock_de_json.return_value = mock_update
+
+            rv = client.post(f"/{token}", json={"update_id": 123})
+
+            assert rv.status_code == HTTP_200_OK
+            assert rv.text == "Handled"
+            mock_de_json.assert_called()
+            mock_app.initialize.assert_called()
+            mock_app.bot.get_me.assert_called_once()
+            mock_app.process_update.assert_called_with(mock_update)
+
+
 def test_telegram_ping_handler(client):
     token = config.tg_token
 
