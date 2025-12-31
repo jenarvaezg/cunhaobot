@@ -18,6 +18,8 @@ class Config:
     owner_id: str
     slack_client_id: str
     slack_client_secret: str
+    slack_signing_secret: str
+    slack_state_secret: str
     slack_bot_token: str
     mod_chat_id: str
     is_gae: bool
@@ -51,6 +53,10 @@ class Config:
             owner_id=os.environ.get("OWNER_ID", ""),
             slack_client_id=os.environ.get("SLACK_CLIENT_ID", ""),
             slack_client_secret=os.environ.get("SLACK_CLIENT_SECRET", ""),
+            slack_signing_secret=os.environ.get("SLACK_SIGNING_SECRET", ""),
+            slack_state_secret=os.environ.get(
+                "SLACK_STATE_SECRET", "default-state-secret"
+            ),
             slack_bot_token=os.environ.get("SLACK_BOT_TOKEN", ""),
             mod_chat_id=os.environ.get("MOD_CHAT_ID", ""),
             is_gae=is_gae,
