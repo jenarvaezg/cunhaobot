@@ -60,11 +60,12 @@ class AIService:
         context_phrases: List[str] | None = None,
     ) -> List[str]:
         """Generates cuñao-style phrases using pydantic-ai, with database context."""
-        
+
         existing_phrases = context_phrases if context_phrases is not None else []
 
         if not existing_phrases:
             from services import phrase_service
+
             try:
                 # Get a sample of existing phrases to avoid repetition and set style
                 all_short = phrase_service.get_phrases("", long=False)
@@ -80,7 +81,11 @@ class AIService:
         context_msg = ""
         if existing_phrases:
             # Limit context if it's too huge, though likely fine
-            sample_context = existing_phrases[:20] if len(existing_phrases) > 20 else existing_phrases
+            sample_context = (
+                existing_phrases[:20]
+                if len(existing_phrases) > 20
+                else existing_phrases
+            )
             context_str = "\n".join([f"- {p}" for p in sample_context])
             context_msg = f"\nAquí tienes ejemplos de frases que ya existen (ÚSALAS COMO INSPIRACIÓN PERO NO LAS REPITAS):\n{context_str}"
 
