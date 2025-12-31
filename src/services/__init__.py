@@ -21,6 +21,7 @@ from services.proposal_service import ProposalService  # noqa: E402
 from services.user_service import UserService  # noqa: E402
 from services.ai_service import ai_service  # noqa: E402
 from services.tts_service import tts_service  # noqa: E402
+from services.cunhao_agent import cunhao_agent  # noqa: E402
 
 # Services
 phrase_service = PhraseService(phrase_repo, long_phrase_repo)  # type: ignore[arg-type]
@@ -44,4 +45,5 @@ __all__ = [
     "proposal_service",
     "ai_service",
     "tts_service",
+    "cunhao_agent",
 ]

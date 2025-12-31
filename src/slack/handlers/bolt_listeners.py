@@ -6,7 +6,7 @@ from typing import Any
 from slack_bolt.async_app import AsyncApp
 
 from core.config import config
-from services import phrase_service
+from services import phrase_service, cunhao_agent
 from slack.attachments import (
     build_phrase_attachments,
     build_saludo_attachments,
@@ -250,3 +250,22 @@ def register_listeners(app: AsyncApp):
             )
         elif value == "cancel":
             await respond(delete_original=True)
+
+    @app.event("app_mention")
+    async def handle_app_mention(ack: Any, body: dict[str, Any], say: Any):
+        await ack()
+        event = body["event"]
+        text = event.get("text", "")
+        response = await cunhao_agent.answer(text)
+        await say(response, thread_ts=event.get("ts"))
+
+    @app.event("message")
+    async def handle_message_event(ack: Any, body: dict[str, Any], say: Any):
+        await ack()
+        event = body["event"]
+        channel_type = event.get("channel_type")
+        # Only handle DMs here, avoid double replying in channels (handled by app_mention)
+        if channel_type == "im" and "subtype" not in event:
+            text = event.get("text", "")
+            response = await cunhao_agent.answer(text)
+            await say(response)
