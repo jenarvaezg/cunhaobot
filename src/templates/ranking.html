@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-5 animate__animated animate__fadeIn">
+    <div class="col-lg-8">
+        <h1 class="oswald hero-title mb-3">RANKING DE CUÑADISMO</h1>
+        <p class="lead text-secondary fw-light mb-5">
+            ¡La clasificación oficial de los cuñados más grandes! <br class="d-none d-md-block">
+            Gana puntos proponiendo frases y participando en las votaciones.
+        </p>
+    </div>
+</div>
+
+<div class="row g-4 mb-5 animate__animated animate__fadeInUp">
+    <div class="col-md-4">
+        <div class="glass-card p-4 text-center h-100 border-warning border-opacity-25" style="border: 1px solid;">
+            <h3 class="oswald text-warning mb-3">10 PUNTOS</h3>
+            <p class="text-secondary small text-uppercase fw-bold mb-0">Por frase aprobada</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="glass-card p-4 text-center h-100 border-info border-opacity-25" style="border: 1px solid;">
+            <h3 class="oswald text-info mb-3">1 PUNTO</h3>
+            <p class="text-secondary small text-uppercase fw-bold mb-0">Por voto recibido</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="glass-card p-4 text-center h-100 border-success border-opacity-25" style="border: 1px solid;">
+            <h3 class="oswald text-success mb-3">1 PUNTO</h3>
+            <p class="text-secondary small text-uppercase fw-bold mb-0">Por voto emitido</p>
+        </div>
+    </div>
+</div>
+
+<!-- Ranking Table -->
+<div class="glass-card p-4 animate__animated animate__fadeInUp" style="animation-delay: 0.4s;">
+    <div class="table-responsive">
+        <table class="table table-dark table-hover align-middle mb-0" style="--bs-table-bg: transparent;">
+            <thead>
+                <tr class="text-secondary text-uppercase x-small border-bottom border-secondary">
+                    <th scope="col" class="ps-4">#</th>
+                    <th scope="col">Usuario</th>
+                    <th scope="col" class="text-center">Puntos Totales</th>
+                    <th scope="col" class="text-end pe-4">Medalla</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user_entry in ranking %}
+                <tr class="border-bottom border-secondary border-opacity-25">
+                    <td class="ps-4 text-secondary fw-bold">{{ loop.index }}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="/user/{{ user_entry.id }}/photo.png"
+                                 class="rounded-circle"
+                                 style="width: 40px; height: 40px; object-fit: cover; background-color: #333;"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="rounded-circle bg-secondary d-none align-items-center justify-content-center fw-bold text-dark" style="width: 40px; height: 40px; font-size: 0.9rem;">
+                                {{ user_entry.name[:2].upper() if user_entry.name else '??' }}
+                            </div>
+                            <div>
+                                <div class="fw-bold text-white">{{ user_entry.name or "Anónimo" }}</div>
+                                {% if user_entry.username %}
+                                <div class="text-secondary x-small">@{{ user_entry.username }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <span class="fs-4 fw-bold text-gold">{{ user_entry.points }}</span>
+                    </td>
+                    <td class="text-end pe-4">
+                        {% if loop.index == 1 %}
+                        <span class="fs-3" title="Cuñao de Oro">🥇</span>
+                        {% elif loop.index == 2 %}
+                        <span class="fs-3" title="Cuñao de Plata">🥈</span>
+                        {% elif loop.index == 3 %}
+                        <span class="fs-3" title="Cuñao de Bronce">🥉</span>
+                        {% else %}
+                        <span class="text-secondary opacity-50">#{{ loop.index }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="text-center py-5">
+                        <p class="text-secondary mb-0">Todavía no hay nadie con puntos. ¡Sé el primero!</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

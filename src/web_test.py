@@ -6,7 +6,7 @@ from litestar.status_codes import (
 from unittest.mock import patch, AsyncMock, PropertyMock
 from models.phrase import Phrase, LongPhrase
 from models.proposal import Proposal, LongProposal
-from models.user import User, InlineUser
+from models.user import User
 
 
 def test_index_page(client):
@@ -86,11 +86,6 @@ def test_proposals_search(client):
         assert "Apelativos en Espera" in rv.text
 
 
-# Missing tests for WebController:
-# generate_ai_phrases (unauthorized, authorized success, authorized exception)
-# metrics (various scenarios to cover branches and data population)
-
-
 def test_generate_ai_phrases_unauthorized(client):
     with patch("core.config.config.is_gae", True):
         rv = client.post("/ai/generate")
@@ -145,7 +140,6 @@ def test_metrics_page_empty_data(client):
         patch("services.proposal_repo.load_all", return_value=[]),
         patch("services.long_proposal_repo.load_all", return_value=[]),
         patch("services.user_repo.load_all", return_value=[]),
-        patch("services.inline_user_repo.load_all", return_value=[]),
     ):
         rv = client.get("/metrics")
         assert rv.status_code == HTTP_200_OK
@@ -163,17 +157,16 @@ def test_metrics_page_with_data(client):
     prop1 = Proposal(id="1", user_id=1, voting_ended=False, text="prop1")
     lprop1 = LongProposal(id="2", user_id=3, voting_ended=False, text="lprop1")
 
-    user1 = User(chat_id=1, name="User One")
-    user2 = User(chat_id=2, name="User Two")
-    inline_user1 = InlineUser(user_id=3, name="Inline User Three")
+    user1 = User(id=1, name="User One")
+    user2 = User(id=2, name="User Two")
+    user3 = User(id=3, name="User Three")
 
     with (
         patch("services.phrase_repo.get_phrases", return_value=[p1]),
         patch("services.long_phrase_repo.get_phrases", return_value=[lp1]),
         patch("services.proposal_repo.load_all", return_value=[prop1]),
         patch("services.long_proposal_repo.load_all", return_value=[lprop1]),
-        patch("services.user_repo.load_all", return_value=[user1, user2]),
-        patch("services.inline_user_repo.load_all", return_value=[inline_user1]),
+        patch("services.user_repo.load_all", return_value=[user1, user2, user3]),
     ):
         rv = client.get("/metrics")
         assert rv.status_code == HTTP_200_OK
@@ -183,7 +176,7 @@ def test_metrics_page_with_data(client):
         assert "Ranking de Contribuidores" in rv.text
         assert "User One" in rv.text
         assert "User Two" in rv.text
-        assert "Inline User Three" in rv.text
+        assert "User Three" in rv.text
 
 
 def test_phrase_detail_page(client):
@@ -201,7 +194,6 @@ def test_phrase_detail_page(client):
         patch("services.phrase_repo.load", return_value=p1),
         patch("services.long_phrase_repo.load", return_value=None),
         patch("services.user_repo.load", return_value=None),
-        patch("services.inline_user_repo.load", return_value=None),
     ):
         rv = client.get("/phrase/123")
         assert rv.status_code == HTTP_200_OK
@@ -237,6 +229,22 @@ def test_phrase_sticker_route(client):
         assert rv.content == sticker_content
         assert rv.headers["content-type"] == "image/png"
         assert "max-age=31536000" in rv.headers["cache-control"]
+
+
+def test_ranking_page(client):
+    u1 = User(id=1, name="Cuñao Pro", points=100)
+    u2 = User(id=2, name="Cuñao Junior", points=50)
+
+    with (
+        patch("services.user_repo.load_all", return_value=[u1, u2]),
+    ):
+        rv = client.get("/ranking")
+        assert rv.status_code == HTTP_200_OK
+        assert "RANKING DE CUÑADISMO" in rv.text
+        assert "Cuñao Pro" in rv.text
+        assert "100" in rv.text
+        assert "Cuñao Junior" in rv.text
+        assert "50" in rv.text
 
 
 def test_ai_phrase_success(client):

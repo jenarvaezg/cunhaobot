@@ -105,6 +105,7 @@ class TestPhraseService:
         with (
             patch.object(service, "create_sticker_image", return_value=b"img"),
             patch("tg.stickers.upload_sticker", new_callable=AsyncMock) as mock_upload,
+            patch("services.user_service.user_service") as mock_user_service,
         ):
             mock_upload.return_value = "sticker_123"
             await service.create_from_proposal(proposal, mock_bot)
@@ -114,6 +115,8 @@ class TestPhraseService:
             assert isinstance(saved_phrase, Phrase)
             assert saved_phrase.text == "prop"
             assert saved_phrase.sticker_file_id == "sticker_123"
+            # Award 10 points
+            mock_user_service.add_points.assert_called_once_with(1, 10)
 
     @pytest.mark.asyncio
     async def test_create_from_proposal_long(self, service):
@@ -123,6 +126,7 @@ class TestPhraseService:
         with (
             patch.object(service, "create_sticker_image", return_value=b"img"),
             patch("tg.stickers.upload_sticker", new_callable=AsyncMock) as mock_upload,
+            patch("services.user_service.user_service") as mock_user_service,
         ):
             mock_upload.return_value = "sticker_123"
             await service.create_from_proposal(proposal, mock_bot)
@@ -132,6 +136,8 @@ class TestPhraseService:
             assert isinstance(saved_phrase, LongPhrase)
             assert saved_phrase.text == "prop"
             assert saved_phrase.sticker_file_id == "sticker_123"
+            # Award 10 points
+            mock_user_service.add_points.assert_called_once_with(1, 10)
 
     def test_add_usage_by_id_short_text(self, service):
         p1 = Phrase(text="foo", id=1)

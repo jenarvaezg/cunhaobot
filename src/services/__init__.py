@@ -3,7 +3,7 @@ from infrastructure.datastore.proposal import (
     proposal_repository,
     long_proposal_repository,
 )
-from infrastructure.datastore.user import user_repository, inline_user_repository
+from infrastructure.datastore.user import user_repository
 
 # Alias
 phrase_repo = phrase_repository
@@ -11,7 +11,8 @@ long_phrase_repo = long_phrase_repository
 proposal_repo = proposal_repository
 long_proposal_repo = long_proposal_repository
 user_repo = user_repository
-inline_user_repo = inline_user_repository
+# For backward compatibility with some codes
+inline_user_repo = user_repository
 
 from models.phrase import Phrase as Phrase, LongPhrase as LongPhrase  # noqa: E402
 from models.proposal import Proposal as Proposal, LongProposal as LongProposal  # noqa: E402
@@ -25,12 +26,11 @@ from services.cunhao_agent import cunhao_agent  # noqa: E402
 
 # Services
 phrase_service = PhraseService(phrase_repo, long_phrase_repo)  # type: ignore[arg-type]
-user_service = UserService(user_repo, inline_user_repo)  # type: ignore[arg-type]
+user_service = UserService(user_repo)  # type: ignore[arg-type]
 proposal_service = ProposalService(
     proposal_repo,  # type: ignore[invalid-argument-type]
     long_proposal_repo,  # type: ignore[invalid-argument-type]
     user_repo,  # type: ignore[invalid-argument-type]
-    inline_user_repo,  # type: ignore[invalid-argument-type]
 )
 
 __all__ = [
