@@ -166,13 +166,20 @@ def register_listeners(app: AsyncApp):
                 delete_original=True,
                 response_type="in_channel",
                 text=full_text,
-                attachments=[
+                blocks=[
                     {
-                        "text": full_text,
-                        "title": f"Saludo de <@{user_name}>",
-                        "fallback": f"Saludo de <@{user_name}>",
-                        "actions": [],
-                    }
+                        "type": "section",
+                        "text": {"type": "mrkdwn", "text": f"*{full_text}*"},
+                    },
+                    {
+                        "type": "context",
+                        "elements": [
+                            {
+                                "type": "mrkdwn",
+                                "text": f"Saludo de <@{user_name}>",
+                            }
+                        ],
+                    },
                 ],
             )
         elif value.startswith("send-"):
