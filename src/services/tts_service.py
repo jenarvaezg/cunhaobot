@@ -11,7 +11,7 @@ class TTSService:
     def __init__(self):
         self._client = None
         self.voice = texttospeech.VoiceSelectionParams(
-            language_code="es-ES", name="es-ES-Neural2-B"
+            language_code="es-ES", name="es-ES-Neural2-A"
         )
         self.audio_config = texttospeech.AudioConfig(
             audio_encoding=texttospeech.AudioEncoding.OGG_OPUS
