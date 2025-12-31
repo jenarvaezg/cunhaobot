@@ -36,6 +36,7 @@ async def test_broadcast_page_success(client):
 async def test_broadcast_send_text_success(client, mock_users):
     mock_bot = AsyncMock()
     mock_app = MagicMock()
+    mock_app.initialize = AsyncMock()
     mock_app.bot = mock_bot
 
     with (
@@ -60,6 +61,7 @@ async def test_broadcast_send_image_success(client):
 
     mock_bot = AsyncMock()
     mock_app = MagicMock()
+    mock_app.initialize = AsyncMock()
     mock_app.bot = mock_bot
 
     with (
@@ -73,7 +75,9 @@ async def test_broadcast_send_image_success(client):
         # Prepare a dummy file upload
         files = {"data": ("test.png", b"fake-image-bytes", "image/png")}
 
-        response = client.post("/admin/broadcast", files=files, data={"message": "Optional caption"})
+        response = client.post(
+            "/admin/broadcast", files=files, data={"message": "Optional caption"}
+        )
 
         assert response.status_code == 200
         assert b"1 enviados" in response.content
@@ -88,6 +92,7 @@ async def test_broadcast_send_video_success(client):
 
     mock_bot = AsyncMock()
     mock_app = MagicMock()
+    mock_app.initialize = AsyncMock()
     mock_app.bot = mock_bot
 
     with (
@@ -117,6 +122,7 @@ async def test_broadcast_send_skips_non_telegram(client):
 
     mock_bot = AsyncMock()
     mock_app = MagicMock()
+    mock_app.initialize = AsyncMock()
     mock_app.bot = mock_bot
 
     with (
@@ -142,6 +148,7 @@ async def test_broadcast_send_failure_updates_gdpr(client):
     # Fail the send_message call
     mock_bot.send_message.side_effect = Exception("Telegram Error")
     mock_app = MagicMock()
+    mock_app.initialize = AsyncMock()
     mock_app.bot = mock_bot
 
     with (
@@ -150,7 +157,9 @@ async def test_broadcast_send_failure_updates_gdpr(client):
             "infrastructure.datastore.user.UserDatastoreRepository.load_all",
             return_value=[mock_user],
         ),
-        patch("infrastructure.datastore.user.UserDatastoreRepository.save") as mock_save,
+        patch(
+            "infrastructure.datastore.user.UserDatastoreRepository.save"
+        ) as mock_save,
         patch("api.admin.get_tg_application", return_value=mock_app),
     ):
         response = client.post("/admin/broadcast", data={"message": "fail"})

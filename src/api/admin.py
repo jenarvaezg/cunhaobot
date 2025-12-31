@@ -5,8 +5,6 @@ from litestar.response import Response, Template
 from litestar.params import Dependency
 from litestar.exceptions import HTTPException
 from litestar.datastructures import UploadFile
-from litestar.enums import RequestEncodingType
-from litestar.params import Body
 
 from services.proposal_service import ProposalService
 from infrastructure.protocols import UserRepository
@@ -37,23 +35,29 @@ class AdminController(Controller):
         self,
         request: Request,
         user_repo: Annotated[UserRepository, Dependency()],
-        data: Annotated[UploadFile | None, Body(media_type=RequestEncodingType.MULTI_PART)] = None,
     ) -> Response[str]:
         user = request.session.get("user")
         if not user or str(user.get("id")) != config.owner_id:
             return Response("Unauthorized", status_code=401)
 
-        # Try to get message from form data if it's not in the file upload
         form_data = await request.form()
         message = form_data.get("message")
+        upload_file = form_data.get("data")
 
-        content_bytes = await data.read() if data else b""
-        content_type = data.content_type if data else None
-        is_video = content_type.startswith("video/") if content_type else False
-        is_image = content_type.startswith("image/") if content_type else False
+        content_bytes = b""
+        is_video = False
+        is_image = False
+
+        if isinstance(upload_file, UploadFile) and upload_file.filename:
+            content_bytes = await upload_file.read()
+            content_type = upload_file.content_type
+            is_video = content_type.startswith("video/") if content_type else False
+            is_image = content_type.startswith("image/") if content_type else False
 
         if not content_bytes and not message:
-            return Response("Escribe algo o sube un archivo, alma de cántaro.", status_code=400)
+            return Response(
+                "Escribe algo o sube un archivo, alma de cántaro.", status_code=400
+            )
 
         users = user_repo.load_all(ignore_gdpr=False)
 
@@ -76,19 +80,20 @@ class AdminController(Controller):
                 )
 
                 if is_video:
-                    await bot.send_video(chat_id=chat_id, video=content_bytes, caption=message)
+                    await bot.send_video(
+                        chat_id=chat_id, video=content_bytes, caption=message
+                    )
                 elif is_image:
-                    await bot.send_photo(chat_id=chat_id, photo=content_bytes, caption=message)
+                    await bot.send_photo(
+                        chat_id=chat_id, photo=content_bytes, caption=message
+                    )
                 else:
                     await bot.send_message(chat_id=chat_id, text=message)  # type: ignore[arg-type]
-                
+
                 success_count += 1
             except Exception as e:
-                logger.warning(
-                    f"Error sending broadcast to {u.id}: {e}"
-                )
+                logger.warning(f"Error sending broadcast to {u.id}: {e}")
                 # If they blocked us, we count it as a fail but don't stop the broadcast
-                # HEAD version was setting gdpr=True, I'll follow that pattern
                 u.gdpr = True
                 user_repo.save(u)
                 fail_count += 1
