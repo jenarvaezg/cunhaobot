@@ -81,12 +81,14 @@ async def approve_proposal(
         except Exception as e:
             logger.error(f"Error sending web approval notification: {e}")
 
-    if proposal.from_chat_id > 0:
+    if isinstance(proposal.from_chat_id, int) and proposal.from_chat_id > 0:
         try:
             await bot.send_message(
                 proposal.from_chat_id,
                 f"Tu propuesta '{proposal.text}' ha sido aprobada, felicidades, {p_random}",
-                reply_to_message_id=proposal.from_message_id or None,
+                reply_to_message_id=proposal.from_message_id
+                if isinstance(proposal.from_message_id, int)
+                else None,
             )
         except Exception as e:
             logger.error(f"Error enviando notificación de aprobación: {e}")
@@ -124,12 +126,14 @@ async def dismiss_proposal(
         except Exception as e:
             logger.error(f"Error sending web dismissal notification: {e}")
 
-    if proposal.from_chat_id > 0:
+    if isinstance(proposal.from_chat_id, int) and proposal.from_chat_id > 0:
         try:
             await bot.send_message(
                 proposal.from_chat_id,
                 f"Tu propuesta '{proposal.text}' ha sido rechazada, lo siento {p_random}",
-                reply_to_message_id=proposal.from_message_id or None,
+                reply_to_message_id=proposal.from_message_id
+                if isinstance(proposal.from_message_id, int)
+                else None,
             )
         except Exception as e:
             logger.error(f"Error enviando notificación de rechazo: {e}")

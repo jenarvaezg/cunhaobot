@@ -119,9 +119,9 @@ def register_listeners(app: AsyncApp):
             await respond("No hay frases disponibles en este momento.")
             return
 
-        if selected_phrase.key:
-            encoded_key = urllib.parse.quote(selected_phrase.key)
-            sticker_url = f"{config.base_url}/phrase/{encoded_key}/sticker.png"
+        if selected_phrase.id:
+            encoded_id = urllib.parse.quote(str(selected_phrase.id))
+            sticker_url = f"{config.base_url}/phrase/{encoded_id}/sticker.png"
         else:
             encoded_text = urllib.parse.quote(selected_phrase.text)
             sticker_url = f"{config.base_url}/sticker/text.png?text={encoded_text}"
@@ -185,8 +185,8 @@ def register_listeners(app: AsyncApp):
                 encoded_text = urllib.parse.quote(text)
                 sticker_url = f"{config.base_url}/sticker/text.png?text={encoded_text}"
             else:
-                encoded_key = urllib.parse.quote(selected_phrase.key)
-                sticker_url = f"{config.base_url}/phrase/{encoded_key}/sticker.png"
+                encoded_id = urllib.parse.quote(str(selected_phrase.id))
+                sticker_url = f"{config.base_url}/phrase/{encoded_id}/sticker.png"
                 phrase_service.register_sticker_usage(selected_phrase)
 
             await respond(
@@ -257,9 +257,9 @@ def register_listeners(app: AsyncApp):
             else:
                 selected_phrase = random.choice(phrases)
 
-            if selected_phrase.key:
-                encoded_key = urllib.parse.quote(selected_phrase.key)
-                sticker_url = f"{config.base_url}/phrase/{encoded_key}/sticker.png"
+            if selected_phrase.id:
+                encoded_id = urllib.parse.quote(str(selected_phrase.id))
+                sticker_url = f"{config.base_url}/phrase/{encoded_id}/sticker.png"
             else:
                 encoded_text = urllib.parse.quote(selected_phrase.text)
                 sticker_url = f"{config.base_url}/sticker/text.png?text={encoded_text}"
