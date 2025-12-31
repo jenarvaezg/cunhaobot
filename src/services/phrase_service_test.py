@@ -90,16 +90,24 @@ class TestPhraseService:
         assert isinstance(result, LongPhrase)
 
     def test_register_sticker_usage(self, service):
-        p = Phrase(text="test")
+        p = Phrase(text="test", score=10)
         service.register_sticker_usage(p)
         assert p.usages == 1
         assert p.sticker_usages == 1
+        assert p.score == 11
         self.phrase_repo.save.assert_called_once_with(p)
 
     @pytest.mark.asyncio
     async def test_create_from_proposal(self, service):
         mock_bot = MagicMock()
-        proposal = Proposal(id="1", text="prop", user_id=1, from_chat_id=2)
+        proposal = Proposal(
+            id="1",
+            text="prop",
+            user_id=1,
+            from_chat_id=2,
+            liked_by=[1, 2, 3],
+            disliked_by=[4],
+        )
 
         # Mock create_sticker_image internal call
         with (
@@ -115,6 +123,8 @@ class TestPhraseService:
             assert isinstance(saved_phrase, Phrase)
             assert saved_phrase.text == "prop"
             assert saved_phrase.sticker_file_id == "sticker_123"
+            # (3 likes - 1 dislike) * 5 = 10
+            assert saved_phrase.score == 10
             # Award 10 points
             mock_user_service.add_points.assert_called_once_with(1, 10)
 
@@ -140,12 +150,13 @@ class TestPhraseService:
             mock_user_service.add_points.assert_called_once_with(1, 10)
 
     def test_add_usage_by_id_short_text(self, service):
-        p1 = Phrase(text="foo", id=1)
+        p1 = Phrase(text="foo", id=1, score=5)
         service.phrase_repo.load.return_value = p1
 
         service.add_usage_by_id("short-1")
 
         assert p1.usages == 1
+        assert p1.score == 6
         service.phrase_repo.load.assert_called_with(1)
         service.phrase_repo.save.assert_called_once_with(p1)
 

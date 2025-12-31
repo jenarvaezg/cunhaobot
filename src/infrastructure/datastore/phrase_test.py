@@ -49,6 +49,7 @@ class TestPhraseRepository:
         assert phrase.sticker_file_id == ""
         assert phrase.audio_usages == 0
         assert phrase.sticker_usages == 0
+        assert phrase.score == 0
         assert phrase.user_id == 0
         assert phrase.chat_id == 0
         assert phrase.created_at is None
@@ -62,6 +63,7 @@ class TestPhraseRepository:
             "usages": 10,
             "audio_usages": 5,
             "sticker_usages": 2,
+            "score": 100,
             "user_id": 123,
             "chat_id": 456,
             "created_at": now,
@@ -74,6 +76,7 @@ class TestPhraseRepository:
         assert phrase.usages == 10
         assert phrase.audio_usages == 5
         assert phrase.sticker_usages == 2
+        assert phrase.score == 100
         assert phrase.user_id == 123
         assert phrase.chat_id == 456
         assert phrase.created_at == now
@@ -163,3 +166,14 @@ class TestPhraseRepository:
         results = repo.get_phrases(proposal_id="123")
         assert len(results) == 1
         assert results[0].text == "foo"
+
+    def test_add_usage(self, repo, mock_datastore_client):
+        p1 = Phrase(text="target", usages=5, score=10)
+        repo._cache = [p1]
+
+        repo.add_usage("target", "audio")
+
+        assert p1.usages == 6
+        assert p1.audio_usages == 1
+        assert p1.score == 11
+        mock_datastore_client.put.assert_called_once()
