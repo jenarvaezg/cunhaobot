@@ -1,4 +1,5 @@
 import logging
+import os
 from google import genai
 from typing import List
 from core.config import config
@@ -65,6 +66,43 @@ class AIService:
                 return [
                     "⚠️ Quota de AI agotada. ¡Paco no puede más con el calor! Reintenta en un momento."
                 ]
+            raise e
+
+    async def generate_image(self, phrase: str) -> bytes:
+        """Generates an image from a phrase using the nanobanana pattern (Gemini 2.5 Flash Image)."""
+        model_name = os.getenv("NANOBANANA_MODEL", "gemini-2.5-flash-image")
+        prompt = f"""
+        A high-quality, satirical and funny illustration of a stereotypical Spanish 'cuñado'
+        (a middle-aged man with a mustache, wearing a classic polo shirt or a vest)
+        acting out or representing this phrase: "{phrase}".
+        The style should be a modern comic or a realistic but slightly caricatured digital painting.
+        Set the scene in a typical Spanish bar with a wooden counter and beer tapas.
+        """
+        try:
+            # Following nanobanana pattern: use generate_content with gemini-2.5-flash-image
+            response = self.client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+            )
+
+            if not response.candidates or not response.candidates[0].content.parts:
+                raise ValueError("No candidates or parts in AI response")
+
+            for part in response.candidates[0].content.parts:
+                if part.inline_data:
+                    return part.inline_data.data
+                # Fallback: check if it's in text (some versions might put base64 in text)
+                if part.text and len(part.text) > 1000:
+                    import base64
+
+                    try:
+                        return base64.b64decode(part.text)
+                    except Exception:
+                        continue
+
+            raise ValueError("No image data found in AI response parts")
+        except Exception as e:
+            logger.error(f"Error generating image: {e}")
             raise e
 
 

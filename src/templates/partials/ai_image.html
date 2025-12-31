@@ -1,0 +1,46 @@
+<div id="ai-image-container" class="mt-4">
+    {% if image_url %}
+        <div class="glass-card p-4 text-center animate__animated animate__zoomIn">
+            <h5 class="oswald mb-4">Interpretación de la IA</h5>
+            <div class="sticker-preview mx-auto mb-3" style="width: 100%; max-width: 512px; aspect-ratio: 1; background: rgba(255,255,255,0.05); border-radius: 20px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                <img src="{{ image_url }}" alt="AI Generated Interpretation" class="img-fluid rounded-3 shadow-lg" style="max-height: 100%;">
+            </div>
+            <p class="text-secondary small">Imagen generada por Imagen 3 basada en la sabiduría de este cuñao.</p>
+            <button class="btn btn-sm btn-outline-warning rounded-pill mt-2"
+                    hx-post="/phrase/{{ phrase.key or phrase.text }}/generate-image"
+                    hx-target="#ai-image-container"
+                    hx-swap="outerHTML"
+                    hx-indicator="#ai-loader">
+                <i class="bi bi-arrow-clockwise me-1"></i> Regenerar
+            </button>
+        </div>
+    {% elif error %}
+        <div class="alert alert-danger d-flex align-items-center" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <div>
+                Error al generar imagen: {{ error }}
+            </div>
+            <button class="btn btn-sm btn-outline-danger ms-auto rounded-pill"
+                    hx-post="/phrase/{{ phrase.key or phrase.text }}/generate-image"
+                    hx-target="#ai-image-container"
+                    hx-swap="outerHTML"
+                    hx-indicator="#ai-loader">
+                Reintentar
+            </button>
+        </div>
+    {% else %}
+        <div class="text-center p-5 glass-card border-dashed">
+            <i class="bi bi-robot display-4 text-warning mb-3 d-block"></i>
+            <h5 class="oswald">¿Quieres ver esta frase en imágenes?</h5>
+            <p class="text-secondary">Deja que nuestra IA cuñadil interprete visualmente esta verdad universal.</p>
+            <button class="btn btn-warning rounded-pill px-4 py-2 fw-bold"
+                    hx-post="/phrase/{{ phrase.key or phrase.text }}/generate-image"
+                    hx-target="#ai-image-container"
+                    hx-swap="outerHTML"
+                    hx-indicator="#ai-loader">
+                <span class="spinner-border spinner-border-sm me-2 htmx-indicator" id="ai-loader" role="status"></span>
+                <i class="bi bi-magic me-2"></i> Generar Imagen con IA
+            </button>
+        </div>
+    {% endif %}
+</div>
