@@ -1,13 +1,17 @@
 import logging
 from typing import Annotated, Any
-from litestar import Controller, Request, post, get
-from litestar.response import Response, Redirect
+from litestar import Controller, Request, get, post
+from litestar.response import Response, Template
 from litestar.params import Dependency
-from litestar.plugins.htmx import HTMXTemplate
+from litestar.exceptions import HTTPException
+from litestar.datastructures import UploadFile
+from litestar.enums import RequestEncodingType
+from litestar.params import Body
 
 from services.proposal_service import ProposalService
-from services.user_service import UserService
+from infrastructure.protocols import UserRepository
 from core.config import config
+from tg import get_tg_application
 
 logger = logging.getLogger(__name__)
 
@@ -16,54 +20,53 @@ class AdminController(Controller):
     path = "/admin"
 
     @get("/broadcast")
-    async def get_broadcast(self, request: Request) -> HTMXTemplate | Redirect:
+    async def broadcast_page(self, request: Request) -> Template:
         user = request.session.get("user")
         if not user or str(user.get("id")) != config.owner_id:
-            return Redirect(path="/")
-
-        return HTMXTemplate(
-            template_name="broadcast.html", context={"owner_id": config.owner_id}
+            raise HTTPException(status_code=401, detail="Unauthorized")
+        return Template(
+            template_name="broadcast.html",
+            context={
+                "user": user,
+                "owner_id": config.owner_id,
+            },
         )
 
     @post("/broadcast")
-    async def post_broadcast(
+    async def broadcast_send(
         self,
         request: Request,
-        user_service: Annotated[UserService, Dependency()],
-    ) -> HTMXTemplate:
+        user_repo: Annotated[UserRepository, Dependency()],
+        data: Annotated[UploadFile | None, Body(media_type=RequestEncodingType.MULTI_PART)] = None,
+    ) -> Response[str]:
         user = request.session.get("user")
         if not user or str(user.get("id")) != config.owner_id:
-            return HTMXTemplate(
-                template_name="partials/broadcast_result.html",
-                context={
-                    "error": True,
-                    "message": "Pirate de aquí, que no eres el jefe.",
-                },
-            )
+            return Response("Unauthorized", status_code=401)
 
-        data = await request.form()
-        message = data.get("message")
-        if not message:
-            return HTMXTemplate(
-                template_name="partials/broadcast_result.html",
-                context={"error": True, "message": "Escribe algo, alma de cántaro."},
-            )
+        # Try to get message from form data if it's not in the file upload
+        form_data = await request.form()
+        message = form_data.get("message")
 
-        # Get all telegram users
-        all_users = user_service.user_repo.load_all(ignore_gdpr=False)
-        telegram_users = [
-            u for u in all_users if u.platform == "telegram" and not u.is_group
-        ]
+        content_bytes = await data.read() if data else b""
+        content_type = data.content_type if data else None
+        is_video = content_type.startswith("video/") if content_type else False
+        is_image = content_type.startswith("image/") if content_type else False
 
-        from tg import get_tg_application
+        if not content_bytes and not message:
+            return Response("Escribe algo o sube un archivo, alma de cántaro.", status_code=400)
+
+        users = user_repo.load_all(ignore_gdpr=False)
 
         application = get_tg_application()
+        await application.initialize()
         bot = application.bot
 
         success_count = 0
-        blocked_count = 0
+        fail_count = 0
 
-        for u in telegram_users:
+        for u in users:
+            if u.platform != "telegram" or u.is_group:
+                continue
             try:
                 # Convert ID to int if it's numeric
                 chat_id = (
@@ -71,21 +74,28 @@ class AdminController(Controller):
                     if isinstance(u.id, str) and u.id.lstrip("-").isdigit()
                     else u.id
                 )
-                await bot.send_message(chat_id=chat_id, text=message)  # type: ignore[arg-type]
+
+                if is_video:
+                    await bot.send_video(chat_id=chat_id, video=content_bytes, caption=message)
+                elif is_image:
+                    await bot.send_photo(chat_id=chat_id, photo=content_bytes, caption=message)
+                else:
+                    await bot.send_message(chat_id=chat_id, text=message)  # type: ignore[arg-type]
+                
                 success_count += 1
             except Exception as e:
                 logger.warning(
-                    f"Error sending message to {u.id}, assuming permission lost: {e}"
+                    f"Error sending broadcast to {u.id}: {e}"
                 )
+                # If they blocked us, we count it as a fail but don't stop the broadcast
+                # HEAD version was setting gdpr=True, I'll follow that pattern
                 u.gdpr = True
-                user_service.user_repo.save(u)
-                blocked_count += 1
+                user_repo.save(u)
+                fail_count += 1
 
-        result_message = f"¡Difusión completada! ✅ {success_count} enviados, 🚫 {blocked_count} fallidos/bloqueados (GDPR activado)."
-
-        return HTMXTemplate(
-            template_name="partials/broadcast_result.html",
-            context={"message": result_message},
+        return Response(
+            f"Difusión completada. ✅ {success_count} enviados, 🚫 {fail_count} fallidos (usuarios que han bloqueado el bot o GDPR activado).",
+            status_code=200,
         )
 
     @post("/proposals/{kind:str}/{proposal_id:str}/approve")

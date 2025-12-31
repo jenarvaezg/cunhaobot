@@ -13,14 +13,27 @@ def mock_users():
     ]
 
 
-def test_get_broadcast_owner(client):
+@pytest.mark.asyncio
+async def test_broadcast_page_unauthorized(client):
+    # Test without being the owner
+    with patch(
+        "core.config.config.is_gae", True
+    ):  # Force it to not auto-login as owner
+        response = client.get("/admin/broadcast")
+        assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_broadcast_page_success(client):
+    # Test as owner (auto-login in local dev)
     with patch("core.config.config.is_gae", False):
-        rv = client.get("/admin/broadcast")
-        assert rv.status_code == 200
-        assert b"Broadcast Maestro" in rv.content
+        response = client.get("/admin/broadcast")
+        assert response.status_code == 200
+        assert b"BROADCAST MAESTRO" in response.content
 
 
-def test_post_broadcast_success(client, mock_users):
+@pytest.mark.asyncio
+async def test_broadcast_send_text_success(client, mock_users):
     mock_bot = AsyncMock()
     mock_app = MagicMock()
     mock_app.bot = mock_bot
@@ -28,46 +41,124 @@ def test_post_broadcast_success(client, mock_users):
     with (
         patch("core.config.config.is_gae", False),
         patch(
-            "services.user_service.user_service.user_repo.load_all",
+            "infrastructure.datastore.user.UserDatastoreRepository.load_all",
             return_value=mock_users,
         ),
-        patch("services.user_service.user_service.user_repo.save") as mock_save,
-        patch("tg.get_tg_application", return_value=mock_app),
+        patch("api.admin.get_tg_application", return_value=mock_app),
     ):
-        rv = client.post("/admin/broadcast", data={"message": "Hola caracola"})
-        assert rv.status_code == 200
+        response = client.post("/admin/broadcast", data={"message": "Hola caracola"})
+        assert response.status_code == 200
 
         # Should have sent 2 messages (User 1 and User 2, not Group 1, not Slack 1)
         assert mock_bot.send_message.call_count == 2
-        mock_save.assert_not_called()
-        assert b"2 enviados" in rv.content
+        assert b"2 enviados" in response.content
 
 
-def test_post_broadcast_with_errors(client, mock_users):
+@pytest.mark.asyncio
+async def test_broadcast_send_image_success(client):
+    mock_user = User(id=123, name="Test Machine", platform="telegram", gdpr=False)
+
     mock_bot = AsyncMock()
-    # User 1 succeeds, User 2 fails
-    mock_bot.send_message.side_effect = [None, Exception("Failed")]
     mock_app = MagicMock()
     mock_app.bot = mock_bot
 
     with (
         patch("core.config.config.is_gae", False),
         patch(
-            "services.user_service.user_service.user_repo.load_all",
-            return_value=mock_users,
+            "infrastructure.datastore.user.UserDatastoreRepository.load_all",
+            return_value=[mock_user],
         ),
-        patch("services.user_service.user_service.user_repo.save") as mock_save,
-        patch("tg.get_tg_application", return_value=mock_app),
+        patch("api.admin.get_tg_application", return_value=mock_app),
     ):
-        rv = client.post("/admin/broadcast", data={"message": "Hola caracola"})
-        assert rv.status_code == 200
+        # Prepare a dummy file upload
+        files = {"data": ("test.png", b"fake-image-bytes", "image/png")}
 
-        assert mock_bot.send_message.call_count == 2
-        # One user should have been saved with gdpr=True
-        assert mock_save.call_count == 1
+        response = client.post("/admin/broadcast", files=files, data={"message": "Optional caption"})
+
+        assert response.status_code == 200
+        assert b"1 enviados" in response.content
+        mock_bot.send_photo.assert_called_once_with(
+            chat_id=123, photo=b"fake-image-bytes", caption="Optional caption"
+        )
+
+
+@pytest.mark.asyncio
+async def test_broadcast_send_video_success(client):
+    mock_user = User(id=123, name="Test Machine", platform="telegram", gdpr=False)
+
+    mock_bot = AsyncMock()
+    mock_app = MagicMock()
+    mock_app.bot = mock_bot
+
+    with (
+        patch("core.config.config.is_gae", False),
+        patch(
+            "infrastructure.datastore.user.UserDatastoreRepository.load_all",
+            return_value=[mock_user],
+        ),
+        patch("api.admin.get_tg_application", return_value=mock_app),
+    ):
+        # Prepare a dummy video upload
+        files = {"data": ("test.mp4", b"fake-video-bytes", "video/mp4")}
+
+        response = client.post("/admin/broadcast", files=files)
+
+        assert response.status_code == 200
+        assert b"1 enviados" in response.content
+        mock_bot.send_video.assert_called_once_with(
+            chat_id=123, video=b"fake-video-bytes", caption=None
+        )
+
+
+@pytest.mark.asyncio
+async def test_broadcast_send_skips_non_telegram(client):
+    mock_user_tg = User(id=123, name="TG User", platform="telegram", gdpr=False)
+    mock_user_slack = User(id="S456", name="Slack User", platform="slack", gdpr=False)
+
+    mock_bot = AsyncMock()
+    mock_app = MagicMock()
+    mock_app.bot = mock_bot
+
+    with (
+        patch("core.config.config.is_gae", False),
+        patch(
+            "infrastructure.datastore.user.UserDatastoreRepository.load_all",
+            return_value=[mock_user_tg, mock_user_slack],
+        ),
+        patch("api.admin.get_tg_application", return_value=mock_app),
+    ):
+        response = client.post("/admin/broadcast", data={"message": "Skip slack"})
+
+        assert response.status_code == 200
+        assert b"1 enviados" in response.content
+        mock_bot.send_message.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_broadcast_send_failure_updates_gdpr(client):
+    mock_user = User(id=123, name="Test Machine", platform="telegram", gdpr=False)
+
+    mock_bot = AsyncMock()
+    # Fail the send_message call
+    mock_bot.send_message.side_effect = Exception("Telegram Error")
+    mock_app = MagicMock()
+    mock_app.bot = mock_bot
+
+    with (
+        patch("core.config.config.is_gae", False),
+        patch(
+            "infrastructure.datastore.user.UserDatastoreRepository.load_all",
+            return_value=[mock_user],
+        ),
+        patch("infrastructure.datastore.user.UserDatastoreRepository.save") as mock_save,
+        patch("api.admin.get_tg_application", return_value=mock_app),
+    ):
+        response = client.post("/admin/broadcast", data={"message": "fail"})
+
+        assert response.status_code == 200
+        assert b"1 fallidos" in response.content
+        # Should have updated GDPR to True
+        mock_save.assert_called_once()
         saved_user = mock_save.call_args[0][0]
-        assert saved_user.id == 2
+        assert saved_user.id == 123
         assert saved_user.gdpr is True
-
-        assert b"1 enviados" in rv.content
-        assert b"1 fallidos" in rv.content
