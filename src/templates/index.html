@@ -9,17 +9,45 @@
             Porque un "te lo dije" a tiempo no tiene precio, máquina.
         </p>
 
-        <div id="ai-phrase-container" class="mb-5 animate__animated animate__fadeIn animate__delay-1s">
-            <button class="btn btn-outline-warning rounded-pill px-4 py-2"
-                    hx-get="/ai/phrase"
-                    hx-target="#ai-phrase-container"
-                    hx-swap="outerHTML"
-                    hx-indicator="#ai-indicator">
-                <i class="bi bi-robot me-2"></i>Generar sabiduría instantánea (IA)
-                <div id="ai-indicator" class="htmx-indicator ms-2 d-inline-block">
-                    <div class="spinner-border spinner-border-sm" role="status"></div>
+        <div class="row mb-5 justify-content-center">
+            <div class="col-lg-8">
+                <div class="glass-card p-4 border-warning animate__animated animate__fadeIn">
+                    <h5 class="oswald text-warning mb-4 text-center"><i class="bi bi-stars me-2"></i>LO NUEVO: IA</h5>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div id="ai-phrase-container" class="p-4 bg-dark bg-opacity-25 rounded-4 border border-secondary border-opacity-10 h-100 d-flex flex-column align-items-center text-center">
+                                <i class="bi bi-robot display-6 text-warning mb-3"></i>
+                                <h6 class="oswald mb-2">Frases IA</h6>
+                                <p class="small text-secondary mb-4">Genera sabiduría cuñadil instantánea con nuestra IA de última generación.</p>
+                                <div class="mt-auto w-100">
+                                    <button class="btn btn-outline-warning rounded-pill px-4 w-100"
+                                            hx-get="/ai/phrase"
+                                            hx-target="#ai-phrase-container"
+                                            hx-swap="outerHTML"
+                                            hx-indicator="#ai-indicator">
+                                        <i class="bi bi-cpu me-2"></i>Generar Frase
+                                        <div id="ai-indicator" class="htmx-indicator ms-2 d-inline-block">
+                                            <div class="spinner-border spinner-border-sm" role="status"></div>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-4 bg-dark bg-opacity-25 rounded-4 border border-secondary border-opacity-10 h-100 d-flex flex-column align-items-center text-center">
+                                <i class="bi bi-magic display-6 text-info mb-3"></i>
+                                <h6 class="oswald mb-2">Imágenes IA</h6>
+                                <p class="small text-secondary mb-4">¿Quieres ver la sabiduría en imágenes? Nuestra IA lo hace realidad.</p>
+                                <div class="mt-auto w-100">
+                                    <a href="/proposals" class="btn btn-outline-info rounded-pill px-4 w-100">
+                                        <i class="bi bi-image me-2"></i>Generar Imagen
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </button>
+            </div>
         </div>
 
         <div class="search-wrapper d-flex align-items-center mb-4 mx-auto" style="max-width: 600px;">
