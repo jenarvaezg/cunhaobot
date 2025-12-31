@@ -25,7 +25,6 @@ oauth_settings = AsyncOAuthSettings(
         "chat:write",
         "chat:write.public",
         "chat:write.customize",
-        "files:write",
     ],
     installation_store=installation_store,
     state_store=state_store,

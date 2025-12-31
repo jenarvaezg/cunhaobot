@@ -49,15 +49,7 @@ class SlackController(Controller):
         self, request: Request, phrase_service: Annotated[PhraseService, Dependency()]
     ) -> Response:
         bolt_req: AsyncBoltRequest = await to_bolt_request(request)
-        logger.info(
-            f"Slack request: {bolt_req.headers}, body length: {len(bolt_req.body)}"
-        )
-
         bolt_resp: BoltResponse = await app.async_dispatch(bolt_req)
-        if bolt_resp.status != 200:
-            logger.warning(
-                f"Slack Bolt returned status {bolt_resp.status}: {bolt_resp.body}"
-            )
         return to_litestar_response(bolt_resp)
 
     @get("/auth")
