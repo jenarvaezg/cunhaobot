@@ -80,8 +80,9 @@ def generate_png(text: str) -> BytesIO:
     img = Image.new("RGBA", image_size)
     img_draw = ImageDraw.Draw(img)
 
-    # Use BORDER_SIZE as the symmetric margin for top and bottom
-    current_y = BORDER_SIZE
+    # Calculate vertical padding to center the text
+    vertical_padding = (image_size[1] - text_block_height) / 2
+    current_y = vertical_padding
     for line in lines:
         bbox = font.getbbox(line)
         line_width = bbox[2] - bbox[0]
