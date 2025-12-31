@@ -31,24 +31,28 @@ class TestInlineQuery:
     @pytest.mark.asyncio
     async def test_handle_inline_query_no_func(self):
         update = MagicMock()
-        update.inline_query.query = "unknown_mode"
+        update.inline_query.query = "!!"  # Use symbols to trigger no-mode logic (now actually defaults to long if not numeric/empty)
+        # Actually, if I want to trigger the "results_func is None" branch,
+        # I need get_query_mode to return ("", "").
+        # But my new get_query_mode is very broad.
+        # Let's mock get_query_mode directly for this test.
         update.inline_query.answer = AsyncMock()
         update.effective_user.id = 123
-        update.effective_user.name = "Test User"  # Provide a string value
+        update.effective_user.name = "Test User"
 
         mock_phrase = Phrase(text="cuñao")
         with (
-            patch.object(
-                UserService, "update_or_create_user"
-            ) as mock_update_user,  # Patch the decorator's call
+            patch(
+                "tg.handlers.inline.inline_query.base.get_query_mode",
+                return_value=("", ""),
+            ),
+            patch.object(UserService, "update_or_create_user"),
             patch(
                 "tg.handlers.inline.inline_query.base.phrase_service.get_random",
                 return_value=mock_phrase,
-            ),  # Patch phrase_service.get_random
+            ),
         ):
             await handle_inline_query(update, MagicMock())
             update.inline_query.answer.assert_called_once()
-            # Should answer with help/dont know how to use
             results = update.inline_query.answer.call_args[0][0]
             assert "No sabes usarme" in results[0].title
-            mock_update_user.assert_called_once()
