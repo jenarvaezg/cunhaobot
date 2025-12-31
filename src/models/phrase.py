@@ -10,6 +10,7 @@ class Phrase(BaseModel):
     usages: int = 0
     audio_usages: int = 0
     sticker_usages: int = 0
+    score: int = 0
     user_id: int = 0
     chat_id: int = 0
     created_at: datetime | None = None

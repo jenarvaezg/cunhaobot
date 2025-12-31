@@ -23,6 +23,7 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
             usages=entity.get("usages", 0),
             audio_usages=entity.get("audio_usages", 0),
             sticker_usages=entity.get("sticker_usages", 0),
+            score=entity.get("score", 0),
             user_id=entity.get("user_id", 0),
             chat_id=entity.get("chat_id", 0),
             created_at=entity.get("created_at"),
@@ -85,6 +86,7 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
 
         if phrase:
             phrase.usages += 1
+            phrase.score += 1
             if usage_type == "audio":
                 phrase.audio_usages += 1
             elif usage_type == "sticker":

@@ -45,6 +45,7 @@ class PhraseService:
             chat_id=proposal.from_chat_id,
             created_at=datetime.now(),
             proposal_id=proposal.id,
+            score=(len(proposal.liked_by) - len(proposal.disliked_by)) * 5,
         )
 
         sticker_image = self.create_sticker_image(phrase)
@@ -87,6 +88,7 @@ class PhraseService:
         """Increments sticker usage counters for a phrase."""
         phrase.usages += 1
         phrase.sticker_usages += 1
+        phrase.score += 1
 
         repo = self.long_repo if isinstance(phrase, LongPhrase) else self.phrase_repo
         repo.save(phrase)  # type: ignore[arg-type]
@@ -126,6 +128,7 @@ class PhraseService:
                 phrase = repo.load(int(item))
                 if phrase:
                     phrase.usages += 1
+                    phrase.score += 1
                     if is_audio:
                         phrase.audio_usages += 1
                     if is_sticker:
