@@ -105,7 +105,7 @@ def register_listeners(app: AsyncApp):
         attachments = build_phrase_attachments(phrase.text, search=text)
         await respond(attachments=attachments)
 
-    @app.action("choice")
+    @app.action("phrase")
     async def handle_choice_action(ack: Any, body: dict[str, Any], respond: Any):
         await ack()
         actions: list[dict[str, Any]] = body.get("actions", [])
