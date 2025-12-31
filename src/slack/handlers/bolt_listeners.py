@@ -1,22 +1,20 @@
 import logging
 import random
+import urllib.parse
 from typing import Any
 
 from slack_bolt.async_app import AsyncApp
-from slack_sdk.web.async_client import AsyncWebClient
 
+from core.config import config
 from services import phrase_service
 from slack.attachments import build_phrase_attachments
-from utils.image_utils import generate_png
 
 logger = logging.getLogger(__name__)
 
 
 def register_listeners(app: AsyncApp):
     @app.command("/sticker")
-    async def handle_sticker_command(
-        ack: Any, body: dict[str, Any], client: AsyncWebClient, respond: Any
-    ):
+    async def handle_sticker_command(ack: Any, body: dict[str, Any], respond: Any):
         await ack()
         text: str = body.get("text", "").strip()
         channel_id: str | None = body.get("channel_id")
@@ -45,25 +43,35 @@ def register_listeners(app: AsyncApp):
             await respond("No hay frases disponibles en este momento.")
             return
 
-        logger.info(f"Generating sticker for phrase: '{selected_phrase.text}'")
-        sticker_image = generate_png(selected_phrase.text)
+        logger.info(f"Sending sticker for phrase: '{selected_phrase.text}'")
+
+        # Instead of uploading a file (which requires the bot to be in the channel),
+        # we send an image block pointing to our public sticker generator endpoint.
+        # This works even if the bot is not in the channel because it uses the response_url.
+        if selected_phrase.key:
+            sticker_url = f"{config.base_url}/phrase/{selected_phrase.key}/sticker.png"
+        else:
+            # Fallback for ad-hoc phrases without a key
+            encoded_text = urllib.parse.quote(selected_phrase.text)
+            sticker_url = f"{config.base_url}/sticker/text.png?text={encoded_text}"
 
         try:
-            logger.info(f"Uploading sticker to Slack channel {channel_id}...")
-
-            # Use Bolt client for upload
-            # files_upload_v2 is the recommended way
-            await client.files_upload_v2(
-                channel=channel_id,
-                initial_comment=f'Aquí tienes tu sticker con la frase: "{selected_phrase.text}"',
-                file=sticker_image.getvalue(),
-                filename="sticker.png",
+            await respond(
+                response_type="in_channel",
+                blocks=[
+                    {
+                        "type": "image",
+                        "title": {"type": "plain_text", "text": selected_phrase.text},
+                        "image_url": sticker_url,
+                        "alt_text": selected_phrase.text,
+                    }
+                ],
             )
 
-            logger.info("Sticker uploaded successfully")
+            logger.info("Sticker sent successfully via response_url")
             phrase_service.register_sticker_usage(selected_phrase)
         except Exception as e:
-            logger.exception(f"Exception uploading file to slack: {e}")
+            logger.exception(f"Exception sending sticker to slack: {e}")
             await respond(
                 "Hubo un error al generar tu sticker. Inténtalo de nuevo más tarde."
             )

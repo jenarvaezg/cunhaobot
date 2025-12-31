@@ -146,6 +146,22 @@ class WebController(Controller):
             headers={"Cache-Control": "public, max-age=31536000"},
         )
 
+    @get("/sticker/text.png", sync_to_thread=True)
+    def text_sticker(
+        self,
+        text: str,
+        phrase_service: Annotated[PhraseService, Dependency()],
+    ) -> Response:
+        from models.phrase import LongPhrase
+
+        phrase = LongPhrase(text=text)
+        sticker_bytes = phrase_service.create_sticker_image(phrase)
+        return Response(
+            content=sticker_bytes,
+            media_type="image/png",
+            headers={"Cache-Control": "public, max-age=3600"},
+        )
+
     @get("/proposals", sync_to_thread=True)
     def proposals(
         self,
