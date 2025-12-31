@@ -14,7 +14,7 @@ from infrastructure.protocols import (
     UserRepository,
     InlineUserRepository,
 )
-from services import PhraseService, UserService
+from services import PhraseService, UserService, tts_service as tts_service_instance
 from services.ai_service import AIService
 from core.config import config
 
@@ -121,6 +121,32 @@ class WebController(Controller):
             content=photo_bytes,
             media_type="image/png",
             headers={"Cache-Control": "public, max-age=3600"},
+        )
+
+    @get("/phrase/{phrase_id:str}/audio.ogg")
+    async def phrase_audio(
+        self,
+        phrase_id: str,
+        phrase_repo: Annotated[Any, Dependency()],
+        long_phrase_repo: Annotated[Any, Dependency()],
+    ) -> Response:
+        p_repo: PhraseRepository = phrase_repo
+        lp_repo: LongPhraseRepository = long_phrase_repo
+
+        phrase = p_repo.load(phrase_id) or lp_repo.load(phrase_id)
+        if not phrase:
+            raise HTTPException(status_code=404, detail="Phrase not found")
+
+        result_type = "long" if phrase.kind == "LongPhrase" else "short"
+        audio_url = tts_service_instance.get_audio_url(phrase, result_type)
+
+        if not audio_url:
+            raise HTTPException(status_code=500, detail="Could not generate audio")
+
+        return Response(
+            content=b"",
+            status_code=307,
+            headers={"Location": audio_url},
         )
 
     @get("/phrase/{phrase_id:str}/sticker.png", sync_to_thread=True)

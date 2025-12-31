@@ -53,7 +53,12 @@ class TTSService:
         try:
             audio_content = self.generate_audio(phrase.text)
             blob.upload_from_string(audio_content, content_type="audio/ogg")
-            blob.make_public()
+            try:
+                blob.make_public()
+            except Exception as e:
+                logger.warning(
+                    f"Could not make blob public (might already be public or restricted): {e}"
+                )
             return blob.public_url
         except Exception as e:
             logger.error(f"Error generating audio: {e}")
