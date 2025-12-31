@@ -1,7 +1,6 @@
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, Optional
 from telegram import Update
 from telegram.error import BadRequest, TelegramError
 
@@ -27,8 +26,8 @@ class ProposalService:
         self.repo = repo
         self.long_repo = long_repo
         self.user_repo = user_repo
-        self._curators_cache: Dict[int, str] = {}
-        self._last_update: Optional[datetime] = None
+        self._curators_cache: dict[str | int, str] = {}
+        self._last_update: datetime | None = None
 
     def create_from_update(
         self, update: Update, is_long: bool = False, text: str | None = None
@@ -58,7 +57,7 @@ class ProposalService:
             user_id=user.id,
         )
 
-    def vote(self, proposal: Proposal, voter_id: int, positive: bool) -> None:
+    def vote(self, proposal: Proposal, voter_id: str | int, positive: bool) -> None:
         liked = set(proposal.liked_by)
         disliked = set(proposal.disliked_by)
 
@@ -76,7 +75,7 @@ class ProposalService:
         # Award points: 1 to proposer
         user_service.add_points(proposal.user_id, 1)
 
-    async def get_curators(self) -> Dict[int, str]:
+    async def get_curators(self) -> dict[str | int, str]:
         now = datetime.now()
         if not self._last_update or (now - self._last_update) > timedelta(minutes=10):
             await self._update_curators_cache()
@@ -89,7 +88,7 @@ class ProposalService:
             application = get_tg_application()
             await application.initialize()
             bot = application.bot
-            new_cache = {}
+            new_cache: dict[str | int, str] = {}
             admins = await bot.get_chat_administrators(chat_id=config.mod_chat_id)
             for admin in admins:
                 if not admin.user.is_bot:
@@ -118,7 +117,9 @@ class ProposalService:
             member_ids = await asyncio.gather(*check_tasks)
 
             # Unify db names lookup
-            db_names = {u.id: u.name for u in self.user_repo.load_all(ignore_gdpr=True)}
+            db_names: dict[str | int, str] = {
+                u.id: u.name for u in self.user_repo.load_all(ignore_gdpr=True)
+            }
 
             for mid in member_ids:
                 if mid and mid not in new_cache:

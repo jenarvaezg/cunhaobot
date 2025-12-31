@@ -15,6 +15,9 @@ class UserDatastoreRepository(DatastoreRepository[User]):
         if "user_id" in data:
             data["id"] = data.pop("user_id")
 
+        if "platform" not in data:
+            data["platform"] = "telegram"
+
         # Ensure all fields exist for the new model
         return User(**data)
 

@@ -117,10 +117,10 @@ class WebController(Controller):
             },
         )
 
-    @get("/user/{user_id:int}/photo.png")
+    @get("/user/{user_id:str}/photo.png")
     async def user_photo(
         self,
-        user_id: int,
+        user_id: str,
         user_service: Annotated[UserService, Dependency()],
     ) -> Response:
         photo_bytes = await user_service.get_user_photo(user_id)
@@ -402,11 +402,11 @@ class WebController(Controller):
         }
 
         # User stats
-        user_map: dict[int, str] = {
+        user_map: dict[str | int, str] = {
             u.id: u.name for u in user_repo.load_all(ignore_gdpr=True) if not u.is_group
         }
 
-        stats: dict[int, dict[str, Any]] = defaultdict(
+        stats: dict[str | int, dict[str, Any]] = defaultdict(
             lambda: {"approved": 0, "pending": 0, "score": 0, "name": "Anónimo"}
         )
 

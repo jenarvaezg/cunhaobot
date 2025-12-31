@@ -4,7 +4,8 @@ from pydantic import BaseModel, Field
 
 
 class User(BaseModel):
-    id: int = 0
+    id: str | int = 0
+    platform: str = "telegram"
     name: str = ""
     username: str | None = None
     is_group: bool = False

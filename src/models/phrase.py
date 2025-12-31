@@ -11,8 +11,8 @@ class Phrase(BaseModel):
     audio_usages: int = 0
     sticker_usages: int = 0
     score: int = 0
-    user_id: int = 0
-    chat_id: int = 0
+    user_id: str | int = 0
+    chat_id: str | int = 0
     created_at: datetime | None = None
     proposal_id: str = ""
 

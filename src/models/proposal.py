@@ -6,12 +6,12 @@ from models.phrase import Phrase, LongPhrase
 
 class Proposal(BaseModel):
     id: str = ""
-    from_chat_id: int = 0
-    from_message_id: int = 0
+    from_chat_id: str | int = 0
+    from_message_id: str | int = 0
     text: str = ""
-    liked_by: list[int] = []
-    disliked_by: list[int] = []
-    user_id: int = 0
+    liked_by: list[str | int] = []
+    disliked_by: list[str | int] = []
+    user_id: str | int = 0
     voting_ended: bool = False
     voting_ended_at: datetime | None = None
     created_at: datetime | None = Field(default_factory=datetime.now)
