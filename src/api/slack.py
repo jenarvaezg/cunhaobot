@@ -14,10 +14,15 @@ logger = logging.getLogger(__name__)
 
 async def to_bolt_request(request: Request) -> AsyncBoltRequest:
     body = await request.body()
+    headers = request.headers
     return AsyncBoltRequest(
         body=body.decode("utf-8"),
         query=dict(request.query_params),
-        headers=dict(request.headers),
+        headers={
+            "X-Slack-Signature": headers.get("x-slack-signature", ""),
+            "X-Slack-Request-Timestamp": headers.get("x-slack-request-timestamp", ""),
+            "Content-Type": headers.get("content-type", ""),
+        },
     )
 
 
@@ -43,19 +48,11 @@ class SlackController(Controller):
     async def slack_events(
         self, request: Request, phrase_service: Annotated[PhraseService, Dependency()]
     ) -> Response:
-        body = await request.body()
-        headers = request.headers
+        bolt_req: AsyncBoltRequest = await to_bolt_request(request)
         logger.info(
-            f"Slack request headers: {list(headers.keys())}, body length: {len(body)}"
+            f"Slack request: {bolt_req.headers}, body length: {len(bolt_req.body)}"
         )
 
-        if (
-            "x-slack-signature" not in headers
-            or "x-slack-request-timestamp" not in headers
-        ):
-            logger.warning("Missing Slack signature headers")
-
-        bolt_req: AsyncBoltRequest = await to_bolt_request(request)
         bolt_resp: BoltResponse = await app.async_dispatch(bolt_req)
         if bolt_resp.status != 200:
             logger.warning(
