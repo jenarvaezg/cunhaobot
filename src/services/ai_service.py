@@ -67,6 +67,33 @@ class AIService:
                 ]
             raise e
 
+    async def generate_image(self, phrase: str) -> bytes:
+        """Generates an image from a phrase using Imagen."""
+        prompt = f"""
+        A high-quality, satirical and funny illustration of a stereotypical Spanish 'cuñado'
+        (a middle-aged man with a mustache, wearing a classic polo shirt or a vest)
+        acting out or representing this phrase: "{phrase}".
+        The style should be a modern comic or a realistic but slightly caricatured digital painting.
+        Set the scene in a typical Spanish bar with a wooden counter and beer tapas.
+        """
+        try:
+            # We use the sync client for image generation for now as the SDK might have issues with async for this specific call
+            # in some environments, or just to keep it simple if it's a wrapper.
+            # Actually, the genai SDK is mostly sync or uses its own event loop management.
+            response = self.client.models.generate_image(
+                model="imagen-3",
+                prompt=prompt,
+                config={
+                    "number_of_images": 1,
+                    "include_rai_reasoning": True,
+                    "output_mime_type": "image/png",
+                },
+            )
+            return response.generated_images[0].image_bytes
+        except Exception as e:
+            logger.error(f"Error generating image: {e}")
+            raise e
+
 
 # Singleton instance
 ai_service = AIService()

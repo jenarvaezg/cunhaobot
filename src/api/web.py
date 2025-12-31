@@ -97,6 +97,18 @@ class WebController(Controller):
                         f"Could not fetch user info from Telegram for {phrase.user_id}: {e}"
                     )
 
+        # Check if AI image exists in GCS
+        from utils.gcp import get_bucket
+
+        image_url = None
+        try:
+            bucket = get_bucket()
+            blob = bucket.blob(f"generated_images/{phrase_id}.png")
+            if blob.exists():
+                image_url = blob.public_url
+        except Exception as e:
+            logger.warning(f"Could not check for AI image existence: {e}")
+
         return Template(
             template_name="phrase_detail.html",
             context={
@@ -104,6 +116,7 @@ class WebController(Controller):
                 "contributor": contributor,
                 "user": request.session.get("user"),
                 "owner_id": config.owner_id,
+                "image_url": image_url,
             },
         )
 
@@ -266,6 +279,49 @@ class WebController(Controller):
                 template_name="partials/ai_phrase.html",
                 context={"phrase": f"Error: {str(e)}"},
                 status_code=500,
+            )
+
+    @post("/phrase/{phrase_id:str}/generate-image")
+    async def generate_phrase_image(
+        self,
+        phrase_id: str,
+        phrase_repo: Annotated[Any, Dependency()],
+        long_phrase_repo: Annotated[Any, Dependency()],
+        ai_service: Annotated[AIService, Dependency()],
+    ) -> HTMXTemplate:
+        p_repo: PhraseRepository = phrase_repo
+        lp_repo: LongPhraseRepository = long_phrase_repo
+
+        phrase = p_repo.load(phrase_id) or lp_repo.load(phrase_id)
+        if not phrase:
+            raise HTTPException(status_code=404, detail="Phrase not found")
+
+        try:
+            from services.ai_service import AIService as AIServiceType
+
+            service: AIServiceType = ai_service
+            image_bytes = await service.generate_image(phrase.text)
+
+            # Upload to GCS
+            from utils.gcp import get_bucket
+
+            bucket = get_bucket()
+            # Use a deterministic name but allow for some variety if needed,
+            # or just overwrite to save space.
+            blob = bucket.blob(f"generated_images/{phrase_id}.png")
+            blob.upload_from_string(image_bytes, content_type="image/png")
+            blob.make_public()
+            image_url = blob.public_url
+
+            return HTMXTemplate(
+                template_name="partials/ai_image.html",
+                context={"image_url": image_url, "phrase": phrase},
+            )
+        except Exception as e:
+            logger.error(f"Failed to generate image for phrase {phrase_id}: {e}")
+            return HTMXTemplate(
+                template_name="partials/ai_image.html",
+                context={"error": str(e), "phrase": phrase},
             )
 
     @get("/metrics", sync_to_thread=True)
