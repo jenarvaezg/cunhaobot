@@ -1,7 +1,6 @@
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, Optional
 from telegram import Update
 from telegram.error import BadRequest, TelegramError
 
@@ -27,8 +26,8 @@ class ProposalService:
         self.repo = repo
         self.long_repo = long_repo
         self.user_repo = user_repo
-        self._curators_cache: Dict[int, str] = {}
-        self._last_update: Optional[datetime] = None
+        self._curators_cache: dict[str, str] = {}
+        self._last_update: datetime | None = None
 
     def create_from_update(
         self, update: Update, is_long: bool = False, text: str | None = None
@@ -58,16 +57,17 @@ class ProposalService:
             user_id=user.id,
         )
 
-    def vote(self, proposal: Proposal, voter_id: int, positive: bool) -> None:
+    def vote(self, proposal: Proposal, voter_id: str | int, positive: bool) -> None:
+        voter_id_str = str(voter_id)
         liked = set(proposal.liked_by)
         disliked = set(proposal.disliked_by)
 
         if positive:
-            disliked.discard(voter_id)
-            liked.add(voter_id)
+            disliked.discard(voter_id_str)
+            liked.add(voter_id_str)
         else:
-            liked.discard(voter_id)
-            disliked.add(voter_id)
+            liked.discard(voter_id_str)
+            disliked.add(voter_id_str)
 
         proposal.liked_by, proposal.disliked_by = list(liked), list(disliked)
         repo = self.long_repo if isinstance(proposal, LongProposal) else self.repo
@@ -76,7 +76,7 @@ class ProposalService:
         # Award points: 1 to proposer
         user_service.add_points(proposal.user_id, 1)
 
-    async def get_curators(self) -> Dict[int, str]:
+    async def get_curators(self) -> dict[str, str]:
         now = datetime.now()
         if not self._last_update or (now - self._last_update) > timedelta(minutes=10):
             await self._update_curators_cache()
@@ -89,28 +89,32 @@ class ProposalService:
             application = get_tg_application()
             await application.initialize()
             bot = application.bot
-            new_cache = {}
+            new_cache: dict[str, str] = {}
             admins = await bot.get_chat_administrators(chat_id=config.mod_chat_id)
             for admin in admins:
                 if not admin.user.is_bot:
-                    new_cache[admin.user.id] = admin.user.name or admin.user.first_name
+                    new_cache[str(admin.user.id)] = (
+                        admin.user.name or admin.user.first_name
+                    )
 
             all_proposals = self.repo.load_all() + self.long_repo.load_all()
-            active_ids = {p.user_id for p in all_proposals}
+            active_ids = {str(p.user_id) for p in all_proposals}
             for p in all_proposals:
-                active_ids.update(p.liked_by)
-                active_ids.update(p.disliked_by)
+                active_ids.update(str(uid) for uid in p.liked_by)
+                active_ids.update(str(uid) for uid in p.disliked_by)
 
-            ids_to_check = active_ids - set(new_cache.keys()) - {0}
+            ids_to_check = active_ids - set(new_cache.keys()) - {"0"}
 
             async def check_user(uid):
                 try:
+                    # Telegram API requires int for numeric IDs
+                    target_id = int(uid) if uid.lstrip("-").isdigit() else uid
                     m = await bot.get_chat_member(
-                        chat_id=config.mod_chat_id, user_id=uid
+                        chat_id=config.mod_chat_id, user_id=target_id
                     )
                     if m.status in ["member", "administrator", "creator"]:
                         return uid
-                except (BadRequest, TelegramError):
+                except (BadRequest, TelegramError, ValueError):
                     pass
                 return None
 
@@ -118,11 +122,13 @@ class ProposalService:
             member_ids = await asyncio.gather(*check_tasks)
 
             # Unify db names lookup
-            db_names = {u.id: u.name for u in self.user_repo.load_all(ignore_gdpr=True)}
+            db_names: dict[str, str] = {
+                str(u.id): u.name for u in self.user_repo.load_all(ignore_gdpr=True)
+            }
 
             for mid in member_ids:
                 if mid and mid not in new_cache:
-                    new_cache[mid] = db_names.get(mid, f"User {mid}")
+                    new_cache[str(mid)] = db_names.get(str(mid), f"User {mid}")
 
             self._curators_cache = new_cache
             self._last_update = datetime.now()

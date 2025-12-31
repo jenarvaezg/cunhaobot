@@ -69,6 +69,20 @@ class TestUserRepository:
         user_inline = repo._entity_to_domain(entity_inline)
         assert user_inline.id == 456
 
+    def test_entity_to_domain_platform(self, repo):
+        # New entity with platform
+        data_slack = {"id": "U123", "name": "Slack User", "platform": "slack"}
+        entity_slack = create_mock_entity(data_slack)
+        user_slack = repo._entity_to_domain(entity_slack)
+        assert user_slack.id == "U123"
+        assert user_slack.platform == "slack"
+
+        # Old entity without platform
+        data_old = {"id": 123, "name": "Old User"}
+        entity_old = create_mock_entity(data_old)
+        user_old = repo._entity_to_domain(entity_old)
+        assert user_old.platform == "telegram"
+
     def test_load_user(self, repo, mock_datastore_client):
         data = {"id": 123, "name": "Test User", "is_group": False}
         entity = create_mock_entity(data, kind="User", entity_id=123)

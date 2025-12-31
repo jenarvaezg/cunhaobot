@@ -104,7 +104,7 @@ class TestCallbackQuery:
         ):
             # Mock vote behavior (manually add to p since we mock the service)
             def side_effect(prop, user_id, pos):
-                prop.liked_by.append(user_id)
+                prop.liked_by.append(str(user_id))
 
             mock_vote.side_effect = side_effect
 
@@ -140,7 +140,7 @@ class TestCallbackQuery:
         ):
 
             def side_effect(prop, user_id, pos):
-                prop.disliked_by.append(user_id)
+                prop.disliked_by.append(str(user_id))
 
             mock_vote.side_effect = side_effect
 
@@ -206,7 +206,7 @@ class TestCallbackQuery:
     async def test_update_proposal_text_equal(self):
         from tg.handlers.utils.callback_query import _update_proposal_text
 
-        p = Proposal(id="123", text="test", liked_by=[1])
+        p = Proposal(id="123", text="test", liked_by=["1"])
         callback_query = MagicMock()
         callback_query.message.text_markdown = "Original text\n\n*Han votado ya:*\nNew"
         callback_query.edit_message_text = AsyncMock()
@@ -229,7 +229,7 @@ class TestCallbackQuery:
         admin.user.name = "Admin"
         cb_query.admins = [admin]
 
-        p = Proposal(text="test", disliked_by=[1])
+        p = Proposal(text="test", disliked_by=["1"])
         summary = get_vote_summary(p)
         assert "Han votado que no: Admin" in summary
 

@@ -19,10 +19,11 @@ class UserService:
 
     def _update_or_create(
         self,
-        user_id: int,
+        user_id: str | int,
         name: str,
         username: str | None = None,
         is_group: bool = False,
+        platform: str = "telegram",
     ) -> User:
         user = self.user_repo.load(user_id)
 
@@ -36,6 +37,9 @@ class UserService:
                 changed = True
             if user.gdpr:
                 user.gdpr = False
+                changed = True
+            if user.platform != platform:
+                user.platform = platform
                 changed = True
             # In case it was loaded from InlineUser kind, it might not have is_group set correctly
             if not is_group and user.is_group:
@@ -51,6 +55,7 @@ class UserService:
             name=name,
             username=username,
             is_group=is_group,
+            platform=platform,
         )
         self.user_repo.save(user)
         return user
@@ -64,6 +69,7 @@ class UserService:
             name=update_user.name,
             username=update_user.username,
             is_group=False,
+            platform="telegram",
         )
 
     def _get_name_from_message(self, msg: Message) -> str:
@@ -86,7 +92,26 @@ class UserService:
         is_group = message.chat.type != message.chat.PRIVATE
 
         return self._update_or_create(
-            user_id=chat_id, name=name, username=username, is_group=is_group
+            user_id=chat_id,
+            name=name,
+            username=username,
+            is_group=is_group,
+            platform="telegram",
+        )
+
+    def update_or_create_slack_user(
+        self,
+        slack_user_id: str,
+        name: str,
+        username: str | None = None,
+        is_group: bool = False,
+    ) -> User:
+        return self._update_or_create(
+            user_id=slack_user_id,
+            name=name,
+            username=username,
+            is_group=is_group,
+            platform="slack",
         )
 
     def delete_user(self, user: User, hard: bool = False) -> None:
@@ -101,7 +126,7 @@ class UserService:
         user.points += 1
         self.user_repo.save(user)
 
-    def add_points(self, user_id: int, points: int) -> None:
+    def add_points(self, user_id: str | int, points: int) -> None:
         if user_id == 0:
             return
 
@@ -117,8 +142,19 @@ class UserService:
             # For now, if they are not in our DB, they don't get points until they interact.
             pass
 
-    async def get_user_photo(self, user_id: int) -> bytes | None:
-        if not user_id or user_id <= 0:
+    async def get_user_photo(self, user_id: str | int) -> bytes | None:
+        if not user_id:
+            return None
+
+        # Convert to int if possible (for Telegram IDs passed as strings from web routes)
+        target_id: int | None = None
+        if isinstance(user_id, int):
+            target_id = user_id
+        elif isinstance(user_id, str) and user_id.lstrip("-").isdigit():
+            target_id = int(user_id)
+
+        if target_id is None:
+            # Probably Slack or other platform with non-numeric IDs, we don't support it yet
             return None
 
         from tg import get_tg_application
@@ -129,14 +165,14 @@ class UserService:
                 await application.initialize()
 
             bot = application.bot
-            photos = await bot.get_user_profile_photos(user_id, limit=1)
+            photos = await bot.get_user_profile_photos(target_id, limit=1)
             if photos.total_count > 0:
                 # Get the smallest photo to be fast
                 file_id = photos.photos[0][0].file_id
                 file = await bot.get_file(file_id)
                 return await file.download_as_bytearray()
         except Exception as e:
-            logger.error(f"Error getting user photo for {user_id}: {e}")
+            logger.error(f"Error getting user photo for {target_id}: {e}")
         return None
 
 

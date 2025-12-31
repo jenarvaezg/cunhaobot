@@ -6,7 +6,7 @@ from typing import Any
 from slack_bolt.async_app import AsyncApp
 
 from core.config import config
-from services import phrase_service, cunhao_agent
+from services import phrase_service, cunhao_agent, user_service
 from slack.attachments import (
     build_phrase_attachments,
     build_saludo_attachments,
@@ -16,11 +16,54 @@ from slack.attachments import (
 logger = logging.getLogger(__name__)
 
 
+async def _register_slack_user(body: dict[str, Any], client: Any):
+    try:
+        user_id = None
+        user_name = "Unknown"
+        username = None
+
+        if "user_id" in body:  # Command
+            user_id = body["user_id"]
+            user_name = body.get("user_name", "Unknown")
+        elif "user" in body:  # Action
+            user_data = body["user"]
+            if isinstance(user_data, dict):
+                user_id = user_data.get("id")
+                user_name = user_data.get("name", "Unknown")
+                username = user_data.get("username")
+            else:
+                user_id = user_data
+        elif "event" in body:  # Event
+            user_id = body["event"].get("user")
+
+        if user_id and (user_name == "Unknown" or not username):
+            # Fetch more info if we only have the ID
+            user_info = await client.users_info(user=user_id)
+            if user_info.get("ok"):
+                slack_user = user_info.get("user", {})
+                user_name = (
+                    slack_user.get("real_name") or slack_user.get("name") or user_name
+                )
+                username = slack_user.get("name")
+
+        if user_id:
+            user_service.update_or_create_slack_user(
+                slack_user_id=user_id,
+                name=user_name,
+                username=username,
+            )
+    except Exception as e:
+        logger.error(f"Error registering slack user: {e}")
+
+
 def register_listeners(app: AsyncApp):
     @app.command("/saludo")
     @app.command("/que_pasa")
-    async def handle_saludo_command(ack: Any, body: dict[str, Any], respond: Any):
+    async def handle_saludo_command(
+        ack: Any, body: dict[str, Any], respond: Any, client: Any
+    ):
         await ack()
+        await _register_slack_user(body, client)
         text: str = body.get("text", "").strip()
 
         if text == "help":
@@ -42,8 +85,11 @@ def register_listeners(app: AsyncApp):
         await respond(attachments=attachments)
 
     @app.command("/sticker")
-    async def handle_sticker_command(ack: Any, body: dict[str, Any], respond: Any):
+    async def handle_sticker_command(
+        ack: Any, body: dict[str, Any], respond: Any, client: Any
+    ):
         await ack()
+        await _register_slack_user(body, client)
         text: str = body.get("text", "").strip()
 
         if text == "help":
@@ -73,9 +119,9 @@ def register_listeners(app: AsyncApp):
             await respond("No hay frases disponibles en este momento.")
             return
 
-        if selected_phrase.key:
-            encoded_key = urllib.parse.quote(selected_phrase.key)
-            sticker_url = f"{config.base_url}/phrase/{encoded_key}/sticker.png"
+        if selected_phrase.id:
+            encoded_id = urllib.parse.quote(str(selected_phrase.id))
+            sticker_url = f"{config.base_url}/phrase/{encoded_id}/sticker.png"
         else:
             encoded_text = urllib.parse.quote(selected_phrase.text)
             sticker_url = f"{config.base_url}/sticker/text.png?text={encoded_text}"
@@ -84,8 +130,11 @@ def register_listeners(app: AsyncApp):
         await respond(attachments=attachments)
 
     @app.command("/cuñao")
-    async def handle_cunao_command(ack: Any, body: dict[str, Any], respond: Any):
+    async def handle_cunao_command(
+        ack: Any, body: dict[str, Any], respond: Any, client: Any
+    ):
         await ack()
+        await _register_slack_user(body, client)
         text: str = body.get("text", "").strip()
 
         if text == "help":
@@ -109,8 +158,11 @@ def register_listeners(app: AsyncApp):
         await respond(attachments=attachments)
 
     @app.action("phrase")
-    async def handle_choice_action(ack: Any, body: dict[str, Any], respond: Any):
+    async def handle_choice_action(
+        ack: Any, body: dict[str, Any], respond: Any, client: Any
+    ):
         await ack()
+        await _register_slack_user(body, client)
         actions: list[dict[str, Any]] = body.get("actions", [])
         if not actions:
             return
@@ -133,8 +185,8 @@ def register_listeners(app: AsyncApp):
                 encoded_text = urllib.parse.quote(text)
                 sticker_url = f"{config.base_url}/sticker/text.png?text={encoded_text}"
             else:
-                encoded_key = urllib.parse.quote(selected_phrase.key)
-                sticker_url = f"{config.base_url}/phrase/{encoded_key}/sticker.png"
+                encoded_id = urllib.parse.quote(str(selected_phrase.id))
+                sticker_url = f"{config.base_url}/phrase/{encoded_id}/sticker.png"
                 phrase_service.register_sticker_usage(selected_phrase)
 
             await respond(
@@ -205,9 +257,9 @@ def register_listeners(app: AsyncApp):
             else:
                 selected_phrase = random.choice(phrases)
 
-            if selected_phrase.key:
-                encoded_key = urllib.parse.quote(selected_phrase.key)
-                sticker_url = f"{config.base_url}/phrase/{encoded_key}/sticker.png"
+            if selected_phrase.id:
+                encoded_id = urllib.parse.quote(str(selected_phrase.id))
+                sticker_url = f"{config.base_url}/phrase/{encoded_id}/sticker.png"
             else:
                 encoded_text = urllib.parse.quote(selected_phrase.text)
                 sticker_url = f"{config.base_url}/sticker/text.png?text={encoded_text}"
@@ -252,16 +304,20 @@ def register_listeners(app: AsyncApp):
             await respond(delete_original=True)
 
     @app.event("app_mention")
-    async def handle_app_mention(ack: Any, body: dict[str, Any], say: Any):
+    async def handle_app_mention(ack: Any, body: dict[str, Any], say: Any, client: Any):
         await ack()
+        await _register_slack_user(body, client)
         event = body["event"]
         text = event.get("text", "")
         response = await cunhao_agent.answer(text)
         await say(response, thread_ts=event.get("ts"))
 
     @app.event("message")
-    async def handle_message_event(ack: Any, body: dict[str, Any], say: Any):
+    async def handle_message_event(
+        ack: Any, body: dict[str, Any], say: Any, client: Any
+    ):
         await ack()
+        await _register_slack_user(body, client)
         event = body["event"]
         channel_type = event.get("channel_type")
         # Only handle DMs here, avoid double replying in channels (handled by app_mention)

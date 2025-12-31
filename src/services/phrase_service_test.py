@@ -105,8 +105,8 @@ class TestPhraseService:
             text="prop",
             user_id=1,
             from_chat_id=2,
-            liked_by=[1, 2, 3],
-            disliked_by=[4],
+            liked_by=["1", "2", "3"],
+            disliked_by=["4"],
         )
 
         # Mock create_sticker_image internal call

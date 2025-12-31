@@ -60,7 +60,7 @@ class TestProposalService:
         )
         with patch("services.proposal_service.user_service") as mock_user_service:
             service.vote(p, voter_id=1, positive=True)
-            assert p.liked_by == [1]
+            assert p.liked_by == ["1"]
             self.repo.save.assert_called_once_with(p)
             # Proposer (id=10) gets 1 point
             mock_user_service.add_points.assert_called_once_with(10, 1)
@@ -71,24 +71,25 @@ class TestProposalService:
         )
         with patch("services.proposal_service.user_service") as mock_user_service:
             service.vote(p, voter_id=1, positive=True)
+            assert p.liked_by == ["1"]
             self.long_repo.save.assert_called_once_with(p)
             mock_user_service.add_points.assert_called_once_with(10, 1)
 
     def test_vote_switch(self, service):
         p = Proposal(
-            id="123", from_chat_id=456, from_message_id=789, text="test", liked_by=[1]
+            id="123", from_chat_id=456, from_message_id=789, text="test", liked_by=["1"]
         )
         service.vote(p, voter_id=1, positive=False)
         assert p.liked_by == []
-        assert p.disliked_by == [1]
+        assert p.disliked_by == ["1"]
 
     @pytest.mark.asyncio
     async def test_get_curators_cached(self, service):
-        service._curators_cache = {1: "User 1"}
+        service._curators_cache = {"1": "User 1"}
         service._last_update = datetime.now()
 
         curators = await service.get_curators()
-        assert curators == {1: "User 1"}
+        assert curators == {"1": "User 1"}
 
     @pytest.mark.asyncio
     async def test_update_curators_cache(self, service):
@@ -117,7 +118,7 @@ class TestProposalService:
                     from_message_id=1,
                     text="t",
                     user_id=200,
-                    liked_by=[300],
+                    liked_by=["300"],
                 )
                 service.repo.load_all.return_value = [p1]
                 service.long_repo.load_all.return_value = []
@@ -133,10 +134,10 @@ class TestProposalService:
 
                 await service._update_curators_cache()
 
-                assert 100 in service._curators_cache  # Admin
-                assert 200 in service._curators_cache  # Proposer (known in user_repo)
+                assert "100" in service._curators_cache  # Admin
+                assert "200" in service._curators_cache  # Proposer (known in user_repo)
                 assert (
-                    300 in service._curators_cache
+                    "300" in service._curators_cache
                 )  # Voter (validated via get_chat_member)
 
     @pytest.mark.asyncio
@@ -190,14 +191,14 @@ class TestProposalService:
         with patch("tg.get_tg_application", return_value=mock_app):
             with patch("services.proposal_service.config") as mock_config:
                 mock_config.mod_chat_id = 123
-                service.repo.load_all.return_value = [Proposal(id="1", user_id=100)]
+                service.repo.load_all.return_value = [Proposal(id="1", user_id="100")]
                 service.long_repo.load_all.return_value = []
                 service.user_repo.load_all.return_value = []
                 mock_bot.get_chat_administrators.return_value = []
 
                 await service._update_curators_cache()
                 # User 100 should NOT be in cache because check failed
-                assert 100 not in service._curators_cache
+                assert "100" not in service._curators_cache
 
     @pytest.mark.asyncio
     async def test_reject(self, service):

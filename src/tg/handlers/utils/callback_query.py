@@ -28,8 +28,8 @@ def get_required_votes() -> int:
 
 
 def get_vote_summary(proposal: Proposal) -> str:
-    likers = [a.user.name for a in admins if a.user.id in proposal.liked_by]
-    dislikers = [a.user.name for a in admins if a.user.id in proposal.disliked_by]
+    likers = [a.user.name for a in admins if str(a.user.id) in proposal.liked_by]
+    dislikers = [a.user.name for a in admins if str(a.user.id) in proposal.disliked_by]
     return (
         f"Han votado que si: {' '.join(likers)}\n"
         f"Han votado que no: {' '.join(dislikers)}"
@@ -81,12 +81,14 @@ async def approve_proposal(
         except Exception as e:
             logger.error(f"Error sending web approval notification: {e}")
 
-    if proposal.from_chat_id > 0:
+    if isinstance(proposal.from_chat_id, int) and proposal.from_chat_id > 0:
         try:
             await bot.send_message(
                 proposal.from_chat_id,
                 f"Tu propuesta '{proposal.text}' ha sido aprobada, felicidades, {p_random}",
-                reply_to_message_id=proposal.from_message_id or None,
+                reply_to_message_id=proposal.from_message_id
+                if isinstance(proposal.from_message_id, int)
+                else None,
             )
         except Exception as e:
             logger.error(f"Error enviando notificación de aprobación: {e}")
@@ -124,12 +126,14 @@ async def dismiss_proposal(
         except Exception as e:
             logger.error(f"Error sending web dismissal notification: {e}")
 
-    if proposal.from_chat_id > 0:
+    if isinstance(proposal.from_chat_id, int) and proposal.from_chat_id > 0:
         try:
             await bot.send_message(
                 proposal.from_chat_id,
                 f"Tu propuesta '{proposal.text}' ha sido rechazada, lo siento {p_random}",
-                reply_to_message_id=proposal.from_message_id or None,
+                reply_to_message_id=proposal.from_message_id
+                if isinstance(proposal.from_message_id, int)
+                else None,
             )
         except Exception as e:
             logger.error(f"Error enviando notificación de rechazo: {e}")
@@ -155,7 +159,7 @@ async def _update_proposal_text(
     before_votes_text = text.split(votes_text)[0]
 
     all_voters = proposal.disliked_by + proposal.liked_by
-    voted_admins = [a.user for a in admins if a.user.id in all_voters]
+    voted_admins = [a.user for a in admins if str(a.user.id) in all_voters]
     votes_text += "\n".join([u.name for u in voted_admins])
 
     final_text = before_votes_text + votes_text
