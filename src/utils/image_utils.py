@@ -13,7 +13,8 @@ def _text_wrap(text: str, font: ImageFont.FreeTypeFont, max_width: int) -> list[
     # If the width of the text is smaller than image width
     # we don't need to split it, just add it to the lines array
     # and return
-    if font.getbbox(text)[2] <= max_width:
+    bbox = font.getbbox(text)
+    if (bbox[2] - bbox[0]) <= max_width:
         lines.append(text)
     else:
         # split the line by spaces to get words
@@ -22,19 +23,74 @@ def _text_wrap(text: str, font: ImageFont.FreeTypeFont, max_width: int) -> list[
         # append every word to a line while its width is shorter than image width
         while i < len(words):
             line = ""
-            while i < len(words) and font.getbbox(line + words[i])[2] <= max_width:
-                line = line + words[i] + " "
-                i += 1
+            while i < len(words):
+                next_word = words[i]
+                test_line = line + next_word + " "
+                test_bbox = font.getbbox(test_line.strip())
+                if (test_bbox[2] - test_bbox[0]) <= max_width:
+                    line = test_line
+                    i += 1
+                else:
+                    break
             if not line:
                 line = words[i]
                 i += 1
             # when the line gets longer than the max width do not append the word,
             # add the line to the lines array
-            lines.append(line)
+            lines.append(line.strip())
     return lines
 
 
-def _draw_text_with_border(
+def generate_png(text: str) -> BytesIO:
+    font_path = "src/fonts/impact.ttf"
+    font = None
+    lines = []
+    line_height = 0
+
+    for font_size in range(80, 1, -1):
+        font = ImageFont.truetype(font_path, size=font_size)
+        lines = _text_wrap(text, font, MAX_SIZE[0] - BORDER_SIZE * 2)
+
+        ascent, descent = font.getmetrics()
+        line_height = ascent + descent
+
+        sum_y = len(lines) * line_height + BORDER_SIZE * 2
+        longest_x = 0
+        for line in lines:
+            bbox = font.getbbox(line)
+            width = bbox[2] - bbox[0]
+            longest_x = max(longest_x, width + BORDER_SIZE * 2)
+
+        if sum_y <= MAX_SIZE[1] and longest_x <= MAX_SIZE[0]:
+            break
+
+    if font is None:
+        raise ValueError("Could not calculate font size")
+
+    # For stickers, we want the longest side to be 512.
+    # If the height is smaller, we can use it as is.
+    image_size = (MAX_SIZE[0], int(sum_y))
+    img = Image.new("RGBA", image_size)
+    img_draw = ImageDraw.Draw(img)
+
+    y = BORDER_SIZE
+    for line in lines:
+        bbox = font.getbbox(line)
+        line_width = bbox[2] - bbox[0]
+        line_x = (image_size[0] - line_width) // 2
+
+        # Draw with explicit anchor to ensure positioning matches our calculations
+        # 'lt' means left-top
+        _draw_text_with_border_precise(line, (line_x, y), font, img_draw)
+        y = y + line_height
+
+    b = io.BytesIO()
+    img.save(b, "PNG")
+    b.seek(0)
+    return b
+
+
+def _draw_text_with_border_precise(
     text: str,
     text_position: tuple[int, int],
     font: ImageFont.FreeTypeFont,
@@ -42,49 +98,35 @@ def _draw_text_with_border(
 ) -> None:
     x, y = text_position
     # draw border
-    draw.text((x - BORDER_SIZE, y - BORDER_SIZE), text, font=font, fill=SHADOW_COLOR)
-    draw.text((x + BORDER_SIZE, y - BORDER_SIZE), text, font=font, fill=SHADOW_COLOR)
-    draw.text((x - BORDER_SIZE, y + BORDER_SIZE), text, font=font, fill=SHADOW_COLOR)
-    draw.text((x + BORDER_SIZE, y + BORDER_SIZE), text, font=font, fill=SHADOW_COLOR)
+    # Using explicit anchor="lt" for all calls
+    draw.text(
+        (x - BORDER_SIZE, y - BORDER_SIZE),
+        text,
+        font=font,
+        fill=SHADOW_COLOR,
+        anchor="lt",
+    )
+    draw.text(
+        (x + BORDER_SIZE, y - BORDER_SIZE),
+        text,
+        font=font,
+        fill=SHADOW_COLOR,
+        anchor="lt",
+    )
+    draw.text(
+        (x - BORDER_SIZE, y + BORDER_SIZE),
+        text,
+        font=font,
+        fill=SHADOW_COLOR,
+        anchor="lt",
+    )
+    draw.text(
+        (x + BORDER_SIZE, y + BORDER_SIZE),
+        text,
+        font=font,
+        fill=SHADOW_COLOR,
+        anchor="lt",
+    )
 
     # now draw the text over it
-    draw.text((x, y), text, font=font)
-
-
-def generate_png(text: str) -> BytesIO:
-    font_path = "src/fonts/impact.ttf"
-    font_size = 80
-    font = None
-    lines = []
-
-    for font_size in range(80, 1, -1):
-        font = ImageFont.truetype(font_path, size=font_size)
-        lines = _text_wrap(text, font, MAX_SIZE[0] - BORDER_SIZE * 2)
-        sum_y = sum(
-            (font.getbbox(line)[3] - font.getbbox(line)[1]) + BORDER_SIZE * 2
-            for line in lines
-        )
-        longest_x = max(font.getbbox(line)[2] + BORDER_SIZE * 2 for line in lines)
-        if sum_y < MAX_SIZE[1] and longest_x < MAX_SIZE[0]:
-            break
-
-    if font is None:
-        raise ValueError("Could not calculate font size")
-
-    image_size = (MAX_SIZE[0], int(sum_y))
-    img = Image.new("RGBA", image_size)
-    img_draw = ImageDraw.Draw(img)
-
-    bbox_hg = font.getbbox("hg")
-    line_height = bbox_hg[3] - bbox_hg[1]
-    y = BORDER_SIZE
-    for line in lines:
-        line_x = int((image_size[0] - font.getbbox(line)[2] + BORDER_SIZE * 2) / 2)
-
-        _draw_text_with_border(line, (line_x, y), font, img_draw)
-        y = y + line_height
-
-    b = io.BytesIO()
-    img.save(b, "PNG")
-    b.seek(0)
-    return b
+    draw.text((x, y), text, font=font, anchor="lt")
