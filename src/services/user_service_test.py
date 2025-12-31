@@ -90,9 +90,10 @@ class TestUserService:
         service.user_repo.save.assert_called_once_with(user)
 
     def test_add_inline_usage(self, service):
-        user = User(id=123, usages=5)
+        user = User(id=123, usages=5, points=0)
         service.add_inline_usage(user)
         assert user.usages == 6
+        assert user.points == 1
         service.user_repo.save.assert_called_once_with(user)
 
     def test_add_points(self, service):

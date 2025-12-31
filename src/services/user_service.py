@@ -98,6 +98,7 @@ class UserService:
 
     def add_inline_usage(self, user: User) -> None:
         user.usages += 1
+        user.points += 1
         self.user_repo.save(user)
 
     def add_points(self, user_id: int, points: int) -> None:
