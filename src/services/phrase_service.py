@@ -33,6 +33,7 @@ class PhraseService:
     async def create_from_proposal(self, proposal: Any, bot: telegram.Bot) -> None:
         from models.proposal import LongProposal
         from tg.stickers import upload_sticker
+        from services.user_service import user_service
 
         is_long = isinstance(proposal, LongProposal)
         model_class = LongPhrase if is_long else Phrase
@@ -54,6 +55,9 @@ class PhraseService:
             phrase.stickerset_title_template,
         )
         repo.save(phrase)  # type: ignore[arg-type]
+
+        # Award points to the proposer
+        user_service.add_points(proposal.user_id, 10)
 
     def get_random(self, long: bool = False) -> Phrase:
         repo = self.long_repo if long else self.phrase_repo

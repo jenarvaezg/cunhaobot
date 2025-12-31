@@ -12,10 +12,7 @@ class TestProposalService:
         self.repo = MagicMock()
         self.long_repo = MagicMock()
         self.user_repo = MagicMock()
-        self.inline_repo = MagicMock()
-        return ProposalService(
-            self.repo, self.long_repo, self.user_repo, self.inline_repo
-        )
+        return ProposalService(self.repo, self.long_repo, self.user_repo)
 
     def test_create_from_update_validation(self, service):
         update = MagicMock()
@@ -58,15 +55,26 @@ class TestProposalService:
         assert p.text == "reply text"
 
     def test_vote(self, service):
-        p = Proposal(id="123", from_chat_id=456, from_message_id=789, text="test")
-        service.vote(p, voter_id=1, positive=True)
-        assert p.liked_by == [1]
-        self.repo.save.assert_called_once_with(p)
+        p = Proposal(
+            id="123", from_chat_id=456, from_message_id=789, text="test", user_id=10
+        )
+        with patch("services.proposal_service.user_service") as mock_user_service:
+            service.vote(p, voter_id=1, positive=True)
+            assert p.liked_by == [1]
+            self.repo.save.assert_called_once_with(p)
+            # Award points: 1 to voter, 1 to proposer
+            mock_user_service.add_points.assert_any_call(1, 1)
+            mock_user_service.add_points.assert_any_call(10, 1)
 
     def test_vote_long(self, service):
-        p = LongProposal(id="123", from_chat_id=456, from_message_id=789, text="test")
-        service.vote(p, voter_id=1, positive=True)
-        self.long_repo.save.assert_called_once_with(p)
+        p = LongProposal(
+            id="123", from_chat_id=456, from_message_id=789, text="test", user_id=10
+        )
+        with patch("services.proposal_service.user_service") as mock_user_service:
+            service.vote(p, voter_id=1, positive=True)
+            self.long_repo.save.assert_called_once_with(p)
+            mock_user_service.add_points.assert_any_call(1, 1)
+            mock_user_service.add_points.assert_any_call(10, 1)
 
     def test_vote_switch(self, service):
         p = Proposal(
@@ -117,9 +125,8 @@ class TestProposalService:
                 service.long_repo.load_all.return_value = []
 
                 # Setup user repos
-                u1 = User(chat_id=200, name="User 200")
+                u1 = User(id=200, name="User 200")
                 service.user_repo.load_all.return_value = [u1]
-                service.inline_repo.load_all.return_value = []
 
                 # Mock get_chat_member for user 300
                 member_mock = MagicMock()
@@ -188,7 +195,6 @@ class TestProposalService:
                 service.repo.load_all.return_value = [Proposal(id="1", user_id=100)]
                 service.long_repo.load_all.return_value = []
                 service.user_repo.load_all.return_value = []
-                service.inline_repo.load_all.return_value = []
                 mock_bot.get_chat_administrators.return_value = []
 
                 await service._update_curators_cache()

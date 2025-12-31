@@ -1,7 +1,7 @@
 from typing import Protocol, TypeVar, Any, runtime_checkable
 from models.phrase import Phrase, LongPhrase
 from models.proposal import Proposal, LongProposal
-from models.user import User, InlineUser
+from models.user import User
 
 T = TypeVar("T")
 
@@ -48,5 +48,6 @@ class UserRepository(Repository[User], Protocol):
     def load_all(self, ignore_gdpr: bool = False) -> list[User]: ...
 
 
-@runtime_checkable
-class InlineUserRepository(Repository[InlineUser], Protocol): ...
+# Keeping it as an alias for backward compatibility in some places,
+# but now it uses User model.
+class InlineUserRepository(UserRepository, Protocol): ...

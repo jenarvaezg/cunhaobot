@@ -1,12 +1,10 @@
 import logging
 from typing import Optional
 from telegram import Update, Message
-from models.user import User, InlineUser
+from models.user import User
 from infrastructure.datastore.user import (
     user_repository,
-    inline_user_repository,
     UserDatastoreRepository,
-    InlineUserDatastoreRepository,
 )
 
 logger = logging.getLogger(__name__)
@@ -16,35 +14,57 @@ class UserService:
     def __init__(
         self,
         user_repo: UserDatastoreRepository = user_repository,
-        inline_user_repo: InlineUserDatastoreRepository = inline_user_repository,
     ):
         self.user_repo = user_repo
-        self.inline_user_repo = inline_user_repo
 
-    def update_or_create_inline_user(self, update: Update) -> Optional[InlineUser]:
-        if not (update_user := update.effective_user):
-            return None
-
-        user = self.inline_user_repo.load(update_user.id)
+    def _update_or_create(
+        self,
+        user_id: int,
+        name: str,
+        username: str | None = None,
+        is_group: bool = False,
+    ) -> User:
+        user = self.user_repo.load(user_id)
 
         if user:
             changed = False
-            if user.name != update_user.name:
-                user.name = update_user.name
+            if user.name != name:
+                user.name = name
                 changed = True
-            if user.username != update_user.username:
-                user.username = update_user.username
+            if user.username != username:
+                user.username = username
+                changed = True
+            if user.gdpr:
+                user.gdpr = False
+                changed = True
+            # In case it was loaded from InlineUser kind, it might not have is_group set correctly
+            if not is_group and user.is_group:
+                user.is_group = False
                 changed = True
 
             if changed:
-                self.inline_user_repo.save(user)
+                self.user_repo.save(user)
             return user
 
-        user = InlineUser(
-            user_id=update_user.id, name=update_user.name, username=update_user.username
+        user = User(
+            id=user_id,
+            name=name,
+            username=username,
+            is_group=is_group,
         )
-        self.inline_user_repo.save(user)
+        self.user_repo.save(user)
         return user
+
+    def update_or_create_inline_user(self, update: Update) -> Optional[User]:
+        if not (update_user := update.effective_user):
+            return None
+
+        return self._update_or_create(
+            user_id=update_user.id,
+            name=update_user.name,
+            username=update_user.username,
+            is_group=False,
+        )
 
     def _get_name_from_message(self, msg: Message) -> str:
         if msg.chat.type == msg.chat.PRIVATE:
@@ -63,35 +83,38 @@ class UserService:
         chat_id = message.chat_id
         name = self._get_name_from_message(message)
         username = message.from_user.username if message.from_user else None
+        is_group = message.chat.type != message.chat.PRIVATE
 
-        user = self.user_repo.load(chat_id)
-
-        if user:
-            user.gdpr = False
-            user.name = name
-            user.username = username
-            self.user_repo.save(user)
-            return user
-
-        user = User(
-            chat_id=chat_id,
-            name=name,
-            username=username,
-            is_group=message.chat.type != message.chat.PRIVATE,
+        return self._update_or_create(
+            user_id=chat_id, name=name, username=username, is_group=is_group
         )
-        self.user_repo.save(user)
-        return user
 
     def delete_user(self, user: User, hard: bool = False) -> None:
         if hard:
-            self.user_repo.delete(user.chat_id)
+            self.user_repo.delete(user.id)
         else:
             user.gdpr = True
             self.user_repo.save(user)
 
-    def add_inline_usage(self, user: InlineUser) -> None:
+    def add_inline_usage(self, user: User) -> None:
         user.usages += 1
-        self.inline_user_repo.save(user)
+        self.user_repo.save(user)
+
+    def add_points(self, user_id: int, points: int) -> None:
+        if user_id == 0:
+            return
+
+        user = self.user_repo.load(user_id)
+        if user:
+            # We only award points to individuals, but we can store them in group entities too?
+            # Usually points are for the person. In Telegram, a group chat_id is negative.
+            # If the ID is from a person, it will be positive.
+            user.points += points
+            self.user_repo.save(user)
+        else:
+            # If user not found, we could create a stub but we don't have the name.
+            # For now, if they are not in our DB, they don't get points until they interact.
+            pass
 
     async def get_user_photo(self, user_id: int) -> bytes | None:
         if not user_id or user_id <= 0:

@@ -12,7 +12,6 @@ from infrastructure.protocols import (
     ProposalRepository,
     LongProposalRepository,
     UserRepository,
-    InlineUserRepository,
 )
 from services import PhraseService, UserService, tts_service as tts_service_instance
 from services.ai_service import AIService
@@ -58,12 +57,10 @@ class WebController(Controller):
         phrase_id: int,
         phrase_repo: Annotated[Any, Dependency()],
         long_phrase_repo: Annotated[Any, Dependency()],
-        inline_user_repo: Annotated[Any, Dependency()],
         user_repo: Annotated[Any, Dependency()],
     ) -> Template:
         p_repo: PhraseRepository = phrase_repo
         lp_repo: LongPhraseRepository = long_phrase_repo
-        iu_repo: InlineUserRepository = inline_user_repo
         u_repo: UserRepository = user_repo
 
         phrase = p_repo.load(phrase_id) or lp_repo.load(phrase_id)
@@ -73,25 +70,25 @@ class WebController(Controller):
 
         contributor = None
         if phrase.user_id:
-            contributor = iu_repo.load(phrase.user_id) or u_repo.load(phrase.user_id)
+            contributor = u_repo.load(phrase.user_id)
 
             # If not in DB, try to fetch from Telegram
             if not contributor:
                 from tg import get_tg_application
-                from models.user import InlineUser
+                from models.user import User
 
                 try:
                     application = get_tg_application()
                     if not application.running:
                         await application.initialize()
                     chat = await application.bot.get_chat(phrase.user_id)
-                    contributor = InlineUser(
-                        user_id=chat.id,
+                    contributor = User(
+                        id=chat.id,
                         name=chat.full_name or chat.first_name or f"User {chat.id}",
                         username=chat.username,
                     )
                     # Save for next time
-                    iu_repo.save(contributor)
+                    u_repo.save(contributor)
                 except Exception as e:
                     logger.warning(
                         f"Could not fetch user info from Telegram for {phrase.user_id}: {e}"
@@ -213,6 +210,27 @@ class WebController(Controller):
         return Template(
             template_name="proposals.html",
             context=get_proposals_context(request, proposal_repo, long_proposal_repo),
+        )
+
+    @get("/ranking", sync_to_thread=True)
+    def ranking(
+        self,
+        request: Request,
+        user_repo: Annotated[Any, Dependency()],
+    ) -> Template:
+        u_repo: UserRepository = user_repo
+
+        # Get all users with points > 0
+        ranking = [u for u in u_repo.load_all() if u.points > 0 and not u.is_group]
+        ranking.sort(key=lambda x: x.points, reverse=True)
+
+        return Template(
+            template_name="ranking.html",
+            context={
+                "ranking": ranking,
+                "user": request.session.get("user"),
+                "owner_id": config.owner_id,
+            },
         )
 
     @get("/search", sync_to_thread=True)
@@ -346,7 +364,6 @@ class WebController(Controller):
         proposal_repo: Annotated[Any, Dependency()],
         long_proposal_repo: Annotated[Any, Dependency()],
         user_repo: Annotated[Any, Dependency()],
-        inline_user_repo: Annotated[Any, Dependency()],
     ) -> Template:
         from collections import defaultdict
         import json
@@ -385,12 +402,9 @@ class WebController(Controller):
         }
 
         # User stats
-        user_map: dict[int, str] = {}
-        for u in inline_user_repo.load_all():
-            user_map[u.user_id] = u.name
-        for u in user_repo.load_all(ignore_gdpr=True):
-            if not u.is_group:
-                user_map[u.chat_id] = u.name
+        user_map: dict[int, str] = {
+            u.id: u.name for u in user_repo.load_all(ignore_gdpr=True) if not u.is_group
+        }
 
         stats: dict[int, dict[str, Any]] = defaultdict(
             lambda: {"approved": 0, "pending": 0, "score": 0, "name": "Anónimo"}

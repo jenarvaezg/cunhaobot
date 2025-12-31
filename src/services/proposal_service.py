@@ -10,8 +10,8 @@ from infrastructure.protocols import (
     ProposalRepository,
     LongProposalRepository,
     UserRepository,
-    InlineUserRepository,
 )
+from services.user_service import user_service
 from core.config import config
 
 logger = logging.getLogger(__name__)
@@ -23,12 +23,10 @@ class ProposalService:
         repo: ProposalRepository,
         long_repo: LongProposalRepository,
         user_repo: UserRepository,
-        inline_repo: InlineUserRepository,
     ):
         self.repo = repo
         self.long_repo = long_repo
         self.user_repo = user_repo
-        self.inline_repo = inline_repo
         self._curators_cache: Dict[int, str] = {}
         self._last_update: Optional[datetime] = None
 
@@ -75,6 +73,10 @@ class ProposalService:
         repo = self.long_repo if isinstance(proposal, LongProposal) else self.repo
         repo.save(proposal)  # type: ignore[arg-type]
 
+        # Award points: 1 to voter, 1 to proposer
+        user_service.add_points(voter_id, 1)
+        user_service.add_points(proposal.user_id, 1)
+
     async def get_curators(self) -> Dict[int, str]:
         now = datetime.now()
         if not self._last_update or (now - self._last_update) > timedelta(minutes=10):
@@ -116,11 +118,8 @@ class ProposalService:
             check_tasks = [check_user(uid) for uid in list(ids_to_check)[:100]]
             member_ids = await asyncio.gather(*check_tasks)
 
-            users_db = {
-                u.chat_id: u.name for u in self.user_repo.load_all() if not u.is_group
-            }
-            inline_db = {u.user_id: u.name for u in self.inline_repo.load_all()}
-            db_names = {**users_db, **inline_db}
+            # Unify db names lookup
+            db_names = {u.id: u.name for u in self.user_repo.load_all(ignore_gdpr=True)}
 
             for mid in member_ids:
                 if mid and mid not in new_cache:
