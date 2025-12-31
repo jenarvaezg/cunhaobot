@@ -23,10 +23,13 @@ from services.ai_service import ai_service  # noqa: E402
 from services.tts_service import tts_service  # noqa: E402
 
 # Services
-phrase_service = PhraseService(phrase_repo, long_phrase_repo)
-user_service = UserService(user_repo, inline_user_repo)
+phrase_service = PhraseService(phrase_repo, long_phrase_repo)  # type: ignore[arg-type]
+user_service = UserService(user_repo, inline_user_repo)  # type: ignore[arg-type]
 proposal_service = ProposalService(
-    proposal_repo, long_proposal_repo, user_repo, inline_user_repo
+    proposal_repo,
+    long_proposal_repo,
+    user_repo,
+    inline_user_repo,  # type: ignore[arg-type]
 )
 
 __all__ = [

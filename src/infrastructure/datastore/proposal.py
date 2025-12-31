@@ -11,8 +11,12 @@ class ProposalDatastoreRepository(DatastoreRepository[Proposal]):
         self.model_class = model_class
 
     def _entity_to_domain(self, entity: datastore.Entity) -> Proposal:
+        entity_id = ""
+        if entity.key:
+            entity_id = str(entity.key.name)
+
         return self.model_class(
-            id=str(entity.key.name),
+            id=entity_id,
             from_chat_id=entity["from_chat_id"],
             from_message_id=entity["from_message_id"],
             text=entity["text"],

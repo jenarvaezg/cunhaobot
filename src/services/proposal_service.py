@@ -73,7 +73,7 @@ class ProposalService:
 
         proposal.liked_by, proposal.disliked_by = list(liked), list(disliked)
         repo = self.long_repo if isinstance(proposal, LongProposal) else self.repo
-        repo.save(proposal)
+        repo.save(proposal)  # type: ignore[arg-type]
 
     async def get_curators(self) -> Dict[int, str]:
         now = datetime.now()

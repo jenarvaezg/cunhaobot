@@ -53,7 +53,7 @@ class PhraseService:
             phrase.stickerset_template,
             phrase.stickerset_title_template,
         )
-        repo.save(phrase)
+        repo.save(phrase)  # type: ignore[arg-type]
 
     def get_random(self, long: bool = False) -> Phrase:
         repo = self.long_repo if long else self.phrase_repo
@@ -85,7 +85,7 @@ class PhraseService:
         phrase.sticker_usages += 1
 
         repo = self.long_repo if isinstance(phrase, LongPhrase) else self.phrase_repo
-        repo.save(phrase)
+        repo.save(phrase)  # type: ignore[arg-type]
 
     def add_usage_by_id(self, result_id: str) -> None:
         """Increments usage count based on inline result ID."""
@@ -128,5 +128,5 @@ class PhraseService:
                     if is_sticker:
                         p.sticker_usages += 1
 
-                    repo.save(p)
+                    repo.save(p)  # type: ignore[arg-type]
                     break  # Next text

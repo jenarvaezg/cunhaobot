@@ -117,7 +117,7 @@ app = Litestar(
     middleware=[CookieBackendConfig(secret=config.session_secret.encode()).middleware],
     template_config=TemplateConfig(
         directory="src/templates", engine=JinjaTemplateEngine
-    ),
+    ),  # type: ignore[arg-type]
     request_class=HTMXRequest,
     before_request=auto_login_local,
     debug=not config.is_gae,

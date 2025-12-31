@@ -12,8 +12,12 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
         self._cache: list[Phrase] = []
 
     def _entity_to_domain(self, entity: datastore.Entity) -> Phrase:
+        key_id = ""
+        if entity.key:
+            key_id = entity.key.name or str(entity.key.id)
+
         return self.model_class(
-            key=entity.key.name or str(entity.key.id),
+            key=key_id,
             text=entity["text"],
             sticker_file_id=entity.get("sticker_file_id", ""),
             usages=entity.get("usages", 0),
@@ -64,6 +68,16 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
                 ]
 
         return results[offset : offset + limit] if limit > 0 else results
+
+    def add_usage(self, phrase_text: str, usage_type: str) -> None:
+        phrase = self.load(phrase_text)
+        if phrase:
+            phrase.usages += 1
+            if usage_type == "audio":
+                phrase.audio_usages += 1
+            elif usage_type == "sticker":
+                phrase.sticker_usages += 1
+            self.save(phrase)
 
 
 # Instances
