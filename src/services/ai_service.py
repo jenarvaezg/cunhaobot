@@ -52,7 +52,7 @@ class AIService:
         try:
             client = self.client
             response = client.models.generate_content(
-                model="gemini-3-flash", contents=prompt
+                model="gemini-2.5-flash", contents=prompt
             )
             phrases = [
                 line.strip()
