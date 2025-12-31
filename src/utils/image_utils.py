@@ -55,18 +55,18 @@ def generate_png(text: str) -> BytesIO:
         lines = _text_wrap(text, font, wrap_width)
 
         ascent, descent = font.getmetrics()
-        # More generous line height: ascent + descent + 15% gap
-        line_height = ascent + descent + int(ascent * 0.15)
+        # Reduce line gap to 5% of ascent
+        line_height = ascent + descent + int(ascent * 0.05)
 
-        # sum_y: lines * line_height + top/bottom padding
-        sum_y = len(lines) * line_height + BORDER_SIZE * 2 + 30
+        # sum_y: lines * line_height + smaller padding
+        sum_y = len(lines) * line_height + BORDER_SIZE * 2 + 10
 
         longest_x = 0
         for line in lines:
             bbox = font.getbbox(line)
             width = bbox[2] - bbox[0]
             # Account for the stroke width in the width check
-            longest_x = max(longest_x, width + BORDER_SIZE * 2 + 20)
+            longest_x = max(longest_x, width + BORDER_SIZE * 2 + 10)
 
         if sum_y <= MAX_SIZE[1] and longest_x <= MAX_SIZE[0]:
             break
@@ -78,8 +78,8 @@ def generate_png(text: str) -> BytesIO:
     img = Image.new("RGBA", image_size)
     img_draw = ImageDraw.Draw(img)
 
-    # Start a bit lower
-    current_y = BORDER_SIZE + 10
+    # Start just a bit lower than the border
+    current_y = BORDER_SIZE + 5
     for line in lines:
         bbox = font.getbbox(line)
         line_width = bbox[2] - bbox[0]
