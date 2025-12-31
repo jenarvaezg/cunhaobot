@@ -1,0 +1,100 @@
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,783 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1927855633/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,784 - services.user_service - user_service - Error getting user photo for 1927855633: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,788 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/2020279264/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,789 - services.user_service - user_service - Error getting user photo for 2020279264: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,825 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/2101539835/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,827 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/2062132356/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,828 - services.user_service - user_service - Error getting user photo for 2062132356: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,878 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/2111904773/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,879 - services.user_service - user_service - Error getting user photo for 2111904773: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,881 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,918 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/5082050349/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,919 - services.user_service - user_service - Error getting user photo for 5082050349: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,921 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getFile "HTTP/1.1 200 OK"
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,931 - httpx - _client - HTTP Request: GET https://api.telegram.org/file/bot726741970%3AAAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/photos/file_325.jpg "HTTP/1.1 200 OK"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/2115267028/photo.png HTTP/1.1" 500 Internal Server Error
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/5082215848/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,958 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,958 - services.user_service - user_service - Error getting user photo for 5082215848: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,986 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/5173330505/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,987 - services.user_service - user_service - Error getting user photo for 5173330505: User not found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,037 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/5324421138/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/5210387683/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,046 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,083 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/5363036043/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/5502254899/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,089 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:18 default[20251231t195232]  ERROR - 2025-12-31 19:56:18,090 - services.user_service - user_service - Error getting user photo for 5502254899: User not found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,120 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/5572404053/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,161 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/5763909020/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  ERROR - 2025-12-31 19:56:18,162 - services.user_service - user_service - Error getting user photo for 5763909020: User not found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,164 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/5638941056/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/5837914168/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,222 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:18 default[20251231t195232]  ERROR - 2025-12-31 19:56:18,223 - services.user_service - user_service - Error getting user photo for 5837914168: User not found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,232 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/5668883796/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  ERROR - 2025-12-31 19:56:18,232 - services.user_service - user_service - Error getting user photo for 5668883796: User not found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,259 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/6018854997/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  ERROR - 2025-12-31 19:56:18,260 - services.user_service - user_service - Error getting user photo for 6018854997: User not found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,296 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/6217142405/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  ERROR - 2025-12-31 19:56:18,297 - services.user_service - user_service - Error getting user photo for 6217142405: User not found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,350 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/7029798969/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  ERROR - 2025-12-31 19:56:18,350 - services.user_service - user_service - Error getting user photo for 7029798969: User not found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,387 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:18 default[20251231t195232]  ERROR - 2025-12-31 19:56:18,388 - services.user_service - user_service - Error getting user photo for 7276853463: User not found
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/7276853463/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/7925421466/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,427 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:18 default[20251231t195232]  ERROR - 2025-12-31 19:56:18,427 - services.user_service - user_service - Error getting user photo for 7925421466: User not found
+2025-12-31 19:56:20 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /metrics HTTP/1.1" 200 OK
+2025-12-31 19:56:54 default[20251231t195232]  "GET / HTTP/1.1" 200
+2025-12-31 19:56:54 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET / HTTP/1.1" 200 OK
+2025-12-31 19:56:57 default[20251231t195232]  "GET /ai/phrase HTTP/1.1" 200
+2025-12-31 19:56:57 default[20251231t195232]  WARNING - 2025-12-31 19:56:57,989 - google_genai._api_client - _api_client - Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+2025-12-31 19:56:58 default[20251231t195232]  INFO - 2025-12-31 19:56:58,388 - google_genai.models - models - AFC is enabled with max remote calls: 10.
+2025-12-31 19:57:00 default[20251231t195232]  INFO - 2025-12-31 19:57:00,744 - httpx - _client - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-12-31 19:57:00 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /ai/phrase HTTP/1.1" 200 OK
+2025-12-31 19:57:30 default[20251231t195232]  "POST /726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA HTTP/1.1" 200
+2025-12-31 19:57:30 default[20251231t195232]  INFO - 2025-12-31 19:57:30,290 - cunhaobot - decorators - {'inline_query': {'chat_type': 'supergroup', 'id': '155976853622183804', 'query': 'probando', 'from': {'first_name': 'jenarvaez', 'id': 36316191, 'language_code': 'es', 'username': 'jenarvaezg'}}, 'update_id': 77809562, 'method': 'handle_inline_query'}
+2025-12-31 19:57:30 default[20251231t195232]  INFO - 2025-12-31 19:57:30,403 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/answerInlineQuery "HTTP/1.1 200 OK"
+2025-12-31 19:57:30 default[20251231t195232]  INFO:     169.254.1.1:0 - "POST /726741970%3AAAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA HTTP/1.1" 200 OK
+2025-12-31 19:57:30 default[20251231t195232]  "POST /726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA HTTP/1.1" 200
+2025-12-31 19:57:30 default[20251231t195232]  INFO - 2025-12-31 19:57:30,733 - cunhaobot - decorators - {'inline_query': {'chat_type': 'supergroup', 'id': '155976853257383600', 'query': 'probando', 'from': {'first_name': 'jenarvaez', 'id': 36316191, 'language_code': 'es', 'username': 'jenarvaezg'}}, 'update_id': 77809563, 'method': 'handle_inline_query'}
+2025-12-31 19:57:30 default[20251231t195232]  INFO - 2025-12-31 19:57:30,771 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/answerInlineQuery "HTTP/1.1 200 OK"
+2025-12-31 19:57:30 default[20251231t195232]  INFO:     169.254.1.1:0 - "POST /726741970%3AAAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA HTTP/1.1" 200 OK
+2025-12-31 19:58:15 default[20251231t195232]  "POST /726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA HTTP/1.1" 200
+2025-12-31 19:58:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "POST /726741970%3AAAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA HTTP/1.1" 200 OK
+2025-12-31 19:58:15 default[20251231t195232]  INFO - 2025-12-31 19:58:15,297 - cunhaobot - decorators - {'message': {'text': 'entiendo', 'chat': {'id': -1001118202400, 'title': "Bookwatch's Bizzare Monastery", 'type': <ChatType.SUPERGROUP>}, 'date': 1767211095, 'message_id': 369442, 'from': {'first_name': 'jenarvaez', 'id': 36316191, 'language_code': 'es', 'username': 'jenarvaezg'}}, 'update_id': 77809564, 'method': 'handle_message'}
+2025-12-31 19:58:15 default[20251231t195232]  INFO - 2025-12-31 19:58:15,297 - tg.handlers.messages.text_message - text_message - Checking message triggers: Private=False, Reply=None, Mention=False, Text='entiendo'
+2025-12-31 19:58:23 default[20251231t195232]  "POST /726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA HTTP/1.1" 200
+2025-12-31 19:58:23 default[20251231t195232]  INFO:     169.254.1.1:0 - "POST /726741970%3AAAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA HTTP/1.1" 200 OK
+2025-12-31 19:58:23 default[20251231t195232]  INFO - 2025-12-31 19:58:23,103 - cunhaobot - decorators - {'message': {'text': 'el prompt me lo hizo la IA', 'chat': {'id': -1001118202400, 'title': "Bookwatch's Bizzare Monastery", 'type': <ChatType.SUPERGROUP>}, 'date': 1767211102, 'message_id': 369443, 'from': {'first_name': 'jenarvaez', 'id': 36316191, 'language_code': 'es', 'username': 'jenarvaezg'}}, 'update_id': 77809565, 'method': 'handle_message'}
+2025-12-31 19:58:23 default[20251231t195232]  INFO - 2025-12-31 19:58:23,103 - tg.handlers.messages.text_message - text_message - Checking message triggers: Private=False, Reply=None, Mention=False, Text='el prompt me lo hizo la ia'
+2025-12-31 19:58:27 default[20251231t195232]  "POST /726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA HTTP/1.1" 200
+2025-12-31 19:58:27 default[20251231t195232]  INFO:     169.254.1.1:0 - "POST /726741970%3AAAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA HTTP/1.1" 200 OK
+2025-12-31 19:58:27 default[20251231t195232]  INFO - 2025-12-31 19:58:27,571 - cunhaobot - decorators - {'message': {'text': 'estoy hasta arriba de vibe ahora mismo', 'chat': {'id': -1001118202400, 'title': "Bookwatch's Bizzare Monastery", 'type': <ChatType.SUPERGROUP>}, 'date': 1767211107, 'message_id': 369444, 'from': {'first_name': 'jenarvaez', 'id': 36316191, 'language_code': 'es', 'username': 'jenarvaezg'}}, 'update_id': 77809566, 'method': 'handle_message'}
+2025-12-31 19:58:27 default[20251231t195232]  INFO - 2025-12-31 19:58:27,571 - tg.handlers.messages.text_message - text_message - Checking message triggers: Private=False, Reply=None, Mention=False, Text='estoy hasta arriba de vibe ahora mismo'
+2025-12-31 19:58:46 default[20251231t195232]  "POST /726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA HTTP/1.1" 200
+2025-12-31 19:58:46 default[20251231t195232]  INFO:     169.254.1.1:0 - "POST /726741970%3AAAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA HTTP/1.1" 200 OK
+2025-12-31 19:58:46 default[20251231t195232]  INFO - 2025-12-31 19:58:46,550 - cunhaobot - decorators - {'message': {'text': 'Ya veo', 'chat': {'id': -1001118202400, 'title': "Bookwatch's Bizzare Monastery", 'type': <ChatType.SUPERGROUP>}, 'date': 1767211125, 'message_id': 369445, 'from': {'first_name': 'Antonio', 'id': 6355276, 'language_code': 'es', 'username': 'Anthyc'}}, 'update_id': 77809567, 'method': 'handle_message'}
+2025-12-31 19:58:46 default[20251231t195232]  INFO - 2025-12-31 19:58:46,550 - tg.handlers.messages.text_message - text_message - Checking message triggers: Private=False, Reply=None, Mention=False, Text='ya veo'
+2025-12-31 19:58:52 default[20251231t195232]  "POST /726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA HTTP/1.1" 200
+2025-12-31 19:58:52 default[20251231t195232]  INFO:     169.254.1.1:0 - "POST /726741970%3AAAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA HTTP/1.1" 200 OK
+2025-12-31 19:58:52 default[20251231t195232]  INFO - 2025-12-31 19:58:52,911 - cunhaobot - decorators - {'message': {'text': 'Welcum', 'chat': {'id': -1001118202400, 'title': "Bookwatch's Bizzare Monastery", 'type': <ChatType.SUPERGROUP>}, 'date': 1767211132, 'message_id': 369446, 'from': {'first_name': 'Antonio', 'id': 6355276, 'language_code': 'es', 'username': 'Anthyc'}}, 'update_id': 77809568, 'method': 'handle_message'}
+2025-12-31 19:58:52 default[20251231t195232]  INFO - 2025-12-31 19:58:52,911 - tg.handlers.messages.text_message - text_message - Checking message triggers: Private=False, Reply=None, Mention=False, Text='welcum'

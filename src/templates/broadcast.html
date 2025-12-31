@@ -90,7 +90,7 @@
         const file = files[0];
         if (file) {
             currentFile = file;
-            
+
             previewImg.classList.add('d-none');
             previewVideo.classList.add('d-none');
             previewVideo.src = '';
@@ -152,7 +152,7 @@
             status.classList.remove('d-none');
             sendBtn.innerHTML = '<i class="bi bi-megaphone-fill me-2"></i>REPARTIR SABIDURÍA';
             sendBtn.disabled = false;
-            
+
             // Clear on success
             if (!data.includes('Error')) {
                 messageElem.value = '';

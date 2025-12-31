@@ -1,0 +1,500 @@
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,083 - services.user_service - user_service - Error getting user photo for 467659737: User not found
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/467659737/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,085 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,085 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,086 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,087 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/469584145/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,087 - services.user_service - user_service - Error getting user photo for 469584145: User not found
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/478822021/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,089 - services.user_service - user_service - Error getting user photo for 478822021: User not found
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/469819844/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,090 - services.user_service - user_service - Error getting user photo for 469819844: User not found
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/1128756332/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/1153702499/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/1191722852/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/1204344081/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,137 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,138 - services.user_service - user_service - Error getting user photo for 481857170: User not found
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/481857170/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,184 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,185 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,186 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/472159108/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,186 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getFile "HTTP/1.1 200 OK"
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,187 - services.user_service - user_service - Error getting user photo for 472159108: User not found
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/480513354/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,188 - services.user_service - user_service - Error getting user photo for 480513354: User not found
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/482051354/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,189 - services.user_service - user_service - Error getting user photo for 482051354: User not found
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,207 - httpx - _client - HTTP Request: GET https://api.telegram.org/file/bot726741970%3AAAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/photos/file_315.jpg "HTTP/1.1 200 OK"
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/1211166567/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/1213673477/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/1244982038/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/1290257154/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/475119571/photo.png HTTP/1.1" 500 Internal Server Error
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,284 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,285 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,286 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,286 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/484799090/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,287 - services.user_service - user_service - Error getting user photo for 484799090: User not found
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/482654070/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,289 - services.user_service - user_service - Error getting user photo for 482654070: User not found
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/486183349/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/1290530009/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/1306810407/photo.png HTTP/1.1" 500
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,326 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/487921801/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,327 - services.user_service - user_service - Error getting user photo for 487921801: User not found
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/1354084045/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/1363097847/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/1400771621/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,333 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getFile "HTTP/1.1 200 OK"
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,384 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,385 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/492803170/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,386 - services.user_service - user_service - Error getting user photo for 492803170: User not found
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/495693672/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,387 - services.user_service - user_service - Error getting user photo for 495693672: User not found
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,394 - httpx - _client - HTTP Request: GET https://api.telegram.org/file/bot726741970%3AAAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/photos/file_316.jpg "HTTP/1.1 200 OK"
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/482865758/photo.png HTTP/1.1" 500 Internal Server Error
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,417 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,420 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/1410457428/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/1474567639/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/1523815830/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,420 - services.user_service - user_service - Error getting user photo for 505581959: User not found
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/505581959/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,484 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/511746073/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,484 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,485 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getFile "HTTP/1.1 200 OK"
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,486 - services.user_service - user_service - Error getting user photo for 511746073: User not found
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/508875459/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,488 - services.user_service - user_service - Error getting user photo for 508875459: User not found
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,502 - httpx - _client - HTTP Request: GET https://api.telegram.org/file/bot726741970%3AAAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/photos/file_317.jpg "HTTP/1.1 200 OK"
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/503314567/photo.png HTTP/1.1" 500 Internal Server Error
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/1639892806/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/1663142231/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/1666028489/photo.png HTTP/1.1" 500
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/1679780807/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,583 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,584 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,585 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/521767223/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,586 - services.user_service - user_service - Error getting user photo for 521767223: User not found
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/533268946/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,587 - services.user_service - user_service - Error getting user photo for 533268946: User not found
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/515113181/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,589 - services.user_service - user_service - Error getting user photo for 515113181: User not found
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,618 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/536273950/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/1812108100/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,622 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/548757113/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,623 - services.user_service - user_service - Error getting user photo for 548757113: User not found
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/1841711509/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/1850153907/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/1927855633/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/2020279264/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,684 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,684 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/556010006/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/550193190/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,687 - services.user_service - user_service - Error getting user photo for 550193190: User not found
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/2062132356/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/2101539835/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,725 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/552210308/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,726 - services.user_service - user_service - Error getting user photo for 552210308: User not found
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,729 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/588768311/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,730 - services.user_service - user_service - Error getting user photo for 588768311: User not found
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,732 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,733 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/613338504/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/568048383/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,735 - services.user_service - user_service - Error getting user photo for 568048383: User not found
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/2111904773/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/2115267028/photo.png HTTP/1.1" 500
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/5082050349/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/5082215848/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,796 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/635295987/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,797 - services.user_service - user_service - Error getting user photo for 635295987: User not found
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/5173330505/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,835 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/654303568/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,836 - services.user_service - user_service - Error getting user photo for 654303568: User not found
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,845 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/684450012/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,845 - services.user_service - user_service - Error getting user photo for 684450012: User not found
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/5210387683/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/5324421138/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,883 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,884 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/687105971/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,886 - services.user_service - user_service - Error getting user photo for 687105971: User not found
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,907 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getFile "HTTP/1.1 200 OK"
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,921 - httpx - _client - HTTP Request: GET https://api.telegram.org/file/bot726741970%3AAAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/photos/file_318.jpg "HTTP/1.1 200 OK"
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/659538124/photo.png HTTP/1.1" 500 Internal Server Error
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,924 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/686834861/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/5363036043/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,924 - services.user_service - user_service - Error getting user photo for 686834861: User not found
+2025-12-31 19:56:14 default[20251231t195232]  INFO - 2025-12-31 19:56:14,926 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:14 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/695735020/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:14 default[20251231t195232]  ERROR - 2025-12-31 19:56:14,926 - services.user_service - user_service - Error getting user photo for 695735020: User not found
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/5502254899/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/5572404053/photo.png HTTP/1.1" 404
+2025-12-31 19:56:14 default[20251231t195232]  "GET /user/5638941056/photo.png HTTP/1.1" 404
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,021 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/709539256/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,022 - services.user_service - user_service - Error getting user photo for 709539256: User not found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,023 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/708339976/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,024 - services.user_service - user_service - Error getting user photo for 708339976: User not found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,048 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/698512863/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,049 - services.user_service - user_service - Error getting user photo for 698512863: User not found
+2025-12-31 19:56:15 default[20251231t195232]  "GET /user/5763909020/photo.png HTTP/1.1" 404
+2025-12-31 19:56:15 default[20251231t195232]  "GET /user/5668883796/photo.png HTTP/1.1" 404
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,084 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,084 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,085 - services.user_service - user_service - Error getting user photo for 719735930: User not found
+2025-12-31 19:56:15 default[20251231t195232]  "GET /user/5837914168/photo.png HTTP/1.1" 404
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/719735930/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/719800851/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,087 - services.user_service - user_service - Error getting user photo for 719800851: User not found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,120 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/729507563/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  "GET /user/6018854997/photo.png HTTP/1.1" 404
+2025-12-31 19:56:15 default[20251231t195232]  "GET /user/6217142405/photo.png HTTP/1.1" 404
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,138 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/734478696/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,139 - services.user_service - user_service - Error getting user photo for 734478696: User not found
+2025-12-31 19:56:15 default[20251231t195232]  "GET /user/7029798969/photo.png HTTP/1.1" 404
+2025-12-31 19:56:15 default[20251231t195232]  "GET /user/7276853463/photo.png HTTP/1.1" 404
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/731406938/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,141 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,142 - services.user_service - user_service - Error getting user photo for 731406938: User not found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,184 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,216 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getFile "HTTP/1.1 200 OK"
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,219 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  "GET /user/7925421466/photo.png HTTP/1.1" 404
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/747982715/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,220 - services.user_service - user_service - Error getting user photo for 747982715: User not found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,221 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/742651766/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,222 - services.user_service - user_service - Error getting user photo for 742651766: User not found
+2025-12-31 19:56:15 default[20251231t195232]  "GET /metrics HTTP/1.1" 200
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,284 - httpx - _client - HTTP Request: GET https://api.telegram.org/file/bot726741970%3AAAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/photos/file_319.jpg "HTTP/1.1 200 OK"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/735333100/photo.png HTTP/1.1" 500 Internal Server Error
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,314 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/751725238/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,315 - services.user_service - user_service - Error getting user photo for 751725238: User not found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,317 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/748682990/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,317 - services.user_service - user_service - Error getting user photo for 748682990: User not found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,364 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/774356310/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,364 - services.user_service - user_service - Error getting user photo for 774356310: User not found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,368 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/773774637/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,369 - services.user_service - user_service - Error getting user photo for 773774637: User not found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,401 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/775224684/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,402 - services.user_service - user_service - Error getting user photo for 775224684: User not found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,417 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/776421419/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,418 - services.user_service - user_service - Error getting user photo for 776421419: User not found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,434 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/777224145/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,435 - services.user_service - user_service - Error getting user photo for 777224145: User not found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,459 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,483 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/782399971/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,484 - services.user_service - user_service - Error getting user photo for 782399971: User not found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,490 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getFile "HTTP/1.1 200 OK"
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,500 - httpx - _client - HTTP Request: GET https://api.telegram.org/file/bot726741970%3AAAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/photos/file_320.jpg "HTTP/1.1 200 OK"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/779856495/photo.png HTTP/1.1" 500 Internal Server Error
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,528 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/783402282/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,537 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,538 - services.user_service - user_service - Error getting user photo for 795634336: User not found
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/795634336/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,584 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/799638117/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,585 - services.user_service - user_service - Error getting user photo for 799638117: User not found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,621 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/803440396/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,622 - services.user_service - user_service - Error getting user photo for 803440396: User not found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,634 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/813585329/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,635 - services.user_service - user_service - Error getting user photo for 813585329: User not found
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/813955299/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,658 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,658 - services.user_service - user_service - Error getting user photo for 813955299: User not found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,684 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/816538512/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,685 - services.user_service - user_service - Error getting user photo for 816538512: User not found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,722 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,723 - services.user_service - user_service - Error getting user photo for 831644932: User not found
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/831644932/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,725 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,755 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getFile "HTTP/1.1 200 OK"
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,766 - httpx - _client - HTTP Request: GET https://api.telegram.org/file/bot726741970%3AAAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/photos/file_321.jpg "HTTP/1.1 200 OK"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/816936759/photo.png HTTP/1.1" 500 Internal Server Error
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,782 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/834880649/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,784 - services.user_service - user_service - Error getting user photo for 834880649: User not found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,820 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/835581877/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,866 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/841428051/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,867 - services.user_service - user_service - Error getting user photo for 841428051: User not found
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/836948739/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,906 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,907 - services.user_service - user_service - Error getting user photo for 836948739: User not found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,938 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/855814239/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,939 - services.user_service - user_service - Error getting user photo for 855814239: User not found
+2025-12-31 19:56:15 default[20251231t195232]  INFO - 2025-12-31 19:56:15,972 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/862683222/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:15 default[20251231t195232]  ERROR - 2025-12-31 19:56:15,973 - services.user_service - user_service - Error getting user photo for 862683222: User not found
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,035 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:16 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/870740590/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:16 default[20251231t195232]  ERROR - 2025-12-31 19:56:16,036 - services.user_service - user_service - Error getting user photo for 870740590: User not found
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,076 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:16 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/883000983/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:16 default[20251231t195232]  ERROR - 2025-12-31 19:56:16,077 - services.user_service - user_service - Error getting user photo for 883000983: User not found
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,116 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:16 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/890223309/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:16 default[20251231t195232]  ERROR - 2025-12-31 19:56:16,117 - services.user_service - user_service - Error getting user photo for 890223309: User not found
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,150 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:16 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/893718686/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:16 default[20251231t195232]  ERROR - 2025-12-31 19:56:16,151 - services.user_service - user_service - Error getting user photo for 893718686: User not found
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,190 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:16 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/894186738/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:16 default[20251231t195232]  ERROR - 2025-12-31 19:56:16,191 - services.user_service - user_service - Error getting user photo for 894186738: User not found
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,233 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:16 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/894713284/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:16 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/895478718/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,272 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:16 default[20251231t195232]  ERROR - 2025-12-31 19:56:16,273 - services.user_service - user_service - Error getting user photo for 895478718: User not found
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,318 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:16 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/902300575/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,357 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:16 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/920623416/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:16 default[20251231t195232]  ERROR - 2025-12-31 19:56:16,358 - services.user_service - user_service - Error getting user photo for 920623416: User not found
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,387 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:16 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/940000761/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:16 default[20251231t195232]  ERROR - 2025-12-31 19:56:16,388 - services.user_service - user_service - Error getting user photo for 940000761: User not found
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,426 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:16 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/956633272/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:16 default[20251231t195232]  ERROR - 2025-12-31 19:56:16,427 - services.user_service - user_service - Error getting user photo for 956633272: User not found
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,461 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:16 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/967772617/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:16 default[20251231t195232]  ERROR - 2025-12-31 19:56:16,462 - services.user_service - user_service - Error getting user photo for 967772617: User not found
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,501 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:16 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/974459360/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:16 default[20251231t195232]  ERROR - 2025-12-31 19:56:16,502 - services.user_service - user_service - Error getting user photo for 974459360: User not found
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,539 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:16 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/994774869/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,580 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:16 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1000840773/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:16 default[20251231t195232]  ERROR - 2025-12-31 19:56:16,581 - services.user_service - user_service - Error getting user photo for 1000840773: User not found
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,617 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:16 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1004555523/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:16 default[20251231t195232]  ERROR - 2025-12-31 19:56:16,618 - services.user_service - user_service - Error getting user photo for 1004555523: User not found
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,654 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:16 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1009929898/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,686 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:16 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1015120973/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,731 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:16 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1024714209/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:16 default[20251231t195232]  ERROR - 2025-12-31 19:56:16,732 - services.user_service - user_service - Error getting user photo for 1024714209: User not found
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,781 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,818 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getFile "HTTP/1.1 200 OK"
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,828 - httpx - _client - HTTP Request: GET https://api.telegram.org/file/bot726741970%3AAAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/photos/file_322.jpg "HTTP/1.1 200 OK"
+2025-12-31 19:56:16 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1029311811/photo.png HTTP/1.1" 500 Internal Server Error
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,868 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:16 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1046729095/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,908 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:16 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1062840495/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,945 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:16 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1077125499/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:16 default[20251231t195232]  ERROR - 2025-12-31 19:56:16,946 - services.user_service - user_service - Error getting user photo for 1077125499: User not found
+2025-12-31 19:56:16 default[20251231t195232]  INFO - 2025-12-31 19:56:16,978 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:16 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1079025956/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:16 default[20251231t195232]  ERROR - 2025-12-31 19:56:16,979 - services.user_service - user_service - Error getting user photo for 1079025956: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,024 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1085142439/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,025 - services.user_service - user_service - Error getting user photo for 1085142439: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,069 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,070 - services.user_service - user_service - Error getting user photo for 1093203821: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1093203821/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1127072332/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,120 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,121 - services.user_service - user_service - Error getting user photo for 1127072332: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,153 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1128756332/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,154 - services.user_service - user_service - Error getting user photo for 1128756332: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,188 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1153702499/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,189 - services.user_service - user_service - Error getting user photo for 1153702499: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,242 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1191722852/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,243 - services.user_service - user_service - Error getting user photo for 1191722852: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,280 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1211166567/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,281 - services.user_service - user_service - Error getting user photo for 1211166567: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,283 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1204344081/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,284 - services.user_service - user_service - Error getting user photo for 1204344081: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,321 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1213673477/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,322 - services.user_service - user_service - Error getting user photo for 1213673477: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,324 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1244982038/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,356 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,357 - services.user_service - user_service - Error getting user photo for 1290530009: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1290530009/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,359 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1290257154/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,359 - services.user_service - user_service - Error getting user photo for 1290257154: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,405 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,415 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1354084045/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,426 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getFile "HTTP/1.1 200 OK"
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,438 - httpx - _client - HTTP Request: GET https://api.telegram.org/file/bot726741970%3AAAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/photos/file_323.jpg "HTTP/1.1 200 OK"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1306810407/photo.png HTTP/1.1" 500 Internal Server Error
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,456 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1363097847/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,457 - services.user_service - user_service - Error getting user photo for 1363097847: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,485 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1400771621/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,485 - services.user_service - user_service - Error getting user photo for 1400771621: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,489 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1410457428/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,490 - services.user_service - user_service - Error getting user photo for 1410457428: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,521 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1474567639/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,528 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1523815830/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,529 - services.user_service - user_service - Error getting user photo for 1523815830: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,583 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1639892806/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,584 - services.user_service - user_service - Error getting user photo for 1639892806: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,585 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1663142231/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,586 - services.user_service - user_service - Error getting user photo for 1663142231: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,617 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,618 - services.user_service - user_service - Error getting user photo for 1679780807: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1679780807/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,625 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1812108100/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,658 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,658 - services.user_service - user_service - Error getting user photo for 1812108100: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,684 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getFile "HTTP/1.1 200 OK"
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,695 - httpx - _client - HTTP Request: GET https://api.telegram.org/file/bot726741970%3AAAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/photos/file_324.jpg "HTTP/1.1 200 OK"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1666028489/photo.png HTTP/1.1" 500 Internal Server Error
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,717 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1841711509/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,718 - services.user_service - user_service - Error getting user photo for 1841711509: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,728 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1850153907/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,729 - services.user_service - user_service - Error getting user photo for 1850153907: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,783 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/1927855633/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,784 - services.user_service - user_service - Error getting user photo for 1927855633: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,788 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/2020279264/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,789 - services.user_service - user_service - Error getting user photo for 2020279264: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,825 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/2101539835/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,827 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/2062132356/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,828 - services.user_service - user_service - Error getting user photo for 2062132356: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,878 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/2111904773/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,879 - services.user_service - user_service - Error getting user photo for 2111904773: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,881 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,918 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/5082050349/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,919 - services.user_service - user_service - Error getting user photo for 5082050349: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,921 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getFile "HTTP/1.1 200 OK"
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,931 - httpx - _client - HTTP Request: GET https://api.telegram.org/file/bot726741970%3AAAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/photos/file_325.jpg "HTTP/1.1 200 OK"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/2115267028/photo.png HTTP/1.1" 500 Internal Server Error
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/5082215848/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,958 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,958 - services.user_service - user_service - Error getting user photo for 5082215848: User not found
+2025-12-31 19:56:17 default[20251231t195232]  INFO - 2025-12-31 19:56:17,986 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:17 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/5173330505/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:17 default[20251231t195232]  ERROR - 2025-12-31 19:56:17,987 - services.user_service - user_service - Error getting user photo for 5173330505: User not found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,037 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/5324421138/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/5210387683/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,046 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,083 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/5363036043/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/5502254899/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,089 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:18 default[20251231t195232]  ERROR - 2025-12-31 19:56:18,090 - services.user_service - user_service - Error getting user photo for 5502254899: User not found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,120 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/5572404053/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,161 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/5763909020/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  ERROR - 2025-12-31 19:56:18,162 - services.user_service - user_service - Error getting user photo for 5763909020: User not found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,164 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 200 OK"
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/5638941056/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/5837914168/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,222 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:18 default[20251231t195232]  ERROR - 2025-12-31 19:56:18,223 - services.user_service - user_service - Error getting user photo for 5837914168: User not found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,232 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/5668883796/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  ERROR - 2025-12-31 19:56:18,232 - services.user_service - user_service - Error getting user photo for 5668883796: User not found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,259 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/6018854997/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  ERROR - 2025-12-31 19:56:18,260 - services.user_service - user_service - Error getting user photo for 6018854997: User not found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,296 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/6217142405/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  ERROR - 2025-12-31 19:56:18,297 - services.user_service - user_service - Error getting user photo for 6217142405: User not found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,350 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/7029798969/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  ERROR - 2025-12-31 19:56:18,350 - services.user_service - user_service - Error getting user photo for 7029798969: User not found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,387 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:18 default[20251231t195232]  ERROR - 2025-12-31 19:56:18,388 - services.user_service - user_service - Error getting user photo for 7276853463: User not found
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/7276853463/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /user/7925421466/photo.png HTTP/1.1" 404 Not Found
+2025-12-31 19:56:18 default[20251231t195232]  INFO - 2025-12-31 19:56:18,427 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/getUserProfilePhotos "HTTP/1.1 400 Bad Request"
+2025-12-31 19:56:18 default[20251231t195232]  ERROR - 2025-12-31 19:56:18,427 - services.user_service - user_service - Error getting user photo for 7925421466: User not found
+2025-12-31 19:56:20 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /metrics HTTP/1.1" 200 OK
+2025-12-31 19:56:54 default[20251231t195232]  "GET / HTTP/1.1" 200
+2025-12-31 19:56:54 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET / HTTP/1.1" 200 OK
+2025-12-31 19:56:57 default[20251231t195232]  "GET /ai/phrase HTTP/1.1" 200
+2025-12-31 19:56:57 default[20251231t195232]  WARNING - 2025-12-31 19:56:57,989 - google_genai._api_client - _api_client - Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+2025-12-31 19:56:58 default[20251231t195232]  INFO - 2025-12-31 19:56:58,388 - google_genai.models - models - AFC is enabled with max remote calls: 10.
+2025-12-31 19:57:00 default[20251231t195232]  INFO - 2025-12-31 19:57:00,744 - httpx - _client - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2025-12-31 19:57:00 default[20251231t195232]  INFO:     169.254.1.1:0 - "GET /ai/phrase HTTP/1.1" 200 OK
+2025-12-31 19:57:30 default[20251231t195232]  "POST /726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA HTTP/1.1" 200
+2025-12-31 19:57:30 default[20251231t195232]  INFO - 2025-12-31 19:57:30,290 - cunhaobot - decorators - {'inline_query': {'chat_type': 'supergroup', 'id': '155976853622183804', 'query': 'probando', 'from': {'first_name': 'jenarvaez', 'id': 36316191, 'language_code': 'es', 'username': 'jenarvaezg'}}, 'update_id': 77809562, 'method': 'handle_inline_query'}
+2025-12-31 19:57:30 default[20251231t195232]  INFO - 2025-12-31 19:57:30,403 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/answerInlineQuery "HTTP/1.1 200 OK"
+2025-12-31 19:57:30 default[20251231t195232]  INFO:     169.254.1.1:0 - "POST /726741970%3AAAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA HTTP/1.1" 200 OK
+2025-12-31 19:57:30 default[20251231t195232]  "POST /726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA HTTP/1.1" 200
+2025-12-31 19:57:30 default[20251231t195232]  INFO - 2025-12-31 19:57:30,733 - cunhaobot - decorators - {'inline_query': {'chat_type': 'supergroup', 'id': '155976853257383600', 'query': 'probando', 'from': {'first_name': 'jenarvaez', 'id': 36316191, 'language_code': 'es', 'username': 'jenarvaezg'}}, 'update_id': 77809563, 'method': 'handle_inline_query'}
+2025-12-31 19:57:30 default[20251231t195232]  INFO - 2025-12-31 19:57:30,771 - httpx - _client - HTTP Request: POST https://api.telegram.org/bot726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA/answerInlineQuery "HTTP/1.1 200 OK"
+2025-12-31 19:57:30 default[20251231t195232]  INFO:     169.254.1.1:0 - "POST /726741970%3AAAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA HTTP/1.1" 200 OK
+2025-12-31 19:58:15 default[20251231t195232]  "POST /726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA HTTP/1.1" 200
+2025-12-31 19:58:15 default[20251231t195232]  INFO:     169.254.1.1:0 - "POST /726741970%3AAAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA HTTP/1.1" 200 OK
+2025-12-31 19:58:15 default[20251231t195232]  INFO - 2025-12-31 19:58:15,297 - cunhaobot - decorators - {'message': {'text': 'entiendo', 'chat': {'id': -1001118202400, 'title': "Bookwatch's Bizzare Monastery", 'type': <ChatType.SUPERGROUP>}, 'date': 1767211095, 'message_id': 369442, 'from': {'first_name': 'jenarvaez', 'id': 36316191, 'language_code': 'es', 'username': 'jenarvaezg'}}, 'update_id': 77809564, 'method': 'handle_message'}
+2025-12-31 19:58:15 default[20251231t195232]  INFO - 2025-12-31 19:58:15,297 - tg.handlers.messages.text_message - text_message - Checking message triggers: Private=False, Reply=None, Mention=False, Text='entiendo'
+2025-12-31 19:58:23 default[20251231t195232]  "POST /726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA HTTP/1.1" 200
+2025-12-31 19:58:23 default[20251231t195232]  INFO:     169.254.1.1:0 - "POST /726741970%3AAAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA HTTP/1.1" 200 OK
+2025-12-31 19:58:23 default[20251231t195232]  INFO - 2025-12-31 19:58:23,103 - cunhaobot - decorators - {'message': {'text': 'el prompt me lo hizo la IA', 'chat': {'id': -1001118202400, 'title': "Bookwatch's Bizzare Monastery", 'type': <ChatType.SUPERGROUP>}, 'date': 1767211102, 'message_id': 369443, 'from': {'first_name': 'jenarvaez', 'id': 36316191, 'language_code': 'es', 'username': 'jenarvaezg'}}, 'update_id': 77809565, 'method': 'handle_message'}
+2025-12-31 19:58:23 default[20251231t195232]  INFO - 2025-12-31 19:58:23,103 - tg.handlers.messages.text_message - text_message - Checking message triggers: Private=False, Reply=None, Mention=False, Text='el prompt me lo hizo la ia'
+2025-12-31 19:58:27 default[20251231t195232]  "POST /726741970:AAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA HTTP/1.1" 200
+2025-12-31 19:58:27 default[20251231t195232]  INFO:     169.254.1.1:0 - "POST /726741970%3AAAGjRx5pHsfikW8hjfKvq5fOQQJCOBpN-iA HTTP/1.1" 200 OK
+2025-12-31 19:58:27 default[20251231t195232]  INFO - 2025-12-31 19:58:27,571 - cunhaobot - decorators - {'message': {'text': 'estoy hasta arriba de vibe ahora mismo', 'chat': {'id': -1001118202400, 'title': "Bookwatch's Bizzare Monastery", 'type': <ChatType.SUPERGROUP>}, 'date': 1767211107, 'message_id': 369444, 'from': {'first_name': 'jenarvaez', 'id': 36316191, 'language_code': 'es', 'username': 'jenarvaezg'}}, 'update_id': 77809566, 'method': 'handle_message'}
+2025-12-31 19:58:27 default[20251231t195232]  INFO - 2025-12-31 19:58:27,571 - tg.handlers.messages.text_message - text_message - Checking message triggers: Private=False, Reply=None, Mention=False, Text='estoy hasta arriba de vibe ahora mismo'
