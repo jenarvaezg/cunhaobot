@@ -33,142 +33,219 @@
                 </div>
             </div>
 
-            <div id="status" class="alert d-none mb-4"></div>
+                        <div id="status" class="alert d-none mb-4"></div>
 
-            <div class="d-grid">
-                <button id="send-btn" class="btn btn-gold btn-lg oswald">
-                    <i class="bi bi-megaphone-fill me-2"></i>REPARTIR SABIDURÍA
-                </button>
+                        <!-- Progress Bar Section -->
+                        <div id="progress-container" class="d-none mb-4 animate__animated animate__fadeIn">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span id="progress-status" class="text-warning fw-bold small">Iniciando...</span>
+                                <span id="progress-percent" class="text-white small">0%</span>
+                            </div>
+                            <div class="progress bg-dark border border-secondary" style="height: 10px;">
+                                <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-warning"
+                                     role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <div class="mt-2 text-center">
+                                <small class="text-muted">Procesando a: <span id="current-user" class="text-white">...</span></small>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button id="send-btn" class="btn btn-gold btn-lg oswald">
+                                <i class="bi bi-megaphone-fill me-2"></i>REPARTIR SABIDURÍA
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
 
-{% block scripts %}
-<script>
-    const dropArea = document.getElementById('drop-area');
-    const fileElem = document.getElementById('fileElem');
-    const messageElem = document.getElementById('message');
-    const previewContainer = document.getElementById('preview-container');
-    const previewImg = document.getElementById('preview-img');
-    const previewVideo = document.getElementById('preview-video');
-    const removeFileBtn = document.getElementById('remove-file');
-    const sendBtn = document.getElementById('send-btn');
-    const status = document.getElementById('status');
+            <!-- SSE Connection Target (Hidden) -->
+            <div id="sse-handler" hx-ext="sse" class="d-none"></div>
+            {% endblock %}
 
-    let currentFile = null;
+            {% block scripts %}
+            <script>
+                const dropArea = document.getElementById('drop-area');
+                const fileElem = document.getElementById('fileElem');
+                const messageElem = document.getElementById('message');
+                const previewContainer = document.getElementById('preview-container');
+                const previewImg = document.getElementById('preview-img');
+                const previewVideo = document.getElementById('preview-video');
+                const removeFileBtn = document.getElementById('remove-file');
+                const sendBtn = document.getElementById('send-btn');
+                const status = document.getElementById('status');
 
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropArea.addEventListener(eventName, preventDefaults, false);
-    });
+                const progressContainer = document.getElementById('progress-container');
+                const progressBar = document.getElementById('progress-bar');
+                const progressStatus = document.getElementById('progress-status');
+                const progressPercent = document.getElementById('progress-percent');
+                const currentUser = document.getElementById('current-user');
+                const sseHandler = document.getElementById('sse-handler');
 
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
+                let currentFile = null;
 
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropArea.addEventListener(eventName, () => dropArea.classList.add('bg-warning-subtle'), false);
-    });
+                // ... (Keep drag & drop logic same)
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, preventDefaults, false);
+                });
 
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropArea.addEventListener(eventName, () => dropArea.classList.remove('bg-warning-subtle'), false);
-    });
+                function preventDefaults(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
 
-    dropArea.addEventListener('drop', handleDrop, false);
-    dropArea.addEventListener('click', () => fileElem.click(), false);
-    fileElem.addEventListener('change', (e) => handleFiles(e.target.files), false);
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, () => dropArea.classList.add('bg-warning-subtle'), false);
+                });
 
-    function handleDrop(e) {
-        const dt = e.dataTransfer;
-        const files = dt.files;
-        handleFiles(files);
-    }
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, () => dropArea.classList.remove('bg-warning-subtle'), false);
+                });
 
-    function handleFiles(files) {
-        const file = files[0];
-        if (file) {
-            currentFile = file;
+                dropArea.addEventListener('drop', handleDrop, false);
+                dropArea.addEventListener('click', () => fileElem.click(), false);
+                fileElem.addEventListener('change', (e) => handleFiles(e.target.files), false);
 
-            previewImg.classList.add('d-none');
-            previewVideo.classList.add('d-none');
-            previewVideo.src = '';
+                function handleDrop(e) {
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+                    handleFiles(files);
+                }
 
-            if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    previewImg.src = e.target.result;
-                    previewImg.classList.remove('d-none');
-                    previewContainer.classList.remove('d-none');
+                function handleFiles(files) {
+                    const file = files[0];
+                    if (file) {
+                        currentFile = file;
+
+                        previewImg.classList.add('d-none');
+                        previewVideo.classList.add('d-none');
+                        previewVideo.src = '';
+
+                        if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                previewImg.src = e.target.result;
+                                previewImg.classList.remove('d-none');
+                                previewContainer.classList.remove('d-none');
+                                status.classList.add('d-none');
+                            };
+                            reader.readAsDataURL(file);
+                        } else if (file.type.startsWith('video/')) {
+                            const url = URL.createObjectURL(file);
+                            previewVideo.src = url;
+                            previewVideo.classList.remove('d-none');
+                            previewContainer.classList.remove('d-none');
+                            status.classList.add('d-none');
+                        }
+                    }
+                }
+
+                removeFileBtn.addEventListener('click', () => {
+                    currentFile = null;
+                    fileElem.value = '';
+                    previewImg.src = '';
+                    previewVideo.src = '';
+                    previewContainer.classList.add('d-none');
+                });
+
+                sendBtn.addEventListener('click', () => {
+                    const message = messageElem.value.trim();
+
+                    // If there's a file, we use the traditional POST (it won't have real-time progress for now but works)
+                    // If it's ONLY text, we'll use the new SSE flow for real-time progress
+                    if (currentFile) {
+                        sendTraditionalBroadcast(message);
+                    } else if (message) {
+                        startRealTimeBroadcast(message);
+                    } else {
+                        status.textContent = 'Escribe algo o sube un archivo, alma de cántaro.';
+                        status.className = 'alert alert-warning mb-4';
+                        status.classList.remove('d-none');
+                    }
+                });
+
+                function sendTraditionalBroadcast(message) {
+                    const formData = new FormData();
+                    formData.append('data', currentFile);
+                    formData.append('message', message);
+
+                    sendBtn.disabled = true;
+                    sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>ENVIANDO ARCHIVO...';
                     status.classList.add('d-none');
-                };
-                reader.readAsDataURL(file);
-            } else if (file.type.startsWith('video/')) {
-                const url = URL.createObjectURL(file);
-                previewVideo.src = url;
-                previewVideo.classList.remove('d-none');
-                previewContainer.classList.remove('d-none');
-                status.classList.add('d-none');
-            }
-        }
-    }
 
-    removeFileBtn.addEventListener('click', () => {
-        currentFile = null;
-        fileElem.value = '';
-        previewImg.src = '';
-        previewVideo.src = '';
-        previewContainer.classList.add('d-none');
-    });
+                    fetch('/admin/broadcast', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.text())
+                    .then(data => {
+                        status.textContent = data;
+                        status.className = 'alert alert-success mb-4';
+                        status.classList.remove('d-none');
+                        sendBtn.innerHTML = '<i class="bi bi-megaphone-fill me-2"></i>REPARTIR SABIDURÍA';
+                        sendBtn.disabled = false;
 
-    sendBtn.addEventListener('click', () => {
-        const message = messageElem.value.trim();
-        if (!currentFile && !message) {
-            status.textContent = 'Escribe algo o sube un archivo, alma de cántaro.';
-            status.className = 'alert alert-warning mb-4';
-            status.classList.remove('d-none');
-            return;
-        }
+                        messageElem.value = '';
+                        removeFileBtn.click();
+                    })
+                    .catch(error => {
+                        status.textContent = 'Error: ' + error;
+                        status.className = 'alert alert-danger mb-4';
+                        status.classList.remove('d-none');
+                        sendBtn.innerHTML = '<i class="bi bi-megaphone-fill me-2"></i>REPARTIR SABIDURÍA';
+                        sendBtn.disabled = false;
+                    });
+                }
 
-        const formData = new FormData();
-        if (currentFile) {
-            formData.append('data', currentFile);
-        }
-        formData.append('message', message);
+                function startRealTimeBroadcast(message) {
+                    sendBtn.disabled = true;
+                    sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>PROCESANDO...';
+                    status.classList.add('d-none');
+                    progressContainer.classList.remove('d-none');
 
-        sendBtn.disabled = true;
-        sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>ENVIANDO...';
-        status.classList.add('d-none');
+                    // Reset progress bar
+                    progressBar.style.width = '0%';
+                    progressPercent.textContent = '0%';
+                    progressStatus.textContent = 'Iniciando conexión...';
+                    currentUser.textContent = '...';
 
-        fetch('/admin/broadcast', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.text())
-        .then(data => {
-            status.textContent = data;
-            status.className = 'alert alert-success mb-4';
-            status.classList.remove('d-none');
-            sendBtn.innerHTML = '<i class="bi bi-megaphone-fill me-2"></i>REPARTIR SABIDURÍA';
-            sendBtn.disabled = false;
+                    // Add SSE listener
+                    const sseUrl = `/admin/broadcast/status?message=${encodeURIComponent(message)}`;
 
-            // Clear on success
-            if (!data.includes('Error')) {
-                messageElem.value = '';
-                removeFileBtn.click();
-            }
-        })
-        .catch(error => {
-            status.textContent = 'Error: ' + error;
-            status.className = 'alert alert-danger mb-4';
-            status.classList.remove('d-none');
-            sendBtn.innerHTML = '<i class="bi bi-megaphone-fill me-2"></i>REPARTIR SABIDURÍA';
-            sendBtn.disabled = false;
-        });
-    });
-</script>
+                    // Use standard EventSource for easier control than HTMX SSE extension for this specific case
+                    const source = new EventSource(sseUrl);
 
+                    source.addEventListener('progress', (event) => {
+                        const data = JSON.parse(event.data);
+
+                        progressBar.style.width = data.progress + '%';
+                        progressPercent.textContent = data.progress + '%';
+                        progressStatus.textContent = data.status;
+                        currentUser.textContent = data.current_user;
+
+                        if (data.status.includes('Completado')) {
+                            source.close();
+                            sendBtn.disabled = false;
+                            sendBtn.innerHTML = '<i class="bi bi-megaphone-fill me-2"></i>REPARTIR SABIDURÍA';
+                            messageElem.value = '';
+
+                            status.textContent = data.status;
+                            status.className = 'alert alert-success mb-4';
+                            status.classList.remove('d-none');
+                        }
+                    });
+
+                    source.onerror = (err) => {
+                        console.error("SSE Error:", err);
+                        source.close();
+                        sendBtn.disabled = false;
+                        sendBtn.innerHTML = '<i class="bi bi-megaphone-fill me-2"></i>REPARTIR SABIDURÍA';
+                        status.textContent = 'Se perdió la conexión con el servidor, fiera.';
+                        status.className = 'alert alert-danger mb-4';
+                        status.classList.remove('d-none');
+                    };
+                }
+            </script>
 <style>
     .bg-warning-subtle {
         background: rgba(255, 193, 7, 0.2) !important;

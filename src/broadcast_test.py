@@ -171,3 +171,29 @@ async def test_broadcast_send_failure_updates_gdpr(client):
         saved_user = mock_save.call_args[0][0]
         assert saved_user.id == 123
         assert saved_user.gdpr is True
+
+
+@pytest.mark.asyncio
+async def test_broadcast_status_sse_success(client, mock_users):
+    mock_bot = AsyncMock()
+    mock_app = MagicMock()
+    mock_app.initialize = AsyncMock()
+    mock_app.bot = mock_bot
+
+    with (
+        patch("core.config.config.is_gae", False),
+        patch(
+            "infrastructure.datastore.user.UserDatastoreRepository.load_all",
+            return_value=mock_users,
+        ),
+        patch("api.admin.get_tg_application", return_value=mock_app),
+    ):
+        # We use a GET request for SSE
+        response = client.get("/admin/broadcast/status", params={"message": "SSE test"})
+
+        assert response.status_code == 200
+        # Check that it returns SSE content type
+        assert "text/event-stream" in response.headers["content-type"]
+
+        # Verify it sent messages to the 2 telegram users
+        assert mock_bot.send_message.call_count == 2

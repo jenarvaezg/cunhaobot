@@ -1,7 +1,9 @@
 import logging
-from typing import Annotated, Any
+import asyncio
+import json
+from typing import Annotated, Any, AsyncIterable
 from litestar import Controller, Request, get, post
-from litestar.response import Response, Template
+from litestar.response import Response, Template, ServerSentEvent
 from litestar.params import Dependency
 from litestar.exceptions import HTTPException
 from litestar.datastructures import UploadFile
@@ -29,6 +31,96 @@ class AdminController(Controller):
                 "owner_id": config.owner_id,
             },
         )
+
+    @get("/broadcast/status")
+    async def broadcast_status(
+        self,
+        request: Request,
+        user_repo: Annotated[UserRepository, Dependency()],
+    ) -> ServerSentEvent:
+        user = request.session.get("user")
+        if not user or str(user.get("id")) != config.owner_id:
+            raise HTTPException(status_code=401, detail="Unauthorized")
+
+        # Note: In a real app with file upload via SSE, we'd need a multi-step process.
+        # For simplicity, if it's a "master" broadcast, we assume it's text for now
+        # OR we store the file in a temp session.
+        # Since the user asked for real-time progress, I'll adapt the POST to trigger
+        # a background process and this to follow it, but for a cleaner HTMX integration,
+        # we'll do the broadcast INSIDE the SSE generator.
+
+        async def progress_generator() -> AsyncIterable[ServerSentEvent]:
+            # Use query params for the message since it's a GET
+            msg = request.query_params.get("message")
+
+            users = user_repo.load_all(ignore_gdpr=False)
+            telegram_users = [
+                u for u in users if u.platform == "telegram" and not u.is_group
+            ]
+            total = len(telegram_users)
+
+            if total == 0:
+                yield ServerSentEvent(
+                    content=json.dumps(
+                        {
+                            "progress": 100,
+                            "current_user": "No hay usuarios",
+                            "status": "completed",
+                        }
+                    ),
+                    event_type="progress",
+                )
+                return
+
+            application = get_tg_application()
+            await application.initialize()
+            bot = application.bot
+
+            success_count = 0
+            fail_count = 0
+
+            for i, u in enumerate(telegram_users):
+                progress = int((i / total) * 100)
+                yield ServerSentEvent(
+                    content=json.dumps(
+                        {
+                            "progress": progress,
+                            "current_user": u.name or u.username or str(u.id),
+                            "status": f"Enviando a {i + 1}/{total}...",
+                        }
+                    ),
+                    event_type="progress",
+                )
+
+                try:
+                    chat_id = (
+                        int(u.id)
+                        if isinstance(u.id, str) and u.id.lstrip("-").isdigit()
+                        else u.id
+                    )
+                    await bot.send_message(chat_id=chat_id, text=msg)  # type: ignore[arg-type]
+                    success_count += 1
+                except Exception as e:
+                    logger.warning(f"Error sending broadcast to {u.id}: {e}")
+                    u.gdpr = True
+                    user_repo.save(u)
+                    fail_count += 1
+
+                # Small delay to avoid flooding and allow SSE to breathe
+                await asyncio.sleep(0.05)
+
+            yield ServerSentEvent(
+                content=json.dumps(
+                    {
+                        "progress": 100,
+                        "current_user": "¡Terminado!",
+                        "status": f"Completado. ✅ {success_count} ok, 🚫 {fail_count} fallidos.",
+                    }
+                ),
+                event_type="progress",
+            )
+
+        return ServerSentEvent(progress_generator())
 
     @post("/broadcast")
     async def broadcast_send(
