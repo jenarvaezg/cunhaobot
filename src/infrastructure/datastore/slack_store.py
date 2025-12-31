@@ -86,7 +86,11 @@ class DatastoreInstallationStore(AsyncInstallationStore):
         key = self.bot_repo.get_key(team_id or "enterprise")
         entity = self.bot_repo.client.get(key)
         if entity:
-            return Bot(**dict(entity))
+            data = dict(entity)
+            # Ensure mandatory fields for Bot
+            if "installed_at" not in data:
+                data["installed_at"] = time.time()
+            return Bot(**data)
         return None
 
     async def async_find_installation(
@@ -101,7 +105,13 @@ class DatastoreInstallationStore(AsyncInstallationStore):
             key = self.installation_repo.get_key(f"{team_id or ''}-{user_id}")
             entity = self.installation_repo.client.get(key)
             if entity:
-                return Installation(**dict(entity))
+                data = dict(entity)
+                # Ensure mandatory fields for Installation
+                if "user_id" not in data:
+                    data["user_id"] = user_id
+                if "installed_at" not in data:
+                    data["installed_at"] = time.time()
+                return Installation(**data)
         return None
 
     async def async_delete_bot(
