@@ -63,12 +63,14 @@ google-api-core==2.25.2
     #   google-cloud-core
     #   google-cloud-datastore
     #   google-cloud-storage
+    #   google-cloud-texttospeech
 google-auth==2.45.0
     # via
     #   google-api-core
     #   google-cloud-core
     #   google-cloud-datastore
     #   google-cloud-storage
+    #   google-cloud-texttospeech
     #   google-genai
 google-cloud-core==2.5.0
     # via
@@ -77,6 +79,8 @@ google-cloud-core==2.5.0
 google-cloud-datastore==2.23.0
     # via cunhaobot
 google-cloud-storage==3.4.1
+    # via cunhaobot
+google-cloud-texttospeech==2.33.0
     # via cunhaobot
 google-crc32c==1.8.0
     # via
@@ -94,6 +98,7 @@ grpcio==1.76.0
     # via
     #   google-api-core
     #   google-cloud-datastore
+    #   google-cloud-texttospeech
     #   grpcio-status
 grpcio-status==1.71.2
     # via google-api-core
@@ -172,10 +177,12 @@ proto-plus==1.27.0
     # via
     #   google-api-core
     #   google-cloud-datastore
+    #   google-cloud-texttospeech
 protobuf==5.29.5
     # via
     #   google-api-core
     #   google-cloud-datastore
+    #   google-cloud-texttospeech
     #   googleapis-common-protos
     #   grpcio-status
     #   proto-plus

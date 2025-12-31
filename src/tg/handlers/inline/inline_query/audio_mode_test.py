@@ -9,7 +9,7 @@ def test_get_audio_mode_results_short():
     with (
         patch("services.phrase_repo.load_all", return_value=[p1]),
         patch(
-            "tg.handlers.inline.inline_query.audio_mode.get_audio_url",
+            "services.tts_service.tts_service.get_audio_url",
             return_value="http://audio",
         ) as mock_url,
         patch(
@@ -21,7 +21,7 @@ def test_get_audio_mode_results_short():
         assert len(results) == 1
         assert results[0].voice_url == "http://audio"
         assert results[0].title == "foo"
-        mock_url.assert_called_once_with("short-foo")
+        mock_url.assert_called_once_with(p1, "short")
 
 
 def test_get_audio_mode_results_long():
@@ -29,7 +29,7 @@ def test_get_audio_mode_results_long():
     with (
         patch("services.long_phrase_repo.load_all", return_value=[p1]),
         patch(
-            "tg.handlers.inline.inline_query.audio_mode.get_audio_url",
+            "services.tts_service.tts_service.get_audio_url",
             return_value="http://audio",
         ),
         patch(
@@ -47,7 +47,7 @@ def test_get_audio_mode_results_no_url():
     with (
         patch("services.phrase_repo.load_all", return_value=[p1]),
         patch(
-            "tg.handlers.inline.inline_query.audio_mode.get_audio_url",
+            "services.tts_service.tts_service.get_audio_url",
             return_value=None,
         ),
         patch(

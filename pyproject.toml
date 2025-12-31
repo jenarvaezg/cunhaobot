@@ -25,6 +25,7 @@ dependencies = [
     "slack-bolt>=1.22.0",
     "slack_sdk>=3.30.0",
     "aiohttp>=3.11.0",
+    "google-cloud-texttospeech>=2.33.0",
 ]
 
 [dependency-groups]
