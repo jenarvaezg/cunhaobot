@@ -1,19 +1,17 @@
-<div id="ai-phrase-container" class="glass-card p-4 border-warning animate__animated animate__zoomIn position-relative mb-5">
-    <div class="position-absolute top-0 start-50 translate-middle">
-        <span class="badge rounded-pill bg-warning text-dark px-3 py-2 oswald shadow-sm">
+<div id="ai-phrase-container" class="p-4 bg-dark bg-opacity-25 rounded-4 border border-warning h-100 d-flex flex-column align-items-center text-center animate__animated animate__zoomIn">
+    <div class="mb-auto">
+        <span class="badge rounded-pill bg-warning text-dark px-3 py-2 oswald shadow-sm mb-3">
             <i class="bi bi-robot me-2"></i>PERLA DE IA
         </span>
+        <p class="fs-4 oswald text-white mb-0 mt-2">"{{ phrase }}"</p>
     </div>
-    <div class="mt-2 text-center">
-        <p class="fs-4 oswald text-white mb-0">"{{ phrase }}"</p>
-    </div>
-    <div class="text-center mt-3">
-        <button class="btn btn-sm btn-link text-warning text-decoration-none"
+    <div class="mt-auto w-100">
+        <button class="btn btn-outline-warning rounded-pill px-4 w-100"
                 hx-get="/ai/phrase"
                 hx-target="#ai-phrase-container"
                 hx-swap="outerHTML"
                 hx-indicator="#ai-indicator-inner">
-            <i class="bi bi-arrow-clockwise me-1"></i>¿Otra? Que me las quitan de las manos
+            <i class="bi bi-arrow-clockwise me-2"></i>¿Otra? Máquina
             <div id="ai-indicator-inner" class="htmx-indicator ms-2 d-inline-block">
                 <div class="spinner-border spinner-border-sm" role="status"></div>
             </div>
