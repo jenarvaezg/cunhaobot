@@ -1,6 +1,9 @@
+import logging
 from google import genai
 from typing import List
 from core.config import config
+
+logger = logging.getLogger(__name__)
 
 
 class AIService:
@@ -12,8 +15,13 @@ class AIService:
     def client(self):
         if self._client is None:
             if not self._api_key or self._api_key == "dummy":
+                logger.error("GEMINI_API_KEY not set or invalid")
                 raise ValueError("GEMINI_API_KEY not set or invalid")
-            self._client = genai.Client(api_key=self._api_key)
+            try:
+                self._client = genai.Client(api_key=self._api_key)
+            except Exception:
+                logger.exception("Error initializing Gemini client:")
+                raise
         return self._client
 
     async def generate_cunhao_phrases(self, count: int = 5) -> List[str]:
@@ -52,6 +60,7 @@ class AIService:
             ]
             return phrases[:count]
         except Exception as e:
+            logger.exception("Error generating cuñao phrases:")
             if "429" in str(e):
                 return [
                     "⚠️ Quota de AI agotada. ¡Paco no puede más con el calor! Reintenta en un momento."
