@@ -262,7 +262,11 @@ class WebController(Controller):
 
     @post("/ai/generate")
     async def generate_ai_phrases(
-        self, request: Request, ai_service: Annotated[Any, Dependency()]
+        self,
+        request: Request,
+        ai_service: Annotated[Any, Dependency()],
+        phrase_repo: Annotated[Any, Dependency()],
+        long_phrase_repo: Annotated[Any, Dependency()],
     ) -> Response[dict[str, Any]]:
         user = request.session.get("user")
         if not user or str(user.get("id")) != str(config.owner_id):
@@ -271,7 +275,17 @@ class WebController(Controller):
         try:
             # Type safety via casting
             service: AIService = ai_service
-            phrases = await service.generate_cunhao_phrases(count=5)
+            p_repo: PhraseRepository = phrase_repo
+            lp_repo: LongPhraseRepository = long_phrase_repo
+
+            # Fetch all phrases for context
+            context_phrases = [p.text for p in p_repo.load_all()] + [
+                p.text for p in lp_repo.load_all()
+            ]
+
+            phrases = await service.generate_cunhao_phrases(
+                count=5, context_phrases=context_phrases
+            )
             return Response({"phrases": phrases}, status_code=200)
         except Exception as e:
             logger.exception("Error generating AI phrases:")
@@ -279,11 +293,25 @@ class WebController(Controller):
 
     @get("/ai/phrase")
     async def ai_phrase(
-        self, ai_service: Annotated[Any, Dependency()], request: Request
+        self,
+        ai_service: Annotated[Any, Dependency()],
+        phrase_repo: Annotated[Any, Dependency()],
+        long_phrase_repo: Annotated[Any, Dependency()],
+        request: Request,
     ) -> HTMXTemplate:
         try:
             service: AIService = ai_service
-            phrases = await service.generate_cunhao_phrases(count=1)
+            p_repo: PhraseRepository = phrase_repo
+            lp_repo: LongPhraseRepository = long_phrase_repo
+
+            # Fetch all phrases for context
+            context_phrases = [p.text for p in p_repo.load_all()] + [
+                p.text for p in lp_repo.load_all()
+            ]
+
+            phrases = await service.generate_cunhao_phrases(
+                count=1, context_phrases=context_phrases
+            )
             phrase = (
                 phrases[0]
                 if phrases
