@@ -46,8 +46,13 @@ class SlackController(Controller):
     async def slack_events(
         self, request: Request, phrase_service: Annotated[PhraseService, Dependency()]
     ) -> Response:
+        logger.debug(f"Received Slack request: {request.headers.keys()}")
         bolt_req: AsyncBoltRequest = await to_bolt_request(request)
         bolt_resp: BoltResponse = await app.async_dispatch(bolt_req)
+        if bolt_resp.status != 200:
+            logger.warning(
+                f"Slack Bolt returned status {bolt_resp.status}: {bolt_resp.body}"
+            )
         return to_litestar_response(bolt_resp)
 
     @get("/auth")
