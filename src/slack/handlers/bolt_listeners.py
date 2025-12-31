@@ -7,7 +7,7 @@ from slack_bolt.async_app import AsyncApp
 
 from core.config import config
 from services import phrase_service
-from slack.attachments import build_phrase_attachments
+from slack.attachments import build_phrase_attachments, build_sticker_attachments
 
 logger = logging.getLogger(__name__)
 
@@ -17,11 +17,13 @@ def register_listeners(app: AsyncApp):
     async def handle_sticker_command(ack: Any, body: dict[str, Any], respond: Any):
         await ack()
         text: str = body.get("text", "").strip()
-        channel_id: str | None = body.get("channel_id")
 
-        logger.info(
-            f"Handling sticker request for text: '{text}' in channel: {channel_id}"
-        )
+        if text == "help":
+            await respond(
+                "Usando /sticker <texto> te doy un sticker de cuñao basado en el texto. "
+                "Si no pones nada, te daré uno al azar."
+            )
+            return
 
         if text:
             phrases = phrase_service.get_phrases(search=text, long=True)
@@ -43,42 +45,15 @@ def register_listeners(app: AsyncApp):
             await respond("No hay frases disponibles en este momento.")
             return
 
-        logger.info(f"Sending sticker for phrase: '{selected_phrase.text}'")
-
-        # Instead of uploading a file (which requires the bot to be in the channel),
-        # we send an image block pointing to our public sticker generator endpoint.
-        # This works even if the bot is not in the channel because it uses the response_url.
         if selected_phrase.key:
             encoded_key = urllib.parse.quote(selected_phrase.key)
             sticker_url = f"{config.base_url}/phrase/{encoded_key}/sticker.png"
         else:
-            # Fallback for ad-hoc phrases without a key
             encoded_text = urllib.parse.quote(selected_phrase.text)
             sticker_url = f"{config.base_url}/sticker/text.png?text={encoded_text}"
 
-        logger.info(f"Sending sticker URL: {sticker_url}")
-
-        try:
-            await respond(
-                response_type="in_channel",
-                text=f'Aquí tienes tu sticker: "{selected_phrase.text}"',
-                blocks=[
-                    {
-                        "type": "image",
-                        "title": {"type": "plain_text", "text": selected_phrase.text},
-                        "image_url": sticker_url,
-                        "alt_text": selected_phrase.text,
-                    }
-                ],
-            )
-
-            logger.info("Sticker sent successfully via response_url")
-            phrase_service.register_sticker_usage(selected_phrase)
-        except Exception as e:
-            logger.exception(f"Exception sending sticker to slack: {e}")
-            await respond(
-                "Hubo un error al generar tu sticker. Inténtalo de nuevo más tarde."
-            )
+        attachments = build_sticker_attachments(selected_phrase.text, text, sticker_url)
+        await respond(attachments=attachments)
 
     @app.command("/cuñao")
     async def handle_cunao_command(ack: Any, body: dict[str, Any], respond: Any):
@@ -114,10 +89,41 @@ def register_listeners(app: AsyncApp):
 
         action = actions[0]
         value: str = action.get("value", "")
+        user_name: str = body["user"]["name"]
 
-        if value.startswith("send-"):
+        if value.startswith("send-sticker-"):
+            text: str = value[len("send-sticker-") :]
+            # We need to find the phrase to get the key and build the URL again
+            # or we could have passed the URL in the value, but it might be too long.
+            # Let's search for the exact text.
+            phrases = phrase_service.get_phrases(search=text, long=True)
+            # Find exact match
+            selected_phrase = next((p for p in phrases if p.text == text), None)
+
+            if not selected_phrase:
+                # If not found (unlikely), generate ad-hoc
+                encoded_text = urllib.parse.quote(text)
+                sticker_url = f"{config.base_url}/sticker/text.png?text={encoded_text}"
+            else:
+                encoded_key = urllib.parse.quote(selected_phrase.key)
+                sticker_url = f"{config.base_url}/phrase/{encoded_key}/sticker.png"
+                phrase_service.register_sticker_usage(selected_phrase)
+
+            await respond(
+                delete_original=True,
+                response_type="in_channel",
+                text=f"Sticker enviado por <@{user_name}>",
+                blocks=[
+                    {
+                        "type": "image",
+                        "title": {"type": "plain_text", "text": text},
+                        "image_url": sticker_url,
+                        "alt_text": text,
+                    }
+                ],
+            )
+        elif value.startswith("send-"):
             text: str = value[len("send-") :]
-            user_name: str = body["user"]["name"]
             await respond(
                 delete_original=True,
                 response_type="in_channel",
@@ -129,6 +135,30 @@ def register_listeners(app: AsyncApp):
                         "actions": [],
                     }
                 ],
+            )
+        elif value.startswith("shuffle-sticker-"):
+            search: str = value[len("shuffle-sticker-") :]
+            phrases = phrase_service.get_phrases(search=search, long=True)
+            if not phrases:
+                # Fallback to random if search yields nothing now
+                selected_phrase = phrase_service.get_random(long=True)
+            else:
+                selected_phrase = random.choice(phrases)
+
+            if selected_phrase.key:
+                encoded_key = urllib.parse.quote(selected_phrase.key)
+                sticker_url = f"{config.base_url}/phrase/{encoded_key}/sticker.png"
+            else:
+                encoded_text = urllib.parse.quote(selected_phrase.text)
+                sticker_url = f"{config.base_url}/sticker/text.png?text={encoded_text}"
+
+            attachments = build_sticker_attachments(
+                selected_phrase.text, search, sticker_url
+            )
+            await respond(
+                replace_original=True,
+                response_type="ephemeral",
+                attachments=attachments,
             )
         elif value.startswith("shuffle-"):
             search: str = value[len("shuffle-") :]

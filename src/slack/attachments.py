@@ -27,3 +27,35 @@ def build_phrase_attachments(text: str, search: str) -> list[dict]:
             ],
         }
     ]
+
+
+def build_sticker_attachments(text: str, search: str, sticker_url: str) -> list[dict]:
+    return [
+        {
+            "text": f'¿Quieres enviar este sticker? "{text}"',
+            "image_url": sticker_url,
+            "callback_id": "phrase",
+            "actions": [
+                {
+                    "name": "choice",
+                    "text": "Enviar",
+                    "type": "button",
+                    "value": f"send-sticker-{text}",
+                    "style": "primary",
+                },
+                {
+                    "name": "choice",
+                    "text": "Otro",
+                    "type": "button",
+                    "value": f"shuffle-sticker-{search}",
+                },
+                {
+                    "name": "choice",
+                    "text": "Cancelar",
+                    "type": "button",
+                    "value": "cancel",
+                    "style": "danger",
+                },
+            ],
+        }
+    ]
