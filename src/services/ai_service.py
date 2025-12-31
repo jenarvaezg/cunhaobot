@@ -20,7 +20,7 @@ class GeneratedPhrases(BaseModel):
 # Using a dummy key for tests if not provided
 os.environ.setdefault("GOOGLE_API_KEY", config.gemini_api_key or "dummy_key_for_tests")
 
-phrase_generator_agent = Agent(
+phrase_generator_agent: Agent[None, GeneratedPhrases] = Agent(
     "google-gla:gemini-2.5-flash",
     output_type=GeneratedPhrases,
     system_prompt=(
