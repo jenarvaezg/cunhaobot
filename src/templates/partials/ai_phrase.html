@@ -1,0 +1,22 @@
+<div id="ai-phrase-container" class="glass-card p-4 border-warning animate__animated animate__zoomIn position-relative mb-5">
+    <div class="position-absolute top-0 start-50 translate-middle">
+        <span class="badge rounded-pill bg-warning text-dark px-3 py-2 oswald shadow-sm">
+            <i class="bi bi-robot me-2"></i>PERLA DE IA
+        </span>
+    </div>
+    <div class="mt-2 text-center">
+        <p class="fs-4 oswald text-white mb-0">"{{ phrase }}"</p>
+    </div>
+    <div class="text-center mt-3">
+        <button class="btn btn-sm btn-link text-warning text-decoration-none"
+                hx-get="/ai/phrase"
+                hx-target="#ai-phrase-container"
+                hx-swap="outerHTML"
+                hx-indicator="#ai-indicator-inner">
+            <i class="bi bi-arrow-clockwise me-1"></i>¿Otra? Que me las quitan de las manos
+            <div id="ai-indicator-inner" class="htmx-indicator ms-2 d-inline-block">
+                <div class="spinner-border spinner-border-sm" role="status"></div>
+            </div>
+        </button>
+    </div>
+</div>

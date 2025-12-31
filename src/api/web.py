@@ -245,6 +245,20 @@ class WebController(Controller):
         except Exception as e:
             return Response({"error": str(e)}, status_code=500)
 
+    @get("/ai/phrase")
+    async def ai_phrase(self, ai_service: Annotated[Any, Dependency()]) -> HTMXTemplate:
+        service: AIService = ai_service
+        phrases = await service.generate_cunhao_phrases(count=1)
+        phrase = (
+            phrases[0]
+            if phrases
+            else "No se me ocurre nada, mákina. Pídeme un carajillo."
+        )
+        return HTMXTemplate(
+            template_name="partials/ai_phrase.html",
+            context={"phrase": phrase},
+        )
+
     @get("/metrics", sync_to_thread=True)
     def metrics(
         self,
