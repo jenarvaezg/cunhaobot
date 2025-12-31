@@ -87,11 +87,8 @@ class CunhaoAgent:
                 return "¡Eh! Que no me has pagado la ronda (API Key inválida/no configurada)."
 
             result = await agent.run(text)
-
-            logger.info(f"CunhaoAgent response generated: '{result.data}'")
-
-            return result.data
-
+            logger.info(f"CunhaoAgent response generated: '{result.output}'")
+            return result.output
         except Exception:
             logger.exception("Error in CunhaoAgent:")
 

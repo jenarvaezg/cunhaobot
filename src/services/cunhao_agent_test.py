@@ -10,7 +10,7 @@ async def test_answer_calls_agent():
         patch("services.cunhao_agent.config") as mock_config,
     ):
         mock_config.gemini_api_key = "valid_key"
-        mock_run.return_value = MagicMock(data="Respuesta de prueba")
+        mock_run.return_value = MagicMock(output="Respuesta de prueba")
 
         response = await cunhao_agent.answer("Hola")
 
