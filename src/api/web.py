@@ -263,16 +263,6 @@ class WebController(Controller):
     async def ai_phrase(
         self, ai_service: Annotated[Any, Dependency()], request: Request
     ) -> HTMXTemplate:
-        user = request.session.get("user")
-        if not user or str(user.get("id")) != str(config.owner_id):
-            return HTMXTemplate(
-                template_name="partials/ai_phrase.html",
-                context={
-                    "phrase": "Unauthorized: AI generation is for the owner only."
-                },
-                status_code=401,
-            )
-
         try:
             service: AIService = ai_service
             phrases = await service.generate_cunhao_phrases(count=1)
