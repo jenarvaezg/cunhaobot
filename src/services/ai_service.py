@@ -1,4 +1,5 @@
 import logging
+import os
 from google import genai
 from typing import List
 from core.config import config
@@ -68,7 +69,8 @@ class AIService:
             raise e
 
     async def generate_image(self, phrase: str) -> bytes:
-        """Generates an image from a phrase using Imagen."""
+        """Generates an image from a phrase using the nanobanana pattern (Gemini 2.5 Flash Image)."""
+        model_name = os.getenv("NANOBANANA_MODEL", "gemini-2.5-flash-image")
         prompt = f"""
         A high-quality, satirical and funny illustration of a stereotypical Spanish 'cuñado'
         (a middle-aged man with a mustache, wearing a classic polo shirt or a vest)
@@ -77,19 +79,28 @@ class AIService:
         Set the scene in a typical Spanish bar with a wooden counter and beer tapas.
         """
         try:
-            # We use the sync client for image generation for now as the SDK might have issues with async for this specific call
-            # in some environments, or just to keep it simple if it's a wrapper.
-            # Actually, the genai SDK is mostly sync or uses its own event loop management.
-            response = self.client.models.generate_image(
-                model="imagen-3",
-                prompt=prompt,
-                config={
-                    "number_of_images": 1,
-                    "include_rai_reasoning": True,
-                    "output_mime_type": "image/png",
-                },
+            # Following nanobanana pattern: use generate_content with gemini-2.5-flash-image
+            response = self.client.models.generate_content(
+                model=model_name,
+                contents=prompt,
             )
-            return response.generated_images[0].image_bytes
+
+            if not response.candidates or not response.candidates[0].content.parts:
+                raise ValueError("No candidates or parts in AI response")
+
+            for part in response.candidates[0].content.parts:
+                if part.inline_data:
+                    return part.inline_data.data
+                # Fallback: check if it's in text (some versions might put base64 in text)
+                if part.text and len(part.text) > 1000:
+                    import base64
+
+                    try:
+                        return base64.b64decode(part.text)
+                    except Exception:
+                        continue
+
+            raise ValueError("No image data found in AI response parts")
         except Exception as e:
             logger.error(f"Error generating image: {e}")
             raise e
