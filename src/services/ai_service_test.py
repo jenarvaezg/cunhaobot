@@ -40,7 +40,7 @@ class TestAIService:
             assert phrases == ["Frase 1", "Frase 2"]
             mock_client_instance.models.generate_content.assert_called_once()
             args, kwargs = mock_client_instance.models.generate_content.call_args
-            assert kwargs["model"] == "gemini-3-flash-preview"
+            assert kwargs["model"] == "gemini-3-flash"
 
     @pytest.mark.asyncio
     async def test_generate_cunhao_phrases_quota_error(self):
