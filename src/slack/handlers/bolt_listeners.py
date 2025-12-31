@@ -119,7 +119,16 @@ def register_listeners(app: AsyncApp):
                         "title": {"type": "plain_text", "text": text},
                         "image_url": sticker_url,
                         "alt_text": text,
-                    }
+                    },
+                    {
+                        "type": "context",
+                        "elements": [
+                            {
+                                "type": "mrkdwn",
+                                "text": f"Enviado por <@{user_name}>",
+                            }
+                        ],
+                    },
                 ],
             )
         elif value.startswith("send-"):
