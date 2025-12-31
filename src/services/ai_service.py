@@ -1,7 +1,6 @@
 import logging
 import os
 from google import genai
-from typing import List
 from core.config import config
 
 logger = logging.getLogger(__name__)
@@ -25,10 +24,18 @@ class AIService:
                 raise
         return self._client
 
-    async def generate_cunhao_phrases(self, count: int = 5) -> List[str]:
+    async def generate_cunhao_phrases(
+        self, count: int = 5, context_phrases: list[str] | None = None
+    ) -> list[str]:
         """Generates cuñao-style phrases using Gemini."""
+        context_str = ""
+        if context_phrases:
+            context_list = "\n".join([f"- {p}" for p in context_phrases])
+            context_str = f"Aquí tienes ejemplos de tu 'repertorio' habitual para que te inspires en el estilo, tono y vocabulario:\n{context_list}\n"
+
         prompt = f"""
         Actúa como un "cuñao" español de manual en una barra de bar.
+        {context_str}
         Genera {count} frases lapidarias, cortas y directas.
 
         REGLAS CRÍTICAS:
