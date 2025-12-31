@@ -88,7 +88,7 @@ class TestGetQueryMode(unittest.TestCase):
 
     def test_special_characters(self):
         query = "wtf!!"
-        expected = "", ""
+        expected = LONG_MODE, query
 
         actual = get_query_mode(query)
 

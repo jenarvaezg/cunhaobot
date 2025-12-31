@@ -30,7 +30,22 @@ def test_get_short_mode_results_with_size():
         # Combination of 2 phrases
 
 
-def test_get_short_mode_results_with_finisher():
+def test_get_short_mode_results_with_search():
+    p1 = Phrase(text="maquina")
+    p2 = Phrase(text="figura")
+    with (
+        patch("services.phrase_repo.load_all", return_value=[p1, p2]),
+        patch(
+            "tg.handlers.inline.inline_query.short_mode.get_thumb", return_value="thumb"
+        ),
+    ):
+        results = get_short_mode_results("maquina")
+        assert len(results) > 0
+        assert "maquina" in results[0].title
+        assert "figura" not in results[0].title
+
+
+def test_get_short_mode_results_no_results():
     p1 = Phrase(text="foo")
     with (
         patch("services.phrase_repo.load_all", return_value=[p1]),
@@ -38,9 +53,9 @@ def test_get_short_mode_results_with_finisher():
             "tg.handlers.inline.inline_query.short_mode.get_thumb", return_value="thumb"
         ),
     ):
-        results = get_short_mode_results("1 finisher")
-        assert len(results) > 0
-        assert "finisher" in results[0].title
+        results = get_short_mode_results("notfound")
+        assert len(results) == 1
+        assert "No tengo" in results[0].title
 
 
 def test_get_short_mode_results_no_phrases():

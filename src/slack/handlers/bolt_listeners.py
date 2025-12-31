@@ -7,12 +7,40 @@ from slack_bolt.async_app import AsyncApp
 
 from core.config import config
 from services import phrase_service
-from slack.attachments import build_phrase_attachments, build_sticker_attachments
+from slack.attachments import (
+    build_phrase_attachments,
+    build_saludo_attachments,
+    build_sticker_attachments,
+)
 
 logger = logging.getLogger(__name__)
 
 
 def register_listeners(app: AsyncApp):
+    @app.command("/saludo")
+    @app.command("/que_pasa")
+    async def handle_saludo_command(ack: Any, body: dict[str, Any], respond: Any):
+        await ack()
+        text: str = body.get("text", "").strip()
+
+        if text == "help":
+            await respond(
+                "Usando /saludo <texto> te doy un saludo de cuñao basado en el texto. "
+                "Si no pones nada, te daré uno al azar."
+            )
+            return
+
+        phrases = phrase_service.get_phrases(search=text, long=False)
+        if not phrases:
+            await respond(
+                f'No tengo ningún saludo que encaje con la búsqueda "{text}".'
+            )
+            return
+
+        phrase = random.choice(phrases)
+        attachments = build_saludo_attachments(phrase.text, search=text)
+        await respond(attachments=attachments)
+
     @app.command("/sticker")
     async def handle_sticker_command(ack: Any, body: dict[str, Any], respond: Any):
         await ack()
@@ -131,6 +159,22 @@ def register_listeners(app: AsyncApp):
                     },
                 ],
             )
+        elif value.startswith("send-saludo-"):
+            text: str = value[len("send-saludo-") :]
+            full_text = f"¿Qué pasa, {text}?"
+            await respond(
+                delete_original=True,
+                response_type="in_channel",
+                text=full_text,
+                attachments=[
+                    {
+                        "text": full_text,
+                        "title": f"Saludo de <@{user_name}>",
+                        "fallback": f"Saludo de <@{user_name}>",
+                        "actions": [],
+                    }
+                ],
+            )
         elif value.startswith("send-"):
             text: str = value[len("send-") :]
             await respond(
@@ -164,6 +208,20 @@ def register_listeners(app: AsyncApp):
             attachments = build_sticker_attachments(
                 selected_phrase.text, search, sticker_url
             )
+            await respond(
+                replace_original=True,
+                response_type="ephemeral",
+                attachments=attachments,
+            )
+        elif value.startswith("shuffle-saludo-"):
+            search: str = value[len("shuffle-saludo-") :]
+            phrases = phrase_service.get_phrases(search=search, long=False)
+            if not phrases:
+                await respond(delete_original=True)
+                return
+
+            new_phrase = random.choice(phrases)
+            attachments = build_saludo_attachments(new_phrase.text, search)
             await respond(
                 replace_original=True,
                 response_type="ephemeral",

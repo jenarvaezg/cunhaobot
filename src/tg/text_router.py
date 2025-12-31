@@ -25,7 +25,7 @@ def get_query_mode(query: str) -> tuple[str, str]:
             return STICKER_MODE, " ".join(rest)
         case [first, *rest] if first in LONG_MODE_WORDS:
             return LONG_MODE, " ".join(rest)
-        case [first, *rest] if first.isalpha():
+        case [first, *rest]:
             return LONG_MODE, " ".join([first] + rest)
         case _:
-            return "", ""
+            return SHORT_MODE, ""
