@@ -136,4 +136,8 @@ gcloud app deploy
 *   `.gemini/skills/TESTING.md`: Estándares de testing.
 *   `.gemini/skills/CLI.md`: Patrones para herramientas de CLI.
 
-**INSTRUCCIÓN CRÍTICA:** No asumas nada. Si una guía dice "No Any", significa "No Any". Si dice "Inyección de Dependencias", úsala. Si dice "Pydantic", no uses `msgspec` ni `dataclasses` para modelos de dominio.
+**INSTRUCCIÓN CRÍTICA:**
+1. **No asumas nada.** Si una guía dice "No Any", significa "No Any".
+2. **Modern Typing:** Es obligatorio usar `| None` en lugar de `Optional[T]`, y `list[T]` / `dict[K, V]` en lugar de `List` / `Dict`. El incumplimiento de esto se considera un error crítico de implementación.
+3. **Arquitectura:** Si dice "Inyección de Dependencias", úsala. Si dice "Pydantic", no uses `msgspec` ni `dataclasses` para modelos de dominio.
+4. **Verificación:** Antes de cada commit, el agente DEBE auto-revisar su código contra estas guías.
