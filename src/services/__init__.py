@@ -26,10 +26,10 @@ from services.tts_service import tts_service  # noqa: E402
 phrase_service = PhraseService(phrase_repo, long_phrase_repo)  # type: ignore[arg-type]
 user_service = UserService(user_repo, inline_user_repo)  # type: ignore[arg-type]
 proposal_service = ProposalService(
-    proposal_repo,
-    long_proposal_repo,
-    user_repo,
-    inline_user_repo,  # type: ignore[arg-type]
+    proposal_repo,  # type: ignore[invalid-argument-type]
+    long_proposal_repo,  # type: ignore[invalid-argument-type]
+    user_repo,  # type: ignore[invalid-argument-type]
+    inline_user_repo,  # type: ignore[invalid-argument-type]
 )
 
 __all__ = [

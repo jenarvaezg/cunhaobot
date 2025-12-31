@@ -260,7 +260,19 @@ class WebController(Controller):
             return Response({"error": str(e)}, status_code=500)
 
     @get("/ai/phrase")
-    async def ai_phrase(self, ai_service: Annotated[Any, Dependency()]) -> HTMXTemplate:
+    async def ai_phrase(
+        self, ai_service: Annotated[Any, Dependency()], request: Request
+    ) -> HTMXTemplate:
+        user = request.session.get("user")
+        if not user or str(user.get("id")) != str(config.owner_id):
+            return HTMXTemplate(
+                template_name="partials/ai_phrase.html",
+                context={
+                    "phrase": "Unauthorized: AI generation is for the owner only."
+                },
+                status_code=401,
+            )
+
         try:
             service: AIService = ai_service
             phrases = await service.generate_cunhao_phrases(count=1)
@@ -288,7 +300,18 @@ class WebController(Controller):
         phrase_repo: Annotated[Any, Dependency()],
         long_phrase_repo: Annotated[Any, Dependency()],
         ai_service: Annotated[AIService, Dependency()],
+        request: Request,
     ) -> HTMXTemplate:
+        user = request.session.get("user")
+        if not user or str(user.get("id")) != str(config.owner_id):
+            return HTMXTemplate(
+                template_name="partials/ai_image.html",
+                context={
+                    "error": "Unauthorized: AI image generation is for the owner only."
+                },
+                status_code=401,
+            )
+
         p_repo: PhraseRepository = phrase_repo
         lp_repo: LongPhraseRepository = long_phrase_repo
 
