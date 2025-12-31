@@ -55,11 +55,13 @@ def generate_png(text: str) -> BytesIO:
         lines = _text_wrap(text, font, wrap_width)
 
         ascent, descent = font.getmetrics()
-        # Reduce line gap to 5% of ascent
-        line_height = ascent + descent + int(ascent * 0.05)
+        # Small gap between lines (5% of ascent)
+        gap = int(ascent * 0.05)
+        line_height = ascent + descent + gap
 
-        # sum_y: lines * line_height + smaller padding
-        sum_y = len(lines) * line_height + BORDER_SIZE * 2 + 10
+        # Total height: All lines including gaps, minus the last gap, plus borders
+        text_block_height = (len(lines) * line_height) - gap
+        sum_y = text_block_height + (BORDER_SIZE * 2)
 
         longest_x = 0
         for line in lines:
@@ -78,8 +80,8 @@ def generate_png(text: str) -> BytesIO:
     img = Image.new("RGBA", image_size)
     img_draw = ImageDraw.Draw(img)
 
-    # Start just a bit lower than the border
-    current_y = BORDER_SIZE + 5
+    # Use BORDER_SIZE as the symmetric margin for top and bottom
+    current_y = BORDER_SIZE
     for line in lines:
         bbox = font.getbbox(line)
         line_width = bbox[2] - bbox[0]
