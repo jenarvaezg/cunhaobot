@@ -2,7 +2,6 @@ from telegram import InlineQueryResultVoice
 
 from models.phrase import LongPhrase, Phrase
 from tg.text_router import LONG_MODE, SHORT_MODE, get_query_mode
-from utils.gcp import get_audio_url
 
 
 from .long_mode import get_long_mode_results  # noqa: F401
@@ -14,8 +13,9 @@ phrase_t = Phrase | LongPhrase
 def _phrase_to_inline_audio(
     phrase: phrase_t, result_type: str
 ) -> InlineQueryResultVoice | None:
-    file_name = f"{result_type}-{phrase.text}"
-    audio_url = get_audio_url(file_name)
+    from services import tts_service
+
+    audio_url = tts_service.get_audio_url(phrase, result_type)
     if not audio_url:
         return None
 
