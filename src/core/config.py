@@ -20,7 +20,6 @@ class Config:
     slack_client_secret: str
     slack_signing_secret: str
     slack_state_secret: str
-    slack_bot_token: str
     mod_chat_id: str
     is_gae: bool
     gemini_api_key: str
@@ -57,7 +56,6 @@ class Config:
             slack_state_secret=os.environ.get(
                 "SLACK_STATE_SECRET", "default-state-secret"
             ),
-            slack_bot_token=os.environ.get("SLACK_BOT_TOKEN", ""),
             mod_chat_id=os.environ.get("MOD_CHAT_ID", ""),
             is_gae=is_gae,
             gemini_api_key=os.environ.get("GEMINI_API_KEY", ""),
