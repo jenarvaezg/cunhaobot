@@ -80,3 +80,27 @@ class TestAIService:
             service = AIService(api_key="valid_key")
             with pytest.raises(Exception, match="Boom"):
                 await service.generate_cunhao_phrases(count=5)
+
+    @pytest.mark.asyncio
+    async def test_generate_cunhao_phrases_with_context(self):
+        """Test generation with explicitly provided context phrases."""
+        with (
+            patch.object(
+                phrase_generator_agent, "run", new_callable=AsyncMock
+            ) as mock_run,
+            patch("services.phrase_service", create=True) as mock_phrase_service,
+        ):
+            mock_result = MagicMock()
+            mock_result.output.phrases = ["Gen 1", "Gen 2"]
+            mock_run.return_value = mock_result
+
+            service = AIService(api_key="valid_key")
+            context = ["Context 1", "Context 2"]
+            phrases = await service.generate_cunhao_phrases(
+                count=2, context_phrases=context
+            )
+
+            assert phrases == ["Gen 1", "Gen 2"]
+            mock_run.assert_called_once()
+            # Verify phrase_service was NOT used
+            mock_phrase_service.get_phrases.assert_not_called()
