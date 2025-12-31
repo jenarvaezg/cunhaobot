@@ -237,3 +237,15 @@ def test_phrase_sticker_route(client):
         assert rv.content == sticker_content
         assert rv.headers["content-type"] == "image/png"
         assert "max-age=31536000" in rv.headers["cache-control"]
+
+
+def test_ai_phrase_success(client):
+    with patch(
+        "services.ai_service.AIService.generate_cunhao_phrases",
+        new_callable=AsyncMock,
+        return_value=["AI phrase"],
+    ):
+        rv = client.get("/ai/phrase")
+        assert rv.status_code == 200
+        assert "AI phrase" in rv.text
+        assert "PERLA DE IA" in rv.text

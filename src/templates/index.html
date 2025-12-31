@@ -9,6 +9,19 @@
             Porque un "te lo dije" a tiempo no tiene precio, máquina.
         </p>
 
+        <div id="ai-phrase-container" class="mb-5 animate__animated animate__fadeIn animate__delay-1s">
+            <button class="btn btn-outline-warning rounded-pill px-4 py-2"
+                    hx-get="/ai/phrase"
+                    hx-target="#ai-phrase-container"
+                    hx-swap="outerHTML"
+                    hx-indicator="#ai-indicator">
+                <i class="bi bi-robot me-2"></i>Generar sabiduría instantánea (IA)
+                <div id="ai-indicator" class="htmx-indicator ms-2 d-inline-block">
+                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                </div>
+            </button>
+        </div>
+
         <div class="search-wrapper d-flex align-items-center mb-4 mx-auto" style="max-width: 600px;">
             <i class="bi bi-search ms-4 text-secondary"></i>
             <form hx-get="/search"
