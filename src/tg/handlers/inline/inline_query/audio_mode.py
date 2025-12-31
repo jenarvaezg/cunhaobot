@@ -20,7 +20,8 @@ def _phrase_to_inline_audio(
     if not audio_url:
         return None
 
-    result_id = f"audio-{result_type}-{phrase.text}"
+    identifier = phrase.id if phrase.id is not None else phrase.text
+    result_id = f"audio-{result_type}-{identifier}"
     return InlineQueryResultVoice(
         id=result_id[:63],
         voice_url=audio_url,

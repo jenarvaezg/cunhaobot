@@ -5,7 +5,7 @@ from infrastructure.datastore.phrase import PhraseDatastoreRepository
 from datetime import datetime
 
 
-def create_mock_entity(data, kind="Phrase", entity_id="test_id"):
+def create_mock_entity(data, kind="Phrase", entity_id=12345):
     m = MagicMock()
     m.__getitem__.side_effect = data.__getitem__
     m.get.side_effect = data.get
@@ -15,9 +15,15 @@ def create_mock_entity(data, kind="Phrase", entity_id="test_id"):
 
     m.__setitem__.side_effect = setitem
     m.update.side_effect = data.update
-    m.key.name = entity_id
     m.key.kind = kind
-    m.key.id = entity_id
+
+    if isinstance(entity_id, int):
+        m.key.id = entity_id
+        m.key.name = None
+    else:
+        m.key.name = entity_id
+        m.key.id = None
+
     return m
 
 

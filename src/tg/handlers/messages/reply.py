@@ -14,12 +14,12 @@ async def handle_reply(update: Update, context: CallbackContext) -> None:
         bot_text = bot_msg.text or ""
 
         # Determine if it's a short or long phrase proposal
-        if f"¿Qué {Phrase.display_name} quieres proponer?" in bot_text:
+        if f"¿Qué {Phrase.display_name} quieres proponer" in bot_text:
             from ..commands.submit import submit_handling
 
             await submit_handling(context.bot, update, is_long=False, text=msg.text)
             return
-        elif f"¿Qué {LongPhrase.display_name} quieres proponer?" in bot_text:
+        elif f"¿Qué {LongPhrase.display_name} quieres proponer" in bot_text:
             from ..commands.submit import submit_handling
 
             await submit_handling(context.bot, update, is_long=True, text=msg.text)

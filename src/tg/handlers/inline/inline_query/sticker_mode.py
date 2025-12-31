@@ -12,7 +12,8 @@ phrase_t = Phrase | LongPhrase
 def _phrase_to_inline_sticker(
     phrase: phrase_t, result_type: str
 ) -> InlineQueryResultCachedSticker:
-    result_id = f"sticker-{result_type}-{normalize_str(phrase.text)}"
+    identifier = str(phrase.id) if phrase.id is not None else normalize_str(phrase.text)
+    result_id = f"sticker-{result_type}-{identifier}"
     return InlineQueryResultCachedSticker(
         id=result_id[:63], sticker_file_id=phrase.sticker_file_id
     )

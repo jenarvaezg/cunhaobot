@@ -114,12 +114,28 @@ class PhraseService:
         )
 
         # In short mode it can be multiple words separated by comma
-        texts = data.split(",") if is_short else [data]
+        items = data.split(",") if is_short else [data]
 
-        # We need to find the phrases. Since IDs are normalized, we match against normalized text
-        all_phrases = repo.load_all()
-        for t in texts:
-            norm_target = normalize_str(t)
+        all_phrases = None  # Load lazily if needed for text search
+
+        for item in items:
+            # Try numeric ID first
+            if item.isdigit():
+                phrase = repo.load(int(item))
+                if phrase:
+                    phrase.usages += 1
+                    if is_audio:
+                        phrase.audio_usages += 1
+                    if is_sticker:
+                        phrase.sticker_usages += 1
+                    repo.save(phrase)  # type: ignore[arg-type]
+                    continue
+
+            # Fallback to text search (Legacy)
+            if all_phrases is None:
+                all_phrases = repo.load_all()
+
+            norm_target = normalize_str(item)
             for p in all_phrases:
                 if normalize_str(p.text) == norm_target:
                     p.usages += 1
@@ -129,4 +145,4 @@ class PhraseService:
                         p.sticker_usages += 1
 
                     repo.save(p)  # type: ignore[arg-type]
-                    break  # Next text
+                    break  # Next item

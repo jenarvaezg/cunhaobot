@@ -12,12 +12,12 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
         self._cache: list[Phrase] = []
 
     def _entity_to_domain(self, entity: datastore.Entity) -> Phrase:
-        key_id = ""
-        if entity.key:
-            key_id = entity.key.name or str(entity.key.id)
+        entity_id = None
+        if entity.key and entity.key.id:
+            entity_id = entity.key.id
 
         return self.model_class(
-            key=key_id,
+            id=entity_id,
             text=entity["text"],
             sticker_file_id=entity.get("sticker_file_id", ""),
             usages=entity.get("usages", 0),
@@ -46,9 +46,17 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
         return self._entity_to_domain(entity) if entity else None
 
     def save(self, phrase: Phrase) -> None:
-        key = self.get_key(phrase.text)
+        if phrase.id:
+            key = self.client.key(self.kind, phrase.id)
+        else:
+            key = self.client.key(self.kind)
+
         entity = self._domain_to_entity(phrase, key)
         self.client.put(entity)
+
+        if entity.key and entity.key.id:
+            phrase.id = entity.key.id
+
         self._cache = []
 
     def get_phrases(
@@ -70,7 +78,11 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
         return results[offset : offset + limit] if limit > 0 else results
 
     def add_usage(self, phrase_text: str, usage_type: str) -> None:
-        phrase = self.load(phrase_text)
+        # Find phrase by text since ID is now numeric
+        phrases = self.get_phrases(search=phrase_text, limit=1)
+        # Verify exact match because get_phrases does fuzzy/partial search
+        phrase = next((p for p in phrases if p.text == phrase_text), None)
+
         if phrase:
             phrase.usages += 1
             if usage_type == "audio":

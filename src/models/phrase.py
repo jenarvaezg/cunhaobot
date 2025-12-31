@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class Phrase(BaseModel):
-    key: str = ""
+    id: int | None = None
     text: str = ""
     sticker_file_id: str = ""
     usages: int = 0

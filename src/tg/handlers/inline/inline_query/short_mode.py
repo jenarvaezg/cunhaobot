@@ -7,9 +7,14 @@ BASE_TEMPLATE = "¿Qué pasa, {}?"
 
 
 def _result_id_for_combination(combination: tuple) -> str:
-    words = [str(c) for c in combination]
-    # Ensure ID is unique and safe (alphanumeric only)
-    safe_id = normalize_str("-".join(words))
+    parts = []
+    for c in combination:
+        if hasattr(c, "id") and c.id is not None:
+            parts.append(str(c.id))
+        else:
+            parts.append(normalize_str(str(c)))
+
+    safe_id = ",".join(parts)
     return f"short-{safe_id}"[:63]
 
 
