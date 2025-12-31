@@ -28,8 +28,8 @@ def get_required_votes() -> int:
 
 
 def get_vote_summary(proposal: Proposal) -> str:
-    likers = [a.user.name for a in admins if a.user.id in proposal.liked_by]
-    dislikers = [a.user.name for a in admins if a.user.id in proposal.disliked_by]
+    likers = [a.user.name for a in admins if str(a.user.id) in proposal.liked_by]
+    dislikers = [a.user.name for a in admins if str(a.user.id) in proposal.disliked_by]
     return (
         f"Han votado que si: {' '.join(likers)}\n"
         f"Han votado que no: {' '.join(dislikers)}"
@@ -159,7 +159,7 @@ async def _update_proposal_text(
     before_votes_text = text.split(votes_text)[0]
 
     all_voters = proposal.disliked_by + proposal.liked_by
-    voted_admins = [a.user for a in admins if a.user.id in all_voters]
+    voted_admins = [a.user for a in admins if str(a.user.id) in all_voters]
     votes_text += "\n".join([u.name for u in voted_admins])
 
     final_text = before_votes_text + votes_text

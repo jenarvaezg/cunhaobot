@@ -146,12 +146,15 @@ class UserService:
         if not user_id:
             return None
 
-        # For now, only telegram supports photo fetching
-        if isinstance(user_id, str):
-            # Probably Slack or other platform, we don't support it yet
-            return None
+        # Convert to int if possible (for Telegram IDs passed as strings from web routes)
+        target_id: int | None = None
+        if isinstance(user_id, int):
+            target_id = user_id
+        elif isinstance(user_id, str) and user_id.lstrip("-").isdigit():
+            target_id = int(user_id)
 
-        if user_id <= 0:
+        if target_id is None:
+            # Probably Slack or other platform with non-numeric IDs, we don't support it yet
             return None
 
         from tg import get_tg_application
@@ -162,14 +165,14 @@ class UserService:
                 await application.initialize()
 
             bot = application.bot
-            photos = await bot.get_user_profile_photos(user_id, limit=1)
+            photos = await bot.get_user_profile_photos(target_id, limit=1)
             if photos.total_count > 0:
                 # Get the smallest photo to be fast
                 file_id = photos.photos[0][0].file_id
                 file = await bot.get_file(file_id)
                 return await file.download_as_bytearray()
         except Exception as e:
-            logger.error(f"Error getting user photo for {user_id}: {e}")
+            logger.error(f"Error getting user photo for {target_id}: {e}")
         return None
 
 

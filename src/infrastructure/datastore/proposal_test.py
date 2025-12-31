@@ -143,7 +143,7 @@ class TestProposalRepository:
         assert {p.id for p in results} == {"1", "3"}
 
         # Test filter by empty field
-        p1.liked_by = [1]  # Add a liked_by to p1
+        p1.liked_by = ["1"]  # Add a liked_by to p1
         mock_query.fetch.return_value = [
             create_mock_entity(p1.model_dump(), entity_id="1"),
             create_mock_entity(p2.model_dump(), entity_id="2"),

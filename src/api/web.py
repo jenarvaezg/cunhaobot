@@ -402,28 +402,30 @@ class WebController(Controller):
         }
 
         # User stats
-        user_map: dict[str | int, str] = {
-            u.id: u.name for u in user_repo.load_all(ignore_gdpr=True) if not u.is_group
+        user_map: dict[str, str] = {
+            str(u.id): u.name
+            for u in user_repo.load_all(ignore_gdpr=True)
+            if not u.is_group
         }
 
-        stats: dict[str | int, dict[str, Any]] = defaultdict(
+        stats: dict[str, dict[str, Any]] = defaultdict(
             lambda: {"approved": 0, "pending": 0, "score": 0, "name": "Anónimo"}
         )
 
         for p in phrases:
-            s = stats[p.user_id]
+            s = stats[str(p.user_id)]
             s["approved"] += 1
             s["score"] += 10 + p.usages + p.audio_usages
-            if p.user_id in user_map:
-                s["name"] = user_map[p.user_id]
+            if str(p.user_id) in user_map:
+                s["name"] = user_map[str(p.user_id)]
 
         for p in pending_proposals:
-            if p.user_id == 0:
+            if p.user_id == 0 or p.user_id == "0":
                 continue
-            s = stats[p.user_id]
+            s = stats[str(p.user_id)]
             s["pending"] += 1
-            if p.user_id in user_map:
-                s["name"] = user_map[p.user_id]
+            if str(p.user_id) in user_map:
+                s["name"] = user_map[str(p.user_id)]
 
         sorted_stats = sorted(
             stats.values(), key=lambda x: (x["score"], x["approved"]), reverse=True

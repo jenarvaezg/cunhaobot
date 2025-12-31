@@ -9,8 +9,8 @@ class Proposal(BaseModel):
     from_chat_id: str | int = 0
     from_message_id: str | int = 0
     text: str = ""
-    liked_by: list[str | int] = []
-    disliked_by: list[str | int] = []
+    liked_by: list[str] = []
+    disliked_by: list[str] = []
     user_id: str | int = 0
     voting_ended: bool = False
     voting_ended_at: datetime | None = None
