@@ -14,6 +14,8 @@ class BotController(Controller):
     async def telegram_handler(self, request: Request) -> str:
         application = get_tg_application()
         await application.initialize()
+        if not application.bot.username:
+            await application.bot.get_me()
         body = await request.json()
         update = Update.de_json(body, application.bot)
         await application.process_update(update)
