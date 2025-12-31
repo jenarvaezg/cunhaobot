@@ -49,7 +49,8 @@ def register_listeners(app: AsyncApp):
         # we send an image block pointing to our public sticker generator endpoint.
         # This works even if the bot is not in the channel because it uses the response_url.
         if selected_phrase.key:
-            sticker_url = f"{config.base_url}/phrase/{selected_phrase.key}/sticker.png"
+            encoded_key = urllib.parse.quote(selected_phrase.key)
+            sticker_url = f"{config.base_url}/phrase/{encoded_key}/sticker.png"
         else:
             # Fallback for ad-hoc phrases without a key
             encoded_text = urllib.parse.quote(selected_phrase.text)
