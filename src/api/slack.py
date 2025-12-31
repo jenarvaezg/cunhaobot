@@ -13,8 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 async def to_bolt_request(request: Request) -> AsyncBoltRequest:
+    body = await request.body()
     return AsyncBoltRequest(
-        body=(await request.body()).decode("utf-8"),
+        body=body.decode("utf-8"),
         query=dict(request.query_params),
         headers=dict(request.headers),
     )
@@ -24,13 +25,9 @@ def to_litestar_response(bolt_resp: BoltResponse) -> Response:
     headers: dict[str, str] = {}
     for k, v in bolt_resp.headers.items():
         if isinstance(v, list):
-            # For Set-Cookie we might need multiple headers,
-            # but Litestar's Response constructor takes a dict.
-            # To support multiple headers with the same key, we'd need to use a different approach.
-            # For now, let's take the first one to avoid the crash.
             headers[k] = v[0] if v else ""
         else:
-            headers[k] = v
+            headers[k] = str(v)
 
     return Response(
         content=bolt_resp.body,
@@ -46,7 +43,18 @@ class SlackController(Controller):
     async def slack_events(
         self, request: Request, phrase_service: Annotated[PhraseService, Dependency()]
     ) -> Response:
-        logger.debug(f"Received Slack request: {request.headers.keys()}")
+        body = await request.body()
+        headers = request.headers
+        logger.info(
+            f"Slack request headers: {list(headers.keys())}, body length: {len(body)}"
+        )
+
+        if (
+            "x-slack-signature" not in headers
+            or "x-slack-request-timestamp" not in headers
+        ):
+            logger.warning("Missing Slack signature headers")
+
         bolt_req: AsyncBoltRequest = await to_bolt_request(request)
         bolt_resp: BoltResponse = await app.async_dispatch(bolt_req)
         if bolt_resp.status != 200:
