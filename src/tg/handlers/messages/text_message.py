@@ -1,8 +1,11 @@
+import logging
 import random
 from telegram import Update
 from telegram.ext import CallbackContext
 from services import phrase_service, cunhao_agent
 from tg.decorators import log_update
+
+logger = logging.getLogger(__name__)
 
 
 @log_update
@@ -22,6 +25,10 @@ async def handle_message(update: Update, context: CallbackContext) -> None:
     )
     is_mentioned = bot_username and f"@{bot_username.lower()}" in text
 
+    logger.info(
+        f"Checking message triggers: Private={is_private}, Reply={is_reply_to_bot}, Mention={is_mentioned}, Text='{text}'"
+    )
+
     if is_private or is_reply_to_bot or is_mentioned:
         # Use AI Agent
         clean_text = message.text
@@ -29,6 +36,7 @@ async def handle_message(update: Update, context: CallbackContext) -> None:
             # Basic cleanup of the mention handle
             clean_text = clean_text.replace(f"@{bot_username}", "").strip()
 
+        logger.info(f"Triggering CunhaoAgent with text: '{clean_text}'")
         # Indicate typing status
         await message.chat.send_action(action="typing")
 

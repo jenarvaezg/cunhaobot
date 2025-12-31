@@ -35,25 +35,37 @@ agent = Agent(
 
 @agent.system_prompt
 async def add_phrase_context(ctx: RunContext[CuñaoDeps]) -> str:
+    logger.info("Generating context for CunhaoAgent...")
+
     # Get some random phrases to set the tone/vocabulary
+
     phrases = []
+
     try:
         # Get some short phrases (usually generic interjections)
+
         for _ in range(5):
             p = phrase_service.get_random(long=False)
+
             if p and p.text:
                 phrases.append(p.text)
 
         # Get some long phrases (sentences)
+
         for _ in range(3):
             p = phrase_service.get_random(long=True)
+
             if p and p.text:
                 phrases.append(p.text)
+
     except Exception as e:
         logger.warning(f"Could not fetch phrases for context: {e}")
+
         phrases = ["¡Cuñado!", "A ver...", "Esto con Franco no pasaba."]
 
     context_str = "\n".join([f"- {p}" for p in phrases])
+
+    logger.debug(f"Generated context phrases: {phrases}")
 
     return (
         f"Aquí tienes ejemplos de tu 'repertorio' habitual (úsalos como inspiración de estilo, tono y vocabulario):\n{context_str}\n\n"
@@ -64,15 +76,25 @@ async def add_phrase_context(ctx: RunContext[CuñaoDeps]) -> str:
 
 class CunhaoAgent:
     async def answer(self, text: str) -> str:
+        logger.info(f"CunhaoAgent answering text: '{text}'")
+
         try:
             # Check for API Key validity
+
             if not config.gemini_api_key or config.gemini_api_key == "dummy":
+                logger.error("GEMINI_API_KEY is missing or invalid in config")
+
                 return "¡Eh! Que no me has pagado la ronda (API Key inválida/no configurada)."
 
             result = await agent.run(text)
+
+            logger.info(f"CunhaoAgent response generated: '{result.data}'")
+
             return result.data
+
         except Exception:
             logger.exception("Error in CunhaoAgent:")
+
             return "Mira, ahora no te puedo explicar esto porque tengo prisa. (Error interno del sistema)"
 
 
