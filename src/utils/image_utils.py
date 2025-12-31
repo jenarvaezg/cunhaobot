@@ -52,9 +52,11 @@ def generate_png(text: str) -> BytesIO:
         lines = _text_wrap(text, font, MAX_SIZE[0] - BORDER_SIZE * 2)
 
         ascent, descent = font.getmetrics()
-        line_height = ascent + descent
+        # Add a small gap between lines (10% of height)
+        line_height = ascent + descent + int(ascent * 0.1)
 
-        sum_y = len(lines) * line_height + BORDER_SIZE * 2
+        # sum_y needs to account for the border of the last line plus some safety margin
+        sum_y = len(lines) * line_height + BORDER_SIZE * 2 + 10
         longest_x = 0
         for line in lines:
             bbox = font.getbbox(line)
