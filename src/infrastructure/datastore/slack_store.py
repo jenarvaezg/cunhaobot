@@ -1,7 +1,6 @@
 import logging
 import time
 import uuid
-from typing import Optional
 
 from google.cloud import datastore
 from slack_sdk.oauth.installation_store import Bot, Installation
@@ -80,10 +79,10 @@ class DatastoreInstallationStore(AsyncInstallationStore):
     async def async_find_bot(
         self,
         *,
-        enterprise_id: Optional[str],
-        team_id: Optional[str],
-        is_enterprise_install: Optional[bool] = False,
-    ) -> Optional[Bot]:
+        enterprise_id: str | None,
+        team_id: str | None,
+        is_enterprise_install: bool | None = False,
+    ) -> Bot | None:
         key = self.bot_repo.get_key(team_id or "enterprise")
         entity = self.bot_repo.client.get(key)
         if entity:
@@ -93,11 +92,11 @@ class DatastoreInstallationStore(AsyncInstallationStore):
     async def async_find_installation(
         self,
         *,
-        enterprise_id: Optional[str],
-        team_id: Optional[str],
-        user_id: Optional[str] = None,
-        is_enterprise_install: Optional[bool] = False,
-    ) -> Optional[Installation]:
+        enterprise_id: str | None,
+        team_id: str | None,
+        user_id: str | None = None,
+        is_enterprise_install: bool | None = False,
+    ) -> Installation | None:
         if user_id:
             key = self.installation_repo.get_key(f"{team_id or ''}-{user_id}")
             entity = self.installation_repo.client.get(key)
@@ -108,17 +107,17 @@ class DatastoreInstallationStore(AsyncInstallationStore):
     async def async_delete_bot(
         self,
         *,
-        enterprise_id: Optional[str],
-        team_id: Optional[str],
+        enterprise_id: str | None,
+        team_id: str | None,
     ) -> None:
         self.bot_repo.delete(team_id or "enterprise")
 
     async def async_delete_installation(
         self,
         *,
-        enterprise_id: Optional[str],
-        team_id: Optional[str],
-        user_id: Optional[str] = None,
+        enterprise_id: str | None,
+        team_id: str | None,
+        user_id: str | None = None,
     ) -> None:
         if user_id:
             self.installation_repo.delete(f"{team_id or ''}-{user_id}")
