@@ -1,7 +1,9 @@
 import logging
 import random
+from typing import Any
 
 from slack_bolt.async_app import AsyncApp
+from slack_sdk.web.async_client import AsyncWebClient
 
 from services import phrase_service
 from slack.attachments import build_phrase_attachments
@@ -12,10 +14,12 @@ logger = logging.getLogger(__name__)
 
 def register_listeners(app: AsyncApp):
     @app.command("/sticker")
-    async def handle_sticker_command(ack, body, client, respond):
+    async def handle_sticker_command(
+        ack: Any, body: dict[str, Any], client: AsyncWebClient, respond: Any
+    ):
         await ack()
-        text = body.get("text", "").strip()
-        channel_id = body.get("channel_id")
+        text: str = body.get("text", "").strip()
+        channel_id: str | None = body.get("channel_id")
 
         logger.info(
             f"Handling sticker request for text: '{text}' in channel: {channel_id}"
@@ -65,9 +69,9 @@ def register_listeners(app: AsyncApp):
             )
 
     @app.command("/cuñao")
-    async def handle_cunao_command(ack, body, respond):
+    async def handle_cunao_command(ack: Any, body: dict[str, Any], respond: Any):
         await ack()
-        text = body.get("text", "").strip()
+        text: str = body.get("text", "").strip()
 
         if text == "help":
             random_phrase = phrase_service.get_random().text
@@ -90,18 +94,18 @@ def register_listeners(app: AsyncApp):
         await respond(attachments=attachments)
 
     @app.action("choice")
-    async def handle_choice_action(ack, body, respond):
+    async def handle_choice_action(ack: Any, body: dict[str, Any], respond: Any):
         await ack()
-        actions = body.get("actions", [])
+        actions: list[dict[str, Any]] = body.get("actions", [])
         if not actions:
             return
 
         action = actions[0]
-        value = action.get("value", "")
+        value: str = action.get("value", "")
 
         if value.startswith("send-"):
-            text = value[len("send-") :]
-            user_name = body["user"]["name"]
+            text: str = value[len("send-") :]
+            user_name: str = body["user"]["name"]
             await respond(
                 delete_original=True,
                 response_type="in_channel",
@@ -115,7 +119,7 @@ def register_listeners(app: AsyncApp):
                 ],
             )
         elif value.startswith("shuffle-"):
-            search = value[len("shuffle-") :]
+            search: str = value[len("shuffle-") :]
             phrases = phrase_service.get_phrases(search=search, long=True)
             if not phrases:
                 await respond(delete_original=True)
