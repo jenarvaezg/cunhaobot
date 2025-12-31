@@ -55,9 +55,12 @@ def register_listeners(app: AsyncApp):
             encoded_text = urllib.parse.quote(selected_phrase.text)
             sticker_url = f"{config.base_url}/sticker/text.png?text={encoded_text}"
 
+        logger.info(f"Sending sticker URL: {sticker_url}")
+
         try:
             await respond(
                 response_type="in_channel",
+                text=f'Aquí tienes tu sticker: "{selected_phrase.text}"',
                 blocks=[
                     {
                         "type": "image",
