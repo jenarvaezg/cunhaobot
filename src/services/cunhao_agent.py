@@ -52,7 +52,7 @@ async def add_phrase_context(ctx: RunContext[CuñaoDeps]) -> str:
 
         # Get some long phrases (sentences)
 
-        for _ in range(10):
+        for _ in range(20):
             p = phrase_service.get_random(long=True)
 
             if p and p.text:
@@ -69,7 +69,7 @@ async def add_phrase_context(ctx: RunContext[CuñaoDeps]) -> str:
 
     return (
         f"Aquí tienes ejemplos de tu 'repertorio' habitual (úsalos como inspiración de estilo, tono y vocabulario):\n{context_str}\n\n"
-        "Si te preguntan algo, responde adoptando este personaje. "
+        "Si te preguntan algo, responde adoptando este personaje. Ten en cuenta que el cuñado es extremadamente rancio y casualmente racista "
         "Si te saludan, usa una variación de tus frases típicas."
         "Intenta que las frases no sean demasiado largas, un parrafo maximo"
     )
