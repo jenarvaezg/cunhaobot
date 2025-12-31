@@ -51,11 +51,11 @@ class WebController(Controller):
             },
         )
 
-    @get("/phrase/{phrase_id:str}")
+    @get("/phrase/{phrase_id:int}")
     async def phrase_detail(
         self,
         request: Request,
-        phrase_id: str,
+        phrase_id: int,
         phrase_repo: Annotated[Any, Dependency()],
         long_phrase_repo: Annotated[Any, Dependency()],
         inline_user_repo: Annotated[Any, Dependency()],
@@ -136,10 +136,10 @@ class WebController(Controller):
             headers={"Cache-Control": "public, max-age=3600"},
         )
 
-    @get("/phrase/{phrase_id:str}/audio.ogg")
+    @get("/phrase/{phrase_id:int}/audio.ogg")
     async def phrase_audio(
         self,
-        phrase_id: str,
+        phrase_id: int,
         phrase_repo: Annotated[Any, Dependency()],
         long_phrase_repo: Annotated[Any, Dependency()],
     ) -> Response:
@@ -162,10 +162,10 @@ class WebController(Controller):
             headers={"Location": audio_url},
         )
 
-    @get("/phrase/{phrase_id:str}/sticker.png", sync_to_thread=True)
+    @get("/phrase/{phrase_id:int}/sticker.png", sync_to_thread=True)
     def phrase_sticker(
         self,
-        phrase_id: str,
+        phrase_id: int,
         phrase_repo: Annotated[Any, Dependency()],
         long_phrase_repo: Annotated[Any, Dependency()],
         phrase_service: Annotated[PhraseService, Dependency()],
@@ -283,10 +283,10 @@ class WebController(Controller):
                 status_code=500,
             )
 
-    @post("/phrase/{phrase_id:str}/generate-image")
+    @post("/phrase/{phrase_id:int}/generate-image")
     async def generate_phrase_image(
         self,
-        phrase_id: str,
+        phrase_id: int,
         phrase_repo: Annotated[Any, Dependency()],
         long_phrase_repo: Annotated[Any, Dependency()],
         ai_service: Annotated[AIService, Dependency()],

@@ -190,7 +190,7 @@ def test_phrase_detail_page(client):
     from datetime import datetime
 
     p1 = Phrase(
-        key="test_key",
+        id=123,
         text="p1",
         usages=10,
         user_id=12345,
@@ -203,7 +203,7 @@ def test_phrase_detail_page(client):
         patch("services.user_repo.load", return_value=None),
         patch("services.inline_user_repo.load", return_value=None),
     ):
-        rv = client.get("/phrase/test_key")
+        rv = client.get("/phrase/123")
         assert rv.status_code == HTTP_200_OK
         assert "Detalle de Sabiduría" in rv.text
         assert "p1" in rv.text
@@ -216,12 +216,12 @@ def test_phrase_detail_page_not_found(client):
         patch("services.phrase_repo.load", return_value=None),
         patch("services.long_phrase_repo.load", return_value=None),
     ):
-        rv = client.get("/phrase/non_existent_key")
+        rv = client.get("/phrase/999")
         assert rv.status_code == 404
 
 
 def test_phrase_sticker_route(client):
-    p1 = Phrase(key="test_key", text="p1", sticker_file_id="file123")
+    p1 = Phrase(id=123, text="p1", sticker_file_id="file123")
     sticker_content = b"fake_png_content"
 
     with (
@@ -232,7 +232,7 @@ def test_phrase_sticker_route(client):
             return_value=sticker_content,
         ),
     ):
-        rv = client.get("/phrase/test_key/sticker.png")
+        rv = client.get("/phrase/123/sticker.png")
         assert rv.status_code == 200
         assert rv.content == sticker_content
         assert rv.headers["content-type"] == "image/png"
