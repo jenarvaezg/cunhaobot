@@ -17,6 +17,7 @@ from infrastructure.protocols import (
 from services import PhraseService, UserService
 from services.ai_service import AIService
 from core.config import config
+from utils.gcp import get_audio_url
 
 logger = logging.getLogger(__name__)
 
@@ -97,6 +98,9 @@ class WebController(Controller):
                         f"Could not fetch user info from Telegram for {phrase.user_id}: {e}"
                     )
 
+        result_type = "short" if phrase.kind == "Phrase" else "long"
+        audio_url = get_audio_url(f"{result_type}-{phrase.text}")
+
         return Template(
             template_name="phrase_detail.html",
             context={
@@ -104,6 +108,7 @@ class WebController(Controller):
                 "contributor": contributor,
                 "user": request.session.get("user"),
                 "owner_id": config.owner_id,
+                "audio_url": audio_url,
             },
         )
 

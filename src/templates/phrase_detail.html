@@ -20,6 +20,22 @@
                 </blockquote>
             </div>
 
+            {% if audio_url %}
+            <div class="mb-4 animate__animated animate__fadeIn">
+                <div class="p-3 rounded-4 bg-dark bg-opacity-25 border border-info border-opacity-10 d-flex align-items-center gap-3">
+                    <div class="bg-info bg-opacity-10 p-2 rounded-circle">
+                        <i class="bi bi-volume-up-fill text-info fs-4"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <audio controls class="w-100 custom-audio" style="height: 32px;">
+                            <source src="{{ audio_url }}" type="audio/ogg">
+                            Tu navegador no soporta el elemento de audio.
+                        </audio>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <hr class="border-secondary border-opacity-25 my-5">
 
             <div class="row g-4">
@@ -109,5 +125,8 @@
     .letter-spacing-2 { letter-spacing: 2px; }
     .stat-card { transition: all 0.3s; }
     .stat-card:hover { background: rgba(255,255,255,0.05) !important; border-color: var(--primary-gold) !important; }
+    .custom-audio::-webkit-media-controls-panel { background-color: rgba(255, 255, 255, 0.1); }
+    .custom-audio::-webkit-media-controls-current-time-display,
+    .custom-audio::-webkit-media-controls-time-remaining-display { color: #fff; }
 </style>
 {% endblock %}

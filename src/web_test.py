@@ -202,6 +202,7 @@ def test_phrase_detail_page(client):
         patch("services.long_phrase_repo.load", return_value=None),
         patch("services.user_repo.load", return_value=None),
         patch("services.inline_user_repo.load", return_value=None),
+        patch("api.web.get_audio_url", return_value=""),
     ):
         rv = client.get("/phrase/test_key")
         assert rv.status_code == HTTP_200_OK
@@ -209,6 +210,58 @@ def test_phrase_detail_page(client):
         assert "p1" in rv.text
         assert "12345" in rv.text
         assert "10" in rv.text
+        assert "<audio controls" not in rv.text
+
+
+def test_phrase_detail_page_with_audio(client):
+    from datetime import datetime
+
+    p1 = Phrase(
+        key="test_key",
+        text="p1",
+        usages=10,
+        user_id=12345,
+        created_at=datetime.now(),
+    )
+
+    with (
+        patch("services.phrase_repo.load", return_value=p1),
+        patch("services.long_phrase_repo.load", return_value=None),
+        patch("services.user_repo.load", return_value=None),
+        patch("services.inline_user_repo.load", return_value=None),
+        patch("api.web.get_audio_url", return_value="http://example.com/audio.ogg"),
+    ):
+        rv = client.get("/phrase/test_key")
+        assert rv.status_code == HTTP_200_OK
+        assert "<audio controls" in rv.text
+        assert 'src="http://example.com/audio.ogg"' in rv.text
+
+
+def test_phrase_detail_page_long_with_audio(client):
+    from datetime import datetime
+
+    lp1 = LongPhrase(
+        key="test_key_long",
+        text="lp1",
+        usages=10,
+        user_id=12345,
+        created_at=datetime.now(),
+    )
+
+    with (
+        patch("services.phrase_repo.load", return_value=None),
+        patch("services.long_phrase_repo.load", return_value=lp1),
+        patch("services.user_repo.load", return_value=None),
+        patch("services.inline_user_repo.load", return_value=None),
+        patch(
+            "api.web.get_audio_url", return_value="http://example.com/audio_long.ogg"
+        ) as mock_get_audio,
+    ):
+        rv = client.get("/phrase/test_key_long")
+        assert rv.status_code == HTTP_200_OK
+        assert "<audio controls" in rv.text
+        assert 'src="http://example.com/audio_long.ogg"' in rv.text
+        mock_get_audio.assert_called_once_with("long-lp1")
 
 
 def test_phrase_detail_page_not_found(client):
