@@ -7,7 +7,6 @@ from tg.stickers import (
 from utils.image_utils import (
     generate_png,
     _text_wrap,
-    _draw_text_with_border_precise,
 )
 import io
 
@@ -20,12 +19,6 @@ class TestStickers:
         text = "one two three four"
         lines = _text_wrap(text, mock_font, 50)
         assert len(lines) > 1
-
-    def test_draw_text_with_border_precise(self):
-        mock_draw = MagicMock()
-        mock_font = MagicMock()
-        _draw_text_with_border_precise("test", (0, 0), mock_font, mock_draw)
-        assert mock_draw.text.call_count == 5
 
     def test_generate_png(self):
         text = "Test Phrase"

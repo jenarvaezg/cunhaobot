@@ -47,21 +47,26 @@ def generate_png(text: str) -> BytesIO:
     lines = []
     line_height = 0
 
+    # Increase horizontal safety margin for the wrap
+    wrap_width = MAX_SIZE[0] - (BORDER_SIZE * 2) - 20
+
     for font_size in range(80, 1, -1):
         font = ImageFont.truetype(font_path, size=font_size)
-        lines = _text_wrap(text, font, MAX_SIZE[0] - BORDER_SIZE * 2)
+        lines = _text_wrap(text, font, wrap_width)
 
         ascent, descent = font.getmetrics()
-        # Add a small gap between lines (10% of height)
-        line_height = ascent + descent + int(ascent * 0.1)
+        # More generous line height: ascent + descent + 15% gap
+        line_height = ascent + descent + int(ascent * 0.15)
 
-        # sum_y needs to account for the border of the last line plus some safety margin
-        sum_y = len(lines) * line_height + BORDER_SIZE * 2 + 10
+        # sum_y: lines * line_height + top/bottom padding
+        sum_y = len(lines) * line_height + BORDER_SIZE * 2 + 30
+
         longest_x = 0
         for line in lines:
             bbox = font.getbbox(line)
             width = bbox[2] - bbox[0]
-            longest_x = max(longest_x, width + BORDER_SIZE * 2)
+            # Account for the stroke width in the width check
+            longest_x = max(longest_x, width + BORDER_SIZE * 2 + 20)
 
         if sum_y <= MAX_SIZE[1] and longest_x <= MAX_SIZE[0]:
             break
@@ -69,66 +74,30 @@ def generate_png(text: str) -> BytesIO:
     if font is None:
         raise ValueError("Could not calculate font size")
 
-    # For stickers, we want the longest side to be 512.
-    # If the height is smaller, we can use it as is.
     image_size = (MAX_SIZE[0], int(sum_y))
     img = Image.new("RGBA", image_size)
     img_draw = ImageDraw.Draw(img)
 
-    y = BORDER_SIZE
+    # Start a bit lower
+    current_y = BORDER_SIZE + 10
     for line in lines:
         bbox = font.getbbox(line)
         line_width = bbox[2] - bbox[0]
         line_x = (image_size[0] - line_width) // 2
 
-        # Draw with explicit anchor to ensure positioning matches our calculations
-        # 'lt' means left-top
-        _draw_text_with_border_precise(line, (line_x, y), font, img_draw)
-        y = y + line_height
+        # Use native stroke_width for a much cleaner and more reliable border
+        img_draw.text(
+            (line_x, current_y),
+            line,
+            font=font,
+            fill="white",
+            stroke_width=BORDER_SIZE,
+            stroke_fill=SHADOW_COLOR,
+            anchor="lt",
+        )
+        current_y += line_height
 
     b = io.BytesIO()
     img.save(b, "PNG")
     b.seek(0)
     return b
-
-
-def _draw_text_with_border_precise(
-    text: str,
-    text_position: tuple[int, int],
-    font: ImageFont.FreeTypeFont,
-    draw: ImageDraw.ImageDraw,
-) -> None:
-    x, y = text_position
-    # draw border
-    # Using explicit anchor="lt" for all calls
-    draw.text(
-        (x - BORDER_SIZE, y - BORDER_SIZE),
-        text,
-        font=font,
-        fill=SHADOW_COLOR,
-        anchor="lt",
-    )
-    draw.text(
-        (x + BORDER_SIZE, y - BORDER_SIZE),
-        text,
-        font=font,
-        fill=SHADOW_COLOR,
-        anchor="lt",
-    )
-    draw.text(
-        (x - BORDER_SIZE, y + BORDER_SIZE),
-        text,
-        font=font,
-        fill=SHADOW_COLOR,
-        anchor="lt",
-    )
-    draw.text(
-        (x + BORDER_SIZE, y + BORDER_SIZE),
-        text,
-        font=font,
-        fill=SHADOW_COLOR,
-        anchor="lt",
-    )
-
-    # now draw the text over it
-    draw.text((x, y), text, font=font, anchor="lt")
