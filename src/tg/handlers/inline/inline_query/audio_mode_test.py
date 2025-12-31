@@ -5,7 +5,7 @@ from tg.text_router import SHORT_MODE, LONG_MODE
 
 
 def test_get_audio_mode_results_short():
-    p1 = Phrase(text="foo")
+    p1 = Phrase(text="foo", id=1)
     with (
         patch("services.phrase_repo.load_all", return_value=[p1]),
         patch(
@@ -25,7 +25,7 @@ def test_get_audio_mode_results_short():
 
 
 def test_get_audio_mode_results_long():
-    p1 = LongPhrase(text="bar")
+    p1 = LongPhrase(text="bar", id=2)
     with (
         patch("services.long_phrase_repo.load_all", return_value=[p1]),
         patch(

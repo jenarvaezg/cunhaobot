@@ -4,7 +4,7 @@ from models.phrase import LongPhrase
 
 
 def test_get_long_mode_results_success():
-    p1 = LongPhrase(text="long phrase test")
+    p1 = LongPhrase(text="long phrase test", id=1)
     with (
         patch("services.long_phrase_repo.get_phrases", return_value=[p1]),
         patch(

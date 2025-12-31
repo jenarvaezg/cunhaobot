@@ -134,43 +134,54 @@ class TestPhraseService:
             assert saved_phrase.sticker_file_id == "sticker_123"
 
     def test_add_usage_by_id_short_text(self, service):
-        p1 = Phrase(text="foo")
-        service.phrase_repo.load_all.return_value = [p1]
+        p1 = Phrase(text="foo", id=1)
+        service.phrase_repo.load.return_value = p1
 
-        service.add_usage_by_id("short-foo")
+        service.add_usage_by_id("short-1")
 
         assert p1.usages == 1
+        service.phrase_repo.load.assert_called_with(1)
         service.phrase_repo.save.assert_called_once_with(p1)
 
     def test_add_usage_by_id_short_combination(self, service):
-        p1 = Phrase(text="foo")
-        p2 = Phrase(text="bar")
-        service.phrase_repo.load_all.return_value = [p1, p2]
+        p1 = Phrase(text="foo", id=1)
+        p2 = Phrase(text="bar", id=2)
 
-        service.add_usage_by_id("short-foo,bar")
+        def mock_load(pid):
+            if pid == 1:
+                return p1
+            if pid == 2:
+                return p2
+            return None
+
+        service.phrase_repo.load.side_effect = mock_load
+
+        service.add_usage_by_id("short-1,2")
 
         assert p1.usages == 1
         assert p2.usages == 1
         assert service.phrase_repo.save.call_count == 2
 
     def test_add_usage_by_id_long_audio(self, service):
-        p1 = LongPhrase(text="long phrase")
-        service.long_repo.load_all.return_value = [p1]
+        p1 = LongPhrase(text="long phrase", id=10)
+        service.long_repo.load.return_value = p1
 
-        service.add_usage_by_id("audio-long-long phrase")
+        service.add_usage_by_id("audio-long-10")
 
         assert p1.usages == 1
         assert p1.audio_usages == 1
+        service.long_repo.load.assert_called_with(10)
         service.long_repo.save.assert_called_once_with(p1)
 
     def test_add_usage_by_id_short_sticker(self, service):
-        p1 = Phrase(text="sticker text")
-        service.phrase_repo.load_all.return_value = [p1]
+        p1 = Phrase(text="sticker text", id=5)
+        service.phrase_repo.load.return_value = p1
 
-        service.add_usage_by_id("sticker-short-sticker text")
+        service.add_usage_by_id("sticker-short-5")
 
         assert p1.usages == 1
         assert p1.sticker_usages == 1
+        service.phrase_repo.load.assert_called_with(5)
         service.phrase_repo.save.assert_called_once_with(p1)
 
     def test_add_usage_by_id_invalid(self, service):

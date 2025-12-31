@@ -116,10 +116,8 @@ class PhraseService:
         # In short mode it can be multiple words separated by comma
         items = data.split(",") if is_short else [data]
 
-        all_phrases = None  # Load lazily if needed for text search
-
         for item in items:
-            # Try numeric ID first
+            # Numeric ID only
             if item.isdigit():
                 phrase = repo.load(int(item))
                 if phrase:
@@ -129,20 +127,3 @@ class PhraseService:
                     if is_sticker:
                         phrase.sticker_usages += 1
                     repo.save(phrase)  # type: ignore[arg-type]
-                    continue
-
-            # Fallback to text search (Legacy)
-            if all_phrases is None:
-                all_phrases = repo.load_all()
-
-            norm_target = normalize_str(item)
-            for p in all_phrases:
-                if normalize_str(p.text) == norm_target:
-                    p.usages += 1
-                    if is_audio:
-                        p.audio_usages += 1
-                    if is_sticker:
-                        p.sticker_usages += 1
-
-                    repo.save(p)  # type: ignore[arg-type]
-                    break  # Next item

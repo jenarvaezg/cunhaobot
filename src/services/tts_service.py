@@ -41,8 +41,11 @@ class TTSService:
 
     def get_audio_url(self, phrase: Phrase | LongPhrase, result_type: str) -> str:
         """Gets the audio URL, generating it if it doesn't exist."""
-        identifier = str(phrase.id) if phrase.id is not None else phrase.text
-        file_name = f"audios/{result_type}-{identifier}.ogg"
+        if phrase.id is None:
+            logger.error(f"Cannot generate audio for phrase without ID: {phrase.text}")
+            return ""
+
+        file_name = f"audios/{result_type}-{phrase.id}.ogg"
         bucket = get_bucket()
         blob = bucket.blob(file_name)
 

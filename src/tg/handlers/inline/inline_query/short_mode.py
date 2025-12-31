@@ -11,8 +11,10 @@ def _result_id_for_combination(combination: tuple) -> str:
     for c in combination:
         if hasattr(c, "id") and c.id is not None:
             parts.append(str(c.id))
-        else:
-            parts.append(normalize_str(str(c)))
+
+    if not parts:
+        # Fallback or empty combination? Should not happen if data is correct
+        return "short-invalid"
 
     safe_id = ",".join(parts)
     return f"short-{safe_id}"[:63]

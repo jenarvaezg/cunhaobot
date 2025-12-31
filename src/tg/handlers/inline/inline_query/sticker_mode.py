@@ -11,9 +11,11 @@ phrase_t = Phrase | LongPhrase
 
 def _phrase_to_inline_sticker(
     phrase: phrase_t, result_type: str
-) -> InlineQueryResultCachedSticker:
-    identifier = str(phrase.id) if phrase.id is not None else normalize_str(phrase.text)
-    result_id = f"sticker-{result_type}-{identifier}"
+) -> InlineQueryResultCachedSticker | None:
+    if phrase.id is None:
+        return None
+
+    result_id = f"sticker-{result_type}-{phrase.id}"
     return InlineQueryResultCachedSticker(
         id=result_id[:63], sticker_file_id=phrase.sticker_file_id
     )
@@ -34,4 +36,8 @@ def get_sticker_mode_results(input: str) -> list[InlineQueryResultCachedSticker]
         phrases = long_phrase_repo.get_phrases(search=normalize_str(rest))
 
     random.shuffle(phrases)
-    return [_phrase_to_inline_sticker(p, result_type) for p in phrases[:10]]
+    results = []
+    for p in phrases[:10]:
+        if res := _phrase_to_inline_sticker(p, result_type):
+            results.append(res)
+    return results

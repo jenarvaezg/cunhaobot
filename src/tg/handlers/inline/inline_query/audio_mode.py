@@ -17,11 +17,10 @@ def _phrase_to_inline_audio(
     from services import tts_service
 
     audio_url = tts_service.get_audio_url(phrase, result_type)
-    if not audio_url:
+    if not audio_url or phrase.id is None:
         return None
 
-    identifier = phrase.id if phrase.id is not None else phrase.text
-    result_id = f"audio-{result_type}-{identifier}"
+    result_id = f"audio-{result_type}-{phrase.id}"
     return InlineQueryResultVoice(
         id=result_id[:63],
         voice_url=audio_url,

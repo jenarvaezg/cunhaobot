@@ -29,7 +29,7 @@ class TestTTSService:
         assert call_args.kwargs["request"]["input"].text == "Hola cuñao."
 
     def test_get_audio_url_exists(self, service):
-        p = Phrase(text="test")
+        p = Phrase(text="test", id=123)
         mock_bucket = MagicMock()
         mock_blob = MagicMock()
         mock_blob.exists.return_value = True
@@ -39,10 +39,10 @@ class TestTTSService:
         with patch("services.tts_service.get_bucket", return_value=mock_bucket):
             url = service.get_audio_url(p, "short")
             assert url == "http://fake/test.ogg"
-            mock_blob.upload_from_string.assert_not_called()
+            mock_bucket.blob.assert_called_with("audios/short-123.ogg")
 
     def test_get_audio_url_generate(self, service):
-        p = Phrase(text="test")
+        p = Phrase(text="test", id=123)
         mock_bucket = MagicMock()
         mock_blob = MagicMock()
         mock_blob.exists.return_value = False
@@ -55,6 +55,7 @@ class TestTTSService:
         ):
             url = service.get_audio_url(p, "short")
             assert url == "http://fake/test.ogg"
+            mock_bucket.blob.assert_called_with("audios/short-123.ogg")
             mock_blob.upload_from_string.assert_called_once_with(
                 b"audio data", content_type="audio/ogg"
             )

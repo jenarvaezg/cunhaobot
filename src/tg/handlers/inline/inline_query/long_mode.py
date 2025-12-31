@@ -14,14 +14,13 @@ def get_long_mode_results(input_text: str) -> list[InlineQueryResultArticle]:
 
     results = [
         InlineQueryResultArticle(
-            id=f"long-{phrase.id}"
-            if phrase.id is not None
-            else f"long-{normalize_str(phrase.text)[:58]}",
+            id=f"long-{phrase.id}",
             title=phrase.text,
             input_message_content=InputTextMessageContent(phrase.text),
             thumbnail_url=get_thumb(),
         )
         for phrase in random.sample(phrases, results_number)
+        if phrase.id is not None
     ]
 
     if not results:

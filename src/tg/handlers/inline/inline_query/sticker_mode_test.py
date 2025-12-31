@@ -5,7 +5,7 @@ from tg.text_router import SHORT_MODE, LONG_MODE
 
 
 def test_get_sticker_mode_results_short():
-    p1 = Phrase(text="foo", sticker_file_id="123")
+    p1 = Phrase(text="foo", sticker_file_id="123", id=1)
     with (
         patch("services.phrase_repo.load_all", return_value=[p1]),
         patch(
@@ -19,7 +19,7 @@ def test_get_sticker_mode_results_short():
 
 
 def test_get_sticker_mode_results_long():
-    p1 = LongPhrase(text="bar", sticker_file_id="456")
+    p1 = LongPhrase(text="bar", sticker_file_id="456", id=2)
     with (
         patch("services.long_phrase_repo.get_phrases", return_value=[p1]),
         patch(
