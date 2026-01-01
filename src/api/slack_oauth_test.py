@@ -44,14 +44,14 @@ def test_slack_oauth_flow_cookie_handling():
 
         # If we DO provide the cookie, it should get past the "invalid_browser" check
         client.cookies.set("slack-app-oauth-state", state_cookie)
-        
-        # In the test client, we might need to manually ensure the Cookie header is set 
+
+        # In the test client, we might need to manually ensure the Cookie header is set
         # as our to_bolt_request relies on it.
         response_ok_state = client.get(
-            "/slack/auth/redirect", 
+            "/slack/auth/redirect",
             params={"code": "fake-code", "state": state_from_url},
             follow_redirects=False,
-            # TestClient usually handles cookies automatically if they were set in previous request 
+            # TestClient usually handles cookies automatically if they were set in previous request
             # or manually via client.cookies.set
         )
 
