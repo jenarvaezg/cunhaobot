@@ -1,5 +1,5 @@
 import logging
-from typing import Annotated
+from typing import Annotated, Any
 
 from litestar import Controller, Request, Response, get, post
 from litestar.params import Dependency
@@ -14,31 +14,56 @@ logger = logging.getLogger(__name__)
 
 async def to_bolt_request(request: Request) -> AsyncBoltRequest:
     body = await request.body()
-    headers = request.headers
     return AsyncBoltRequest(
         body=body.decode("utf-8"),
         query=dict(request.query_params),
-        headers={
-            "X-Slack-Signature": headers.get("x-slack-signature", ""),
-            "X-Slack-Request-Timestamp": headers.get("x-slack-request-timestamp", ""),
-            "Content-Type": headers.get("content-type", ""),
-        },
+        headers=dict(request.headers),
     )
 
 
 def to_litestar_response(bolt_resp: BoltResponse) -> Response:
-    headers: dict[str, str] = {}
-    for k, v in bolt_resp.headers.items():
-        if isinstance(v, list):
-            headers[k] = v[0] if v else ""
-        else:
-            headers[k] = str(v)
-
-    return Response(
+    resp = Response(
         content=bolt_resp.body,
         status_code=bolt_resp.status,
-        headers=headers,
     )
+
+    for k, v in bolt_resp.headers.items():
+        if k.lower() == "set-cookie":
+            values = v if isinstance(v, list) else [v]
+            for cookie_str in values:
+                if not isinstance(cookie_str, str):
+                    continue
+                # Basic parsing of Set-Cookie string to use resp.set_cookie
+                # A full parser would be better, but for Slack Bolt state cookie it's usually simple.
+                parts = cookie_str.split(";")
+                if not parts:
+                    continue
+                name_value = parts[0].split("=", 1)
+                if len(name_value) != 2:
+                    continue
+                name = name_value[0].strip()
+                value = name_value[1].strip()
+
+                extras: dict[str, Any] = {}
+                for part in parts[1:]:
+                    part = part.strip().lower()
+                    if part == "httponly":
+                        extras["httponly"] = True
+                    elif part == "secure":
+                        extras["secure"] = True
+                    elif part.startswith("path="):
+                        extras["path"] = part[5:]
+                    elif part.startswith("domain="):
+                        extras["domain"] = part[7:]
+                    elif part.startswith("samesite="):
+                        extras["samesite"] = part[9:]
+                    # Max-Age and Expires could be added too if needed
+
+                resp.set_cookie(key=name, value=value, **extras)
+        else:
+            resp.headers[k] = v[0] if isinstance(v, list) else v
+
+    return resp
 
 
 class SlackController(Controller):
