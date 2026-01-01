@@ -257,3 +257,24 @@ def test_ai_phrase_success(client):
         assert rv.status_code == 200
         assert "AI phrase" in rv.text
         assert "PERLA DE IA" in rv.text
+
+
+def test_privacy_page(client):
+    rv = client.get("/privacy")
+    assert rv.status_code == HTTP_200_OK
+    assert "Política de Privacidad" in rv.text
+    assert "GDPR" in rv.text
+
+
+def test_terms_page(client):
+    rv = client.get("/terms")
+    assert rv.status_code == HTTP_200_OK
+    assert "Términos de Servicio" in rv.text
+    assert "Aceptación" in rv.text
+
+
+def test_data_policy_page(client):
+    rv = client.get("/data-policy")
+    assert rv.status_code == HTTP_200_OK
+    assert "Política de Datos" in rv.text
+    assert "Retención" in rv.text

@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 from telegram import Update, Message
 from models.user import User
 from infrastructure.datastore.user import (
@@ -60,7 +59,7 @@ class UserService:
         self.user_repo.save(user)
         return user
 
-    def update_or_create_inline_user(self, update: Update) -> Optional[User]:
+    def update_or_create_inline_user(self, update: Update) -> User | None:
         if not (update_user := update.effective_user):
             return None
 
@@ -81,7 +80,7 @@ class UserService:
             )
         return msg.chat.title if msg.chat.title else "Unknown"
 
-    def update_or_create_user(self, update: Update) -> Optional[User]:
+    def update_or_create_user(self, update: Update) -> User | None:
         message = update.effective_message
         if not message:
             return None

@@ -25,15 +25,11 @@ class WebController(Controller):
     def index(
         self,
         request: Request,
-        phrase_repo: Annotated[Any, Dependency()],
-        long_phrase_repo: Annotated[Any, Dependency()],
+        phrase_repo: Annotated[PhraseRepository, Dependency()],
+        long_phrase_repo: Annotated[LongPhraseRepository, Dependency()],
     ) -> Template:
-        # Cast to protocol for internal type safety
-        p_repo: PhraseRepository = phrase_repo
-        lp_repo: LongPhraseRepository = long_phrase_repo
-
-        short_phrases = p_repo.get_phrases(limit=50)
-        long_phrases = lp_repo.get_phrases(limit=50)
+        short_phrases = phrase_repo.get_phrases(limit=50)
+        long_phrases = long_phrase_repo.get_phrases(limit=50)
 
         return Template(
             template_name="index.html",
@@ -55,22 +51,18 @@ class WebController(Controller):
         self,
         request: Request,
         phrase_id: int,
-        phrase_repo: Annotated[Any, Dependency()],
-        long_phrase_repo: Annotated[Any, Dependency()],
-        user_repo: Annotated[Any, Dependency()],
+        phrase_repo: Annotated[PhraseRepository, Dependency()],
+        long_phrase_repo: Annotated[LongPhraseRepository, Dependency()],
+        user_repo: Annotated[UserRepository, Dependency()],
     ) -> Template:
-        p_repo: PhraseRepository = phrase_repo
-        lp_repo: LongPhraseRepository = long_phrase_repo
-        u_repo: UserRepository = user_repo
-
-        phrase = p_repo.load(phrase_id) or lp_repo.load(phrase_id)
+        phrase = phrase_repo.load(phrase_id) or long_phrase_repo.load(phrase_id)
 
         if not phrase:
             raise HTTPException(status_code=404, detail="Phrase not found")
 
         contributor = None
         if phrase.user_id:
-            contributor = u_repo.load(phrase.user_id)
+            contributor = user_repo.load(phrase.user_id)
 
             # If not in DB, try to fetch from Telegram
             if not contributor:
@@ -88,7 +80,7 @@ class WebController(Controller):
                         username=chat.username,
                     )
                     # Save for next time
-                    u_repo.save(contributor)
+                    user_repo.save(contributor)
                 except Exception as e:
                     logger.warning(
                         f"Could not fetch user info from Telegram for {phrase.user_id}: {e}"
@@ -137,13 +129,10 @@ class WebController(Controller):
     async def phrase_audio(
         self,
         phrase_id: int,
-        phrase_repo: Annotated[Any, Dependency()],
-        long_phrase_repo: Annotated[Any, Dependency()],
+        phrase_repo: Annotated[PhraseRepository, Dependency()],
+        long_phrase_repo: Annotated[LongPhraseRepository, Dependency()],
     ) -> Response:
-        p_repo: PhraseRepository = phrase_repo
-        lp_repo: LongPhraseRepository = long_phrase_repo
-
-        phrase = p_repo.load(phrase_id) or lp_repo.load(phrase_id)
+        phrase = phrase_repo.load(phrase_id) or long_phrase_repo.load(phrase_id)
         if not phrase:
             raise HTTPException(status_code=404, detail="Phrase not found")
 
@@ -163,14 +152,11 @@ class WebController(Controller):
     def phrase_sticker(
         self,
         phrase_id: int,
-        phrase_repo: Annotated[Any, Dependency()],
-        long_phrase_repo: Annotated[Any, Dependency()],
+        phrase_repo: Annotated[PhraseRepository, Dependency()],
+        long_phrase_repo: Annotated[LongPhraseRepository, Dependency()],
         phrase_service: Annotated[PhraseService, Dependency()],
     ) -> Response:
-        p_repo: PhraseRepository = phrase_repo
-        lp_repo: LongPhraseRepository = long_phrase_repo
-
-        phrase = p_repo.load(phrase_id) or lp_repo.load(phrase_id)
+        phrase = phrase_repo.load(phrase_id) or long_phrase_repo.load(phrase_id)
 
         if not phrase:
             raise HTTPException(status_code=404, detail="Phrase not found")
@@ -202,8 +188,8 @@ class WebController(Controller):
     def proposals(
         self,
         request: Request,
-        proposal_repo: Annotated[Any, Dependency()],
-        long_proposal_repo: Annotated[Any, Dependency()],
+        proposal_repo: Annotated[ProposalRepository, Dependency()],
+        long_proposal_repo: Annotated[LongProposalRepository, Dependency()],
     ) -> Template:
         from .utils import get_proposals_context
 
@@ -216,12 +202,10 @@ class WebController(Controller):
     def ranking(
         self,
         request: Request,
-        user_repo: Annotated[Any, Dependency()],
+        user_repo: Annotated[UserRepository, Dependency()],
     ) -> Template:
-        u_repo: UserRepository = user_repo
-
         # Get all users with points > 0
-        ranking = [u for u in u_repo.load_all() if u.points > 0 and not u.is_group]
+        ranking = [u for u in user_repo.load_all() if u.points > 0 and not u.is_group]
         ranking.sort(key=lambda x: x.points, reverse=True)
 
         return Template(
@@ -267,16 +251,13 @@ class WebController(Controller):
     def search(
         self,
         request: Request,
-        phrase_repo: Annotated[Any, Dependency()],
-        long_phrase_repo: Annotated[Any, Dependency()],
+        phrase_repo: Annotated[PhraseRepository, Dependency()],
+        long_phrase_repo: Annotated[LongPhraseRepository, Dependency()],
         search: str = "",
         **filters: Any,
     ) -> HTMXTemplate:
-        p_repo: PhraseRepository = phrase_repo
-        lp_repo: LongPhraseRepository = long_phrase_repo
-
-        short_phrases = p_repo.get_phrases(search=search, **filters)
-        long_phrases = lp_repo.get_phrases(search=search, **filters)
+        short_phrases = phrase_repo.get_phrases(search=search, **filters)
+        long_phrases = long_phrase_repo.get_phrases(search=search, **filters)
         return HTMXTemplate(
             template_name="partials/phrases_list.html",
             context={
@@ -294,26 +275,21 @@ class WebController(Controller):
     async def generate_ai_phrases(
         self,
         request: Request,
-        ai_service: Annotated[Any, Dependency()],
-        phrase_repo: Annotated[Any, Dependency()],
-        long_phrase_repo: Annotated[Any, Dependency()],
+        ai_service: Annotated[AIService, Dependency()],
+        phrase_repo: Annotated[PhraseRepository, Dependency()],
+        long_phrase_repo: Annotated[LongPhraseRepository, Dependency()],
     ) -> Response[dict[str, Any]]:
         user = request.session.get("user")
         if not user or str(user.get("id")) != str(config.owner_id):
             return Response({"error": "Unauthorized"}, status_code=401)
 
         try:
-            # Type safety via casting
-            service: AIService = ai_service
-            p_repo: PhraseRepository = phrase_repo
-            lp_repo: LongPhraseRepository = long_phrase_repo
-
             # Fetch all phrases for context
-            context_phrases = [p.text for p in p_repo.load_all()] + [
-                p.text for p in lp_repo.load_all()
+            context_phrases = [p.text for p in phrase_repo.load_all()] + [
+                p.text for p in long_phrase_repo.load_all()
             ]
 
-            phrases = await service.generate_cunhao_phrases(
+            phrases = await ai_service.generate_cunhao_phrases(
                 count=5, context_phrases=context_phrases
             )
             return Response({"phrases": phrases}, status_code=200)
@@ -324,22 +300,18 @@ class WebController(Controller):
     @get("/ai/phrase")
     async def ai_phrase(
         self,
-        ai_service: Annotated[Any, Dependency()],
-        phrase_repo: Annotated[Any, Dependency()],
-        long_phrase_repo: Annotated[Any, Dependency()],
+        ai_service: Annotated[AIService, Dependency()],
+        phrase_repo: Annotated[PhraseRepository, Dependency()],
+        long_phrase_repo: Annotated[LongPhraseRepository, Dependency()],
         request: Request,
     ) -> HTMXTemplate:
         try:
-            service: AIService = ai_service
-            p_repo: PhraseRepository = phrase_repo
-            lp_repo: LongPhraseRepository = long_phrase_repo
-
             # Fetch all phrases for context
-            context_phrases = [p.text for p in p_repo.load_all()] + [
-                p.text for p in lp_repo.load_all()
+            context_phrases = [p.text for p in phrase_repo.load_all()] + [
+                p.text for p in long_phrase_repo.load_all()
             ]
 
-            phrases = await service.generate_cunhao_phrases(
+            phrases = await ai_service.generate_cunhao_phrases(
                 count=1, context_phrases=context_phrases
             )
             phrase = (
@@ -363,8 +335,8 @@ class WebController(Controller):
     async def generate_phrase_image(
         self,
         phrase_id: int,
-        phrase_repo: Annotated[Any, Dependency()],
-        long_phrase_repo: Annotated[Any, Dependency()],
+        phrase_repo: Annotated[PhraseRepository, Dependency()],
+        long_phrase_repo: Annotated[LongPhraseRepository, Dependency()],
         ai_service: Annotated[AIService, Dependency()],
         request: Request,
     ) -> HTMXTemplate:
@@ -378,18 +350,12 @@ class WebController(Controller):
                 status_code=401,
             )
 
-        p_repo: PhraseRepository = phrase_repo
-        lp_repo: LongPhraseRepository = long_phrase_repo
-
-        phrase = p_repo.load(phrase_id) or lp_repo.load(phrase_id)
+        phrase = phrase_repo.load(phrase_id) or long_phrase_repo.load(phrase_id)
         if not phrase:
             raise HTTPException(status_code=404, detail="Phrase not found")
 
         try:
-            from services.ai_service import AIService as AIServiceType
-
-            service: AIServiceType = ai_service
-            image_bytes = await service.generate_image(phrase.text)
+            image_bytes = await ai_service.generate_image(phrase.text)
 
             # Upload to GCS
             from utils.gcp import get_bucket
@@ -417,11 +383,11 @@ class WebController(Controller):
     def metrics(
         self,
         request: Request,
-        phrase_repo: Annotated[Any, Dependency()],
-        long_phrase_repo: Annotated[Any, Dependency()],
-        proposal_repo: Annotated[Any, Dependency()],
-        long_proposal_repo: Annotated[Any, Dependency()],
-        user_repo: Annotated[Any, Dependency()],
+        phrase_repo: Annotated[PhraseRepository, Dependency()],
+        long_phrase_repo: Annotated[LongPhraseRepository, Dependency()],
+        proposal_repo: Annotated[ProposalRepository, Dependency()],
+        long_proposal_repo: Annotated[LongProposalRepository, Dependency()],
+        user_repo: Annotated[UserRepository, Dependency()],
     ) -> Template:
         from collections import defaultdict
         import json

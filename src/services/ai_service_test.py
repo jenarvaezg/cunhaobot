@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import MagicMock, patch, AsyncMock, PropertyMock
 from services.ai_service import AIService, phrase_generator_agent
 
 
@@ -104,3 +104,88 @@ class TestAIService:
             mock_run.assert_called_once()
             # Verify phrase_service was NOT used
             mock_phrase_service.get_phrases.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_generate_cunhao_phrases_context_fetch_error(self):
+        """Test that generation continues even if context fetching fails."""
+        with (
+            patch.object(
+                phrase_generator_agent, "run", new_callable=AsyncMock
+            ) as mock_run,
+            patch("services.phrase_service", create=True) as mock_phrase_service,
+        ):
+            mock_phrase_service.get_phrases.side_effect = Exception("DB Error")
+            mock_result = MagicMock()
+            mock_result.output.phrases = ["Gen 1"]
+            mock_run.return_value = mock_result
+
+            service = AIService(api_key="valid_key")
+            phrases = await service.generate_cunhao_phrases(count=1)
+
+            assert phrases == ["Gen 1"]
+            mock_run.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_generate_image_success(self):
+        """Test successful image generation."""
+        service = AIService(api_key="valid_key")
+        mock_client = MagicMock()
+        with patch.object(
+            AIService, "client", new_callable=PropertyMock
+        ) as mock_client_prop:
+            mock_client_prop.return_value = mock_client
+
+            mock_response = MagicMock()
+            mock_part = MagicMock()
+            mock_part.inline_data.data = b"fake_image_bytes"
+            mock_part.text = None
+            mock_response.candidates = [MagicMock(content=MagicMock(parts=[mock_part]))]
+            mock_client.models.generate_content.return_value = mock_response
+
+            image_bytes = await service.generate_image("test phrase")
+            assert image_bytes == b"fake_image_bytes"
+
+    @pytest.mark.asyncio
+    async def test_generate_image_base64_fallback(self):
+        """Test image generation with base64 text fallback."""
+        import base64
+
+        fake_data = b"fake_image_bytes"
+        encoded_data = base64.b64encode(fake_data).decode()
+
+        service = AIService(api_key="valid_key")
+        mock_client = MagicMock()
+        with patch.object(
+            AIService, "client", new_callable=PropertyMock
+        ) as mock_client_prop:
+            mock_client_prop.return_value = mock_client
+
+            mock_response = MagicMock()
+            mock_part = MagicMock()
+            mock_part.inline_data = None
+            # Needs to be long to trigger fallback
+            mock_part.text = encoded_data.ljust(1001, " ")
+            mock_response.candidates = [MagicMock(content=MagicMock(parts=[mock_part]))]
+            mock_client.models.generate_content.return_value = mock_response
+
+            image_bytes = await service.generate_image("test phrase")
+            assert image_bytes == fake_data
+
+    @pytest.mark.asyncio
+    async def test_generate_image_no_data_error(self):
+        """Test error when no image data is found."""
+        service = AIService(api_key="valid_key")
+        mock_client = MagicMock()
+        with patch.object(
+            AIService, "client", new_callable=PropertyMock
+        ) as mock_client_prop:
+            mock_client_prop.return_value = mock_client
+
+            mock_response = MagicMock()
+            mock_response.candidates = [MagicMock(content=MagicMock(parts=[]))]
+            mock_client.models.generate_content.return_value = mock_response
+
+            with pytest.raises(
+                ValueError, match="No candidates or parts in AI response"
+            ):
+                await service.generate_image("test phrase")

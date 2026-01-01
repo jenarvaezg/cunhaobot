@@ -1,7 +1,7 @@
 import logging
 import asyncio
 import json
-from typing import Annotated, Any, AsyncIterable
+from typing import Annotated, AsyncIterable
 from litestar import Controller, Request, get, post
 from litestar.response import Response, Template, ServerSentEvent
 from litestar.params import Dependency
@@ -192,14 +192,13 @@ class AdminController(Controller):
         kind: str,
         proposal_id: str,
         request: Request,
-        proposal_service: Annotated[Any, Dependency()],
+        proposal_service: Annotated[ProposalService, Dependency()],
     ) -> Response[str]:
         user = request.session.get("user")
         if not user or str(user.get("id")) != config.owner_id:
             return Response("Unauthorized", status_code=401)
 
-        service: ProposalService = proposal_service
-        if await service.approve(kind, proposal_id):
+        if await proposal_service.approve(kind, proposal_id):
             return Response("Approved", status_code=200)
         return Response("Not found", status_code=404)
 
@@ -209,13 +208,12 @@ class AdminController(Controller):
         kind: str,
         proposal_id: str,
         request: Request,
-        proposal_service: Annotated[Any, Dependency()],
+        proposal_service: Annotated[ProposalService, Dependency()],
     ) -> Response[str]:
         user = request.session.get("user")
         if not user or str(user.get("id")) != config.owner_id:
             return Response("Unauthorized", status_code=401)
 
-        service: ProposalService = proposal_service
-        if await service.reject(kind, proposal_id):
+        if await proposal_service.reject(kind, proposal_id):
             return Response("Rejected", status_code=200)
         return Response("Not found", status_code=404)
