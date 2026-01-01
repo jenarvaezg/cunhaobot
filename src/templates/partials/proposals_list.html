@@ -111,10 +111,10 @@
                 {% endfor %}
             </div>
         {% else %}
-            <div class="text-center p-5 glass-card">
-                <i class="bi bi-stars fs-1 text-secondary opacity-25"></i>
-                <p class="text-secondary mt-3">Nada pendiente. ¡A descansar, máquina!</p>
-            </div>
+    <div class="text-center py-5">
+        <i class="bi bi-check-circle text-success display-1"></i>
+        <p class="text-secondary mt-3">Nada pendiente. ¡A descansar, {{ apelativo() }}!</p>
+    </div>
         {% endif %}
     </div>
 </div>

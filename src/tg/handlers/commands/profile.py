@@ -1,7 +1,7 @@
 from telegram import Update, constants
 from telegram.ext import CallbackContext
 from tg.decorators import log_update
-from services import user_service, usage_service, badge_service
+from services import user_service, usage_service, badge_service, phrase_service
 from models.usage import ActionType
 
 
@@ -15,8 +15,9 @@ async def handle_profile(update: Update, context: CallbackContext) -> None:
 
     user = user_service.get_user(user_id, platform)
     if not user:
+        p = phrase_service.get_random(long=False).text
         await message.reply_text(
-            "Todavía no tengo tu ficha, fiera. ¡Empieza a usar el bot!"
+            f"Todavía no tengo tu ficha, {p}. ¡Empieza a usar el bot!"
         )
         return
 
@@ -36,17 +37,17 @@ async def handle_profile(update: Update, context: CallbackContext) -> None:
         for b_id in user.badges:
             b_info = badge_service.get_badge_info(b_id)
             if b_info:
-                badge_infos.append(f"{b_info.icon} *{b_info.name}*")
+                badge_infos.append(f"{b_info.icon} <b>{b_info.name}</b>")
         badges_text = "\n" + "\n".join(badge_infos)
     else:
-        badges_text = "\n_Todavía no tienes medallas, ¡dale caña!_"
+        badges_text = "\n<i>Todavía no tienes medallas, ¡dale caña!</i>"
 
     text = (
-        f"👤 *Perfil de {user.name}*\n"
+        f"👤 <b>Perfil de {user.name}</b>\n"
         f"━━━━━━━━━━━━━━━\n"
-        f"🏆 *Puntos:* {user.points}\n"
-        f"📊 *Usos totales:* {stats['total_usages']}\n"
-        f"🎖️ *Logros:* {badges_text}"
+        f"🏆 <b>Puntos:</b> {user.points}\n"
+        f"📊 <b>Usos totales:</b> {stats['total_usages']}\n"
+        f"🎖️ <b>Logros:</b> {badges_text}"
     )
 
-    await message.reply_text(text, parse_mode=constants.ParseMode.MARKDOWN)
+    await message.reply_text(text, parse_mode=constants.ParseMode.HTML)

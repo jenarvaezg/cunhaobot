@@ -20,7 +20,7 @@ async def test_handle_help():
         patch("tg.handlers.commands.help.phrase_service.get_random") as mock_get_random,
         patch("tg.decorators.user_service.update_or_create_user"),
     ):
-        mock_get_random.side_effect = [mock_phrase1, mock_phrase2, mock_phrase_long]
+        mock_get_random.return_value = mock_phrase1
 
         await handle_help(update, context)
         update.effective_message.reply_text.assert_called_once()

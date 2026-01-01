@@ -17,7 +17,9 @@ async def handle_help(update: Update, context: CallbackContext) -> None:
         metadata={"command": "help"},
     )
 
-    p1 = phrase_service.get_random().text
+    p1 = phrase_service.get_random(long=False).text
+    p2 = phrase_service.get_random(long=False).text
+    p3 = phrase_service.get_random(long=False).text
 
     text = (
         f"¿Perdido, {p1}? No te preocupes, que aquí te lo explico yo en un momento, que esto no tiene ciencia.\n\n"
@@ -27,12 +29,12 @@ async def handle_help(update: Update, context: CallbackContext) -> None:
         "• `/saludo [nombre]` - Envía un saludo personalizado.\n"
         "• `/sticker [búsqueda]` - Envía un sticker con frase.\n\n"
         "2️⃣ **Tu Progreso:**\n"
-        "• `/perfil` - Mira tus puntos y tus medallas de fiera.\n\n"
+        f"• `/perfil` - Mira tus puntos y tus medallas de {p2}.\n\n"
         "3️⃣ **Aporta tu Sabiduría:**\n"
         "• `/proponer <palabra>` - Envía apelativos nuevos.\n"
         "• `/proponerfrase <frase>` - Envía frases nuevas para que las aprobemos.\n\n"
         "4️⃣ **Uso en otros chats:**\n"
-        "Escribe `@cunhaobot` seguido de lo que quieras buscar. Puedes filtrar por `audio` o `sticker` (ej: `@cunhaobot audio fiera`).\n\n"
+        f"Escribe `@cunhaobot` seguido de lo que quieras buscar, {p3}. Puedes filtrar por `audio` o `sticker` (ej: `@cunhaobot audio {p2}`).\n\n"
         "5️⃣ **Consultoría IA:**\n"
         "Si me mencionas o me escribes por privado, te responderé con la autoridad que me dan mis años de experiencia.\n\n"
         '_"Escucha a tu cuñao, que sabe de lo que habla."_'

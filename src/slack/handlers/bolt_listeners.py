@@ -395,14 +395,17 @@ def register_listeners(app: AsyncApp):
             action=ActionType.COMMAND,
             metadata={"command": "help"},
         )
+        p1 = phrase_service.get_random(long=False).text
+        p2 = phrase_service.get_random(long=False).text
+        p3 = phrase_service.get_random(long=False).text
         await respond(
             "*Guía Rápida de Supervivencia Cuñadil:*\n\n"
             "• `/cuñao [texto]` - Busca una frase mítica que contenga ese texto.\n"
             "• `/sticker [texto]` - Genera un sticker con una frase para cerrar debates.\n"
-            "• `/saludo [nombre]` - Envía un saludo personalizado (ej: `/saludo máquina`).\n"
-            "• `/perfil` - Mira tus puntos y medallas de fiera.\n"
+            f"• `/saludo [nombre]` - Envía un saludo personalizado (ej: `/saludo {p1}`).\n"
+            f"• `/perfil` - Mira tus puntos y medallas de {p2}.\n"
             "• *Mención* - Si me mencionas (@CuñaoBot) te responderé con mi sabiduría IA.\n\n"
-            '_"Eso con un par de martillazos se arregla, te lo digo yo."_'
+            f'_"Eso con un par de martillazos se arregla, te lo digo yo, {p3}."_'
         )
 
     @app.command("/perfil")
@@ -424,7 +427,8 @@ def register_listeners(app: AsyncApp):
 
         user = user_service.get_user(user_id, platform)
         if not user:
-            await respond("Todavía no tengo tu ficha, fiera. ¡Empieza a usar el bot!")
+            p = phrase_service.get_random(long=False).text
+            await respond(f"Todavía no tengo tu ficha, {p}. ¡Empieza a usar el bot!")
             return
 
         stats = usage_service.get_user_stats(user_id, platform)

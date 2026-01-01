@@ -118,10 +118,9 @@
 <div class="glass-card p-4 animate__animated animate__fadeInUp" style="animation-delay: 0.4s;">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="oswald mb-0">Ranking de Contribuidores</h4>
-        <div class="stat-badge">
-            <i class="bi bi-person-check-fill text-success"></i>
-            <span>Máquina del Año: <strong class="text-warning">{{ top_contributor }}</strong></span>
-        </div>
+            <div class="card-body">
+                <span>{{ apelativo() | capitalize }} del Año: <strong class="text-warning">{{ top_contributor }}</strong></span>
+            </div>
     </div>
 
     <div class="table-responsive">

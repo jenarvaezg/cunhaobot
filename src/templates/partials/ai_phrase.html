@@ -6,15 +6,8 @@
         <p class="fs-4 oswald text-white mb-0 mt-2">"{{ phrase }}"</p>
     </div>
     <div class="mt-auto w-100">
-        <button class="btn btn-outline-warning rounded-pill px-4 w-100"
-                hx-get="/ai/phrase"
-                hx-target="#ai-phrase-container"
-                hx-swap="outerHTML"
-                hx-indicator="#ai-indicator-inner">
-            <i class="bi bi-arrow-clockwise me-2"></i>¿Otra? Máquina
-            <div id="ai-indicator-inner" class="htmx-indicator ms-2 d-inline-block">
-                <div class="spinner-border spinner-border-sm" role="status"></div>
-            </div>
+        <button class="btn btn-outline-primary btn-sm rounded-pill" hx-get="/ai/phrase" hx-target="#ai-phrase-container" hx-swap="outerHTML">
+            <i class="bi bi-arrow-clockwise me-2"></i>¿Otra? {{ apelativo() | capitalize }}
         </button>
     </div>
 </div>

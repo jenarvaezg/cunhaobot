@@ -23,7 +23,7 @@ async def test_handle_start():
         ) as mock_get_random,
         patch("tg.decorators.user_service.update_or_create_user"),
     ):
-        mock_get_random.side_effect = [mock_phrase1, mock_phrase2, mock_long_phrase]
+        mock_get_random.return_value = mock_phrase1
 
         await handle_start(update, context)
 

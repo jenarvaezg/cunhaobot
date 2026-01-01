@@ -16,6 +16,7 @@ from api.slack import SlackController
 from api.bot import BotController
 from api.utils import get_proposals_context
 from utils import verify_telegram_auth
+from utils.ui import apelativo
 from infrastructure.protocols import ProposalRepository, LongProposalRepository
 
 from services import (
@@ -122,6 +123,8 @@ app = Litestar(
     before_request=auto_login_local,
     debug=not config.is_gae,
 )
+
+app.template_engine.engine.globals["apelativo"] = apelativo
 
 if __name__ == "__main__":
     import uvicorn

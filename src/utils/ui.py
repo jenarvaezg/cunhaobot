@@ -20,3 +20,9 @@ thumbs = [
 
 def get_thumb() -> str:
     return random.choice(thumbs)
+
+
+def apelativo() -> str:
+    from services import phrase_service
+
+    return phrase_service.get_random(long=False).text
