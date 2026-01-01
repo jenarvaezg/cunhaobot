@@ -7,34 +7,13 @@
 
         <div class="glass-card p-5">
             <section class="mb-5">
-                <h3 class="oswald text-warning mb-3">1. Política de Retención de Datos</h3>
-                <p>En CuñaoBot, aplicamos el principio de minimización de datos. Solo retenemos la información necesaria para el funcionamiento del servicio:</p>
-                <ul>
-                    <li><strong>Datos de Usuario:</strong> Los IDs de plataforma y nombres se conservan mientras la aplicación esté instalada en el espacio de trabajo o el usuario interactúe con el bot.</li>
-                    <li><strong>Propuestas y Puntos:</strong> Las frases propuestas y los puntos asociados se conservan de forma indefinida para mantener la integridad del ranking y el archivo histórico, a menos que se solicite explícitamente su eliminación.</li>
-                    <li><strong>Logs de Sistema:</strong> Los registros de actividad técnica se conservan por un periodo máximo de 30 días para labores de depuración y seguridad.</li>
-                </ul>
+                <h3 class="oswald text-warning mb-3">1. Retención de Datos</h3>
+                <p>Retenemos los IDs de usuario y nombres mientras la app esté instalada para gestionar el ranking de frases. Los logs técnicos se borran automáticamente a los 30 días.</p>
             </section>
 
             <section class="mb-5">
-                <h3 class="oswald text-warning mb-3">2. Política de Eliminación y Archivado</h3>
-                <p>Garantizamos a los usuarios el control total sobre sus datos:</p>
-                <ul>
-                    <li><strong>Solicitud de Eliminación:</strong> Cualquier usuario puede solicitar la eliminación completa de sus datos personales enviando un mensaje al administrador o abriendo una incidencia en nuestro repositorio oficial de GitHub.</li>
-                    <li><strong>Plazo de Ejecución:</strong> Una vez recibida y verificada la solicitud, los datos serán eliminados de nuestras bases de datos activas en un plazo máximo de 7 días hábiles.</li>
-                    <li><strong>Desinstalación:</strong> Si la aplicación es desinstalada de un espacio de trabajo de Slack, los datos asociados a dicho espacio se marcarán para eliminación y se borrarán definitivamente en nuestro siguiente ciclo de limpieza (máximo 30 días).</li>
-                    <li><strong>Archivado:</strong> No realizamos archivado a largo plazo de datos personales identificables fuera de las copias de seguridad estándar del sistema (Google Cloud Datastore).</li>
-                </ul>
-            </section>
-
-            <section class="mb-0">
-                <h3 class="oswald text-warning mb-3">3. Procedimiento de Borrado</h3>
-                <p>Cuando se solicita un borrado de datos, el proceso incluye:</p>
-                <ol>
-                    <li>Eliminación del registro del usuario en la base de datos de usuarios.</li>
-                    <li>Anonimización de las frases propuestas (la frase permanece en el archivo pero se desvincula del autor).</li>
-                    <li>Eliminación de cualquier metadato residual en sistemas de caché.</li>
-                </ol>
+                <h3 class="oswald text-warning mb-3">2. Eliminación de Datos</h3>
+                <p>Si desinstalas la app, tus datos se marcan para borrado y se eliminan definitivamente en un máximo de 30 días. Puedes solicitar el borrado inmediato contactando a través de GitHub.</p>
             </section>
         </div>
 

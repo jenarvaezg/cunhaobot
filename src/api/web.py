@@ -233,6 +233,36 @@ class WebController(Controller):
             },
         )
 
+    @get("/privacy", sync_to_thread=True)
+    def privacy(self, request: Request) -> Template:
+        return Template(
+            template_name="privacy.html",
+            context={
+                "user": request.session.get("user"),
+                "owner_id": config.owner_id,
+            },
+        )
+
+    @get("/terms", sync_to_thread=True)
+    def terms(self, request: Request) -> Template:
+        return Template(
+            template_name="terms.html",
+            context={
+                "user": request.session.get("user"),
+                "owner_id": config.owner_id,
+            },
+        )
+
+    @get("/data-policy", sync_to_thread=True)
+    def data_policy(self, request: Request) -> Template:
+        return Template(
+            template_name="data_policy.html",
+            context={
+                "user": request.session.get("user"),
+                "owner_id": config.owner_id,
+            },
+        )
+
     @get("/search", sync_to_thread=True)
     def search(
         self,
