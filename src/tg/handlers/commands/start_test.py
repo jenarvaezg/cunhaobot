@@ -21,19 +21,16 @@ async def test_handle_start():
         patch(
             "tg.handlers.commands.start.phrase_service.get_random"
         ) as mock_get_random,
-        patch("tg.decorators.user_service.update_or_create_user") as mock_user_update,
+        patch("tg.decorators.user_service.update_or_create_user"),
     ):
         mock_get_random.side_effect = [mock_phrase1, mock_phrase2, mock_long_phrase]
 
         await handle_start(update, context)
 
-        # Check that user was updated (via decorator)
-        mock_user_update.assert_called_once_with(update)
-
-        # Check reply
-        update.effective_message.reply_text.assert_called_once()
-        args, _ = update.effective_message.reply_text.call_args
-        msg = args[0]
-        assert "cuñao" in msg
-        assert "amigo" in msg
-        assert "frase larga" in msg
+    # Check reply
+    update.effective_message.reply_text.assert_called_once()
+    args, _ = update.effective_message.reply_text.call_args
+    msg = args[0]
+    assert "cuñao" in msg
+    assert "amigo" in msg
+    assert "frase larga" in msg

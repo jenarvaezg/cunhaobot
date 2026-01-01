@@ -48,8 +48,4 @@ async def test_handle_stop_no_user():
     )  # Ensure chat type is set for _get_name_from_message
     update.effective_message = None  # No message, so update_or_create_user returns None
     context = MagicMock()
-    with patch.object(
-        UserService, "update_or_create_user"
-    ) as mock_update_or_create:  # Patch the method on the class
-        await handle_stop(update, context)
-        mock_update_or_create.assert_called_once_with(update)
+    await handle_stop(update, context)

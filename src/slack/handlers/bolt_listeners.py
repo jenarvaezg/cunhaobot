@@ -12,6 +12,7 @@ from slack.attachments import (
     build_saludo_attachments,
     build_sticker_attachments,
 )
+from slack.utils import get_slack_history
 
 logger = logging.getLogger(__name__)
 
@@ -304,17 +305,30 @@ def register_listeners(app: AsyncApp):
             await respond(delete_original=True)
 
     @app.event("app_mention")
-    async def handle_app_mention(ack: Any, body: dict[str, Any], say: Any, client: Any):
+    async def handle_app_mention(
+        ack: Any, body: dict[str, Any], say: Any, client: Any, context: Any
+    ):
         await ack()
         await _register_slack_user(body, client)
         event = body["event"]
         text = event.get("text", "")
-        response = await cunhao_agent.answer(text)
+        thread_ts = event.get("thread_ts")
+        bot_user_id = context.get("bot_user_id")
+
+        # Extract history using API (either thread or general channel context)
+        history = await get_slack_history(
+            client,
+            event.get("channel"),
+            bot_user_id,
+            thread_ts=thread_ts or event.get("ts"),
+        )
+
+        response = await cunhao_agent.answer(text, history=history)
         await say(response, thread_ts=event.get("ts"))
 
     @app.event("message")
     async def handle_message_event(
-        ack: Any, body: dict[str, Any], say: Any, client: Any
+        ack: Any, body: dict[str, Any], say: Any, client: Any, context: Any
     ):
         await ack()
         await _register_slack_user(body, client)
@@ -323,5 +337,13 @@ def register_listeners(app: AsyncApp):
         # Only handle DMs here, avoid double replying in channels (handled by app_mention)
         if channel_type == "im" and "subtype" not in event:
             text = event.get("text", "")
-            response = await cunhao_agent.answer(text)
+            thread_ts = event.get("thread_ts")
+            bot_user_id = context.get("bot_user_id")
+
+            # Extract history using API
+            history = await get_slack_history(
+                client, event.get("channel"), bot_user_id, thread_ts=thread_ts
+            )
+
+            response = await cunhao_agent.answer(text, history=history)
             await say(response)

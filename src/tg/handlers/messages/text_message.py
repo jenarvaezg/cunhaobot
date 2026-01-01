@@ -3,6 +3,7 @@ from telegram import Update
 from telegram.ext import CallbackContext
 from services import phrase_service, cunhao_agent
 from tg.decorators import log_update
+from tg.utils.history import get_telegram_history
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,10 @@ async def handle_message(update: Update, context: CallbackContext) -> None:
         # Indicate typing status
         await message.chat.send_action(action="typing")
 
-        response = await cunhao_agent.answer(clean_text)
+        # Get context history from replies and general chat (extracted from context)
+        history = await get_telegram_history(message, context)
+
+        response = await cunhao_agent.answer(clean_text, history=history)
         await message.reply_text(response, do_quote=True)
         return
 
