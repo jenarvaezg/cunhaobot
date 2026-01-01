@@ -243,6 +243,16 @@ class WebController(Controller):
             },
         )
 
+    @get("/terms", sync_to_thread=True)
+    def terms(self, request: Request) -> Template:
+        return Template(
+            template_name="terms.html",
+            context={
+                "user": request.session.get("user"),
+                "owner_id": config.owner_id,
+            },
+        )
+
     @get("/search", sync_to_thread=True)
     def search(
         self,
