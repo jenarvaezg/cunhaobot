@@ -1,5 +1,6 @@
 import logging
 import asyncio
+import json
 from typing import Annotated, Any, AsyncIterable
 from litestar import Controller, Request, get, post
 from litestar.response import Response, Template, ServerSentEvent
@@ -48,7 +49,7 @@ class AdminController(Controller):
         # a background process and this to follow it, but for a cleaner HTMX integration,
         # we'll do the broadcast INSIDE the SSE generator.
 
-        async def progress_generator() -> AsyncIterable[dict[str, Any]]:
+        async def progress_generator() -> AsyncIterable[str]:
             # Use query params for the message since it's a GET
             msg = request.query_params.get("message")
 
@@ -59,11 +60,13 @@ class AdminController(Controller):
             total = len(telegram_users)
 
             if total == 0:
-                yield {
-                    "progress": 100,
-                    "current_user": "No hay usuarios",
-                    "status": "completed",
-                }
+                yield json.dumps(
+                    {
+                        "progress": 100,
+                        "current_user": "No hay usuarios",
+                        "status": "completed",
+                    }
+                )
                 return
 
             application = get_tg_application()
@@ -75,11 +78,13 @@ class AdminController(Controller):
 
             for i, u in enumerate(telegram_users):
                 progress = int((i / total) * 100)
-                yield {
-                    "progress": progress,
-                    "current_user": u.name or u.username or str(u.id),
-                    "status": f"Enviando a {i + 1}/{total}...",
-                }
+                yield json.dumps(
+                    {
+                        "progress": progress,
+                        "current_user": u.name or u.username or str(u.id),
+                        "status": f"Enviando a {i + 1}/{total}...",
+                    }
+                )
 
                 try:
                     chat_id = (
@@ -98,11 +103,13 @@ class AdminController(Controller):
                 # Small delay to avoid flooding and allow SSE to breathe
                 await asyncio.sleep(0.05)
 
-            yield {
-                "progress": 100,
-                "current_user": "¡Terminado!",
-                "status": f"Completado. ✅ {success_count} ok, 🚫 {fail_count} fallidos.",
-            }
+            yield json.dumps(
+                {
+                    "progress": 100,
+                    "current_user": "¡Terminado!",
+                    "status": f"Completado. ✅ {success_count} ok, 🚫 {fail_count} fallidos.",
+                }
+            )
 
         return ServerSentEvent(progress_generator(), event_type="progress")
 
