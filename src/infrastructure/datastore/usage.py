@@ -32,10 +32,19 @@ class UsageDatastoreRepository(DatastoreRepository[UsageRecord]):
         self.client.put(entity)
 
     def get_user_usage_count(self, user_id: str, platform: str) -> int:
-        query = self.client.query(kind=self.kind)
-        query.add_filter("user_id", "=", user_id)
-        query.add_filter("platform", "=", platform)
-        return len(list(query.fetch()))
+        try:
+            query = self.client.query(kind=self.kind)
+            query.add_filter("user_id", "=", user_id)
+            query.add_filter("platform", "=", platform)
+            query.keys_only()
+            return len(list(query.fetch(limit=5000)))  # Limit to 5000 to avoid timeouts
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).error(
+                f"Error counting usage for {user_id}: {e}"
+            )
+            return 0
 
 
 usage_repository = UsageDatastoreRepository()

@@ -66,7 +66,11 @@ async def handle_profile(update: Update, context: CallbackContext) -> None:
         await message.reply_text(text, parse_mode=constants.ParseMode.HTML)
     except Exception as e:
         logger.error(f"Error in handle_profile: {e}")
+        import traceback
+
+        logger.error(traceback.format_exc())
         # Fallback to simple text if HTML fails
+        user_name = user.name or "máquina"
         await message.reply_text(
-            f"Error al cargar el perfil, {user.name}. Inténtalo de nuevo."
+            f"Error al cargar el perfil ({type(e).__name__}: {e}), {user_name}. Inténtalo de nuevo."
         )
