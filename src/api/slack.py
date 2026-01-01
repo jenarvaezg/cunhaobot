@@ -14,10 +14,15 @@ logger = logging.getLogger(__name__)
 
 async def to_bolt_request(request: Request) -> AsyncBoltRequest:
     body = await request.body()
+    headers = dict(request.headers)
+    if "cookie" not in headers and "Cookie" not in headers and request.cookies:
+        # Reconstruct cookie header if Litestar consumed it
+        headers["Cookie"] = "; ".join(f"{k}={v}" for k, v in request.cookies.items())
+
     return AsyncBoltRequest(
         body=body.decode("utf-8"),
         query=dict(request.query_params),
-        headers=dict(request.headers),
+        headers=headers,
     )
 
 
@@ -44,7 +49,11 @@ def to_litestar_response(bolt_resp: BoltResponse) -> Response:
                 name = name_value[0].strip()
                 value = name_value[1].strip()
 
-                extras: dict[str, Any] = {}
+                extras: dict[str, Any] = {
+                    "httponly": True,
+                    "secure": True,
+                    "samesite": "lax",
+                }
                 for part in parts[1:]:
                     part = part.strip().lower()
                     if part == "httponly":
