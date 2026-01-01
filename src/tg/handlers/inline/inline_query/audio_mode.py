@@ -5,9 +5,6 @@ from models.phrase import LongPhrase, Phrase
 from tg.text_router import LONG_MODE, SHORT_MODE, get_query_mode
 
 
-from .long_mode import get_long_mode_results  # noqa: F401
-from .short_mode import get_short_mode_results  # noqa: F401
-
 phrase_t = Phrase | LongPhrase
 
 
@@ -34,21 +31,20 @@ def get_audio_mode_results(input: str) -> list[InlineQueryResultVoice]:
     mode, rest = get_query_mode(input)
 
     phrases = []
+    result_type = "short"
     if mode == SHORT_MODE:
-        all_phrases = phrase_repo.load_all()
-        random.shuffle(all_phrases)
-        phrases = all_phrases[:10]  # Limit to 10 phrases
+        result_type = "short"
+        phrases = phrase_repo.get_phrases(search=rest)
     elif mode == LONG_MODE:
-        all_phrases = long_phrase_repo.load_all()
-        random.shuffle(all_phrases)
-        phrases = all_phrases[:10]  # Limit to 10 phrases
+        result_type = "long"
+        phrases = long_phrase_repo.get_phrases(search=rest)
+
+    random.shuffle(phrases)
 
     results = []
     for p in phrases:
-        if mode == SHORT_MODE:
-            if res := _phrase_to_inline_audio(p, "short"):
-                results.append(res)
-        elif mode == LONG_MODE:
-            if res := _phrase_to_inline_audio(p, "long"):
-                results.append(res)
+        if res := _phrase_to_inline_audio(p, result_type):
+            results.append(res)
+        if len(results) >= 10:
+            break
     return results

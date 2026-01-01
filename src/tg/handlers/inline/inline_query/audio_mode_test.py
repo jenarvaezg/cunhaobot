@@ -7,7 +7,7 @@ from tg.text_router import SHORT_MODE, LONG_MODE
 def test_get_audio_mode_results_short():
     p1 = Phrase(text="foo", id=1)
     with (
-        patch("services.phrase_repo.load_all", return_value=[p1]),
+        patch("services.phrase_repo.get_phrases", return_value=[p1]),
         patch(
             "services.tts_service.tts_service.get_audio_url",
             return_value="http://audio",
@@ -27,7 +27,7 @@ def test_get_audio_mode_results_short():
 def test_get_audio_mode_results_long():
     p1 = LongPhrase(text="bar", id=2)
     with (
-        patch("services.long_phrase_repo.load_all", return_value=[p1]),
+        patch("services.long_phrase_repo.get_phrases", return_value=[p1]),
         patch(
             "services.tts_service.tts_service.get_audio_url",
             return_value="http://audio",
@@ -45,7 +45,7 @@ def test_get_audio_mode_results_long():
 def test_get_audio_mode_results_no_url():
     p1 = Phrase(text="foo")
     with (
-        patch("services.phrase_repo.load_all", return_value=[p1]),
+        patch("services.phrase_repo.get_phrases", return_value=[p1]),
         patch(
             "services.tts_service.tts_service.get_audio_url",
             return_value=None,
@@ -66,3 +66,22 @@ def test_get_audio_mode_results_other_mode():
     ):
         results = get_audio_mode_results("input")
         assert results == []
+
+
+def test_get_audio_mode_results_search():
+    p1 = LongPhrase(text="facha", id=1)
+    with (
+        patch("services.long_phrase_repo.get_phrases", return_value=[p1]) as mock_get,
+        patch(
+            "services.tts_service.tts_service.get_audio_url",
+            return_value="http://audio",
+        ),
+        patch(
+            "tg.handlers.inline.inline_query.audio_mode.get_query_mode",
+            return_value=(LONG_MODE, "facha"),
+        ),
+    ):
+        results = get_audio_mode_results("audio facha")
+        assert len(results) == 1
+        assert results[0].title == "facha"
+        mock_get.assert_called_once_with(search="facha")

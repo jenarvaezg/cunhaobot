@@ -7,7 +7,7 @@ from tg.text_router import SHORT_MODE, LONG_MODE
 def test_get_sticker_mode_results_short():
     p1 = Phrase(text="foo", sticker_file_id="123", id=1)
     with (
-        patch("services.phrase_repo.load_all", return_value=[p1]),
+        patch("services.phrase_repo.get_phrases", return_value=[p1]),
         patch(
             "tg.handlers.inline.inline_query.sticker_mode.get_query_mode",
             return_value=(SHORT_MODE, "rest"),
