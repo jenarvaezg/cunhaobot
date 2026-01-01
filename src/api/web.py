@@ -233,6 +233,16 @@ class WebController(Controller):
             },
         )
 
+    @get("/privacy", sync_to_thread=True)
+    def privacy(self, request: Request) -> Template:
+        return Template(
+            template_name="privacy.html",
+            context={
+                "user": request.session.get("user"),
+                "owner_id": config.owner_id,
+            },
+        )
+
     @get("/search", sync_to_thread=True)
     def search(
         self,

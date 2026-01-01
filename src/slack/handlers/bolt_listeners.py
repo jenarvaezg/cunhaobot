@@ -303,6 +303,67 @@ def register_listeners(app: AsyncApp):
         elif value == "cancel":
             await respond(delete_original=True)
 
+    @app.event("app_home_opened")
+    async def handle_app_home_opened(ack: Any, body: dict[str, Any], client: Any):
+        await ack()
+        await _register_slack_user(body, client)
+        user_id = body["event"]["user"]
+
+        try:
+            # Simple App Home view
+            await client.views_publish(
+                user_id=user_id,
+                view={
+                    "type": "home",
+                    "blocks": [
+                        {
+                            "type": "section",
+                            "text": {
+                                "type": "mrkdwn",
+                                "text": f"*¡Qué pasa, <@{user_id}>! Bienvenid@ a CuñaoBot.*",
+                            },
+                        },
+                        {
+                            "type": "section",
+                            "text": {
+                                "type": "mrkdwn",
+                                "text": (
+                                    "Soy el bot que tu espacio de trabajo no sabía que necesitaba. "
+                                    "Estoy aquí para aportar esa dosis de sabiduría cuñadil necesaria para sobrevivir al día a día.\n\n"
+                                    "*Comandos disponibles:*\n"
+                                    "• `/cuñao [búsqueda]` - Suelto una perla de sabiduría.\n"
+                                    "• `/sticker [búsqueda]` - Envío un sticker con frase mítica.\n"
+                                    "• `/saludo [nombre]` - Saludo como es debido.\n"
+                                    "• `/help` - Muestro esta ayuda."
+                                ),
+                            },
+                        },
+                        {"type": "divider"},
+                        {
+                            "type": "section",
+                            "text": {
+                                "type": "mrkdwn",
+                                "text": "Si me mencionas en un canal o me escribes por privado, te contestaré como un auténtico profesional.",
+                            },
+                        },
+                    ],
+                },
+            )
+        except Exception as e:
+            logger.error(f"Error publishing App Home: {e}")
+
+    @app.command("/help")
+    async def handle_help_command(ack: Any, respond: Any):
+        await ack()
+        await respond(
+            "*Guía Rápida de Supervivencia Cuñadil:*\n\n"
+            "• `/cuñao [texto]` - Busca una frase mítica que contenga ese texto.\n"
+            "• `/sticker [texto]` - Genera un sticker con una frase para cerrar debates.\n"
+            "• `/saludo [nombre]` - Envía un saludo personalizado (ej: `/saludo máquina`).\n"
+            "• *Mención* - Si me mencionas (@CuñaoBot) te responderé con mi sabiduría IA.\n\n"
+            '_"Eso con un par de martillazos se arregla, te lo digo yo."_'
+        )
+
     @app.event("app_mention")
     async def handle_app_mention(ack: Any, body: dict[str, Any], say: Any, client: Any):
         await ack()
