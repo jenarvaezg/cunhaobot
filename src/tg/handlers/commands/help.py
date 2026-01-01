@@ -1,14 +1,21 @@
 from telegram import Update
 from telegram.ext import CallbackContext
-from services import phrase_service
 from tg.decorators import log_update
+from services import usage_service, phrase_service
+from models.usage import ActionType
 
 
 @log_update
 async def handle_help(update: Update, context: CallbackContext) -> None:
-    """Send a message when the command /help is issued."""
-    if not update.effective_message:
+    if not (message := update.effective_message):
         return
+
+    await usage_service.log_usage(
+        user_id=message.from_user.id if message.from_user else "unknown",
+        platform="telegram",
+        action=ActionType.COMMAND,
+        metadata={"command": "help"},
+    )
 
     p1 = phrase_service.get_random().text
     p2 = phrase_service.get_random().text

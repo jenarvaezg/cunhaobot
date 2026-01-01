@@ -12,5 +12,6 @@ class User(BaseModel):
     gdpr: bool = False
     usages: int = 0
     points: int = 0
+    badges: list[str] = Field(default_factory=list)
     created_at: datetime | None = Field(default_factory=datetime.now)
     kind: ClassVar[str] = "User"

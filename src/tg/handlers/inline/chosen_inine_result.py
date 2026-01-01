@@ -1,7 +1,8 @@
 from telegram import Update
 from telegram.ext import CallbackContext
 
-from services import user_service, phrase_service
+from services import user_service, phrase_service, usage_service
+from models.usage import ActionType
 from tg.decorators import log_update
 
 
@@ -14,3 +15,14 @@ async def handle_chosen_inline_result(update: Update, context: CallbackContext):
         return
 
     phrase_service.add_usage_by_id(result.result_id)
+
+    # Log usage
+    is_sticker = result.result_id.startswith("sticker-")
+    action = ActionType.STICKER if is_sticker else ActionType.PHRASE
+
+    await usage_service.log_usage(
+        user_id=result.from_user.id,
+        platform="telegram",
+        action=action,
+        metadata={"result_id": result.result_id},
+    )

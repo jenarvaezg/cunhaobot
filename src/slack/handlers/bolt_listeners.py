@@ -6,7 +6,14 @@ from typing import Any
 from slack_bolt.async_app import AsyncApp
 
 from core.config import config
-from services import phrase_service, cunhao_agent, user_service
+from services import (
+    phrase_service,
+    cunhao_agent,
+    user_service,
+    usage_service,
+    badge_service,
+)
+from models.usage import ActionType
 from slack.attachments import (
     build_phrase_attachments,
     build_saludo_attachments,
@@ -82,6 +89,12 @@ def register_listeners(app: AsyncApp):
             return
 
         phrase = random.choice(phrases)
+        await usage_service.log_usage(
+            user_id=body["user_id"],
+            platform="slack",
+            action=ActionType.SALUDO,
+            phrase_id=phrase.id,
+        )
         attachments = build_saludo_attachments(phrase.text, search=text)
         await respond(attachments=attachments)
 
@@ -120,6 +133,13 @@ def register_listeners(app: AsyncApp):
             await respond("No hay frases disponibles en este momento.")
             return
 
+        await usage_service.log_usage(
+            user_id=body["user_id"],
+            platform="slack",
+            action=ActionType.STICKER,
+            phrase_id=selected_phrase.id,
+        )
+
         if selected_phrase.id:
             encoded_id = urllib.parse.quote(str(selected_phrase.id))
             sticker_url = f"{config.base_url}/phrase/{encoded_id}/sticker.png"
@@ -155,6 +175,12 @@ def register_listeners(app: AsyncApp):
             return
 
         phrase = random.choice(phrases)
+        await usage_service.log_usage(
+            user_id=body["user_id"],
+            platform="slack",
+            action=ActionType.PHRASE,
+            phrase_id=phrase.id,
+        )
         attachments = build_phrase_attachments(phrase.text, search=text)
         await respond(attachments=attachments)
 
@@ -310,6 +336,13 @@ def register_listeners(app: AsyncApp):
         await _register_slack_user(body, client)
         user_id = body["event"]["user"]
 
+        await usage_service.log_usage(
+            user_id=user_id,
+            platform="slack",
+            action=ActionType.COMMAND,
+            metadata={"command": "app_home_opened"},
+        )
+
         try:
             # Simple App Home view
             await client.views_publish(
@@ -354,15 +387,73 @@ def register_listeners(app: AsyncApp):
             logger.error(f"Error publishing App Home: {e}")
 
     @app.command("/help")
-    async def handle_help_command(ack: Any, respond: Any):
+    async def handle_help_command(ack: Any, body: dict[str, Any], respond: Any):
         await ack()
+        await usage_service.log_usage(
+            user_id=body["user_id"],
+            platform="slack",
+            action=ActionType.COMMAND,
+            metadata={"command": "help"},
+        )
         await respond(
             "*Guía Rápida de Supervivencia Cuñadil:*\n\n"
             "• `/cuñao [texto]` - Busca una frase mítica que contenga ese texto.\n"
             "• `/sticker [texto]` - Genera un sticker con una frase para cerrar debates.\n"
             "• `/saludo [nombre]` - Envía un saludo personalizado (ej: `/saludo máquina`).\n"
+            "• `/perfil` - Mira tus puntos y medallas de fiera.\n"
             "• *Mención* - Si me mencionas (@CuñaoBot) te responderé con mi sabiduría IA.\n\n"
             '_"Eso con un par de martillazos se arregla, te lo digo yo."_'
+        )
+
+    @app.command("/perfil")
+    @app.command("/profile")
+    async def handle_profile_command(
+        ack: Any, body: dict[str, Any], respond: Any, client: Any
+    ):
+        await ack()
+        await _register_slack_user(body, client)
+        user_id = body["user_id"]
+        platform = "slack"
+
+        await usage_service.log_usage(
+            user_id=user_id,
+            platform=platform,
+            action=ActionType.COMMAND,
+            metadata={"command": "profile"},
+        )
+
+        user = user_service.get_user(user_id, platform)
+        if not user:
+            await respond("Todavía no tengo tu ficha, fiera. ¡Empieza a usar el bot!")
+            return
+
+        stats = usage_service.get_user_stats(user_id, platform)
+
+        badges_text = ""
+        if user.badges:
+            badge_elements = []
+            for b_id in user.badges:
+                b_info = badge_service.get_badge_info(b_id)
+                if b_info:
+                    badge_elements.append(f"{b_info.icon} *{b_info.name}*")
+            badges_text = "\n" + "\n".join(badge_elements)
+        else:
+            badges_text = "\n_Todavía no tienes medallas, ¡dale caña!_"
+
+        await respond(
+            blocks=[
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"👤 *Perfil de {user.name}*\n"
+                        f"━━━━━━━━━━━━━━━\n"
+                        f"🏆 *Puntos:* {user.points}\n"
+                        f"📊 *Usos totales:* {stats['total_usages']}\n"
+                        f"🎖️ *Logros:* {badges_text}",
+                    },
+                }
+            ]
         )
 
     @app.event("app_mention")
@@ -385,6 +476,11 @@ def register_listeners(app: AsyncApp):
         )
 
         response = await cunhao_agent.answer(text, history=history)
+        await usage_service.log_usage(
+            user_id=event.get("user"),
+            platform="slack",
+            action=ActionType.AI_ASK,
+        )
         await say(response, thread_ts=event.get("ts"))
 
     @app.event("message")
@@ -407,4 +503,9 @@ def register_listeners(app: AsyncApp):
             )
 
             response = await cunhao_agent.answer(text, history=history)
+            await usage_service.log_usage(
+                user_id=event.get("user"),
+                platform="slack",
+                action=ActionType.AI_ASK,
+            )
             await say(response)

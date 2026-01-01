@@ -1,13 +1,21 @@
 from telegram import Update
 from telegram.ext import CallbackContext
-from services import phrase_service
 from tg.decorators import log_update
+from services import usage_service, phrase_service
+from models.usage import ActionType
 
 
 @log_update
 async def handle_about(update: Update, context: CallbackContext) -> None:
-    if not update.effective_message:
+    if not (message := update.effective_message):
         return
+
+    await usage_service.log_usage(
+        user_id=message.from_user.id if message.from_user else "unknown",
+        platform="telegram",
+        action=ActionType.COMMAND,
+        metadata={"command": "about"},
+    )
 
     p = phrase_service.get_random().text
     await update.effective_message.reply_text(

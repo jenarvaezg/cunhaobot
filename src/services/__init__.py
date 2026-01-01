@@ -4,6 +4,7 @@ from infrastructure.datastore.proposal import (
     long_proposal_repository,
 )
 from infrastructure.datastore.user import user_repository
+from infrastructure.datastore.usage import usage_repository
 
 # Alias
 phrase_repo = phrase_repository
@@ -11,6 +12,7 @@ long_phrase_repo = long_phrase_repository
 proposal_repo = proposal_repository
 long_proposal_repo = long_proposal_repository
 user_repo = user_repository
+usage_repo = usage_repository
 # For backward compatibility with some codes
 inline_user_repo = user_repository
 
@@ -23,6 +25,7 @@ from services.user_service import UserService  # noqa: E402
 from services.ai_service import ai_service  # noqa: E402
 from services.tts_service import tts_service  # noqa: E402
 from services.cunhao_agent import cunhao_agent  # noqa: E402
+from services.usage_service import usage_service  # noqa: E402
 
 # Services
 phrase_service = PhraseService(phrase_repo, long_phrase_repo)  # type: ignore[arg-type]
@@ -46,4 +49,5 @@ __all__ = [
     "ai_service",
     "tts_service",
     "cunhao_agent",
+    "usage_service",
 ]
