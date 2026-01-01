@@ -253,6 +253,16 @@ class WebController(Controller):
             },
         )
 
+    @get("/data-policy", sync_to_thread=True)
+    def data_policy(self, request: Request) -> Template:
+        return Template(
+            template_name="data_policy.html",
+            context={
+                "user": request.session.get("user"),
+                "owner_id": config.owner_id,
+            },
+        )
+
     @get("/search", sync_to_thread=True)
     def search(
         self,
