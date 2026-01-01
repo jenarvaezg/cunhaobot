@@ -82,5 +82,68 @@ class BadgeService:
     def get_badge_info(self, badge_id: str) -> Badge | None:
         return next((b for b in BADGES if b.id == badge_id), None)
 
+    async def get_all_badges_progress(
+        self, user_id: str | int, platform: str
+    ) -> list[dict]:
+        """Returns a list of all badges with current user progress."""
+        from models.usage import ActionType
+
+        user = self.user_service.get_user(user_id, platform)
+        if not user:
+            return []
+
+        current_badges = set(user.badges)
+        results = []
+
+        # Get stats once
+        total_usages = self.usage_repo.get_user_usage_count(str(user_id), platform)
+        # We'll need vision count for Visionario
+        vision_count = self.usage_repo.get_user_action_count(
+            user_id, platform, ActionType.VISION.value
+        )
+        # We need approved phrases for Poeta
+        from infrastructure.datastore.phrase import phrase_repository
+
+        # Simple count of phrases authored by user that are in the main repo
+        # (For now, let's assume phrases in repo are 'approved')
+        user_phrases_count = phrase_repository.get_user_phrase_count(str(user_id))
+
+        for badge in BADGES:
+            is_earned = badge.id in current_badges
+            progress = 100 if is_earned else 0
+            current_val = 0
+            target_val = 0
+
+            if not is_earned:
+                if badge.id == "fiera_total":
+                    current_val = total_usages
+                    target_val = 50
+                    progress = min(100, int((current_val / target_val) * 100))
+                elif badge.id == "visionario":
+                    current_val = vision_count
+                    target_val = 10
+                    progress = min(100, int((current_val / target_val) * 100))
+                elif badge.id == "poeta":
+                    current_val = user_phrases_count
+                    target_val = 5
+                    progress = min(100, int((current_val / target_val) * 100))
+                # Time-based ones are binary for now
+                elif badge.id in ["madrugador", "trasnochador"]:
+                    current_val = 0
+                    target_val = 1
+                    progress = 0
+
+            results.append(
+                {
+                    "badge": badge,
+                    "is_earned": is_earned,
+                    "progress": progress,
+                    "current": current_val,
+                    "target": target_val,
+                }
+            )
+
+        return results
+
 
 badge_service = BadgeService()

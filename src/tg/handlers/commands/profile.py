@@ -40,19 +40,40 @@ async def handle_profile(update: Update, context: CallbackContext) -> None:
         )
 
         stats = usage_service.get_user_stats(user_id, platform)
+        all_badges_progress = await badge_service.get_all_badges_progress(
+            user_id, platform
+        )
+
+        earned_list = []
+        pending_list = []
+
+        for p in all_badges_progress:
+            badge = p["badge"]
+            if p["is_earned"]:
+                earned_list.append(f"{badge.icon} <b>{html.escape(badge.name)}</b>")
+            else:
+                # Create a small progress bar
+                # [████░░░░░░]
+                filled = p["progress"] // 10
+                bar = "█" * filled + "░" * (10 - filled)
+                progress_text = f"{p['progress']}%"
+                if p["target"] > 0:
+                    progress_text = f"{p['current']}/{p['target']}"
+
+                pending_list.append(
+                    f"{badge.icon} <b>{html.escape(badge.name)}</b>\n"
+                    f"<code>[{bar}] {progress_text}</code>"
+                )
 
         badges_text = ""
-        if user.badges:
-            badge_infos = []
-            for b_id in user.badges:
-                b_info = badge_service.get_badge_info(b_id)
-                if b_info:
-                    badge_infos.append(
-                        f"{b_info.icon} <b>{html.escape(b_info.name)}</b>"
-                    )
-            badges_text = "\n" + "\n".join(badge_infos)
+        if earned_list:
+            badges_text = "\n" + "\n".join(earned_list)
         else:
             badges_text = "\n<i>Todavía no tienes medallas, ¡dale caña!</i>"
+
+        pending_text = ""
+        if pending_list:
+            pending_text = "\n\n🚀 <b>Próximos logros:</b>\n" + "\n".join(pending_list)
 
         user_name = html.escape(user.name or "Desconocido")
         text = (
@@ -60,7 +81,8 @@ async def handle_profile(update: Update, context: CallbackContext) -> None:
             f"━━━━━━━━━━━━━━━\n"
             f"🏆 <b>Puntos:</b> {user.points}\n"
             f"📊 <b>Usos totales:</b> {stats['total_usages']}\n"
-            f"🎖️ <b>Logros:</b> {badges_text}"
+            f"🎖️ <b>Logros conseguidos:</b> {badges_text}"
+            f"{pending_text}"
         )
 
         await message.reply_text(text, parse_mode=constants.ParseMode.HTML)

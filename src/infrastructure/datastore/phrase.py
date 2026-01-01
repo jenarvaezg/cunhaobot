@@ -93,6 +93,27 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
                 phrase.sticker_usages += 1
             self.save(phrase)
 
+    def add_usage_by_id(self, phrase_id: str | int) -> None:
+        phrase = self.load(phrase_id)
+        if phrase:
+            phrase.usages += 1
+            self.save(phrase)
+
+    def get_user_phrase_count(self, user_id: str) -> int:
+        """Counts phrases authored by a specific user."""
+        try:
+            query = self.client.query(kind=self.kind)
+            query.add_filter("author_id", "=", str(user_id))
+            query.keys_only()
+            return len(list(query.fetch(limit=1000)))
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).error(
+                f"Error counting phrases for user {user_id}: {e}"
+            )
+            return 0
+
 
 # Instances
 phrase_repository = PhraseDatastoreRepository(Phrase)

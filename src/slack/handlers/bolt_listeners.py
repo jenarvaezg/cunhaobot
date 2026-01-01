@@ -446,17 +446,37 @@ def register_listeners(app: AsyncApp):
             return
 
         stats = usage_service.get_user_stats(user_id, platform)
+        all_badges_progress = await badge_service.get_all_badges_progress(
+            user_id, platform
+        )
 
-        badges_text = ""
-        if user.badges:
-            badge_elements = []
-            for b_id in user.badges:
-                b_info = badge_service.get_badge_info(b_id)
-                if b_info:
-                    badge_elements.append(f"{b_info.icon} *{b_info.name}*")
-            badges_text = "\n" + "\n".join(badge_elements)
-        else:
-            badges_text = "\n_Todavía no tienes medallas, ¡dale caña!_"
+        earned_elements = []
+        pending_elements = []
+
+        for p in all_badges_progress:
+            badge = p["badge"]
+            if p["is_earned"]:
+                earned_elements.append(f"{badge.icon} *{badge.name}*")
+            else:
+                filled = p["progress"] // 10
+                bar = "●" * filled + "○" * (10 - filled)
+                progress_text = f"{p['progress']}%"
+                if p["target"] > 0:
+                    progress_text = f"{p['current']}/{p['target']}"
+                pending_elements.append(
+                    f"{badge.icon} *{badge.name}*\n`{bar} {progress_text}`"
+                )
+
+        earned_text = (
+            "\n".join(earned_elements)
+            if earned_elements
+            else "_Todavía no tienes medallas_"
+        )
+        pending_text = (
+            "\n\n*🚀 Próximos logros:*\n" + "\n".join(pending_elements)
+            if pending_elements
+            else ""
+        )
 
         await respond(
             blocks=[
@@ -467,8 +487,9 @@ def register_listeners(app: AsyncApp):
                         "text": f"👤 *Perfil de {user.name}*\n"
                         f"━━━━━━━━━━━━━━━\n"
                         f"🏆 *Puntos:* {user.points}\n"
-                        f"📊 *Usos totales:* {stats['total_usages']}\n"
-                        f"🎖️ *Logros:* {badges_text}",
+                        f"📊 *Usos totales:* {stats['total_usages']}\n\n"
+                        f"🎖️ *Logros conseguidos:*\n{earned_text}"
+                        f"{pending_text}",
                     },
                 }
             ]
