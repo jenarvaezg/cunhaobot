@@ -19,6 +19,9 @@ async def to_bolt_request(request: Request) -> AsyncBoltRequest:
         # Reconstruct cookie header if Litestar consumed it
         headers["Cookie"] = "; ".join(f"{k}={v}" for k, v in request.cookies.items())
 
+    logger.debug(f"Bolt Request Headers: {headers}")
+    logger.debug(f"Request Cookies: {request.cookies}")
+
     return AsyncBoltRequest(
         body=body.decode("utf-8"),
         query=dict(request.query_params),
@@ -27,6 +30,9 @@ async def to_bolt_request(request: Request) -> AsyncBoltRequest:
 
 
 def to_litestar_response(bolt_resp: BoltResponse) -> Response:
+    logger.debug(f"Bolt Response Status: {bolt_resp.status}")
+    logger.debug(f"Bolt Response Headers: {bolt_resp.headers}")
+
     resp = Response(
         content=bolt_resp.body,
         status_code=bolt_resp.status,
@@ -52,7 +58,7 @@ def to_litestar_response(bolt_resp: BoltResponse) -> Response:
                 extras: dict[str, Any] = {
                     "httponly": True,
                     "secure": True,
-                    "samesite": "lax",
+                    "samesite": "none",  # Changed to none for cross-site compatibility if needed
                 }
                 for part in parts[1:]:
                     part = part.strip().lower()
@@ -65,9 +71,10 @@ def to_litestar_response(bolt_resp: BoltResponse) -> Response:
                     elif part.startswith("domain="):
                         extras["domain"] = part[7:]
                     elif part.startswith("samesite="):
+                        # If bolt provides it, we can keep it, but we forced 'none' above
                         extras["samesite"] = part[9:]
-                    # Max-Age and Expires could be added too if needed
 
+                logger.debug(f"Setting cookie: {name}={value} with {extras}")
                 resp.set_cookie(key=name, value=value, **extras)
         else:
             resp.headers[k] = v[0] if isinstance(v, list) else v

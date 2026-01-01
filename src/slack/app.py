@@ -30,6 +30,9 @@ oauth_settings = AsyncOAuthSettings(
     state_store=state_store,
     install_path="/slack/auth",
     redirect_uri_path="/slack/auth/redirect",
+    # GAE/Proxy fixes
+    state_cookie_name="slack-app-oauth-state",
+    state_validation_enabled=True,
 )
 
 # Initialize the Bolt App
