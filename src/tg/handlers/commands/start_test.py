@@ -32,5 +32,6 @@ async def test_handle_start():
     args, _ = update.effective_message.reply_text.call_args
     msg = args[0]
     assert "cuñao" in msg
-    assert "amigo" in msg
-    assert "frase larga" in msg
+    assert "Bienvenido" in msg
+    assert "/perfil" in msg
+    assert "@cunhaobot" in msg

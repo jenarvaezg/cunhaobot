@@ -16,6 +16,15 @@ class UserService:
     ):
         self.user_repo = user_repo
 
+    def get_user(self, user_id: str | int, platform: str | None = None) -> User | None:
+        user = self.user_repo.load(user_id)
+        if user and platform and user.platform != platform:
+            return None
+        return user
+
+    def save_user(self, user: User) -> None:
+        self.user_repo.save(user)
+
     def _update_or_create(
         self,
         user_id: str | int,

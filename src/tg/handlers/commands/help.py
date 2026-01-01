@@ -1,4 +1,4 @@
-from telegram import Update
+from telegram import Update, constants
 from telegram.ext import CallbackContext
 from tg.decorators import log_update
 from services import usage_service, phrase_service
@@ -18,16 +18,24 @@ async def handle_help(update: Update, context: CallbackContext) -> None:
     )
 
     p1 = phrase_service.get_random().text
-    p2 = phrase_service.get_random().text
-    f1 = phrase_service.get_random(long=True).text
 
-    await update.effective_message.reply_text(
-        "Puedes usar /proponer <palabra o apelativo> para proponer tu palabreja de cuñado favorita. "
-        f'Ejemplo: "{p1}"\n'
-        "Puedes usar /proponerfrase <frase> para proponer tu frase de cuñado favorita. "
-        f'Ejemplo: "{f1}"\n'
-        'También puedes invocarme en cualquier chat escribiendo "@cunhaobot" (como el bot de gifs) '
-        "para recibir frases de cuñao.\nPuedes pasarme argumentos como el número de palabras que encadenar.\n"
-        f"Como mi creador es un {p2}, también te puedo dar audios "
-        'si escribes: "@cunhaobot audio"'
+    text = (
+        f"¿Perdido, {p1}? No te preocupes, que aquí te lo explico yo en un momento, que esto no tiene ciencia.\n\n"
+        "📜 **Guía de Supervivencia:**\n\n"
+        "1️⃣ **Frases y Saludos:**\n"
+        "• `/cuñao [búsqueda]` - Frase aleatoria o filtrada por texto.\n"
+        "• `/saludo [nombre]` - Envía un saludo personalizado.\n"
+        "• `/sticker [búsqueda]` - Envía un sticker con frase.\n\n"
+        "2️⃣ **Tu Progreso:**\n"
+        "• `/perfil` - Mira tus puntos y tus medallas de fiera.\n\n"
+        "3️⃣ **Aporta tu Sabiduría:**\n"
+        "• `/proponer <palabra>` - Envía apelativos nuevos.\n"
+        "• `/proponerfrase <frase>` - Envía frases nuevas para que las aprobemos.\n\n"
+        "4️⃣ **Uso en otros chats:**\n"
+        "Escribe `@cunhaobot` seguido de lo que quieras buscar. Puedes filtrar por `audio` o `sticker` (ej: `@cunhaobot audio fiera`).\n\n"
+        "5️⃣ **Consultoría IA:**\n"
+        "Si me mencionas o me escribes por privado, te responderé con la autoridad que me dan mis años de experiencia.\n\n"
+        '_"Escucha a tu cuñao, que sabe de lo que habla."_'
     )
+
+    await message.reply_text(text, parse_mode=constants.ParseMode.MARKDOWN)
