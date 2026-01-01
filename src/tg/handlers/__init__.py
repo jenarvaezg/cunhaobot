@@ -10,7 +10,7 @@ from telegram.ext import (
 from .commands.about import handle_about
 from .utils.callback_query import handle_callback_query
 from .commands.cancel import handle_cancel
-from .inline.chosen_inine_result import handle_chosen_inline_result
+from .inline.chosen_inline_result import handle_chosen_inline_result
 from .utils.error import error_handler as error_handler
 from .messages.fallback import handle_fallback_message as handle_fallback_message
 from .commands.help import handle_help as handle_help

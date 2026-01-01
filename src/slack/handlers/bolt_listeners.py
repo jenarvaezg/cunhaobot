@@ -19,7 +19,7 @@ from slack.attachments import (
     build_saludo_attachments,
     build_sticker_attachments,
 )
-from slack.utils import get_slack_history
+from slack.utils import get_slack_history, notify_new_badges_slack
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ def register_listeners(app: AsyncApp):
     @app.command("/saludo")
     @app.command("/que_pasa")
     async def handle_saludo_command(
-        ack: Any, body: dict[str, Any], respond: Any, client: Any
+        ack: Any, body: dict[str, Any], respond: Any, client: Any, say: Any
     ):
         await ack()
         await _register_slack_user(body, client)
@@ -89,7 +89,7 @@ def register_listeners(app: AsyncApp):
             return
 
         phrase = random.choice(phrases)
-        await usage_service.log_usage(
+        new_badges = await usage_service.log_usage(
             user_id=body["user_id"],
             platform="slack",
             action=ActionType.SALUDO,
@@ -97,10 +97,11 @@ def register_listeners(app: AsyncApp):
         )
         attachments = build_saludo_attachments(phrase.text, search=text)
         await respond(attachments=attachments)
+        await notify_new_badges_slack(say, new_badges)
 
     @app.command("/sticker")
     async def handle_sticker_command(
-        ack: Any, body: dict[str, Any], respond: Any, client: Any
+        ack: Any, body: dict[str, Any], respond: Any, client: Any, say: Any
     ):
         await ack()
         await _register_slack_user(body, client)
@@ -133,7 +134,7 @@ def register_listeners(app: AsyncApp):
             await respond("No hay frases disponibles en este momento.")
             return
 
-        await usage_service.log_usage(
+        new_badges = await usage_service.log_usage(
             user_id=body["user_id"],
             platform="slack",
             action=ActionType.STICKER,
@@ -149,10 +150,11 @@ def register_listeners(app: AsyncApp):
 
         attachments = build_sticker_attachments(selected_phrase.text, text, sticker_url)
         await respond(attachments=attachments)
+        await notify_new_badges_slack(say, new_badges)
 
     @app.command("/cuñao")
     async def handle_cunao_command(
-        ack: Any, body: dict[str, Any], respond: Any, client: Any
+        ack: Any, body: dict[str, Any], respond: Any, client: Any, say: Any
     ):
         await ack()
         await _register_slack_user(body, client)
@@ -175,7 +177,7 @@ def register_listeners(app: AsyncApp):
             return
 
         phrase = random.choice(phrases)
-        await usage_service.log_usage(
+        new_badges = await usage_service.log_usage(
             user_id=body["user_id"],
             platform="slack",
             action=ActionType.PHRASE,
@@ -183,10 +185,11 @@ def register_listeners(app: AsyncApp):
         )
         attachments = build_phrase_attachments(phrase.text, search=text)
         await respond(attachments=attachments)
+        await notify_new_badges_slack(say, new_badges)
 
     @app.action("phrase")
     async def handle_choice_action(
-        ack: Any, body: dict[str, Any], respond: Any, client: Any
+        ack: Any, body: dict[str, Any], respond: Any, client: Any, say: Any
     ):
         await ack()
         await _register_slack_user(body, client)
@@ -197,6 +200,7 @@ def register_listeners(app: AsyncApp):
         action = actions[0]
         value: str = action.get("value", "")
         user_name: str = body["user"]["name"]
+        user_id: str = body["user"]["id"]
 
         if value.startswith("send-sticker-"):
             text: str = value[len("send-sticker-") :]
@@ -238,6 +242,11 @@ def register_listeners(app: AsyncApp):
                     },
                 ],
             )
+            # Log usage and check badges for actions
+            new_badges = await usage_service.log_usage(
+                user_id=user_id, platform="slack", action=ActionType.STICKER
+            )
+            await notify_new_badges_slack(say, new_badges)
         elif value.startswith("send-saludo-"):
             text: str = value[len("send-saludo-") :]
             full_text = f"¿Qué pasa, {text}?"
@@ -261,6 +270,11 @@ def register_listeners(app: AsyncApp):
                     },
                 ],
             )
+            # Log usage and check badges for actions
+            new_badges = await usage_service.log_usage(
+                user_id=user_id, platform="slack", action=ActionType.SALUDO
+            )
+            await notify_new_badges_slack(say, new_badges)
         elif value.startswith("send-"):
             text: str = value[len("send-") :]
             await respond(

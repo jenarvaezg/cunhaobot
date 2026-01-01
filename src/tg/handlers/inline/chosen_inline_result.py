@@ -20,9 +20,16 @@ async def handle_chosen_inline_result(update: Update, context: CallbackContext):
     is_sticker = result.result_id.startswith("sticker-")
     action = ActionType.STICKER if is_sticker else ActionType.PHRASE
 
-    await usage_service.log_usage(
+    new_badges = await usage_service.log_usage(
         user_id=result.from_user.id,
         platform="telegram",
         action=action,
         metadata={"result_id": result.result_id},
     )
+
+    if new_badges:
+        from tg.utils.badges import notify_new_badges
+
+        # In inline mode, we notify the user via PRIVATE message
+        # We need to ensure we can send messages to them (they must have started the bot)
+        await notify_new_badges(update, context, new_badges)

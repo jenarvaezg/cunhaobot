@@ -41,39 +41,41 @@ class BadgeService:
         self.user_service = u_service
         self.usage_repo = u_repo
 
-    async def check_badges(self, user_id: str | int, platform: str) -> list[str]:
-        """Checks and awards new badges to a user. Returns list of NEWLY awarded badge IDs."""
+    async def check_badges(self, user_id: str | int, platform: str) -> list[Badge]:
+        """Checks and awards new badges to a user. Returns list of NEWLY awarded Badge objects."""
         user = self.user_service.get_user(user_id, platform)
         if not user:
             return []
 
-        new_badges = []
+        new_badge_ids = []
         current_badges = set(user.badges)
         now = datetime.now()
 
         # 1. Madrugador (05:00 - 07:30)
         if "madrugador" not in current_badges:
             if 5 <= now.hour < 7 or (now.hour == 7 and now.minute <= 30):
-                new_badges.append("madrugador")
+                new_badge_ids.append("madrugador")
 
         # 2. Trasnochador (02:00 - 05:00)
         if "trasnochador" not in current_badges:
             if 2 <= now.hour < 5:
-                new_badges.append("trasnochador")
+                new_badge_ids.append("trasnochador")
 
         # 3. Fiera Total (50 saludos)
         if "fiera_total" not in current_badges:
-            # We can use the usage repo to count ActionType.SALUDO
-            # For now, let's keep it simple and check if this user has enough total usages
-            # or we could query the usage repo properly.
-            # Let's do a simple count for now.
-            if user.usages >= 50:  # Simplification for first version
-                new_badges.append("fiera_total")
+            stats = usage_repository.get_user_usage_count(str(user_id), platform)
+            if stats >= 50:
+                new_badge_ids.append("fiera_total")
 
-        if new_badges:
-            user.badges.extend(new_badges)
+        new_badges = []
+        if new_badge_ids:
+            user.badges.extend(new_badge_ids)
             self.user_service.save_user(user)
-            logger.info(f"User {user_id} awarded badges: {new_badges}")
+            logger.info(f"User {user_id} awarded badges: {new_badge_ids}")
+            for b_id in new_badge_ids:
+                b_info = self.get_badge_info(b_id)
+                if b_info:
+                    new_badges.append(b_info)
 
         return new_badges
 

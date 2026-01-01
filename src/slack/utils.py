@@ -75,3 +75,24 @@ async def get_slack_history(
     except Exception as e:
         logger.exception(f"Error extracting Slack history: {e}")
         return []
+
+
+async def notify_new_badges_slack(say: Any, new_badges: list) -> None:
+    """Sends a notification for each newly awarded badge in Slack."""
+    if not new_badges:
+        return
+
+    from utils.ui import apelativo
+
+    for badge in new_badges:
+        try:
+            a = apelativo()
+            text = (
+                f"🎊 *¡LOGRO DESBLOQUEADO, {a.upper()}!* 🎊\n"
+                f"━━━━━━━━━━━━━━━\n"
+                f"{badge.icon} *{badge.name}*\n"
+                f"_{badge.description}_"
+            )
+            await say(text=text)
+        except Exception as e:
+            logger.error(f"Error notifying badge {badge.id} in Slack: {e}")

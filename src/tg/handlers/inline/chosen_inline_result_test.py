@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from tg.handlers.inline.chosen_inine_result import handle_chosen_inline_result
+from tg.handlers.inline.chosen_inline_result import handle_chosen_inline_result
 
 
 @pytest.mark.asyncio
@@ -10,10 +10,10 @@ async def test_handle_chosen_inline_result_success():
 
     with (
         patch(
-            "tg.handlers.inline.chosen_inine_result.user_service"
+            "tg.handlers.inline.chosen_inline_result.user_service"
         ) as mock_user_service,
         patch(
-            "tg.handlers.inline.chosen_inine_result.phrase_service"
+            "tg.handlers.inline.chosen_inline_result.phrase_service"
         ) as mock_phrase_service,
         patch("tg.decorators.user_service.update_or_create_user"),  # For log_update
     ):
@@ -34,10 +34,10 @@ async def test_handle_chosen_inline_result_no_result():
 
     with (
         patch(
-            "tg.handlers.inline.chosen_inine_result.user_service"
+            "tg.handlers.inline.chosen_inline_result.user_service"
         ) as mock_user_service,
         patch(
-            "tg.handlers.inline.chosen_inine_result.phrase_service"
+            "tg.handlers.inline.chosen_inline_result.phrase_service"
         ) as mock_phrase_service,
         patch("tg.decorators.user_service.update_or_create_user"),
     ):

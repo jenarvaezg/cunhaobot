@@ -20,7 +20,7 @@ class UsageService:
         action: ActionType,
         phrase_id: str | int | None = None,
         metadata: dict[str, Any] | None = None,
-    ) -> None:
+    ) -> list[Any]:
         try:
             record = UsageRecord(
                 user_id=str(user_id),
@@ -35,9 +35,10 @@ class UsageService:
 
             from services.badge_service import badge_service
 
-            await badge_service.check_badges(user_id, platform)
+            return await badge_service.check_badges(user_id, platform)
         except Exception as e:
             logger.error(f"Error logging usage: {e}")
+            return []
 
     def get_user_stats(self, user_id: str | int, platform: str) -> dict[str, Any]:
         count = self.repo.get_user_usage_count(str(user_id), platform)
