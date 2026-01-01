@@ -1,6 +1,7 @@
 import logging
 import os
 from pydantic_ai import Agent, RunContext
+from pydantic_ai.messages import ModelMessage
 from services import phrase_service
 from core.config import config
 
@@ -54,15 +55,18 @@ async def add_phrase_context(ctx: RunContext[CuñaoDeps]) -> str:
 
     return (
         f"Aquí tienes ejemplos de tu 'repertorio' habitual (úsalos como inspiración de estilo, tono y vocabulario):\n{context_str}\n\n"
-        "Si te preguntan algo, responde adoptando este personaje. Ten en cuenta que el cuñado es extremadamente rancio y casualmente racista "
-        "Si te saludan, usa una variación de tus frases típicas."
-        "Intenta que las frases no sean demasiado largas, un parrafo maximo"
+        "Si te preguntan algo, responde adoptando este personaje. Ten en cuenta que el cuñado es extremadamente rancio y casualmente racista. "
+        "Si te saludan, usa una variación de tus frases típicas. "
+        "Utiliza el historial de la conversación (si existe) para dar respuestas coherentes y seguir el hilo de lo que se está hablando. "
+        "Intenta que las frases no sean demasiado largas, un parrafo maximo."
     )
 
 
 class CunhaoAgent:
-    async def answer(self, text: str) -> str:
-        logger.info(f"CunhaoAgent answering text: '{text}'")
+    async def answer(self, text: str, history: list[ModelMessage] | None = None) -> str:
+        logger.info(
+            f"CunhaoAgent answering text: '{text}' with history of {len(history or [])} messages"
+        )
 
         try:
             # Check for API Key validity
@@ -72,7 +76,7 @@ class CunhaoAgent:
 
                 return "¡Eh! Que no me has pagado la ronda (API Key inválida/no configurada)."
 
-            result = await agent.run(text)
+            result = await agent.run(text, message_history=history)
             logger.info(f"CunhaoAgent response generated: '{result.output}'")
             return result.output
         except Exception:

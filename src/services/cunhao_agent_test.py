@@ -15,7 +15,23 @@ async def test_answer_calls_agent():
         response = await cunhao_agent.answer("Hola")
 
         assert response == "Respuesta de prueba"
-        mock_run.assert_called_once_with("Hola")
+        mock_run.assert_called_once_with("Hola", message_history=None)
+
+
+@pytest.mark.asyncio
+async def test_answer_with_history():
+    with (
+        patch.object(agent, "run", new_callable=AsyncMock) as mock_run,
+        patch("services.cunhao_agent.config") as mock_config,
+    ):
+        mock_config.gemini_api_key = "valid_key"
+        mock_run.return_value = MagicMock(output="Respuesta con contexto")
+
+        history = [MagicMock()]
+        response = await cunhao_agent.answer("Hola", history=history)
+
+        assert response == "Respuesta con contexto"
+        mock_run.assert_called_once_with("Hola", message_history=history)
 
 
 @pytest.mark.asyncio

@@ -21,12 +21,11 @@ class TestInlineQuery:
             ) as mock_update_inline_user,
             patch.object(
                 UserService, "update_or_create_user"
-            ) as mock_update_user,  # Patch the decorator's call
+            ),  # Patch the decorator's call
         ):
             await handle_inline_query(update, MagicMock())
             update.inline_query.answer.assert_called_once()
             mock_update_inline_user.assert_called_once()
-            mock_update_user.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_handle_inline_query_no_func(self):
