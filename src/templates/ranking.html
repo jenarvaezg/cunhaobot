@@ -66,22 +66,37 @@
             </thead>
             <tbody>
                 {% for user_entry in ranking %}
+                {% set is_private_view = user_entry.is_private and (not user or user.id|string != user_entry.id|string) %}
                 <tr class="border-bottom border-secondary border-opacity-25">
                     <td class="ps-4 text-secondary fw-bold">{{ loop.index }}</td>
                     <td>
                         <div class="d-flex align-items-center gap-3">
+                            {% if not is_private_view %}
                             <img src="/user/{{ user_entry.id }}/photo.png"
                                  class="rounded-circle"
                                  style="width: 40px; height: 40px; object-fit: cover; background-color: #333;"
-                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="rounded-circle bg-secondary d-none align-items-center justify-content-center fw-bold text-dark" style="width: 40px; height: 40px; font-size: 0.9rem;">
-                                {{ user_entry.name[:2].upper() if user_entry.name else '??' }}
+                                 onerror="this.style.display='none'; this.nextElementSibling.classList.remove('d-none'); this.nextElementSibling.classList.add('d-flex');">
+                            {% endif %}
+
+                            <div class="rounded-circle bg-secondary {{ 'd-flex' if is_private_view else 'd-none' }} align-items-center justify-content-center fw-bold text-dark" style="width: 40px; height: 40px; font-size: 0.9rem;">
+                                {% if is_private_view %}
+                                    <i class="bi bi-eye-slash-fill"></i>
+                                {% else %}
+                                    {{ user_entry.name[:2].upper() if user_entry.name else '??' }}
+                                {% endif %}
                             </div>
+
                             <div>
                                 <a href="/user/{{ user_entry.id }}/profile" class="text-decoration-none text-white hover-text-warning transition-colors">
-                                    <div class="fw-bold">{{ user_entry.name or "Anónimo" }}</div>
+                                    <div class="fw-bold">
+                                        {% if is_private_view %}
+                                            Usuario Privado
+                                        {% else %}
+                                            {{ user_entry.name or "Anónimo" }}
+                                        {% endif %}
+                                    </div>
                                 </a>
-                                {% if user_entry.username %}
+                                {% if user_entry.username and not is_private_view %}
                                 <div class="text-secondary x-small">@{{ user_entry.username }}</div>
                                 {% endif %}
                             </div>

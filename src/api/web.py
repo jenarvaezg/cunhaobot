@@ -191,6 +191,28 @@ class WebController(Controller):
             },
         )
 
+    @post("/profile/toggle-privacy")
+    async def toggle_privacy(
+        self,
+        request: Request,
+        user_service: Annotated[UserService, Dependency()],
+    ) -> HTMXTemplate | Response:
+        user_session = request.session.get("user")
+        if not user_session:
+            return Response({"error": "Unauthorized"}, status_code=401)
+
+        user_id = user_session.get("id")
+        platform = user_session.get("platform", "telegram")
+
+        is_private = user_service.toggle_privacy(user_id, platform)
+        if is_private is None:
+            return Response({"error": "User not found"}, status_code=404)
+
+        return HTMXTemplate(
+            template_name="partials/privacy_toggle_button.html",
+            context={"is_private": is_private},
+        )
+
     @get("/phrase/{phrase_id:int}/audio.ogg")
     async def phrase_audio(
         self,

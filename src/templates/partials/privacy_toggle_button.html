@@ -1,0 +1,12 @@
+<button class="btn {% if is_private %}btn-warning{% else %}btn-outline-secondary{% endif %} rounded-pill d-flex align-items-center gap-2"
+        hx-post="/profile/toggle-privacy"
+        hx-swap="outerHTML"
+        title="{% if is_private %}Tu perfil es privado (nombre oculto){% else %}Tu perfil es público{% endif %}">
+    {% if is_private %}
+    <i class="bi bi-eye-slash-fill"></i>
+    <span>Privado</span>
+    {% else %}
+    <i class="bi bi-eye-fill"></i>
+    <span>Público</span>
+    {% endif %}
+</button>

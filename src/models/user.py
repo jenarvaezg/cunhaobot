@@ -9,6 +9,7 @@ class User(BaseModel):
     name: str = ""
     username: str | None = None
     is_group: bool = False
+    is_private: bool = False
     gdpr: bool = False
     usages: int = 0
     points: int = 0

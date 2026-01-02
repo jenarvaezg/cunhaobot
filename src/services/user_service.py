@@ -143,6 +143,15 @@ class UserService:
         user.points += 1
         self.user_repo.save(user)
 
+    def toggle_privacy(self, user_id: str | int, platform: str) -> bool | None:
+        user = self.get_user(user_id, platform)
+        if not user:
+            return None
+
+        user.is_private = not user.is_private
+        self.save_user(user)
+        return user.is_private
+
     def add_points(self, user_id: str | int, points: int) -> None:
         if user_id == 0:
             return

@@ -1,13 +1,17 @@
 {% extends "base.html" %}
 
 {% block meta %}
-    <meta name="description" content="Perfil de {{ profile_user.name }} en CuñaoBot. Nivel {{ level }} de maestría cuñadil.">
+    {% set is_owner = user and user.id|string == profile_user.id|string %}
+    {% set show_private = profile_user.is_private and not is_owner %}
+    {% set display_name = "Usuario Privado" if show_private else profile_user.name %}
+
+    <meta name="description" content="Perfil de {{ display_name }} en CuñaoBot. Nivel {{ level }} de maestría cuñadil.">
 
     <!-- Open Graph -->
     <meta property="og:type" content="profile">
     <meta property="og:site_name" content="CuñaoBot">
     <meta property="og:locale" content="es_ES">
-    <meta property="og:title" content="Perfil de {{ profile_user.name }}">
+    <meta property="og:title" content="Perfil de {{ display_name }}">
     <meta property="og:description" content="Nivel {{ level }} | {{ profile_user.points }} Puntos | {{ phrases_count }} Frases aportadas.">
     <meta property="og:url" content="{{ request.base_url }}{{ request.url.path }}">
     <meta property="og:image" content="{{ request.base_url }}/user/{{ profile_user.id }}/photo.png">
@@ -15,17 +19,25 @@
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Perfil de {{ profile_user.name }}">
+    <meta name="twitter:title" content="Perfil de {{ display_name }}">
     <meta name="twitter:description" content="Nivel {{ level }} | {{ profile_user.points }} Puntos | {{ phrases_count }} Frases aportadas.">
     <meta name="twitter:image" content="{{ request.base_url }}/user/{{ profile_user.id }}/photo.png">
 {% endblock %}
 {% block content %}
+{% set is_owner = user and user.id|string == profile_user.id|string %}
+{% set show_private = profile_user.is_private and not is_owner %}
+
 <div class="row justify-content-center">
     <!-- User Info Card -->
     <div class="col-lg-4 mb-4">
         <div class="glass-card h-100 text-center p-4 animate__animated animate__fadeInLeft">
             <div class="position-relative d-inline-block mb-3">
-                {% if profile_user.photo_url %}
+                {% if show_private %}
+                <div class="rounded-circle border border-2 border-secondary shadow d-flex align-items-center justify-content-center bg-dark mx-auto"
+                     style="width: 120px; height: 120px;">
+                    <i class="bi bi-eye-slash-fill display-1 text-secondary"></i>
+                </div>
+                {% elif profile_user.photo_url %}
                 <img src="/user/{{ profile_user.id }}/photo.png"
                      onerror="this.src='{{ profile_user.photo_url }}'"
                      alt="Avatar de {{ profile_user.name }}"
@@ -43,9 +55,21 @@
                 </span>
             </div>
 
-            <h2 class="oswald mb-1">{{ profile_user.name }}</h2>
-            {% if profile_user.username %}
-            <p class="text-muted mb-3">@{{ profile_user.username }}</p>
+            {% if show_private %}
+                <h2 class="oswald mb-3">Usuario Privado</h2>
+            {% else %}
+                <h2 class="oswald mb-1">{{ profile_user.name }}</h2>
+                {% if profile_user.username %}
+                <p class="text-muted mb-3">@{{ profile_user.username }}</p>
+                {% endif %}
+            {% endif %}
+
+            {% if is_owner %}
+            <div class="mb-4 d-flex justify-content-center">
+                {% with is_private=profile_user.is_private %}
+                    {% include "partials/privacy_toggle_button.html" %}
+                {% endwith %}
+            </div>
             {% endif %}
 
             <div class="d-flex justify-content-center gap-2 flex-wrap mb-4">
