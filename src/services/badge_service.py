@@ -52,7 +52,7 @@ BADGES = [
     Badge(
         id="visionario",
         name="Ojo de Halcón",
-        description="Usar el Cuñao Vision 10 veces",
+        description="Usar el Cuñao Vision 5 veces",
         icon="👁️",
     ),
     Badge(
@@ -150,12 +150,12 @@ class BadgeService:
             if stats >= 50:
                 new_badge_ids.append("fiera_total")
 
-        # 4. Visionario (10 vision usages)
+        # 4. Visionario (5 vision usages)
         if "visionario" not in current_badges:
             vision_count = self.usage_repo.get_user_action_count(
                 str(user_id), action=ActionType.VISION.value
             )
-            if vision_count >= 10:
+            if vision_count >= 5:
                 new_badge_ids.append("visionario")
 
         # 5. Poeta (5 phrases accepted/proposed in repo)
@@ -293,7 +293,7 @@ class BadgeService:
                     target_val = 50
                 elif badge.id == "visionario":
                     current_val = vision_count
-                    target_val = 10
+                    target_val = 5
                 elif badge.id == "poeta":
                     current_val = user_phrases_count
                     target_val = 5
