@@ -177,3 +177,36 @@ class TestUserService:
 
             photo = await service.get_user_photo(12345)
             assert photo is None
+
+    def test_get_user_fallback(self, service):
+        user = User(id=123)
+
+        def load_side_effect(uid):
+            if uid == "123":
+                return None
+            if uid == 123:
+                return user
+            return None
+
+        service.user_repo.load.side_effect = load_side_effect
+
+        # Call with string, expecting fallback to int
+        result = service.get_user("123")
+        assert result == user
+        assert result.id == 123
+
+    def test_get_user_fallback_negative(self, service):
+        user = User(id=-456, is_group=True)
+
+        def load_side_effect(uid):
+            if uid == "-456":
+                return None
+            if uid == -456:
+                return user
+            return None
+
+        service.user_repo.load.side_effect = load_side_effect
+
+        result = service.get_user("-456")
+        assert result == user
+        assert result.id == -456

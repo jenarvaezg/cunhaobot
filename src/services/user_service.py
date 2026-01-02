@@ -27,6 +27,14 @@ class UserService:
 
     def get_user(self, user_id: str | int, platform: str | None = None) -> User | None:
         user = self.user_repo.load(user_id)
+
+        # Fallback: try converting string to int if it's a digit string (handling negative IDs)
+        if not user and isinstance(user_id, str) and user_id.lstrip("-").isdigit():
+            try:
+                user = self.user_repo.load(int(user_id))
+            except ValueError:
+                pass
+
         if user and platform and user.platform != platform:
             return None
         return user
