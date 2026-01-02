@@ -3,7 +3,10 @@ from telegram import Update
 from telegram.ext import ContextTypes
 from services.ai_service import ai_service
 from services.tts_service import tts_service
+from services import usage_service
+from models.usage import ActionType
 from tg.decorators import log_update
+from tg.utils.badges import notify_new_badges
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +29,9 @@ async def photo_roast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     if not (is_private or is_mentioned):
         return
 
+    user_id = update.effective_user.id
     logger.info(
-        f"Processing photo roast for user {update.effective_user.id} (Private: {is_private}, Mentioned: {is_mentioned})"
+        f"Processing photo roast for user {user_id} (Private: {is_private}, Mentioned: {is_mentioned})"
     )
 
     try:
@@ -39,6 +43,11 @@ async def photo_roast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         # Generate roast text
         roast_text = await ai_service.analyze_image(bytes(image_bytes))
 
+        # Log usage and check for badges
+        new_badges = await usage_service.log_usage(
+            user_id=user_id, platform="telegram", action=ActionType.VISION
+        )
+
         # Generate audio bytes
         audio_content = tts_service.generate_audio(roast_text)
 
@@ -48,6 +57,9 @@ async def photo_roast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             caption=roast_text,
             reply_to_message_id=message.message_id,
         )
+
+        # Notify about new badges if any
+        await notify_new_badges(update, context, new_badges)
 
     except Exception as e:
         logger.error(f"Error in photo_roast handler: {e}")

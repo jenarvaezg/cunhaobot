@@ -29,6 +29,12 @@ async def test_photo_roast_private_success():
             "tg.handlers.messages.photo.tts_service.generate_audio",
             return_value=b"fake_audio",
         ) as mock_tts,
+        patch(
+            "tg.handlers.messages.photo.usage_service.log_usage",
+            new_callable=AsyncMock,
+            return_value=[],
+        ) as mock_log,
+        patch("tg.handlers.messages.photo.notify_new_badges") as mock_notify,
     ):
         mock_analyze.return_value = "Eso está mal alicatao"
 
@@ -36,6 +42,8 @@ async def test_photo_roast_private_success():
 
         mock_analyze.assert_called_once_with(b"fake_image")
         mock_tts.assert_called_once_with("Eso está mal alicatao")
+        mock_log.assert_called_once()
+        mock_notify.assert_called_once()
         update.message.reply_voice.assert_called_once_with(
             voice=b"fake_audio",
             caption="Eso está mal alicatao",
@@ -71,6 +79,12 @@ async def test_photo_roast_group_mentioned_success():
             "tg.handlers.messages.photo.tts_service.generate_audio",
             return_value=b"fake_audio",
         ),
+        patch(
+            "tg.handlers.messages.photo.usage_service.log_usage",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
+        patch("tg.handlers.messages.photo.notify_new_badges"),
     ):
         mock_analyze.return_value = "Eso está mal alicatao"
 
