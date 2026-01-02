@@ -1,3 +1,4 @@
+from datetime import datetime
 from google.cloud import datastore
 from models.usage import UsageRecord
 from infrastructure.datastore.base import DatastoreRepository
@@ -60,6 +61,25 @@ class UsageDatastoreRepository(DatastoreRepository[UsageRecord]):
 
             logging.getLogger(__name__).error(
                 f"Error counting action {action} for {user_id}: {e}"
+            )
+            return 0
+
+    def get_recent_usage_count(
+        self, user_id: str, platform: str, since: datetime
+    ) -> int:
+        try:
+            query = self.client.query(kind=self.kind)
+            query.add_filter("user_id", "=", str(user_id))
+            query.add_filter("platform", "=", platform)
+            query.add_filter("timestamp", ">=", since)
+            query.keys_only()
+            # Check up to 11 to confirm threshold
+            return len(list(query.fetch(limit=11)))
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).error(
+                f"Error counting recent usage for {user_id}: {e}"
             )
             return 0
 

@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from services.user_service import user_service
 from infrastructure.datastore.usage import usage_repository
@@ -85,6 +85,15 @@ class BadgeService:
             if user_phrases_count >= 5:
                 new_badge_ids.append("poeta")
 
+        # 6. Pesao (10 usages in 1 hour)
+        if "pesao" not in current_badges:
+            since = now - timedelta(hours=1)
+            recent_count = self.usage_repo.get_recent_usage_count(
+                str(user_id), platform, since
+            )
+            if recent_count >= 10:
+                new_badge_ids.append("pesao")
+
         new_badges = []
         if new_badge_ids:
             user.badges.extend(new_badge_ids)
@@ -144,6 +153,13 @@ class BadgeService:
                 elif badge.id == "poeta":
                     current_val = user_phrases_count
                     target_val = 5
+                    progress = min(100, int((current_val / target_val) * 100))
+                elif badge.id == "pesao":
+                    since = datetime.now() - timedelta(hours=1)
+                    current_val = self.usage_repo.get_recent_usage_count(
+                        str(user_id), platform, since
+                    )
+                    target_val = 10
                     progress = min(100, int((current_val / target_val) * 100))
                 # Time-based ones are binary for now
                 elif badge.id in ["madrugador", "trasnochador"]:
