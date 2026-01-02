@@ -11,21 +11,28 @@ logger = logging.getLogger(__name__)
 @log_update
 async def photo_roast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handles photos by generating a vision roast and a voice message."""
-    if not update.message or not update.message.photo:
+    if not (message := update.message) or not message.photo:
         return
 
     if not update.effective_chat or not update.effective_user:
         return
 
-    # Restrict to private chats for now to avoid spam in groups
-    if update.effective_chat.type != "private":
+    # Check for direct interaction (Private chat or Mention in caption)
+    is_private = update.effective_chat.type == "private"
+    bot_username = context.bot.username
+    caption = message.caption.lower() if message.caption else ""
+    is_mentioned = bot_username and f"@{bot_username.lower()}" in caption
+
+    if not (is_private or is_mentioned):
         return
 
-    logger.info(f"Processing photo roast for user {update.effective_user.id}")
+    logger.info(
+        f"Processing photo roast for user {update.effective_user.id} (Private: {is_private}, Mentioned: {is_mentioned})"
+    )
 
     try:
         # Get the highest resolution photo
-        photo = update.message.photo[-1]
+        photo = message.photo[-1]
         photo_file = await photo.get_file()
         image_bytes = await photo_file.download_as_bytearray()
 
@@ -36,14 +43,14 @@ async def photo_roast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         audio_content = tts_service.generate_audio(roast_text)
 
         # Send voice message (as voice note) with text as caption
-        await update.message.reply_voice(
+        await message.reply_voice(
             voice=audio_content,
             caption=roast_text,
-            reply_to_message_id=update.message.message_id,
+            reply_to_message_id=message.message_id,
         )
 
     except Exception as e:
         logger.error(f"Error in photo_roast handler: {e}")
-        await update.message.reply_text(
+        await message.reply_text(
             "Mira, eso es una chapuza tan grande que no me deja ni ver la foto."
         )

@@ -44,12 +44,53 @@ async def test_photo_roast_private_success():
 
 
 @pytest.mark.asyncio
-async def test_photo_roast_group_ignored():
+async def test_photo_roast_group_mentioned_success():
+    # Setup mocks
+    update = MagicMock()
+    update.message.photo = [MagicMock()]
+    update.message.caption = "Mira esto @TestBot"
+    update.message.message_id = 123
+    update.effective_chat.type = "group"
+    update.effective_user.id = 456
+    update.message.reply_voice = AsyncMock()
+
+    # Mock get_file().download_as_bytearray()
+    mock_file = AsyncMock()
+    mock_file.download_as_bytearray.return_value = bytearray(b"fake_image")
+    update.message.photo[-1].get_file = AsyncMock(return_value=mock_file)
+
+    context = MagicMock()
+    context.bot.username = "TestBot"
+
+    with (
+        patch(
+            "tg.handlers.messages.photo.ai_service.analyze_image",
+            new_callable=AsyncMock,
+        ) as mock_analyze,
+        patch(
+            "tg.handlers.messages.photo.tts_service.generate_audio",
+            return_value=b"fake_audio",
+        ),
+    ):
+        mock_analyze.return_value = "Eso está mal alicatao"
+
+        await photo_roast(update, context)
+
+        mock_analyze.assert_called_once_with(b"fake_image")
+        update.message.reply_voice.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_photo_roast_group_not_mentioned_ignored():
     update = MagicMock()
     update.effective_chat.type = "group"
     update.message.photo = [MagicMock()]
+    update.message.caption = "Una foto normal"
 
-    await photo_roast(update, MagicMock())
+    context = MagicMock()
+    context.bot.username = "TestBot"
+
+    await photo_roast(update, context)
 
     # Should return early
     update.message.photo[-1].get_file.assert_not_called()
