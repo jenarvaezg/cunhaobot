@@ -43,6 +43,7 @@ class WebController(Controller):
                 "user": request.session.get("user"),
                 "owner_id": config.owner_id,
                 "is_htmx": bool(getattr(request, "htmx", False)),
+                "request": request,
             },
         )
 
@@ -284,6 +285,7 @@ class WebController(Controller):
                 "user": request.session.get("user"),
                 "owner_id": config.owner_id,
                 "badges_map": badges_map,
+                "request": request,
             },
         )
 
@@ -294,6 +296,7 @@ class WebController(Controller):
             context={
                 "user": request.session.get("user"),
                 "owner_id": config.owner_id,
+                "request": request,
             },
         )
 
@@ -304,6 +307,7 @@ class WebController(Controller):
             context={
                 "user": request.session.get("user"),
                 "owner_id": config.owner_id,
+                "request": request,
             },
         )
 
@@ -314,6 +318,7 @@ class WebController(Controller):
             context={
                 "user": request.session.get("user"),
                 "owner_id": config.owner_id,
+                "request": request,
             },
         )
 
@@ -532,5 +537,6 @@ class WebController(Controller):
                 "top_phrases": top_phrases,
                 "proposal_stats_json": json.dumps(proposal_stats),
                 "top_5_phrases_chart_json": json.dumps(top_5_phrases_chart),
+                "request": request,
             },
         )

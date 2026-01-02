@@ -5,9 +5,13 @@
 
     <!-- Open Graph -->
     <meta property="og:type" content="profile">
+    <meta property="og:site_name" content="CuñaoBot">
+    <meta property="og:locale" content="es_ES">
     <meta property="og:title" content="Perfil de {{ profile_user.name }}">
     <meta property="og:description" content="Nivel {{ level }} | {{ profile_user.points }} Puntos | {{ phrases_count }} Frases aportadas.">
+    <meta property="og:url" content="{{ request.base_url }}{{ request.url.path }}">
     <meta property="og:image" content="{{ request.base_url }}/user/{{ profile_user.id }}/photo.png">
+    <meta property="og:logo" content="{{ request.base_url }}/user/{{ profile_user.id }}/photo.png">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary">
@@ -15,7 +19,6 @@
     <meta name="twitter:description" content="Nivel {{ level }} | {{ profile_user.points }} Puntos | {{ phrases_count }} Frases aportadas.">
     <meta name="twitter:image" content="{{ request.base_url }}/user/{{ profile_user.id }}/photo.png">
 {% endblock %}
-
 {% block content %}
 <div class="row justify-content-center">
     <!-- User Info Card -->

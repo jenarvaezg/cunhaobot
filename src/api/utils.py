@@ -29,4 +29,5 @@ def get_proposals_context(
         "user": user_session,
         "owner_id": config.owner_id,
         "is_htmx": is_htmx,
+        "request": request,
     }
