@@ -13,6 +13,7 @@ class User(BaseModel):
     usages: int = 0
     points: int = 0
     badges: list[str] = Field(default_factory=list)
+    linked_to: str | int | None = None
     last_usages: list[datetime] = Field(default_factory=list)
     created_at: datetime | None = Field(
         default_factory=lambda: datetime.now(timezone.utc)

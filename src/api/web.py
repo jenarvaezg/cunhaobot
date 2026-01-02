@@ -152,7 +152,7 @@ class WebController(Controller):
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
         # Get stats
-        stats = usage_service.get_user_stats(profile_user.id, profile_user.platform)
+        stats = usage_service.get_user_stats(profile_user.id)
 
         # Get badges progress
         badges_progress = await badge_service.get_all_badges_progress(

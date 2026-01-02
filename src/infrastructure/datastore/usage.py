@@ -31,11 +31,12 @@ class UsageDatastoreRepository(DatastoreRepository[UsageRecord]):
         entity = self._domain_to_entity(record, key)
         self.client.put(entity)
 
-    def get_user_usage_count(self, user_id: str, platform: str) -> int:
+    def get_user_usage_count(self, user_id: str, platform: str | None = None) -> int:
         try:
             query = self.client.query(kind=self.kind)
             query.add_filter("user_id", "=", user_id)
-            query.add_filter("platform", "=", platform)
+            if platform:
+                query.add_filter("platform", "=", platform)
             query.keys_only()
             return len(list(query.fetch(limit=5000)))  # Limit to 5000 to avoid timeouts
         except Exception as e:
@@ -46,13 +47,17 @@ class UsageDatastoreRepository(DatastoreRepository[UsageRecord]):
             )
             return 0
 
-    def get_user_action_count(self, user_id: str, platform: str, action: str) -> int:
+    def get_user_action_count(
+        self, user_id: str, platform: str | None = None, action: str | None = None
+    ) -> int:
         """Counts how many times a user has performed a specific action."""
         try:
             query = self.client.query(kind=self.kind)
             query.add_filter("user_id", "=", str(user_id))
-            query.add_filter("platform", "=", platform)
-            query.add_filter("action", "=", action)
+            if platform:
+                query.add_filter("platform", "=", platform)
+            if action:
+                query.add_filter("action", "=", action)
             query.keys_only()
             return len(list(query.fetch(limit=5000)))
         except Exception as e:

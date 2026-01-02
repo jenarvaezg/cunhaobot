@@ -82,14 +82,14 @@ class BadgeService:
 
         # 3. Fiera Total (50 saludos)
         if "fiera_total" not in current_badges:
-            stats = usage_repository.get_user_usage_count(str(user_id), platform)
+            stats = usage_repository.get_user_usage_count(str(user_id))
             if stats >= 50:
                 new_badge_ids.append("fiera_total")
 
         # 4. Visionario (10 vision usages)
         if "visionario" not in current_badges:
             vision_count = self.usage_repo.get_user_action_count(
-                str(user_id), platform, ActionType.VISION.value
+                str(user_id), action=ActionType.VISION.value
             )
             if vision_count >= 10:
                 new_badge_ids.append("visionario")
@@ -112,7 +112,7 @@ class BadgeService:
         # 7. Autor (1 phrase approved)
         if "autor" not in current_badges:
             approve_count = self.usage_repo.get_user_action_count(
-                str(user_id), platform, ActionType.APPROVE.value
+                str(user_id), action=ActionType.APPROVE.value
             )
             if approve_count >= 1:
                 new_badge_ids.append("autor")
@@ -120,7 +120,7 @@ class BadgeService:
         # 8. Incomprendido (1 phrase rejected)
         if "incomprendido" not in current_badges:
             reject_count = self.usage_repo.get_user_action_count(
-                str(user_id), platform, ActionType.REJECT.value
+                str(user_id), action=ActionType.REJECT.value
             )
             if reject_count >= 1:
                 new_badge_ids.append("incomprendido")
@@ -128,7 +128,7 @@ class BadgeService:
         # 9. Charlatán (5 AI usages)
         if "charlatan" not in current_badges:
             ai_count = self.usage_repo.get_user_action_count(
-                str(user_id), platform, ActionType.AI_ASK.value
+                str(user_id), action=ActionType.AI_ASK.value
             )
             if ai_count >= 5:
                 new_badge_ids.append("charlatan")
@@ -136,7 +136,7 @@ class BadgeService:
         # 10. Melómano (5 Audio usages)
         if "melomano" not in current_badges:
             audio_count = self.usage_repo.get_user_action_count(
-                str(user_id), platform, ActionType.AUDIO.value
+                str(user_id), action=ActionType.AUDIO.value
             )
             if audio_count >= 5:
                 new_badge_ids.append("melomano")
@@ -144,7 +144,7 @@ class BadgeService:
         # 11. Insistente (10 proposals)
         if "insistente" not in current_badges:
             propose_count = self.usage_repo.get_user_action_count(
-                str(user_id), platform, ActionType.PROPOSE.value
+                str(user_id), action=ActionType.PROPOSE.value
             )
             if propose_count >= 10:
                 new_badge_ids.append("insistente")
@@ -181,24 +181,24 @@ class BadgeService:
         results = []
 
         # Get stats
-        total_usages = self.usage_repo.get_user_usage_count(str(user_id), platform)
+        total_usages = self.usage_repo.get_user_usage_count(str(user_id))
         vision_count = self.usage_repo.get_user_action_count(
-            str(user_id), platform, ActionType.VISION.value
+            str(user_id), action=ActionType.VISION.value
         )
         ai_count = self.usage_repo.get_user_action_count(
-            str(user_id), platform, ActionType.AI_ASK.value
+            str(user_id), action=ActionType.AI_ASK.value
         )
         audio_count = self.usage_repo.get_user_action_count(
-            str(user_id), platform, ActionType.AUDIO.value
+            str(user_id), action=ActionType.AUDIO.value
         )
         propose_count = self.usage_repo.get_user_action_count(
-            str(user_id), platform, ActionType.PROPOSE.value
+            str(user_id), action=ActionType.PROPOSE.value
         )
         approve_count = self.usage_repo.get_user_action_count(
-            str(user_id), platform, ActionType.APPROVE.value
+            str(user_id), action=ActionType.APPROVE.value
         )
         reject_count = self.usage_repo.get_user_action_count(
-            str(user_id), platform, ActionType.REJECT.value
+            str(user_id), action=ActionType.REJECT.value
         )
 
         from infrastructure.datastore.phrase import phrase_repository

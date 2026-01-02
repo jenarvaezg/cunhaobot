@@ -25,7 +25,12 @@ import pytest  # noqa: E402
 
 @pytest.fixture
 def mock_datastore_client():
-    return mock_datastore.Client.return_value
+    from utils import gcp
+
+    client = MagicMock()
+    mock_datastore.Client.return_value = client
+    gcp._DATASTORE_CLIENT = None
+    return client
 
 
 @pytest.fixture

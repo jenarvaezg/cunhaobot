@@ -42,8 +42,14 @@ class UserService:
             except ValueError:
                 pass
 
-        if user and platform and user.platform != platform:
+        if not user:
             return None
+
+        # If we followed a link (IDs don't match), we allow different platforms.
+        # If it's a direct load, we still enforce the platform check for safety.
+        if platform and str(user.id) == str(user_id) and user.platform != platform:
+            return None
+
         return user
 
     def get_chat(self, chat_id: str | int, platform: str | None = None) -> Chat | None:
@@ -69,6 +75,8 @@ class UserService:
 
         if user:
             changed = False
+            is_master = str(user.id) == str(user_id)
+
             if user.name != name:
                 user.name = name
                 changed = True
@@ -78,7 +86,9 @@ class UserService:
             if user.gdpr:
                 user.gdpr = False
                 changed = True
-            if user.platform != platform:
+
+            # Only update platform if this is the master record being loaded directly
+            if is_master and user.platform != platform:
                 user.platform = platform
                 changed = True
 
@@ -296,12 +306,18 @@ class UserService:
         ):
             return False
 
-        source_user = self.get_user(source_user_id, source_platform)
-        target_user = self.get_user(target_user_id, target_platform)
+        source_user = self.user_repo.load_raw(source_user_id)
+        target_user = self.user_repo.load(
+            target_user_id
+        )  # Target should be the ultimate master
 
         if not source_user or not target_user:
             return False
 
+        if str(source_user.id) == str(target_user.id):
+            return False
+
+        # Merge Stats
         target_user.points += source_user.points
         target_user.usages += source_user.usages
         target_user.badges = list(set(target_user.badges + source_user.badges))
@@ -333,7 +349,13 @@ class UserService:
             lprop.user_id = target_user.id
             long_proposal_repository.save(lprop)
 
-        self.delete_user(source_user, hard=True)
+        # Instead of deleting, we make source_user an alias of target_user
+        source_user.linked_to = target_user.id
+        source_user.points = 0
+        source_user.usages = 0
+        source_user.badges = []
+        self.save_user(source_user)
+
         link_request_repository.delete(token)
 
         return True

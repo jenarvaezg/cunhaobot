@@ -29,7 +29,7 @@ class TestUserRepository:
         mock_datastore_client.reset_mock()
 
         # Setup mock for client.key
-        def mock_key(kind, id_):
+        def mock_key(kind, id_=None):
             k = MagicMock()
             k.kind = kind
             k.id = id_

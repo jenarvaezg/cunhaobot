@@ -41,7 +41,14 @@ def test_generate_link_token(mock_repos):
 
 
 def test_complete_link_success(mock_repos):
-    user_repo, link_repo, phrase_repo, _, _, _ = mock_repos
+    (
+        user_repo,
+        link_repo,
+        phrase_repo,
+        long_phrase_repo,
+        proposal_repo,
+        long_proposal_repo,
+    ) = mock_repos
     service = UserService(user_repo=user_repo)
 
     # Setup Data
@@ -59,46 +66,53 @@ def test_complete_link_success(mock_repos):
 
     link_repo.load.return_value = request
 
-    # Mock get_user to return source and target
-    def get_user_side_effect(uid, platform=None):
+    # Setup repo load methods
+    def load_side_effect(uid, follow_link=True):
         if uid == "source":
             return source_user
         if uid == "target":
             return target_user
         return None
 
-    # Since get_user calls user_repo.load, we mock that
-    # user_repo.load is mocked via service.user_repo
-    user_repo.load.side_effect = (
-        lambda uid: source_user if uid == "source" else target_user
+    user_repo.load.side_effect = load_side_effect
+    user_repo.load_raw.side_effect = lambda uid: load_side_effect(
+        uid, follow_link=False
     )
 
     # Setup phrase repo to return some items
     mock_phrase = MagicMock()
     phrase_repo.get_phrases.return_value = [mock_phrase]
+    long_phrase_repo.get_phrases.return_value = []
+    proposal_repo.get_phrases.return_value = []
+    long_proposal_repo.get_phrases.return_value = []
 
     success = service.complete_link(token, "target", "slack")
 
     assert success is True
 
-    # Verify Merge
+    # Verify Merge on Target
     assert target_user.points == 30  # 10 + 20
     assert target_user.usages == 15  # 5 + 10
     assert set(target_user.badges) == {"b1", "b2"}
 
-    # Verify Save Target
-    assert user_repo.save.call_count >= 1
-    # Actually complete_link calls save_user once for target.
-    # delete_user calls save(user) (soft delete) or delete(id) (hard).
-    # Code calls delete_user(..., hard=True) -> user_repo.delete(id)
-    user_repo.delete.assert_called_once_with("source")
+    # Verify Alias on Source
+    assert source_user.linked_to == "target"
+    assert source_user.points == 0
+    assert source_user.usages == 0
+    assert source_user.badges == []
+
+    # Verify Save calls
+    # Should save target_user and then source_user
+    assert user_repo.save.call_count >= 2
+
+    # Verify no deletion
+    user_repo.delete.assert_not_called()
 
     # Verify Content Migration
     assert mock_phrase.user_id == "target"
     phrase_repo.save.assert_called_with(mock_phrase)
 
     # Verify Token Deletion
-    # link_repo was patched in service
     link_repo.delete.assert_called_with(token)
 
 
