@@ -6,6 +6,7 @@ from tg.decorators import log_update
 from services import user_service, usage_service, badge_service, phrase_service
 from models.usage import ActionType
 from tg.utils.badges import notify_new_badges
+from core.config import config
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +83,9 @@ async def handle_profile(update: Update, context: CallbackContext) -> None:
             pending_text = "\n\n🚀 <b>Próximos logros:</b>\n" + "\n".join(pending_list)
 
         user_name = html.escape(user.name or "Desconocido")
+        profile_url = f"{config.base_url}/user/{user.id}/profile"
         text = (
+            f"🔗 <a href='{profile_url}'>Ver perfil en la web</a>\n\n"
             f"👤 <b>Perfil de {user_name}</b>\n"
             f"━━━━━━━━━━━━━━━\n"
             f"🏆 <b>Puntos:</b> {user.points}\n"
