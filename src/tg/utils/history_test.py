@@ -49,7 +49,7 @@ async def test_get_telegram_history_with_chat_data():
 
     assert len(history) == 2
     assert isinstance(history[0], ModelRequest)
-    assert history[0].parts[0].content == "user1: Hello"
+    assert history[0].parts[0].content == "user1 dice: Hello"
     assert isinstance(history[1], ModelResponse)
     assert history[1].parts[0].content == "Hi"
 
@@ -91,8 +91,8 @@ async def test_get_telegram_history_recursive_and_chat_data():
 
     assert len(history) == 2
     # Ordered by date: msg1 (10), then msg2 (20)
-    assert history[0].parts[0].content == "user1: Old Message"
-    assert history[1].parts[0].content == "user1: Recent Message"
+    assert history[0].parts[0].content == "user1 dice: Old Message"
+    assert history[1].parts[0].content == "user1 dice: Recent Message"
 
 
 @pytest.mark.asyncio
@@ -129,4 +129,4 @@ async def test_get_telegram_history_deduplication():
     history = await get_telegram_history(message, context)
 
     assert len(history) == 1
-    assert history[0].parts[0].content == "user1: Hello"
+    assert history[0].parts[0].content == "user1 dice: Hello"

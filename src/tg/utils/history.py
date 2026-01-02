@@ -118,7 +118,9 @@ async def get_telegram_history(
             final_history.append(
                 ModelRequest(
                     parts=[
-                        UserPromptPart(content=f"{item['author']}: {item['content']}")
+                        UserPromptPart(
+                            content=f"{item['author']} dice: {item['content']}"
+                        )
                     ]
                 )
             )
