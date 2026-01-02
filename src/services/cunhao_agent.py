@@ -49,11 +49,11 @@ def validate_result(ctx: RunContext[CuñaoDeps], result: str) -> str:
     clean_result = clean_result.strip('"').strip("'")
 
     words = clean_result.split()
-    if len(words) > 12:
+    if len(words) > 30:
         from pydantic_ai import ModelRetry
 
         raise ModelRetry(
-            "¡Te enrollas! Sé más directo, que se me calienta la cerveza. Máximo 10-12 palabras."
+            "¡Te enrollas! Sé más directo, que se me calienta la cerveza. Máximo 20-30 palabras."
         )
     return clean_result
 
