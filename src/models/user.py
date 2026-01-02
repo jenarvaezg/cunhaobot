@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import ClassVar
 from pydantic import BaseModel, Field
 
@@ -15,5 +15,7 @@ class User(BaseModel):
     points: int = 0
     badges: list[str] = Field(default_factory=list)
     last_usages: list[datetime] = Field(default_factory=list)
-    created_at: datetime | None = Field(default_factory=datetime.now)
+    created_at: datetime | None = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
     kind: ClassVar[str] = "User"

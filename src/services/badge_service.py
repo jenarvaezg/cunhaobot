@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from services.user_service import user_service
 from infrastructure.datastore.usage import usage_repository
@@ -49,7 +49,7 @@ class BadgeService:
 
         new_badge_ids = []
         current_badges = set(user.badges)
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
 
         # Update activity history
         if not hasattr(user, "last_usages") or user.last_usages is None:
@@ -163,7 +163,7 @@ class BadgeService:
                     target_val = 5
                     progress = min(100, int((current_val / target_val) * 100))
                 elif badge.id == "pesao":
-                    since = datetime.now() - timedelta(hours=1)
+                    since = datetime.now(timezone.utc) - timedelta(hours=1)
                     if hasattr(user, "last_usages") and user.last_usages:
                         current_val = len([u for u in user.last_usages if u >= since])
                     else:

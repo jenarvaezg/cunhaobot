@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from pydantic import BaseModel, Field
 
@@ -17,5 +17,5 @@ class UsageRecord(BaseModel):
     platform: str  # "slack" | "telegram"
     action: ActionType
     phrase_id: str | None = None
-    timestamp: datetime = Field(default_factory=datetime.now)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: dict = Field(default_factory=dict)

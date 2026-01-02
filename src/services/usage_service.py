@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from models.usage import UsageRecord, ActionType
@@ -27,7 +27,7 @@ class UsageService:
                 platform=platform,
                 action=action,
                 phrase_id=str(phrase_id) if phrase_id else None,
-                timestamp=datetime.now(),
+                timestamp=datetime.now(timezone.utc),
                 metadata=metadata or {},
             )
             self.repo.save(record)

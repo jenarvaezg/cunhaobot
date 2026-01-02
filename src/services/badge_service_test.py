@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import Mock, patch
 from services.badge_service import BadgeService
 from models.user import User
@@ -31,7 +31,6 @@ async def test_check_badges_awards_visionario(
     # Mock usage counts
     # Fiera total < 50
     mock_usage_repo.get_user_usage_count.return_value = 10
-    mock_usage_repo.get_recent_usage_count.return_value = 0
 
     # Visionario >= 10
     def side_effect(uid, p, action):
@@ -62,7 +61,6 @@ async def test_check_badges_awards_poeta(
 
     mock_usage_repo.get_user_usage_count.return_value = 10
     mock_usage_repo.get_user_action_count.return_value = 0
-    mock_usage_repo.get_recent_usage_count.return_value = 0
 
     with patch("infrastructure.datastore.phrase.phrase_repository") as mock_phrase_repo:
         mock_phrase_repo.get_user_phrase_count.return_value = 5
@@ -79,7 +77,7 @@ async def test_check_badges_awards_pesao(
     badge_service, mock_user_service, mock_usage_repo
 ):
     # Setup user with 9 recent usages (current interaction will make it 10)
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
     user = User(id="123", badges=[], last_usages=[now] * 9)
     mock_user_service.get_user.return_value = user
 
