@@ -48,12 +48,11 @@ class TestUserRepository:
         return UserDatastoreRepository()
 
     def test_entity_to_domain_user(self, repo):
-        data = {"id": 123, "name": "Test User", "is_group": True, "gdpr": False}
+        data = {"id": 123, "name": "Test User", "gdpr": False}
         entity = create_mock_entity(data)
         user = repo._entity_to_domain(entity)
         assert user.id == 123
         assert user.name == "Test User"
-        assert user.is_group is True
         assert user.gdpr is False
 
     def test_entity_to_domain_compatibility(self, repo):
@@ -84,7 +83,7 @@ class TestUserRepository:
         assert user_old.platform == "telegram"
 
     def test_load_user(self, repo, mock_datastore_client):
-        data = {"id": 123, "name": "Test User", "is_group": False}
+        data = {"id": 123, "name": "Test User"}
         entity = create_mock_entity(data, kind="User", entity_id=123)
         mock_datastore_client.get.return_value = entity
 
@@ -149,7 +148,6 @@ class TestUserRepository:
         assert len(users_ignore_gdpr) == 3
         assert {u.id for u in users_ignore_gdpr} == {1, 2, 3}
 
-    def test_save_user(self, repo, mock_datastore_client):
-        user = User(id=123, name="Test", is_group=False)
+    def test_save_user(self, repo):
+        user = User(id=123, name="Test")
         repo.save(user)
-        assert mock_datastore_client.put.called

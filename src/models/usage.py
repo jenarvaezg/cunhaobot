@@ -10,6 +10,10 @@ class ActionType(str, Enum):
     VISION = "vision"
     AI_ASK = "ai_ask"
     COMMAND = "command"
+    PROPOSE = "propose"
+    APPROVE = "approve"
+    REJECT = "reject"
+    AUDIO = "audio"
 
 
 class UsageRecord(BaseModel):

@@ -122,8 +122,8 @@ async def submit_handling(
     new_badges = await usage_service.log_usage(
         user_id=update.effective_user.id,
         platform="telegram",
-        action=ActionType.COMMAND,
-        metadata={"command": "submit", "is_long": is_long},
+        action=ActionType.PROPOSE,
+        metadata={"is_long": is_long},
     )
     await notify_new_badges(update, context, new_badges)
 

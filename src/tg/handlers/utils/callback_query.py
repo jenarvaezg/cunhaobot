@@ -12,7 +12,14 @@ from telegram import (
 from telegram.ext import CallbackContext
 
 from models.proposal import Proposal, LongProposal
-from services import proposal_service, phrase_service, proposal_repo, long_proposal_repo
+from models.usage import ActionType
+from services import (
+    proposal_service,
+    phrase_service,
+    proposal_repo,
+    long_proposal_repo,
+    usage_service,
+)
 from tg.constants import LIKE
 from tg.decorators import log_update
 from tg.markup.keyboards import build_vote_keyboard
@@ -93,6 +100,13 @@ async def approve_proposal(
         except Exception as e:
             logger.error(f"Error enviando notificación de aprobación: {e}")
 
+    # Log action for badges
+    await usage_service.log_usage(
+        user_id=proposal.user_id,
+        platform="telegram",
+        action=ActionType.APPROVE,
+    )
+
     # Delegar creación de la frase al servicio
     await phrase_service.create_from_proposal(proposal, bot)
 
@@ -137,6 +151,13 @@ async def dismiss_proposal(
             )
         except Exception as e:
             logger.error(f"Error enviando notificación de rechazo: {e}")
+
+    # Log action for badges
+    await usage_service.log_usage(
+        user_id=proposal.user_id,
+        platform="telegram",
+        action=ActionType.REJECT,
+    )
 
     repo.delete(proposal.id)
 

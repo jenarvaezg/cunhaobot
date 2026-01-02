@@ -5,6 +5,7 @@ from infrastructure.datastore.proposal import (
 )
 from infrastructure.datastore.user import user_repository
 from infrastructure.datastore.usage import usage_repository
+from infrastructure.datastore.chat import chat_repository
 
 # Alias
 phrase_repo = phrase_repository
@@ -13,6 +14,7 @@ proposal_repo = proposal_repository
 long_proposal_repo = long_proposal_repository
 user_repo = user_repository
 usage_repo = usage_repository
+chat_repo = chat_repository
 # For backward compatibility with some codes
 inline_user_repo = user_repository
 
@@ -30,7 +32,7 @@ from services.badge_service import badge_service  # noqa: E402
 
 # Services
 phrase_service = PhraseService(phrase_repo, long_phrase_repo)  # type: ignore[arg-type]
-user_service = UserService(user_repo)  # type: ignore[arg-type]
+user_service = UserService(user_repo, chat_repo)  # type: ignore[arg-type]
 proposal_service = ProposalService(
     proposal_repo,  # type: ignore[invalid-argument-type]
     long_proposal_repo,  # type: ignore[invalid-argument-type]

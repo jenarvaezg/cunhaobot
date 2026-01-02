@@ -216,6 +216,7 @@ class WebController(Controller):
     @get("/phrase/{phrase_id:int}/audio.ogg")
     async def phrase_audio(
         self,
+        request: Request,
         phrase_id: int,
         phrase_repo: Annotated[PhraseRepository, Dependency()],
         long_phrase_repo: Annotated[LongPhraseRepository, Dependency()],
@@ -223,6 +224,19 @@ class WebController(Controller):
         phrase = phrase_repo.load(phrase_id) or long_phrase_repo.load(phrase_id)
         if not phrase:
             raise HTTPException(status_code=404, detail="Phrase not found")
+
+        # Log usage if user is logged in
+        user_session = request.session.get("user")
+        if user_session:
+            from services.usage_service import usage_service
+            from models.usage import ActionType
+
+            await usage_service.log_usage(
+                user_id=user_session.get("id"),
+                platform=user_session.get("platform", "telegram"),
+                action=ActionType.AUDIO,
+                phrase_id=phrase_id,
+            )
 
         result_type = "long" if phrase.kind == "LongPhrase" else "short"
         audio_url = tts_service_instance.get_audio_url(phrase, result_type)
@@ -294,8 +308,9 @@ class WebController(Controller):
     ) -> Template:
         from services.badge_service import BADGES
 
-        # Get all users with points > 0
-        ranking = [u for u in user_repo.load_all() if u.points > 0 and not u.is_group]
+        # Get all users with points > 0.
+        # After refactor, User kind only contains people.
+        ranking = [u for u in user_repo.load_all() if u.points > 0]
         ranking.sort(key=lambda x: x.points, reverse=True)
 
         badges_map = {b.id: b for b in BADGES}
@@ -403,6 +418,18 @@ class WebController(Controller):
         request: Request,
     ) -> HTMXTemplate:
         try:
+            # Log usage if user is logged in
+            user_session = request.session.get("user")
+            if user_session:
+                from services.usage_service import usage_service
+                from models.usage import ActionType
+
+                await usage_service.log_usage(
+                    user_id=user_session.get("id"),
+                    platform=user_session.get("platform", "telegram"),
+                    action=ActionType.AI_ASK,
+                )
+
             # Fetch all phrases for context
             context_phrases = [p.text for p in phrase_repo.load_all()] + [
                 p.text for p in long_phrase_repo.load_all()

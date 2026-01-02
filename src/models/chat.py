@@ -3,18 +3,19 @@ from typing import ClassVar
 from pydantic import BaseModel, Field
 
 
-class User(BaseModel):
+class Chat(BaseModel):
     id: str | int = 0
     platform: str = "telegram"
-    name: str = ""
+    title: str = ""
     username: str | None = None
-    is_private: bool = False
-    gdpr: bool = False
+    type: str = "private"  # private, group, supergroup, channel
     usages: int = 0
-    points: int = 0
-    badges: list[str] = Field(default_factory=list)
-    last_usages: list[datetime] = Field(default_factory=list)
+    is_active: bool = True
     created_at: datetime | None = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
-    kind: ClassVar[str] = "User"
+    last_seen_at: datetime | None = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+
+    kind: ClassVar[str] = "Chat"

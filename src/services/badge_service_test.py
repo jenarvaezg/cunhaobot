@@ -22,10 +22,30 @@ def badge_service(mock_user_service, mock_usage_repo):
 
 
 @pytest.mark.asyncio
-async def test_check_badges_awards_visionario(
+async def test_check_badges_awards_novato(
     badge_service, mock_user_service, mock_usage_repo
 ):
     user = User(id="123", badges=[])
+    mock_user_service.get_user.return_value = user
+
+    mock_usage_repo.get_user_usage_count.return_value = 1
+    mock_usage_repo.get_user_action_count.return_value = 0
+
+    with patch("infrastructure.datastore.phrase.phrase_repository") as mock_phrase_repo:
+        mock_phrase_repo.get_user_phrase_count.return_value = 0
+
+        new_badges = await badge_service.check_badges("123", "telegram")
+
+        assert any(b.id == "novato" for b in new_badges)
+        assert "novato" in user.badges
+
+
+@pytest.mark.asyncio
+async def test_check_badges_awards_visionario(
+    badge_service, mock_user_service, mock_usage_repo
+):
+    # User already has novato
+    user = User(id="123", badges=["novato"])
     mock_user_service.get_user.return_value = user
 
     # Mock usage counts
@@ -56,7 +76,8 @@ async def test_check_badges_awards_visionario(
 async def test_check_badges_awards_poeta(
     badge_service, mock_user_service, mock_usage_repo
 ):
-    user = User(id="123", badges=[])
+    # User already has novato
+    user = User(id="123", badges=["novato"])
     mock_user_service.get_user.return_value = user
 
     mock_usage_repo.get_user_usage_count.return_value = 10
@@ -77,8 +98,9 @@ async def test_check_badges_awards_pesao(
     badge_service, mock_user_service, mock_usage_repo
 ):
     # Setup user with 9 recent usages (current interaction will make it 10)
+    # User already has novato
     now = datetime.now(timezone.utc)
-    user = User(id="123", badges=[], last_usages=[now] * 9)
+    user = User(id="123", badges=["novato"], last_usages=[now] * 9)
     mock_user_service.get_user.return_value = user
 
     mock_usage_repo.get_user_usage_count.return_value = 5  # Not fiera total

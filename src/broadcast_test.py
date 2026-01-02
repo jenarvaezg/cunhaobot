@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import patch, AsyncMock, MagicMock
 from models.user import User
+from models.chat import Chat
 
 
 @pytest.fixture
@@ -8,8 +9,16 @@ def mock_users():
     return [
         User(id=1, name="User 1", platform="telegram", gdpr=False),
         User(id=2, name="User 2", platform="telegram", gdpr=False),
-        User(id=3, name="Group 1", platform="telegram", gdpr=False, is_group=True),
         User(id="slack1", name="Slack 1", platform="slack", gdpr=False),
+    ]
+
+
+@pytest.fixture
+def mock_chats():
+    return [
+        Chat(id=1, title="Chat 1", type="private", platform="telegram"),
+        Chat(id=2, title="Chat 2", type="private", platform="telegram"),
+        Chat(id=3, title="Group 1", type="group", platform="telegram"),
     ]
 
 
@@ -33,7 +42,7 @@ async def test_broadcast_page_success(client):
 
 
 @pytest.mark.asyncio
-async def test_broadcast_send_text_success(client, mock_users):
+async def test_broadcast_send_text_success(client, mock_users, mock_chats):
     mock_bot = AsyncMock()
     mock_app = MagicMock()
     mock_app.initialize = AsyncMock()
@@ -45,20 +54,23 @@ async def test_broadcast_send_text_success(client, mock_users):
             "infrastructure.datastore.user.UserDatastoreRepository.load_all",
             return_value=mock_users,
         ),
+        patch(
+            "infrastructure.datastore.chat.ChatDatastoreRepository.load_all",
+            return_value=mock_chats,
+        ),
         patch("api.admin.get_tg_application", return_value=mock_app),
     ):
         response = client.post("/admin/broadcast", data={"message": "Hola caracola"})
         assert response.status_code == 200
 
-        # Should have sent 2 messages (User 1 and User 2, not Group 1, not Slack 1)
+        # By default, it sends only to private chats (Chat 1 and Chat 2)
+        # mock_chats has 2 private, 1 group.
         assert mock_bot.send_message.call_count == 2
         assert b"2 enviados" in response.content
 
 
 @pytest.mark.asyncio
-async def test_broadcast_send_image_success(client):
-    mock_user = User(id=123, name="Test Machine", platform="telegram", gdpr=False)
-
+async def test_broadcast_send_image_success(client, mock_chats):
     mock_bot = AsyncMock()
     mock_app = MagicMock()
     mock_app.initialize = AsyncMock()
@@ -67,8 +79,9 @@ async def test_broadcast_send_image_success(client):
     with (
         patch("core.config.config.is_gae", False),
         patch(
-            "infrastructure.datastore.user.UserDatastoreRepository.load_all",
-            return_value=[mock_user],
+            "infrastructure.datastore.chat.ChatDatastoreRepository.load_all",
+            # Just one private chat for this test
+            return_value=[mock_chats[0]],
         ),
         patch("api.admin.get_tg_application", return_value=mock_app),
     ):
@@ -82,14 +95,12 @@ async def test_broadcast_send_image_success(client):
         assert response.status_code == 200
         assert b"1 enviados" in response.content
         mock_bot.send_photo.assert_called_once_with(
-            chat_id=123, photo=b"fake-image-bytes", caption="Optional caption"
+            chat_id=1, photo=b"fake-image-bytes", caption="Optional caption"
         )
 
 
 @pytest.mark.asyncio
-async def test_broadcast_send_video_success(client):
-    mock_user = User(id=123, name="Test Machine", platform="telegram", gdpr=False)
-
+async def test_broadcast_send_video_success(client, mock_chats):
     mock_bot = AsyncMock()
     mock_app = MagicMock()
     mock_app.initialize = AsyncMock()
@@ -98,8 +109,8 @@ async def test_broadcast_send_video_success(client):
     with (
         patch("core.config.config.is_gae", False),
         patch(
-            "infrastructure.datastore.user.UserDatastoreRepository.load_all",
-            return_value=[mock_user],
+            "infrastructure.datastore.chat.ChatDatastoreRepository.load_all",
+            return_value=[mock_chats[0]],
         ),
         patch("api.admin.get_tg_application", return_value=mock_app),
     ):
@@ -111,14 +122,13 @@ async def test_broadcast_send_video_success(client):
         assert response.status_code == 200
         assert b"1 enviados" in response.content
         mock_bot.send_video.assert_called_once_with(
-            chat_id=123, video=b"fake-video-bytes", caption=None
+            chat_id=1, video=b"fake-video-bytes", caption=""
         )
 
 
 @pytest.mark.asyncio
-async def test_broadcast_send_skips_non_telegram(client):
-    mock_user_tg = User(id=123, name="TG User", platform="telegram", gdpr=False)
-    mock_user_slack = User(id="S456", name="Slack User", platform="slack", gdpr=False)
+async def test_broadcast_send_skips_inactive(client, mock_chats):
+    mock_chats[0].is_active = False
 
     mock_bot = AsyncMock()
     mock_app = MagicMock()
@@ -128,22 +138,20 @@ async def test_broadcast_send_skips_non_telegram(client):
     with (
         patch("core.config.config.is_gae", False),
         patch(
-            "infrastructure.datastore.user.UserDatastoreRepository.load_all",
-            return_value=[mock_user_tg, mock_user_slack],
+            "infrastructure.datastore.chat.ChatDatastoreRepository.load_all",
+            return_value=mock_chats,
         ),
         patch("api.admin.get_tg_application", return_value=mock_app),
     ):
-        response = client.post("/admin/broadcast", data={"message": "Skip slack"})
+        response = client.post("/admin/broadcast", data={"message": "Skip inactive"})
 
         assert response.status_code == 200
-        assert b"1 enviados" in response.content
-        mock_bot.send_message.assert_called_once()
+        # Only Chat 2 should receive it (Chat 1 is inactive, Chat 3 is group)
+        assert mock_bot.send_message.call_count == 1
 
 
 @pytest.mark.asyncio
-async def test_broadcast_send_failure_updates_gdpr(client):
-    mock_user = User(id=123, name="Test Machine", platform="telegram", gdpr=False)
-
+async def test_broadcast_send_failure_updates_active(client, mock_chats):
     mock_bot = AsyncMock()
     # Fail the send_message call
     mock_bot.send_message.side_effect = Exception("Telegram Error")
@@ -154,27 +162,27 @@ async def test_broadcast_send_failure_updates_gdpr(client):
     with (
         patch("core.config.config.is_gae", False),
         patch(
-            "infrastructure.datastore.user.UserDatastoreRepository.load_all",
-            return_value=[mock_user],
+            "infrastructure.datastore.chat.ChatDatastoreRepository.load_all",
+            return_value=[mock_chats[0]],
         ),
         patch(
-            "infrastructure.datastore.user.UserDatastoreRepository.save"
+            "infrastructure.datastore.chat.ChatDatastoreRepository.save"
         ) as mock_save,
         patch("api.admin.get_tg_application", return_value=mock_app),
     ):
         response = client.post("/admin/broadcast", data={"message": "fail"})
 
         assert response.status_code == 200
-        assert b"1 fallidos" in response.content
-        # Should have updated GDPR to True
+        assert b"0 enviados" in response.content
+        # Should have updated is_active to False
         mock_save.assert_called_once()
-        saved_user = mock_save.call_args[0][0]
-        assert saved_user.id == 123
-        assert saved_user.gdpr is True
+        saved_chat = mock_save.call_args[0][0]
+        assert saved_chat.id == 1
+        assert saved_chat.is_active is False
 
 
 @pytest.mark.asyncio
-async def test_broadcast_status_sse_success(client, mock_users):
+async def test_broadcast_status_sse_success(client, mock_chats):
     mock_bot = AsyncMock()
     mock_app = MagicMock()
     mock_app.initialize = AsyncMock()
@@ -183,8 +191,8 @@ async def test_broadcast_status_sse_success(client, mock_users):
     with (
         patch("core.config.config.is_gae", False),
         patch(
-            "infrastructure.datastore.user.UserDatastoreRepository.load_all",
-            return_value=mock_users,
+            "infrastructure.datastore.chat.ChatDatastoreRepository.load_all",
+            return_value=mock_chats,
         ),
         patch("api.admin.get_tg_application", return_value=mock_app),
     ):
@@ -195,5 +203,5 @@ async def test_broadcast_status_sse_success(client, mock_users):
         # Check that it returns SSE content type
         assert "text/event-stream" in response.headers["content-type"]
 
-        # Verify it sent messages to the 2 telegram users
+        # Verify it sent messages to the 2 private telegram chats
         assert mock_bot.send_message.call_count == 2

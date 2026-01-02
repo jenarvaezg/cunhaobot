@@ -2,6 +2,7 @@ from typing import Protocol, TypeVar, Any, runtime_checkable
 from models.phrase import Phrase, LongPhrase
 from models.proposal import Proposal, LongProposal
 from models.user import User
+from models.chat import Chat
 
 T = TypeVar("T")
 
@@ -46,6 +47,11 @@ class LongProposalRepository(Repository[LongProposal], Protocol):
 @runtime_checkable
 class UserRepository(Repository[User], Protocol):
     def load_all(self, ignore_gdpr: bool = False) -> list[User]: ...
+
+
+@runtime_checkable
+class ChatRepository(Repository[Chat], Protocol):
+    def load_all(self) -> list[Chat]: ...
 
 
 @runtime_checkable

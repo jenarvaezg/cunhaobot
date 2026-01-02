@@ -18,7 +18,14 @@ async def handle_chosen_inline_result(update: Update, context: CallbackContext):
 
     # Log usage
     is_sticker = result.result_id.startswith("sticker-")
-    action = ActionType.STICKER if is_sticker else ActionType.PHRASE
+    is_audio = result.result_id.startswith("audio-")
+
+    if is_sticker:
+        action = ActionType.STICKER
+    elif is_audio:
+        action = ActionType.AUDIO
+    else:
+        action = ActionType.PHRASE
 
     new_badges = await usage_service.log_usage(
         user_id=result.from_user.id,

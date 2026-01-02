@@ -9,34 +9,42 @@ class TestUserService:
     @pytest.fixture
     def service(self):
         self.user_repo = MagicMock()
-        return UserService(self.user_repo)
+        self.chat_repo = MagicMock()
+        return UserService(self.user_repo, self.chat_repo)
 
     def test_update_or_create_user_new(self, service):
         update = MagicMock()
         update.effective_message.chat_id = 123
-        update.effective_message.chat.PRIVATE = ChatType.PRIVATE
         update.effective_message.chat.type = ChatType.PRIVATE
-        update.effective_message.from_user.name = "New User"
-        update.effective_message.from_user.username = "new_user"
+        update.effective_message.chat.title = None
+        update.effective_message.chat.username = None
+        update.effective_user.id = 123
+        update.effective_user.name = "New User"
+        update.effective_user.username = "new_user"
 
         service.user_repo.load.return_value = None
+        service.chat_repo.load.return_value = None
 
         user = service.update_or_create_user(update)
         assert user.id == 123
         assert user.name == "New User"
         assert user.username == "new_user"
         service.user_repo.save.assert_called_once()
+        service.chat_repo.save.assert_called_once()
 
     def test_update_or_create_user_update(self, service):
         update = MagicMock()
         update.effective_message.chat_id = 123
-        update.effective_message.chat.PRIVATE = ChatType.PRIVATE
         update.effective_message.chat.type = ChatType.PRIVATE
-        update.effective_message.from_user.name = "Updated User"
-        update.effective_message.from_user.username = "updated_user"
+        update.effective_message.chat.title = None
+        update.effective_message.chat.username = None
+        update.effective_user.id = 123
+        update.effective_user.name = "Updated User"
+        update.effective_user.username = "updated_user"
 
         existing = User(id=123, name="Old", gdpr=True)
         service.user_repo.load.return_value = existing
+        service.chat_repo.load.return_value = MagicMock()
 
         user = service.update_or_create_user(update)
         assert user.name == "Updated User"
@@ -46,19 +54,31 @@ class TestUserService:
 
     def test_update_or_create_user_group(self, service):
         update = MagicMock()
-        update.effective_message.chat_id = 456
-        update.effective_message.chat.PRIVATE = ChatType.PRIVATE
+        update.effective_message.chat_id = -456
         update.effective_message.chat.type = ChatType.GROUP
         update.effective_message.chat.title = "My Group"
-        update.effective_message.from_user = None
+        update.effective_message.chat.username = "my_group_user"
+        update.effective_user.id = 123
+        update.effective_user.name = "Person"
+        update.effective_user.username = "person_user"
 
         service.user_repo.load.return_value = None
+        service.chat_repo.load.return_value = None
 
         user = service.update_or_create_user(update)
-        assert user.id == 456
-        assert user.name == "My Group"
-        assert user.is_group is True
-        assert user.username is None
+        # Should return the person, not the group
+        assert user.id == 123
+        assert user.name == "Person"
+
+        # Should have saved both
+        assert service.user_repo.save.called
+        assert service.chat_repo.save.called
+
+        # Verify chat call
+        chat_call = service.chat_repo.save.call_args[0][0]
+        assert chat_call.id == -456
+        assert chat_call.title == "My Group"
+        assert chat_call.type == ChatType.GROUP
 
     def test_update_or_create_user_no_message(self, service):
         update = MagicMock()
@@ -100,7 +120,7 @@ class TestUserService:
         user_id = 123
         points = 10
 
-        user = User(id=user_id, points=5, is_group=False)
+        user = User(id=user_id, points=5)
         service.user_repo.load.return_value = user
 
         service.add_points(user_id, points)
@@ -196,7 +216,7 @@ class TestUserService:
         assert result.id == 123
 
     def test_get_user_fallback_negative(self, service):
-        user = User(id=-456, is_group=True)
+        user = User(id=-456)
 
         def load_side_effect(uid):
             if uid == "-456":

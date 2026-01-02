@@ -3,10 +3,9 @@ from models.user import User
 
 class TestUser:
     def test_user_init(self):
-        user = User(id=123, name="Test User", is_group=False)
+        user = User(id=123, name="Test User")
         assert user.id == 123
         assert user.name == "Test User"
-        assert not user.is_group
         assert not user.gdpr
         assert user.points == 0
         assert user.usages == 0

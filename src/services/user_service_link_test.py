@@ -1,6 +1,6 @@
 import pytest
+from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
-from datetime import datetime, timedelta
 from models.user import User
 from models.link_request import LinkRequest
 from services.user_service import UserService
@@ -111,7 +111,7 @@ def test_complete_link_expired(mock_repos):
         token=token,
         source_user_id="source",
         source_platform="telegram",
-        expires_at=datetime.now() - timedelta(minutes=1),
+        expires_at=datetime.now(timezone.utc) - timedelta(minutes=1),
     )
     link_repo.load.return_value = request
 

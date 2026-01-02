@@ -9,7 +9,7 @@ from litestar.exceptions import HTTPException
 from litestar.datastructures import UploadFile
 
 from services.proposal_service import ProposalService
-from infrastructure.protocols import UserRepository
+from infrastructure.protocols import UserRepository, ChatRepository
 from core.config import config
 from tg import get_tg_application
 
@@ -37,33 +37,33 @@ class AdminController(Controller):
         self,
         request: Request,
         user_repo: Annotated[UserRepository, Dependency()],
+        chat_repo: Annotated[ChatRepository, Dependency()],
     ) -> ServerSentEvent:
         user = request.session.get("user")
         if not user or str(user.get("id")) != config.owner_id:
             raise HTTPException(status_code=401, detail="Unauthorized")
 
-        # Note: In a real app with file upload via SSE, we'd need a multi-step process.
-        # For simplicity, if it's a "master" broadcast, we assume it's text for now
-        # OR we store the file in a temp session.
-        # Since the user asked for real-time progress, I'll adapt the POST to trigger
-        # a background process and this to follow it, but for a cleaner HTMX integration,
-        # we'll do the broadcast INSIDE the SSE generator.
-
         async def progress_generator() -> AsyncIterable[str]:
-            # Use query params for the message since it's a GET
             msg = request.query_params.get("message")
+            include_groups = request.query_params.get("include_groups") == "true"
 
-            users = user_repo.load_all(ignore_gdpr=False)
-            telegram_users = [
-                u for u in users if u.platform == "telegram" and not u.is_group
-            ]
-            total = len(telegram_users)
+            # Use CHATS as the source of truth for messaging
+            chats = chat_repo.load_all()
+
+            # Filter targets: active telegram chats
+            targets = [c for c in chats if c.platform == "telegram" and c.is_active]
+
+            if not include_groups:
+                targets = [c for c in targets if c.type == "private"]
+            # If include_groups is True, we take all active chats (both private and groups)
+
+            total = len(targets)
 
             if total == 0:
                 yield json.dumps(
                     {
                         "progress": 100,
-                        "current_user": "No hay usuarios",
+                        "current_user": "No hay chats activos",
                         "status": "completed",
                     }
                 )
@@ -76,31 +76,34 @@ class AdminController(Controller):
             success_count = 0
             fail_count = 0
 
-            for i, u in enumerate(telegram_users):
+            for i, target in enumerate(targets):
                 progress = int((i / total) * 100)
                 yield json.dumps(
                     {
                         "progress": progress,
-                        "current_user": u.name or u.username or str(u.id),
+                        "current_user": target.title
+                        or target.username
+                        or str(target.id),
                         "status": f"Enviando a {i + 1}/{total}...",
                     }
                 )
 
                 try:
                     chat_id = (
-                        int(u.id)
-                        if isinstance(u.id, str) and u.id.lstrip("-").isdigit()
-                        else u.id
+                        int(target.id)
+                        if isinstance(target.id, str)
+                        and target.id.lstrip("-").isdigit()
+                        else target.id
                     )
                     await bot.send_message(chat_id=chat_id, text=msg)  # type: ignore[arg-type]
                     success_count += 1
                 except Exception as e:
-                    logger.warning(f"Error sending broadcast to {u.id}: {e}")
-                    u.gdpr = True
-                    user_repo.save(u)
+                    logger.warning(f"Error sending broadcast to chat {target.id}: {e}")
+                    # Mark chat as inactive if we can't send messages
+                    target.is_active = False
+                    chat_repo.save(target)
                     fail_count += 1
 
-                # Small delay to avoid flooding and allow SSE to breathe
                 await asyncio.sleep(0.05)
 
             yield json.dumps(
@@ -118,14 +121,16 @@ class AdminController(Controller):
         self,
         request: Request,
         user_repo: Annotated[UserRepository, Dependency()],
+        chat_repo: Annotated[ChatRepository, Dependency()],
     ) -> Response[str]:
         user = request.session.get("user")
         if not user or str(user.get("id")) != config.owner_id:
             return Response("Unauthorized", status_code=401)
 
         form_data = await request.form()
-        message = form_data.get("message")
+        message = str(form_data.get("message") or "")
         upload_file = form_data.get("data")
+        include_groups = form_data.get("include_groups") == "true"
 
         content_bytes = b""
         is_video = False
@@ -142,7 +147,12 @@ class AdminController(Controller):
                 "Escribe algo o sube un archivo, alma de cántaro.", status_code=400
             )
 
-        users = user_repo.load_all(ignore_gdpr=False)
+        # Get targets from Chat repository
+        all_chats = chat_repo.load_all()
+        targets = [c for c in all_chats if c.platform == "telegram" and c.is_active]
+
+        if not include_groups:
+            targets = [c for c in targets if c.type == "private"]
 
         application = get_tg_application()
         await application.initialize()
@@ -151,15 +161,12 @@ class AdminController(Controller):
         success_count = 0
         fail_count = 0
 
-        for u in users:
-            if u.platform != "telegram" or u.is_group:
-                continue
+        for target in targets:
             try:
-                # Convert ID to int if it's numeric
                 chat_id = (
-                    int(u.id)
-                    if isinstance(u.id, str) and u.id.lstrip("-").isdigit()
-                    else u.id
+                    int(target.id)
+                    if isinstance(target.id, str) and target.id.lstrip("-").isdigit()
+                    else target.id
                 )
 
                 if is_video:
@@ -175,14 +182,13 @@ class AdminController(Controller):
 
                 success_count += 1
             except Exception as e:
-                logger.warning(f"Error sending broadcast to {u.id}: {e}")
-                # If they blocked us, we count it as a fail but don't stop the broadcast
-                u.gdpr = True
-                user_repo.save(u)
+                logger.warning(f"Error sending broadcast to chat {target.id}: {e}")
+                target.is_active = False
+                chat_repo.save(target)
                 fail_count += 1
 
         return Response(
-            f"Difusión completada. ✅ {success_count} enviados, 🚫 {fail_count} fallidos (usuarios que han bloqueado el bot o GDPR activado).",
+            f"Difusión completada. ✅ {success_count} enviados, 🚫 {fail_count} fallidos.",
             status_code=200,
         )
 
