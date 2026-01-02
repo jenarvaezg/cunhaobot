@@ -21,6 +21,11 @@ async def test_handle_start():
         patch(
             "tg.handlers.commands.start.phrase_service.get_random"
         ) as mock_get_random,
+        patch(
+            "tg.handlers.commands.start.usage_service.log_usage",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
         patch("tg.decorators.user_service.update_or_create_user"),
     ):
         mock_get_random.return_value = mock_phrase1

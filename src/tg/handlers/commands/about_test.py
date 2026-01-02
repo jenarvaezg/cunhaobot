@@ -22,6 +22,11 @@ async def test_handle_about():
             UserService, "update_or_create_user"
         ),  # Patch the method on the class
         patch(
+            "tg.handlers.commands.about.usage_service.log_usage",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
+        patch(
             "tg.handlers.commands.about.phrase_service.get_random",
             return_value=mock_phrase,
         ),

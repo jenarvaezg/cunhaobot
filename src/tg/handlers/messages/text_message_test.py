@@ -13,6 +13,11 @@ async def test_handle_message_trigger():
         patch(
             "tg.handlers.messages.text_message.phrase_service.get_random"
         ) as mock_random,
+        patch(
+            "tg.handlers.messages.text_message.usage_service.log_usage",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
         patch("tg.decorators.user_service.update_or_create_user"),
     ):
         mock_random.return_value.text = "random phrase"
@@ -45,6 +50,11 @@ async def test_handle_message_mention_trigger():
             "tg.handlers.messages.text_message.cunhao_agent.answer",
             new_callable=AsyncMock,
         ) as mock_answer,
+        patch(
+            "tg.handlers.messages.text_message.usage_service.log_usage",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
         patch("tg.decorators.user_service.update_or_create_user"),
     ):
         mock_answer.return_value = "AI Response"

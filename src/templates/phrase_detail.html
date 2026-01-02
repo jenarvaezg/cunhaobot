@@ -1,7 +1,5 @@
 {% extends "base.html" %}
 
-{% extends "base.html" %}
-
 {% set is_private_contributor = contributor and contributor.is_private and (not user or user.id|string != contributor.id|string) %}
 
 {% block meta %}
