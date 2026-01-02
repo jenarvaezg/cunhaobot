@@ -125,6 +125,69 @@ class WebController(Controller):
             headers={"Cache-Control": "public, max-age=3600"},
         )
 
+    @get("/user/{user_id:str}/profile")
+    async def profile(
+        self,
+        request: Request,
+        user_id: str,
+        user_repo: Annotated[UserRepository, Dependency()],
+        phrase_repo: Annotated[PhraseRepository, Dependency()],
+        long_phrase_repo: Annotated[LongPhraseRepository, Dependency()],
+    ) -> Template:
+        from services.badge_service import badge_service
+        from services.usage_service import usage_service
+
+        # Try to find user
+        profile_user = user_repo.load(user_id)
+        if not profile_user:
+            # Try numeric ID if string failed (legacy compatibility)
+            try:
+                profile_user = user_repo.load(int(user_id))
+            except ValueError:
+                pass
+
+        if not profile_user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+        # Get stats
+        stats = usage_service.get_user_stats(profile_user.id, profile_user.platform)
+
+        # Get badges progress
+        badges_progress = await badge_service.get_all_badges_progress(
+            profile_user.id, profile_user.platform
+        )
+
+        # Get user phrases
+        user_phrases = phrase_repo.get_phrases(user_id=str(profile_user.id))
+        user_long_phrases = long_phrase_repo.get_phrases(user_id=str(profile_user.id))
+        all_user_phrases = sorted(
+            user_phrases + user_long_phrases, key=lambda x: x.usages, reverse=True
+        )
+
+        # Calculate Level (simple formula)
+        level = 1 + int(profile_user.points / 100)
+
+        # Mock fun stats for now (could be improved with more complex queries)
+        fun_stats = {}
+        if stats["total_usages"] > 0:
+            # If we had detailed usage logs we could do more here
+            pass
+
+        return Template(
+            template_name="profile.html",
+            context={
+                "user": request.session.get("user"),
+                "owner_id": config.owner_id,
+                "profile_user": profile_user,
+                "stats": stats,
+                "badges_progress": badges_progress,
+                "user_phrases": all_user_phrases,
+                "phrases_count": len(all_user_phrases),
+                "level": level,
+                "fun_stats": fun_stats,
+            },
+        )
+
     @get("/phrase/{phrase_id:int}/audio.ogg")
     async def phrase_audio(
         self,

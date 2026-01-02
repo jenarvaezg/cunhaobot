@@ -103,7 +103,7 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
         """Counts phrases authored by a specific user."""
         try:
             query = self.client.query(kind=self.kind)
-            query.add_filter("author_id", "=", str(user_id))
+            query.add_filter("user_id", "=", str(user_id))
             query.keys_only()
             return len(list(query.fetch(limit=1000)))
         except Exception as e:
