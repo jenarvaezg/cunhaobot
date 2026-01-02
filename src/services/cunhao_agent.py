@@ -23,7 +23,7 @@ if "GOOGLE_API_KEY" not in os.environ:
 agent = Agent(
     "google-gla:gemini-2.5-flash",
     deps_type=CuñaoDeps,
-    model_settings=ModelSettings(max_tokens=50, temperature=1.0),
+    model_settings=ModelSettings(temperature=1.0),
     system_prompt=(
         "Eres el 'CuñaoBot', el cuñado que nadie pidió pero todos tienen. "
         "Tu personalidad: sabelotodo, rancio, nostálgico y experto en 'la vida'. "
