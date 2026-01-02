@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% extends "base.html" %}
+
+{% set is_private_contributor = contributor and contributor.is_private and (not user or user.id|string != contributor.id|string) %}
+
 {% block meta %}
     <meta name="description" content="{{ phrase.text }} - Una perla de sabiduría cuñadil.">
 
@@ -8,7 +12,7 @@
     <meta property="og:site_name" content="CuñaoBot">
     <meta property="og:locale" content="es_ES">
     <meta property="og:title" content="Frase de Cuñado: {{ phrase.text | truncate(50) }}">
-    <meta property="og:description" content="&quot;{{ phrase.text }}&quot; {% if contributor %}- Por {{ contributor.name }}{% endif %}">
+    <meta property="og:description" content="&quot;{{ phrase.text }}&quot; {% if contributor and not is_private_contributor %}- Por {{ contributor.name }}{% endif %}">
     <meta property="og:url" content="{{ request.base_url }}{{ request.url.path }}">
 
     {% if phrase.sticker_file_id %}
@@ -25,7 +29,7 @@
 
     <!-- Twitter -->
     <meta name="twitter:title" content="Frase de Cuñado: {{ phrase.text | truncate(50) }}">
-    <meta name="twitter:description" content="&quot;{{ phrase.text }}&quot; {% if contributor %}- Por {{ contributor.name }}{% endif %}">
+    <meta name="twitter:description" content="&quot;{{ phrase.text }}&quot; {% if contributor and not is_private_contributor %}- Por {{ contributor.name }}{% endif %}">
 {% endblock %}
 {% block content %}
 <div class="row justify-content-center animate__animated animate__fadeIn">
@@ -67,15 +71,25 @@
                             <div class="d-flex align-items-center gap-3 justify-content-center p-2 rounded-pill hover-bg-light-10 transition-all">
                                 <div class="rounded-circle border border-warning border-opacity-50 d-flex align-items-center justify-content-center fw-bold text-dark overflow-hidden shadow-sm"
                                      style="width: 56px; height: 56px; background: var(--primary-gold);">
-                                    <img src="/user/{{ contributor.id }}/photo.png"
-                                         alt="{{ contributor.name }}"
-                                         class="img-fluid"
-                                         style="width: 100%; height: 100%; object-fit: cover;"
-                                         onerror="this.style.display='none'; this.parentElement.innerHTML='{{ contributor.name.lstrip('@')|first|upper }}'">
+                                    {% if is_private_contributor %}
+                                        <i class="bi bi-eye-slash-fill fs-4 text-dark"></i>
+                                    {% else %}
+                                        <img src="/user/{{ contributor.id }}/photo.png"
+                                             alt="{{ contributor.name }}"
+                                             class="img-fluid"
+                                             style="width: 100%; height: 100%; object-fit: cover;"
+                                             onerror="this.style.display='none'; this.parentElement.innerHTML='{{ contributor.name.lstrip('@')|first|upper }}'">
+                                    {% endif %}
                                 </div>
                                 <div class="text-start">
-                                    <div class="fw-bold fs-5 lh-1">{{ contributor.name }}</div>
-                                    {% if contributor.username %}
+                                    <div class="fw-bold fs-5 lh-1">
+                                        {% if is_private_contributor %}
+                                            Usuario Privado
+                                        {% else %}
+                                            {{ contributor.name }}
+                                        {% endif %}
+                                    </div>
+                                    {% if not is_private_contributor and contributor.username %}
                                     <div class="small text-warning">@{{ contributor.username }}</div>
                                     {% else %}
                                     <div class="small text-secondary">Cuñao Certificado</div>

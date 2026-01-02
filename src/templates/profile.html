@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block meta %}
-    {% set is_owner = user and user.id|string == profile_user.id|string %}
-    {% set show_private = profile_user.is_private and not is_owner %}
-    {% set display_name = "Usuario Privado" if show_private else profile_user.name %}
+{% set is_owner = user and user.id|string == profile_user.id|string %}
+{% set show_private = profile_user.is_private and not is_owner %}
+{% set display_name = "Usuario Privado" if show_private else profile_user.name %}
 
+{% block meta %}
     <meta name="description" content="Perfil de {{ display_name }} en CuñaoBot. Nivel {{ level }} de maestría cuñadil.">
 
     <!-- Open Graph -->
@@ -14,18 +14,24 @@
     <meta property="og:title" content="Perfil de {{ display_name }}">
     <meta property="og:description" content="Nivel {{ level }} | {{ profile_user.points }} Puntos | {{ phrases_count }} Frases aportadas.">
     <meta property="og:url" content="{{ request.base_url }}{{ request.url.path }}">
+    {% if not show_private %}
     <meta property="og:image" content="{{ request.base_url }}/user/{{ profile_user.id }}/photo.png">
     <meta property="og:logo" content="{{ request.base_url }}/user/{{ profile_user.id }}/photo.png">
+    {% else %}
+    <meta property="og:image" content="{{ request.base_url }}/static/favicon.png">
+    {% endif %}
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="Perfil de {{ display_name }}">
     <meta name="twitter:description" content="Nivel {{ level }} | {{ profile_user.points }} Puntos | {{ phrases_count }} Frases aportadas.">
+    {% if not show_private %}
     <meta name="twitter:image" content="{{ request.base_url }}/user/{{ profile_user.id }}/photo.png">
+    {% else %}
+    <meta name="twitter:image" content="{{ request.base_url }}/static/favicon.png">
+    {% endif %}
 {% endblock %}
 {% block content %}
-{% set is_owner = user and user.id|string == profile_user.id|string %}
-{% set show_private = profile_user.is_private and not is_owner %}
 
 <div class="row justify-content-center">
     <!-- User Info Card -->
@@ -170,7 +176,7 @@
         {% if user_phrases %}
         <div class="glass-card p-4 animate__animated animate__fadeInUp animate__delay-1s">
             <h4 class="oswald mb-3 border-bottom border-secondary pb-2">
-                <i class="bi bi-quote text-success me-2"></i>Aportaciones de {{ profile_user.name }}
+                <i class="bi bi-quote text-success me-2"></i>Aportaciones de {{ display_name }}
             </h4>
             <div class="list-group list-group-flush bg-transparent">
                 {% for phrase in user_phrases %}
