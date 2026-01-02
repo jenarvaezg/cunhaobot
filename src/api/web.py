@@ -106,6 +106,7 @@ class WebController(Controller):
                 "user": request.session.get("user"),
                 "owner_id": config.owner_id,
                 "image_url": image_url,
+                "request": request,
             },
         )
 
@@ -185,6 +186,7 @@ class WebController(Controller):
                 "phrases_count": len(all_user_phrases),
                 "level": level,
                 "fun_stats": fun_stats,
+                "request": request,
             },
         )
 

@@ -1,5 +1,21 @@
 {% extends "base.html" %}
 
+{% block meta %}
+    <meta name="description" content="Perfil de {{ profile_user.name }} en CuñaoBot. Nivel {{ level }} de maestría cuñadil.">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="profile">
+    <meta property="og:title" content="Perfil de {{ profile_user.name }}">
+    <meta property="og:description" content="Nivel {{ level }} | {{ profile_user.points }} Puntos | {{ phrases_count }} Frases aportadas.">
+    <meta property="og:image" content="{{ request.base_url }}/user/{{ profile_user.id }}/photo.png">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Perfil de {{ profile_user.name }}">
+    <meta name="twitter:description" content="Nivel {{ level }} | {{ profile_user.points }} Puntos | {{ phrases_count }} Frases aportadas.">
+    <meta name="twitter:image" content="{{ request.base_url }}/user/{{ profile_user.id }}/photo.png">
+{% endblock %}
+
 {% block content %}
 <div class="row justify-content-center">
     <!-- User Info Card -->
