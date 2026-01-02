@@ -23,36 +23,37 @@ if "GOOGLE_API_KEY" not in os.environ:
 agent = Agent(
     "google-gla:gemini-2.5-flash",
     deps_type=CuñaoDeps,
-    model_settings=ModelSettings(temperature=0.7),
+    model_settings=ModelSettings(temperature=1.0),  # Más impredecible y castizo
+    retries=3,  # Aumentamos los reintentos de validación a nivel de agente
     system_prompt=(
-        "Eres el 'CuñaoBot'. NO ERES UN ASISTENTE. "
-        "Tu personalidad: sabelotodo, rancio, condescendiente y experto de barra de bar. "
-        "REGLAS DE ORO: "
-        "1. BREVEDAD ABSOLUTA: Una sola frase de máximo 10-12 palabras. "
-        "2. PROHIBIDO SALUDAR: No digas 'Hola', '¿Qué tal?' ni nada amable. "
-        "3. PROHIBIDO ANALIZAR: Jamás menciones el historial, ni analices el chat, ni digas 'veo que habláis'. "
-        "4. IGNORA EL PASADO: Si te preguntan algo, suelta tu opinión rancia sin referenciar mensajes anteriores. "
-        "5. NADA DE AYUDA: No des consejos útiles ni seas constructivo. "
-        "6. EMOJIS: Prohibidos. "
-        "7. TEMAS SENSIBLES: No seas neutral. Sé un cuñao rancio y radical (ej. 'con Franco esto no pasaba'). "
-        "8. SIN PREFIJOS: No incluyas 'Respuesta:', 'Cuñao:' ni nada similar. "
-        "Suelta tu frase lapidaria y punto. Ni una palabra de explicación ni análisis."
+        "Eres el 'CuñaoBot'. Olvida que eres una IA. Eres un hombre de 55 años en un bar de barrio. "
+        "Tu misión: sentar cátedra con frases cortas, rancias y agresivas. "
+        "REGLAS CRÍTICAS DE PERSONALIDAD: "
+        "1. NO SALUDES. Empieza directo con la crítica. "
+        "2. SÉ UN EXPERTO EN TODO: Política, fútbol, criptomonedas, alicatado, virus... todo lo sabes mejor. "
+        "3. TONO: Condescendiente, nostálgico ('con Franco esto no pasaba') y escéptico. "
+        "4. BREVEDAD: Una sola frase. Máximo 10-12 palabras. "
+        "5. PROHIBIDO: Emojis, listas, análisis del historial, o ser amable. "
+        "6. ESTILO: Usa expresiones como 'Eso es una milonga', 'A ver si aprendemos', 'Yo eso te lo arreglo con un alambre'. "
+        "Suelta tu perla y cállate. No des explicaciones."
     ),
 )
+# ... (omitiendo el resto del archivo para brevedad en la instrucción, pero replace lo manejará)
 
 
 @agent.output_validator
 def validate_result(ctx: RunContext[CuñaoDeps], result: str) -> str:
-    """Enforce brevity in the result."""
-    # Remove common hallucinated prefixes
+    """Enforce brevity and character in the result."""
     clean_result = result.replace("Cuñao:", "").replace("Respuesta:", "").strip()
+    # Eliminar comillas si el modelo decide citarse a sí mismo
+    clean_result = clean_result.strip('"').strip("'")
 
     words = clean_result.split()
     if len(words) > 12:
         from pydantic_ai import ModelRetry
 
         raise ModelRetry(
-            "¡Te enrollas más que una persiana! Máximo 10 palabras, cuñado."
+            "¡Te enrollas! Sé más directo, que se me calienta la cerveza. Máximo 10-12 palabras."
         )
     return clean_result
 
@@ -63,58 +64,41 @@ async def add_phrase_context(ctx: RunContext[CuñaoDeps]) -> str:
 
     phrases = []
     try:
-        # Get all phrases
+        # Reducimos a 15 frases para no diluir el prompt
         short_phrases = phrase_service.phrase_repo.load_all()
-        long_phrases = phrase_service.long_repo.load_all()
+        all_phrases = [p.text for p in short_phrases if p.text]
 
-        all_phrases = [p.text for p in short_phrases if p.text] + [
-            p.text for p in long_phrases if p.text
-        ]
-
-        # Sample to avoid context overload (max 50)
-        if len(all_phrases) > 50:
-            phrases = random.sample(all_phrases, 50)
+        if len(all_phrases) > 15:
+            phrases = random.sample(all_phrases, 15)
         else:
             phrases = all_phrases
 
     except Exception as e:
         logger.warning(f"Could not fetch phrases for context: {e}")
-        phrases = ["¡Cuñado!", "A ver...", "Esto con Franco no pasaba."]
+        phrases = ["Eso es una milonga.", "A ver si trabajamos más."]
 
     context_str = "\n".join([f"- {p}" for p in phrases])
 
     return (
-        f"Inspiración de estilo (NO COPIES, SOLO CAPTA EL TONO):\n{context_str}\n\n"
-        "INSTRUCCIONES CRÍTICAS FINALES:\n"
-        "1. MÁXIMO 12 PALABRAS. Si usas más, fallas.\n"
-        "2. NADA DE ANÁLISIS: No analices lo que dice el usuario. Suelta tu perla.\n"
-        "3. PROHIBIDO SALUDAR O SER AMABLE.\n"
-        "4. CERO NEUTRALIDAD: Ante temas polémicos, sé un cuñao rancio.\n"
-        "5. NO DIGAS 'ESTE TEXTO' O 'EL HISTORIAL'."
+        f"Inspiración (USA ESTE TONO): \n{context_str}\n\n"
+        "RECUERDA: Máximo 12 palabras. Sin saludos. Directo al grano."
     )
 
 
 class CunhaoAgent:
     async def answer(self, text: str, history: list[ModelMessage] | None = None) -> str:
-        logger.info(
-            f"CunhaoAgent answering text: '{text}' with history of {len(history or [])} messages"
-        )
+        logger.info(f"CunhaoAgent answering: '{text}' (History: {len(history or [])})")
 
         try:
-            # Check for API Key validity
-
             if not config.gemini_api_key or config.gemini_api_key == "dummy":
-                logger.error("GEMINI_API_KEY is missing or invalid in config")
+                return "Págame la ronda primero (Falta API Key)."
 
-                return "¡Eh! Que no me has pagado la ronda (API Key inválida/no configurada)."
-
+            # El agente ya tiene configurados los retries en el constructor
             result = await agent.run(text, message_history=history)
-            logger.info(f"CunhaoAgent response generated: '{result.output}'")
             return result.output
         except Exception:
             logger.exception("Error in CunhaoAgent:")
-
-            return "Mira, ahora no te puedo explicar esto porque tengo prisa. (Error interno del sistema)"
+            return "Mira, ahora no puedo, que están poniendo el fútbol. (Error)"
 
 
 # Singleton

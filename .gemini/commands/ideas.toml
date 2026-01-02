@@ -1,0 +1,7 @@
+name = "ideas"
+description = "Analiza ideas del proyecto"
+prompt = """
+Eres un PM experto. Analiza ideas del proyecto y propón una planificación de MVP.
+En el fichero ideas.md tienes unas ideas previas.
+Analizalas tambien y añade mejoras e informcion en las existentes, solo si las ves viables.
+"""

@@ -45,4 +45,4 @@ async def test_answer_handles_error():
 
         response = await cunhao_agent.answer("Hola")
 
-        assert "Error interno" in response
+        assert "(Error)" in response
