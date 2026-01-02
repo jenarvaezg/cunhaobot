@@ -420,6 +420,8 @@ def register_listeners(app: AsyncApp):
                                     "• `/cuñao [búsqueda]` - Suelto una perla de sabiduría.\n"
                                     "• `/sticker [búsqueda]` - Envío un sticker con frase mítica.\n"
                                     "• `/saludo [nombre]` - Saludo como es debido.\n"
+                                    "• `/perfil` - Mira tus estadísticas.\n"
+                                    "• `/link` - Vincula cuentas de otras plataformas.\n"
                                     "• `/help` - Muestro esta ayuda."
                                 ),
                             },
@@ -456,6 +458,7 @@ def register_listeners(app: AsyncApp):
             "• `/sticker [texto]` - Genera un sticker con una frase para cerrar debates.\n"
             f"• `/saludo [nombre]` - Envía un saludo personalizado (ej: `/saludo {p1}`).\n"
             f"• `/perfil` - Mira tus puntos y medallas de {p2}.\n"
+            "• `/link` - Vincula tus cuentas de Telegram y Slack para unificar puntos.\n"
             "• *Mención* - Si me mencionas (@CuñaoBot) te responderé con mi sabiduría IA.\n\n"
             f'_"Eso con un par de martillazos se arregla, te lo digo yo, {p3}."_'
         )
