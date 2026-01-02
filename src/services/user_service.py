@@ -321,6 +321,8 @@ class UserService:
         target_user.points += source_user.points
         target_user.usages += source_user.usages
         target_user.badges = list(set(target_user.badges + source_user.badges))
+        if "multiplataforma" not in target_user.badges:
+            target_user.badges.append("multiplataforma")
 
         self.save_user(target_user)
 

@@ -93,7 +93,7 @@ def test_complete_link_success(mock_repos):
     # Verify Merge on Target
     assert target_user.points == 30  # 10 + 20
     assert target_user.usages == 15  # 5 + 10
-    assert set(target_user.badges) == {"b1", "b2"}
+    assert set(target_user.badges) == {"b1", "b2", "multiplataforma"}
 
     # Verify Alias on Source
     assert source_user.linked_to == "target"

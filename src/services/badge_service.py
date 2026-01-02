@@ -39,6 +39,12 @@ BADGES = [
     Badge("charlatan", "Pico de oro", "Usar el modo IA 5 veces", "🗣️"),
     Badge("melomano", "Dando la nota", "Usar el modo audio 5 veces", "🎶"),
     Badge("insistente", "Martillo pilón", "Proponer 10 frases", "🔨"),
+    Badge(
+        "multiplataforma",
+        "Omnipresente",
+        "Vincular cuentas de distintas plataformas",
+        "🌐",
+    ),
 ]
 
 
@@ -148,6 +154,18 @@ class BadgeService:
             )
             if propose_count >= 10:
                 new_badge_ids.append("insistente")
+
+        # 12. Multiplataforma (Has linked accounts)
+        if "multiplataforma" not in current_badges:
+            # Check if user is linked or has others linked to them
+            raw_user = self.user_service.user_repo.load_raw(user.id)
+            if raw_user and raw_user.linked_to:
+                new_badge_ids.append("multiplataforma")
+            else:
+                # This check is slightly more expensive, but only runs if they don't have the badge
+                all_users = self.user_service.user_repo.load_all(ignore_gdpr=True)
+                if any(u.linked_to == user.id for u in all_users):
+                    new_badge_ids.append("multiplataforma")
 
         # Always save user because last_usages has been updated
         if new_badge_ids:

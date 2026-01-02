@@ -135,11 +135,11 @@ class WebController(Controller):
         user_repo: Annotated[UserRepository, Dependency()],
         phrase_repo: Annotated[PhraseRepository, Dependency()],
         long_phrase_repo: Annotated[LongPhraseRepository, Dependency()],
-    ) -> Template:
+    ) -> Template | Response:
         from services.badge_service import badge_service
         from services.usage_service import usage_service
 
-        # Try to find user
+        # Try to find user (load will follow links)
         profile_user = user_repo.load(user_id)
         if not profile_user:
             # Try numeric ID if string failed (legacy compatibility)
@@ -150,6 +150,14 @@ class WebController(Controller):
 
         if not profile_user:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+        # If the requested ID is an alias (linked_to), redirect to the master profile
+        if str(profile_user.id) != str(user_id):
+            return Response(
+                status_code=307,
+                content=b"",
+                headers={"Location": f"/user/{profile_user.id}/profile"},
+            )
 
         # Get stats
         stats = usage_service.get_user_stats(profile_user.id)
