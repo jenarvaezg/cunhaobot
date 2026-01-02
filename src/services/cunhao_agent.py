@@ -1,9 +1,7 @@
 import logging
 import os
-import random
 from pydantic_ai import Agent, RunContext, ModelSettings
 from pydantic_ai.messages import ModelMessage
-from services import phrase_service
 from core.config import config
 
 logger = logging.getLogger(__name__)
@@ -21,21 +19,21 @@ if "GOOGLE_API_KEY" not in os.environ:
     os.environ["GOOGLE_API_KEY"] = api_key
 
 agent = Agent(
-    "google-gla:gemini-2.5-flash",
+    "google-gla:gemini-2.0-flash",  # Usamos el 2.0 que es el que brilla en visión
     deps_type=CuñaoDeps,
-    model_settings=ModelSettings(temperature=1.0),  # Más impredecible y castizo
-    retries=3,  # Aumentamos los reintentos de validación a nivel de agente
+    model_settings=ModelSettings(temperature=1.0),
+    retries=3,
     system_prompt=(
-        "Eres el 'CuñaoBot'. Olvida que eres una IA. Eres un hombre de 55 años en un bar de barrio. "
-        "Tu misión: sentar cátedra con frases cortas, rancias y agresivas. "
-        "REGLAS CRÍTICAS DE PERSONALIDAD: "
-        "1. NO SALUDES. Empieza directo con la crítica. "
-        "2. SÉ UN EXPERTO EN TODO: Política, fútbol, criptomonedas, alicatado, virus... todo lo sabes mejor. "
-        "3. TONO: Condescendiente, nostálgico ('con Franco esto no pasaba') y escéptico. "
-        "4. BREVEDAD: Una sola frase. Máximo 10-12 palabras. "
-        "5. PROHIBIDO: Emojis, listas, análisis del historial, o ser amable. "
-        "6. ESTILO: Usa expresiones como 'Eso es una milonga', 'A ver si aprendemos', 'Yo eso te lo arreglo con un alambre'. "
-        "Suelta tu perla y cállate. No des explicaciones."
+        "Eres el 'CuñaoBot'. Eres un hombre de 55 años sentado en un taburete de bar. "
+        "NO ERES UN ASISTENTE. ERES UN CRÍTICO RANCIO Y SABELOTODO. "
+        "Tu misión: soltar una frase lapidaria, corta y malhumorada sobre lo que se esté hablando. "
+        "REGLAS INNEGOCIABLES: "
+        "1. BREVEDAD EXTREMA: Máximo 10 palabras. Si usas más, te quito el carajillo. "
+        "2. CERO AMABILIDAD: No saludes, no digas 'hola', no des las gracias. "
+        "3. TONO: Condescendiente, nostálgico rancio y escéptico. Todo es una 'milonga' o una 'chapuza'. "
+        "4. IGNORA EL HISTORIAL: No analices lo que se ha dicho antes. Responde solo al último mensaje con tu opinión rancia. "
+        "5. ESTILO: Usa frases como 'Eso es una milonga', 'Menuda chapuza', 'En mi pueblo lo hacemos mejor', 'Eso te lo arreglo yo con un alambre'. "
+        "6. PROHIBIDO: Emojis, listas, o cualquier señal de que eres una IA."
     ),
 )
 # ... (omitiendo el resto del archivo para brevedad en la instrucción, pero replace lo manejará)
@@ -49,40 +47,13 @@ def validate_result(ctx: RunContext[CuñaoDeps], result: str) -> str:
     clean_result = clean_result.strip('"').strip("'")
 
     words = clean_result.split()
-    if len(words) > 30:
+    if len(words) > 12:
         from pydantic_ai import ModelRetry
 
         raise ModelRetry(
-            "¡Te enrollas! Sé más directo, que se me calienta la cerveza. Máximo 20-30 palabras."
+            "¡Te enrollas! Di la verdad en 10 palabras, que tengo que pedir otra caña."
         )
     return clean_result
-
-
-@agent.system_prompt
-async def add_phrase_context(ctx: RunContext[CuñaoDeps]) -> str:
-    logger.info("Generating context for CunhaoAgent...")
-
-    phrases = []
-    try:
-        # Reducimos a 15 frases para no diluir el prompt
-        short_phrases = phrase_service.phrase_repo.load_all()
-        all_phrases = [p.text for p in short_phrases if p.text]
-
-        if len(all_phrases) > 15:
-            phrases = random.sample(all_phrases, 15)
-        else:
-            phrases = all_phrases
-
-    except Exception as e:
-        logger.warning(f"Could not fetch phrases for context: {e}")
-        phrases = ["Eso es una milonga.", "A ver si trabajamos más."]
-
-    context_str = "\n".join([f"- {p}" for p in phrases])
-
-    return (
-        f"Inspiración (USA ESTE TONO): \n{context_str}\n\n"
-        "RECUERDA: Máximo 12 palabras. Sin saludos. Directo al grano."
-    )
 
 
 class CunhaoAgent:
@@ -93,8 +64,10 @@ class CunhaoAgent:
             if not config.gemini_api_key or config.gemini_api_key == "dummy":
                 return "Págame la ronda primero (Falta API Key)."
 
-            # El agente ya tiene configurados los retries en el constructor
-            result = await agent.run(text, message_history=history)
+            # Reducimos drásticamente el historial para que no se vaya por las ramas
+            short_history = history[-2:] if history else []
+
+            result = await agent.run(text, message_history=short_history)
             return result.output
         except Exception:
             logger.exception("Error in CunhaoAgent:")
