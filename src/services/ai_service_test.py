@@ -189,3 +189,35 @@ class TestAIService:
                 ValueError, match="No candidates or parts in AI response"
             ):
                 await service.generate_image("test phrase")
+
+    @pytest.mark.asyncio
+    async def test_analyze_image_success(self):
+        """Test successful image analysis."""
+        service = AIService(api_key="valid_key")
+        mock_client = MagicMock()
+        with patch.object(
+            AIService, "client", new_callable=PropertyMock
+        ) as mock_client_prop:
+            mock_client_prop.return_value = mock_client
+
+            mock_response = MagicMock()
+            mock_response.text = "Eso está mal alicatao"
+            mock_client.models.generate_content.return_value = mock_response
+
+            roast = await service.analyze_image(b"fake_image_bytes")
+            assert roast == "Eso está mal alicatao"
+            mock_client.models.generate_content.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_analyze_image_error(self):
+        """Test handling of error in image analysis."""
+        service = AIService(api_key="valid_key")
+        mock_client = MagicMock()
+        with patch.object(
+            AIService, "client", new_callable=PropertyMock
+        ) as mock_client_prop:
+            mock_client_prop.return_value = mock_client
+            mock_client.models.generate_content.side_effect = Exception("AI Error")
+
+            roast = await service.analyze_image(b"fake_image_bytes")
+            assert "Error" in roast

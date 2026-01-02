@@ -41,6 +41,35 @@ class AIService:
         self._api_key = api_key
         self._client: genai.Client | None = None
 
+    async def analyze_image(
+        self, image_bytes: bytes, mime_type: str = "image/jpeg"
+    ) -> str:
+        """Analyzes an image and returns a cuñao-style roast using Gemini 2.0 Flash."""
+        prompt = (
+            "Actúa como un cuñao experto de barra de bar. "
+            "Mira esta foto y suelta una crítica lapidaria, rancia y breve (máximo 15 palabras). "
+            "Usa frases como 'Eso está mal alicatao', 'Menuda chapuza', 'Vaya pérdida de dinero', 'En mi pueblo lo hacemos mejor'. "
+            "Sé condescendiente y sabelotodo. No saludes. No seas amable. Directo al fallo."
+        )
+
+        try:
+            # We use gemini-2.0-flash for fast and high quality vision roast
+            response = self.client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=[
+                    prompt,
+                    genai.types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
+                ],
+            )
+
+            if not response or not response.text:
+                return "No tengo palabras para esta chapuza. (Sin respuesta)"
+
+            return response.text.strip()
+        except Exception as e:
+            logger.error(f"Error in analyze_image: {e}")
+            return "Eso es una milonga, no me deja ni verlo. (Error)"
+
     @property
     def client(self) -> genai.Client:
         if self._client is None:

@@ -23,6 +23,7 @@ from .commands.start import handle_start
 from .commands.stop import handle_stop
 from .commands.submit import handle_submit, handle_submit_phrase
 from .messages.text_message import handle_message
+from .messages.photo import photo_roast
 
 handlers = [
     CommandHandler("start", handle_start),
@@ -39,6 +40,7 @@ handlers = [
     CommandHandler("stop", handle_stop),
     CommandHandler("cancelar", handle_cancel),
     MessageHandler(filters.REPLY, handle_reply),
+    MessageHandler(filters.PHOTO, photo_roast),
     MessageHandler(filters.TEXT, handle_message),
     InlineQueryHandler(handle_inline_query),
     CallbackQueryHandler(handle_callback_query),
