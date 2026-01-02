@@ -192,11 +192,7 @@ class UserService:
         slack_user_id: str,
         name: str,
         username: str | None = None,
-        is_group: bool = False,
     ) -> User:
-        # For Slack, we might still want to know if it's a group to create a Chat
-        # but the request was specifically about User model.
-        # For now, we just update the user.
         return self._update_or_create_user(
             user_id=slack_user_id,
             name=name,
