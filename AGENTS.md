@@ -142,3 +142,4 @@ gcloud app deploy
 2. **Modern Typing:** Es obligatorio usar `| None` en lugar de `Optional[T]`, y `list[T]` / `dict[K, V]` en lugar de `List` / `Dict`. El incumplimiento de esto se considera un error crítico de implementación.
 3. **Arquitectura:** Si dice "Inyección de Dependencias", úsala. Si dice "Pydantic", no uses `msgspec` ni `dataclasses` para modelos de dominio.
 4. **Verificación:** Antes de cada commit, el agente DEBE auto-revisar su código contra estas guías.
+5. **SEO & Social Sharing:** TODAS las nuevas páginas web (`.html` templates) DEBEN incluir un bloque `{% block meta %}` que defina las etiquetas Open Graph (`og:title`, `og:description`, `og:url`, `og:image`, `og:locale`) y Twitter Cards. Usa `{{ request.base_url }}` para asegurar URLs absolutas.

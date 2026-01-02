@@ -1,5 +1,25 @@
 {% extends "base.html" %}
 
+{% block meta %}
+    <meta name="description" content="Revisa y vota las frases que están pendientes de aprobación por el consejo de cuñados. Aquí se cocina la sabiduría del mañana.">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="CuñaoBot">
+    <meta property="og:locale" content="es_ES">
+    <meta property="og:title" content="Propuestas en el Horno">
+    <meta property="og:description" content="Revisa y vota las frases que están pendientes de aprobación por el consejo de cuñados.">
+    <meta property="og:url" content="{{ request.base_url }}{{ request.url.path }}">
+    <meta property="og:image" content="{{ request.base_url }}/static/favicon.png">
+    <meta property="og:logo" content="{{ request.base_url }}/static/favicon.png">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Propuestas en el Horno">
+    <meta name="twitter:description" content="Revisa y vota las frases que están pendientes de aprobación por el consejo de cuñados.">
+    <meta name="twitter:image" content="{{ request.base_url }}/static/favicon.png">
+{% endblock %}
+
 {% block content %}
 <div class="row mb-5 justify-content-center text-center">
     <div class="col-lg-8 animate__animated animate__fadeIn">

@@ -1,5 +1,25 @@
 {% extends "base.html" %}
 
+{% block meta %}
+    <meta name="description" content="Información transparente sobre cómo recopilamos y usamos tus datos en CuñaoBot. Tu privacidad es importante.">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="CuñaoBot">
+    <meta property="og:locale" content="es_ES">
+    <meta property="og:title" content="Política de Privacidad - CuñaoBot">
+    <meta property="og:description" content="Información sobre cómo recopilamos y usamos tus datos en CuñaoBot.">
+    <meta property="og:url" content="{{ request.base_url }}{{ request.url.path }}">
+    <meta property="og:image" content="{{ request.base_url }}/static/favicon.png">
+    <meta property="og:logo" content="{{ request.base_url }}/static/favicon.png">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Política de Privacidad - CuñaoBot">
+    <meta name="twitter:description" content="Información sobre cómo recopilamos y usamos tus datos en CuñaoBot.">
+    <meta name="twitter:image" content="{{ request.base_url }}/static/favicon.png">
+{% endblock %}
+
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-lg-10 animate__animated animate__fadeIn">
