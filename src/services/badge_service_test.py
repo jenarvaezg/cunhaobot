@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime
 from unittest.mock import Mock, patch
 from services.badge_service import BadgeService
 from models.user import User
@@ -77,12 +78,13 @@ async def test_check_badges_awards_poeta(
 async def test_check_badges_awards_pesao(
     badge_service, mock_user_service, mock_usage_repo
 ):
-    user = User(id="123", badges=[])
+    # Setup user with 9 recent usages (current interaction will make it 10)
+    now = datetime.now()
+    user = User(id="123", badges=[], last_usages=[now] * 9)
     mock_user_service.get_user.return_value = user
 
     mock_usage_repo.get_user_usage_count.return_value = 5  # Not fiera total
     mock_usage_repo.get_user_action_count.return_value = 0  # Not visionario
-    mock_usage_repo.get_recent_usage_count.return_value = 10  # YES pesao
 
     with patch("infrastructure.datastore.phrase.phrase_repository") as mock_phrase_repo:
         mock_phrase_repo.get_user_phrase_count.return_value = 0  # Not poeta
@@ -91,3 +93,5 @@ async def test_check_badges_awards_pesao(
 
         assert any(b.id == "pesao" for b in new_badges)
         assert "pesao" in user.badges
+        assert len(user.last_usages) == 10
+        mock_user_service.save_user.assert_called_once()

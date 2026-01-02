@@ -51,6 +51,13 @@ class BadgeService:
         current_badges = set(user.badges)
         now = datetime.now()
 
+        # Update activity history
+        if not hasattr(user, "last_usages") or user.last_usages is None:
+            user.last_usages = []
+        user.last_usages.append(now)
+        # Keep only the last 20 usages to avoid entity size bloat
+        user.last_usages = user.last_usages[-20:]
+
         # 1. Madrugador (05:00 - 07:30)
         if "madrugador" not in current_badges:
             if 5 <= now.hour < 7 or (now.hour == 7 and now.minute <= 30):
@@ -88,21 +95,22 @@ class BadgeService:
         # 6. Pesao (10 usages in 1 hour)
         if "pesao" not in current_badges:
             since = now - timedelta(hours=1)
-            recent_count = self.usage_repo.get_recent_usage_count(
-                str(user_id), platform, since
-            )
+            recent_count = len([u for u in user.last_usages if u >= since])
             if recent_count >= 10:
                 new_badge_ids.append("pesao")
 
-        new_badges = []
+        # Always save user because last_usages has been updated
         if new_badge_ids:
             user.badges.extend(new_badge_ids)
-            self.user_service.save_user(user)
             logger.info(f"User {user_id} awarded badges: {new_badge_ids}")
-            for b_id in new_badge_ids:
-                b_info = self.get_badge_info(b_id)
-                if b_info:
-                    new_badges.append(b_info)
+
+        self.user_service.save_user(user)
+
+        new_badges = []
+        for b_id in new_badge_ids:
+            b_info = self.get_badge_info(b_id)
+            if b_info:
+                new_badges.append(b_info)
 
         return new_badges
 
@@ -156,9 +164,10 @@ class BadgeService:
                     progress = min(100, int((current_val / target_val) * 100))
                 elif badge.id == "pesao":
                     since = datetime.now() - timedelta(hours=1)
-                    current_val = self.usage_repo.get_recent_usage_count(
-                        str(user_id), platform, since
-                    )
+                    if hasattr(user, "last_usages") and user.last_usages:
+                        current_val = len([u for u in user.last_usages if u >= since])
+                    else:
+                        current_val = 0
                     target_val = 10
                     progress = min(100, int((current_val / target_val) * 100))
                 # Time-based ones are binary for now
