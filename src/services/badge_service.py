@@ -67,6 +67,24 @@ class BadgeService:
             if stats >= 50:
                 new_badge_ids.append("fiera_total")
 
+        # 4. Visionario (10 vision usages)
+        if "visionario" not in current_badges:
+            from models.usage import ActionType
+
+            vision_count = self.usage_repo.get_user_action_count(
+                str(user_id), platform, ActionType.VISION.value
+            )
+            if vision_count >= 10:
+                new_badge_ids.append("visionario")
+
+        # 5. Poeta (5 phrases proposed)
+        if "poeta" not in current_badges:
+            from infrastructure.datastore.phrase import phrase_repository
+
+            user_phrases_count = phrase_repository.get_user_phrase_count(str(user_id))
+            if user_phrases_count >= 5:
+                new_badge_ids.append("poeta")
+
         new_badges = []
         if new_badge_ids:
             user.badges.extend(new_badge_ids)
