@@ -32,7 +32,7 @@ BADGES = [
         "Usar el bot 10 veces en menos de 1 hora",
         "🍺",
     ),
-    Badge("poeta", "Cervantes del Palillo", "Que te ayuden 5 frases propuestas", "✍️"),
+    Badge("poeta", "Cervantes del Palillo", "Que te acepten 5 frases propuestas", "✍️"),
 ]
 
 
