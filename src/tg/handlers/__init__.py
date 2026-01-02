@@ -14,6 +14,7 @@ from .inline.chosen_inline_result import handle_chosen_inline_result
 from .utils.error import error_handler as error_handler
 from .messages.fallback import handle_fallback_message as handle_fallback_message
 from .commands.help import handle_help as handle_help
+from .commands.link import handle_link
 from .commands.profile import handle_profile
 from .inline.inline_query import handle_inline_query as handle_inline_query
 from .commands.ping import handle_ping as handle_ping
@@ -32,6 +33,8 @@ handlers = [
     CommandHandler("proponerfrase", handle_submit_phrase),
     CommandHandler("profile", handle_profile),
     CommandHandler("perfil", handle_profile),
+    CommandHandler("link", handle_link),
+    CommandHandler("vincular", handle_link),
     CommandHandler("about", handle_about),
     CommandHandler("stop", handle_stop),
     CommandHandler("cancelar", handle_cancel),

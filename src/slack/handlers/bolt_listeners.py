@@ -65,6 +65,44 @@ async def _register_slack_user(body: dict[str, Any], client: Any):
 
 
 def register_listeners(app: AsyncApp):
+    @app.command("/link")
+    async def handle_link_command(
+        ack: Any, body: dict[str, Any], respond: Any, client: Any
+    ):
+        await ack()
+        await _register_slack_user(body, client)
+        user_id = body["user_id"]
+        text = body.get("text", "").strip()
+
+        if not text:
+            # Generate Token
+            token = user_service.generate_link_token(user_id, "slack")
+            await respond(
+                f"🔗 *Vincular Cuenta*\n\n"
+                f"Tu código de vinculación es: `{token}`\n\n"
+                f"Copia este código y úsalo en tu otra cuenta (Telegram o Slack) con el comando:\n"
+                f"`/link {token}`\n\n"
+                f"⚠️ *Atención*: La cuenta donde introduzcas el código será la *PRINCIPAL*. "
+                f"La cuenta actual (donde generaste este código) se fusionará con ella y desaparecerá.",
+                response_type="ephemeral",
+            )
+        else:
+            # Consume Token
+            token = text.upper()
+            success = user_service.complete_link(token, user_id, "slack")
+            if success:
+                await respond(
+                    "✅ *Cuentas Vinculadas con Éxito*\n\n"
+                    "Has absorbido los poderes de tu otra cuenta. Tus puntos, medallas y frases ahora están unificados aquí.",
+                    response_type="ephemeral",
+                )
+            else:
+                await respond(
+                    "❌ *Error al Vincular*\n\n"
+                    "El código es inválido, ha expirado o intentas vincularte contigo mismo.",
+                    response_type="ephemeral",
+                )
+
     @app.command("/saludo")
     @app.command("/que_pasa")
     async def handle_saludo_command(

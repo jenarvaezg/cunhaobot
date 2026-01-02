@@ -1,9 +1,18 @@
 import logging
+import secrets
+from datetime import datetime
 from telegram import Update, Message
 from models.user import User
+from models.link_request import LinkRequest
 from infrastructure.datastore.user import (
     user_repository,
     UserDatastoreRepository,
+)
+from infrastructure.datastore.link_request import link_request_repository
+from infrastructure.datastore.phrase import phrase_repository, long_phrase_repository
+from infrastructure.datastore.proposal import (
+    proposal_repository,
+    long_proposal_repository,
 )
 
 logger = logging.getLogger(__name__)
@@ -182,6 +191,94 @@ class UserService:
         except Exception as e:
             logger.error(f"Error getting user photo for {target_id}: {e}")
         return None
+
+    def generate_link_token(self, user_id: str | int, platform: str) -> str:
+        token = secrets.token_hex(3).upper()  # 6 chars
+        request = LinkRequest(
+            token=token, source_user_id=user_id, source_platform=platform
+        )
+        link_request_repository.save(request)
+        return token
+
+    def complete_link(
+        self, token: str, target_user_id: str | int, target_platform: str
+    ) -> bool:
+        request = link_request_repository.load(token)
+        if not request:
+            return False
+
+        if request.expires_at < datetime.now():
+            link_request_repository.delete(token)
+            return False
+
+        # Source user is the one who generated the token (to be merged FROM)
+        # Target user is the one claiming the token (to be merged TO)
+        # WAIT: Usually "Link my account" means "I am X, add Y to me".
+        # If I am on Telegram (X) and say /link, I get a token.
+        # I go to Slack (Y) and say /link <token>.
+        # Which one keeps identity?
+        # Usually the one where I enter the code becomes the "Primary" or "Linked".
+        # Let's say I want to KEEP Telegram identity.
+        # I generate token on Slack. I enter token on Telegram.
+        # Telegram (Target) absorbs Slack (Source).
+        # So Source (Token Generator) -> Merges INTO -> Target (Token Consumer).
+
+        source_user_id = request.source_user_id
+        source_platform = request.source_platform
+
+        if (
+            str(source_user_id) == str(target_user_id)
+            and source_platform == target_platform
+        ):
+            return False
+
+        source_user = self.get_user(source_user_id, source_platform)
+        target_user = self.get_user(target_user_id, target_platform)
+
+        if not source_user or not target_user:
+            return False
+
+        # Merge Data
+        target_user.points += source_user.points
+        target_user.usages += source_user.usages
+        # Merge badges unique
+        target_user.badges = list(set(target_user.badges + source_user.badges))
+
+        # Save Target
+        self.save_user(target_user)
+
+        # Migrate Content Ownership
+        # Phrases
+        phrases = phrase_repository.get_phrases(user_id=str(source_user.id))
+        for p in phrases:
+            p.user_id = target_user.id
+            phrase_repository.save(p)
+
+        long_phrases = long_phrase_repository.get_phrases(user_id=str(source_user.id))
+        for lp in long_phrases:
+            lp.user_id = target_user.id
+            long_phrase_repository.save(lp)
+
+        # Proposals
+        proposals = proposal_repository.get_proposals(
+            user_id=str(source_user.id), limit=1000
+        )
+        for prop in proposals:
+            prop.user_id = target_user.id
+            proposal_repository.save(prop)
+
+        long_proposals = long_proposal_repository.get_proposals(
+            user_id=str(source_user.id), limit=1000
+        )
+        for lprop in long_proposals:
+            lprop.user_id = target_user.id
+            long_proposal_repository.save(lprop)
+
+        # Delete Source
+        self.delete_user(source_user, hard=True)
+        link_request_repository.delete(token)
+
+        return True
 
 
 # Singleton
