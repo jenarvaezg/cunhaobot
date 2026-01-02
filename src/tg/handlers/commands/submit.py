@@ -3,9 +3,17 @@ from telegram.ext import CallbackContext
 
 from models.phrase import LongPhrase, Phrase
 from models.proposal import LongProposal, Proposal
-from services import phrase_service, proposal_service, proposal_repo, long_proposal_repo
+from services import (
+    phrase_service,
+    proposal_service,
+    proposal_repo,
+    long_proposal_repo,
+    usage_service,
+)
+from models.usage import ActionType
 from tg.decorators import log_update
 from tg.markup.keyboards import build_vote_keyboard
+from tg.utils.badges import notify_new_badges
 from core.config import config
 
 SIMILARITY_DISCARD_THRESHOLD = 90
@@ -45,14 +53,15 @@ async def _notify_proposal_to_curators(
 
 
 async def submit_handling(
-    bot: Bot,
     update: Update,
+    context: CallbackContext,
     is_long: bool,
     text: str | None = None,
 ) -> Message | None:
     if not update.effective_user or not update.effective_message:
         return None
 
+    bot = context.bot
     submitted_by = update.effective_user.name
     proposal = proposal_service.create_from_update(update, is_long=is_long, text=text)
 
@@ -109,6 +118,15 @@ async def submit_handling(
         bot, proposal, submitted_by, most_similar_phrase, phrase_similarity
     )
 
+    # Log usage and check for badges
+    new_badges = await usage_service.log_usage(
+        user_id=update.effective_user.id,
+        platform="telegram",
+        action=ActionType.COMMAND,
+        metadata={"command": "submit", "is_long": is_long},
+    )
+    await notify_new_badges(update, context, new_badges)
+
     return await update.effective_message.reply_text(
         f"Tu aportación será valorada por un consejo de cuñaos expertos y te avisaré una vez haya sido evaluada, "
         f"{phrase_service.get_random().text}.",
@@ -130,11 +148,11 @@ async def handle_submit(update: Update, context: CallbackContext) -> None:
         )
         return
 
-    await submit_handling(context.bot, update, is_long=False)
+    await submit_handling(update, context, is_long=False)
 
 
 @log_update
 async def handle_submit_phrase(update: Update, context: CallbackContext) -> None:
     if not update.effective_message:
         return
-    await submit_handling(context.bot, update, is_long=True)
+    await submit_handling(update, context, is_long=True)

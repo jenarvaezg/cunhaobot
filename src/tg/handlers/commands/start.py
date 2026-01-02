@@ -3,6 +3,7 @@ from telegram.ext import CallbackContext
 from tg.decorators import log_update
 from services import usage_service, phrase_service
 from models.usage import ActionType
+from tg.utils.badges import notify_new_badges
 
 
 @log_update
@@ -10,12 +11,13 @@ async def handle_start(update: Update, context: CallbackContext) -> None:
     if not (message := update.effective_message):
         return
 
-    await usage_service.log_usage(
+    new_badges = await usage_service.log_usage(
         user_id=message.from_user.id if message.from_user else "unknown",
         platform="telegram",
         action=ActionType.COMMAND,
         metadata={"command": "start"},
     )
+    await notify_new_badges(update, context, new_badges)
 
     p1 = phrase_service.get_random(long=False).text
     p2 = phrase_service.get_random(long=False).text

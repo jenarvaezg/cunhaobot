@@ -5,6 +5,7 @@ from telegram.ext import CallbackContext
 from tg.decorators import log_update
 from services import user_service, usage_service, badge_service, phrase_service
 from models.usage import ActionType
+from tg.utils.badges import notify_new_badges
 
 logger = logging.getLogger(__name__)
 
@@ -32,12 +33,13 @@ async def handle_profile(update: Update, context: CallbackContext) -> None:
 
     try:
         # Log usage
-        await usage_service.log_usage(
+        new_badges = await usage_service.log_usage(
             user_id=user_id,
-            platform=platform,
+            platform="telegram",
             action=ActionType.COMMAND,
             metadata={"command": "profile"},
         )
+        await notify_new_badges(update, context, new_badges)
 
         stats = usage_service.get_user_stats(user_id, platform)
         all_badges_progress = await badge_service.get_all_badges_progress(

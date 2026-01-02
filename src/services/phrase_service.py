@@ -60,6 +60,23 @@ class PhraseService:
         # Award points to the proposer
         user_service.add_points(proposal.user_id, 10)
 
+        # Check for badges (Poeta) and notify
+        from services.badge_service import badge_service
+        from utils.ui import format_badge_notification
+
+        new_badges = await badge_service.check_badges(proposal.user_id, "telegram")
+        for badge in new_badges:
+            try:
+                await bot.send_message(
+                    chat_id=proposal.user_id,
+                    text=format_badge_notification(badge),
+                    parse_mode=telegram.constants.ParseMode.HTML,
+                )
+            except Exception as e:
+                logger.warning(
+                    f"Could not notify badge {badge.id} to user {proposal.user_id}: {e}"
+                )
+
     def get_random(self, long: bool = False) -> Phrase:
         repo = self.long_repo if long else self.phrase_repo
         phrases = repo.load_all()

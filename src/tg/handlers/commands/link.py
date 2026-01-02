@@ -1,13 +1,24 @@
 from telegram import Update
 from telegram.ext import CallbackContext
-from services import user_service
+from services import user_service, usage_service
+from models.usage import ActionType
 from tg.decorators import log_update
+from tg.utils.badges import notify_new_badges
 
 
 @log_update
 async def handle_link(update: Update, context: CallbackContext) -> None:
     if not (message := update.effective_message) or not (user := update.effective_user):
         return
+
+    # Log usage
+    new_badges = await usage_service.log_usage(
+        user_id=user.id,
+        platform="telegram",
+        action=ActionType.COMMAND,
+        metadata={"command": "link"},
+    )
+    await notify_new_badges(update, context, new_badges)
 
     args = context.args
     if not args:

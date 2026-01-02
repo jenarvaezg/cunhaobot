@@ -16,25 +16,28 @@ def mock_deps():
         patch("tg.handlers.commands.submit.proposal_repo") as pr,
         patch("tg.handlers.commands.submit.long_proposal_repo") as lpr,
         patch("tg.decorators.user_service.update_or_create_user"),
+        patch("tg.handlers.commands.submit.usage_service") as us,
+        patch("tg.handlers.commands.submit.notify_new_badges") as nnb,
         patch("tg.handlers.commands.submit.config") as config,
     ):
         phs.get_random.return_value.text = "cuñao"
         ps.find_most_similar_proposal.return_value = (None, 0)
         config.mod_chat_id = 123
+        us.log_usage = AsyncMock(return_value=[])
+        nnb.return_value = AsyncMock()
         yield ps, phs, pr, lpr
 
 
 @pytest.mark.asyncio
 async def test_submit_handling_no_user(mock_deps):
     ps, phs, pr, lpr = mock_deps
-    bot = MagicMock()
     update = MagicMock()
     update.effective_user = None
     update.effective_message = MagicMock()
+    context = MagicMock()
 
-    result = await submit_handling(bot, update, is_long=False)
+    result = await submit_handling(update, context, is_long=False)
     assert result is None
-
     ps.create_from_update.assert_not_called()
 
 
@@ -43,6 +46,7 @@ async def test_handle_submit_success(mock_deps):
     ps, phs, pr, lpr = mock_deps
     update = MagicMock()
     update.effective_user.name = "test_user"
+    update.effective_user.id = 123
     update.effective_message.text = "/proponer test"
     update.effective_message.reply_text = AsyncMock()
 

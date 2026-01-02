@@ -35,7 +35,7 @@ async def test_handle_reply_to_me_phrase_prompt():
     ) as mock_submit:
         await handle_reply(update, context)
         mock_submit.assert_called_once_with(
-            context.bot, update, is_long=False, text="New phrase"
+            update, context, is_long=False, text="New phrase"
         )
 
 
@@ -56,7 +56,7 @@ async def test_handle_reply_to_me_long_phrase_prompt():
     ) as mock_submit:
         await handle_reply(update, context)
         mock_submit.assert_called_once_with(
-            context.bot, update, is_long=True, text="New long phrase"
+            update, context, is_long=True, text="New long phrase"
         )
 
 

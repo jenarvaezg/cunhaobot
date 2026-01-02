@@ -17,12 +17,12 @@ async def handle_reply(update: Update, context: CallbackContext) -> None:
         if f"¿Qué {Phrase.display_name} quieres proponer" in bot_text:
             from ..commands.submit import submit_handling
 
-            await submit_handling(context.bot, update, is_long=False, text=msg.text)
+            await submit_handling(update, context, is_long=False, text=msg.text)
             return
         elif f"¿Qué {LongPhrase.display_name} quieres proponer" in bot_text:
             from ..commands.submit import submit_handling
 
-            await submit_handling(context.bot, update, is_long=True, text=msg.text)
+            await submit_handling(update, context, is_long=True, text=msg.text)
             return
 
     # Default to normal message handling
