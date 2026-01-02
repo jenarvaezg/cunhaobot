@@ -1,6 +1,9 @@
+import logging
 from google.cloud import datastore
 from models.usage import UsageRecord
 from infrastructure.datastore.base import DatastoreRepository
+
+logger = logging.getLogger(__name__)
 
 
 class UsageDatastoreRepository(DatastoreRepository[UsageRecord]):
@@ -40,32 +43,19 @@ class UsageDatastoreRepository(DatastoreRepository[UsageRecord]):
             query.keys_only()
             return len(list(query.fetch(limit=5000)))  # Limit to 5000 to avoid timeouts
         except Exception as e:
-            import logging
-
-            logging.getLogger(__name__).error(
-                f"Error counting usage for {user_id}: {e}"
-            )
+            logger.error(f"Error counting usage for {user_id}: {e}")
             return 0
 
-    def get_user_action_count(
-        self, user_id: str, platform: str | None = None, action: str | None = None
-    ) -> int:
+    def get_user_action_count(self, user_id: str, action: str) -> int:
         """Counts how many times a user has performed a specific action."""
         try:
             query = self.client.query(kind=self.kind)
             query.add_filter("user_id", "=", str(user_id))
-            if platform:
-                query.add_filter("platform", "=", platform)
-            if action:
-                query.add_filter("action", "=", action)
+            query.add_filter("action", "=", action)
             query.keys_only()
             return len(list(query.fetch(limit=5000)))
         except Exception as e:
-            import logging
-
-            logging.getLogger(__name__).error(
-                f"Error counting action {action} for {user_id}: {e}"
-            )
+            logger.error(f"Error counting action {action} for {user_id}: {e}")
             return 0
 
 

@@ -1,4 +1,3 @@
-from typing import Any
 from google.cloud import datastore
 from models.proposal import Proposal, LongProposal
 from infrastructure.datastore.base import DatastoreRepository
@@ -50,7 +49,7 @@ class ProposalDatastoreRepository(DatastoreRepository[Proposal]):
         self.client.put(entity)
 
     def get_proposals(
-        self, search: str = "", limit: int = 0, offset: int = 0, **filters: Any
+        self, search: str = "", limit: int = 0, offset: int = 0, **filters: object
     ) -> list[Proposal]:
         results = self.load_all()
         if search:

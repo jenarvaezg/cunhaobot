@@ -1,7 +1,7 @@
 import logging
 from telegram import Update
 from telegram.ext import CallbackContext
-from services import phrase_service, cunhao_agent, usage_service
+from services import cunhao_agent, usage_service
 from models.usage import ActionType
 from tg.decorators import log_update
 from tg.utils.history import get_telegram_history
@@ -54,17 +54,3 @@ async def handle_message(update: Update, context: CallbackContext) -> None:
         await message.reply_text(response, do_quote=True)
         await notify_new_badges(update, context, new_badges)
         return
-
-    triggers = ["cuñao", "cuñado", "cuñadismo"]
-
-    if any(t in text for t in triggers):
-        # Respond with a random long phrase
-        phrase = phrase_service.get_random(long=True)
-        new_badges = await usage_service.log_usage(
-            user_id=message.from_user.id if message.from_user else "unknown",
-            platform="telegram",
-            action=ActionType.PHRASE,
-            phrase_id=phrase.id,
-        )
-        await message.reply_text(phrase.text, do_quote=True)
-        await notify_new_badges(update, context, new_badges)

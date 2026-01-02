@@ -1,9 +1,10 @@
 import logging
 import random
 import urllib.parse
-from typing import Any
+from typing import Any, Callable, cast
 
 from slack_bolt.async_app import AsyncApp
+from slack_sdk.web.async_client import AsyncWebClient
 
 from core.config import config
 from services import (
@@ -24,35 +25,36 @@ from slack.utils import get_slack_history, notify_new_badges_slack
 logger = logging.getLogger(__name__)
 
 
-async def _register_slack_user(body: dict[str, Any], client: Any):
+async def _register_slack_user(body: dict[str, Any], client: AsyncWebClient) -> None:
     try:
-        user_id = None
-        user_name = "Unknown"
-        username = None
+        user_id: str | None = None
+        user_name: str = "Unknown"
+        username: str | None = None
 
         if "user_id" in body:  # Command
-            user_id = body["user_id"]
-            user_name = body.get("user_name", "Unknown")
+            user_id = cast(str, body["user_id"])
+            user_name = cast(str, body.get("user_name", "Unknown"))
         elif "user" in body:  # Action
             user_data = body["user"]
             if isinstance(user_data, dict):
-                user_id = user_data.get("id")
-                user_name = user_data.get("name", "Unknown")
-                username = user_data.get("username")
+                user_id = cast(str | None, user_data.get("id"))
+                user_name = cast(str, user_data.get("name", "Unknown"))
+                username = cast(str | None, user_data.get("username"))
             else:
-                user_id = user_data
+                user_id = cast(str, user_data)
         elif "event" in body:  # Event
-            user_id = body["event"].get("user")
+            user_id = cast(str | None, body["event"].get("user"))
 
         if user_id and (user_name == "Unknown" or not username):
             # Fetch more info if we only have the ID
             user_info = await client.users_info(user=user_id)
             if user_info.get("ok"):
-                slack_user = user_info.get("user", {})
-                user_name = (
-                    slack_user.get("real_name") or slack_user.get("name") or user_name
+                slack_user = cast(dict[str, Any], user_info.get("user", {}))
+                user_name = cast(
+                    str,
+                    slack_user.get("real_name") or slack_user.get("name") or user_name,
                 )
-                username = slack_user.get("name")
+                username = cast(str | None, slack_user.get("name"))
 
         if user_id:
             user_service.update_or_create_slack_user(
@@ -64,11 +66,14 @@ async def _register_slack_user(body: dict[str, Any], client: Any):
         logger.error(f"Error registering slack user: {e}")
 
 
-def register_listeners(app: AsyncApp):
+def register_listeners(app: AsyncApp) -> None:
     @app.command("/link")
     async def handle_link_command(
-        ack: Any, body: dict[str, Any], respond: Any, client: Any
-    ):
+        ack: Callable[..., Any],
+        body: dict[str, Any],
+        respond: Callable[..., Any],
+        client: AsyncWebClient,
+    ) -> None:
         await ack()
         await _register_slack_user(body, client)
         user_id = body["user_id"]
@@ -495,15 +500,15 @@ def register_listeners(app: AsyncApp):
         pending_elements = []
 
         for p in all_badges_progress:
-            badge = p["badge"]
-            if p["is_earned"]:
+            badge = p.badge
+            if p.is_earned:
                 earned_elements.append(f"{badge.icon} *{badge.name}*")
             else:
-                filled = p["progress"] // 10
+                filled = p.progress // 10
                 bar = "●" * filled + "○" * (10 - filled)
-                progress_text = f"{p['progress']}%"
-                if p["target"] > 0:
-                    progress_text = f"{p['current']}/{p['target']}"
+                progress_text = f"{p.progress}%"
+                if p.target > 0:
+                    progress_text = f"{p.current}/{p.target}"
                 pending_elements.append(
                     f"{badge.icon} *{badge.name}*\n`{bar} {progress_text}`"
                 )

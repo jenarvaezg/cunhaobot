@@ -1,3 +1,4 @@
+from typing import cast
 from google.cloud import datastore
 from models.link_request import LinkRequest
 from infrastructure.datastore.base import DatastoreRepository
@@ -8,8 +9,12 @@ class LinkRequestRepository(DatastoreRepository[LinkRequest]):
         super().__init__("LinkRequest")
 
     def _entity_to_domain(self, entity: datastore.Entity) -> LinkRequest:
+        key = cast(datastore.Key, entity.key)
+        token = cast(str | None, key.name)
+        if not token:
+            raise ValueError("Entity key name is missing")
         return LinkRequest(
-            token=entity.key.name,
+            token=token,
             source_user_id=entity["source_user_id"],
             source_platform=entity["source_platform"],
             created_at=entity["created_at"],

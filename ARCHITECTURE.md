@@ -21,13 +21,14 @@ The project is structured into distinct layers, each with specific responsibilit
     *   **Responsibility**: Defines the core data structures and domain rules of the application.
     *   **Characteristics**: Pure Python classes representing the business concepts. They should **NOT** contain persistence logic (e.g., `save()`, `load()` methods).
     *   **Framework**: [Pydantic v2](https://docs.pydantic.dev/latest/) is used for defining data models, providing data validation and serialization.
-    *   **Examples**: `src/models/phrase.py`, `src/models/user.py`, `src/models/proposal.py`.
+    *   **Modern Typing**: Uses Python 3.14+ features strictly (`| None` instead of `Optional`, `list[T]` instead of `List`).
+    *   **Examples**: `src/models/phrase.py`, `src/models/user.py`, `src/models/proposal.py`, `src/services/badge_service.py` (contains `Badge` and `BadgeProgress`).
 
 *   **`infrastructure/` (Data Access & External Interfaces)**:
     *   **Responsibility**: Implements the details of how data is stored and retrieved, and how external services (e.g., Telegram API, Slack API, Google Cloud Datastore) are accessed.
     *   **Characteristics**: This layer depends on the `protocols/` layer (abstractions) and specific external technologies. It contains the concrete implementations of the repository interfaces.
     *   **Sub-layers**:
-        *   **`protocols/`**: Defines abstract interfaces (Python `Protocol` classes) for repositories, ensuring dependency inversion. Services depend on these abstractions, not concrete implementations.
+        *   **`protocols/`**: Defines abstract interfaces (Python `Protocol` classes) for repositories, ensuring dependency inversion. Services depend on these abstractions, not concrete implementations. **Avoid `Any` in protocols**; use concrete types or generic bounds.
         *   **`datastore/`**: Contains the concrete implementations of repositories using Google Cloud Datastore.
     *   **Examples**: `src/infrastructure/protocols.py`, `src/infrastructure/datastore/phrase.py` (implements `PhraseRepository`).
 

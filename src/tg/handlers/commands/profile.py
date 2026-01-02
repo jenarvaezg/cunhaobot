@@ -50,8 +50,8 @@ async def handle_profile(update: Update, context: CallbackContext) -> None:
         pending_list = []
 
         for p in all_badges_progress:
-            badge = p["badge"]
-            if p["is_earned"]:
+            badge = p.badge
+            if p.is_earned:
                 earned_list.append(
                     f"{badge.icon} <b>{html.escape(badge.name)}</b>\n"
                     f"<i>{html.escape(badge.description)}</i>"
@@ -59,11 +59,11 @@ async def handle_profile(update: Update, context: CallbackContext) -> None:
             else:
                 # Create a small progress bar
                 # [████░░░░░░]
-                filled = p["progress"] // 10
+                filled = p.progress // 10
                 bar = "█" * filled + "░" * (10 - filled)
-                progress_text = f"{p['progress']}%"
-                if p["target"] > 0:
-                    progress_text = f"{p['current']}/{p['target']}"
+                progress_text = f"{p.progress}%"
+                if p.target > 0:
+                    progress_text = f"{p.current}/{p.target}"
 
                 pending_list.append(
                     f"{badge.icon} <b>{html.escape(badge.name)}</b>\n"

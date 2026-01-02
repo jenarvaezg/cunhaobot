@@ -126,7 +126,8 @@ app = Litestar(
     debug=not config.is_gae,
 )
 
-app.template_engine.engine.globals["apelativo"] = apelativo
+if app.template_engine:
+    app.template_engine.engine.globals["apelativo"] = apelativo
 
 if __name__ == "__main__":
     import uvicorn

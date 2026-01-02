@@ -20,7 +20,7 @@ async def handle_about(update: Update, context: CallbackContext) -> None:
     await notify_new_badges(update, context, new_badges)
 
     p = phrase_service.get_random().text
-    await update.effective_message.reply_text(
+    await message.reply_text(
         f"Este bot ha sido creado por un {p} muy aburrido.\n"
         "Puedes ver el código fuente en GitHub: https://github.com/josesarmiento/cunhaobot",
         do_quote=True,

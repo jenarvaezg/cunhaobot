@@ -1,8 +1,10 @@
-from typing import Any
+import logging
 from google.cloud import datastore
 from models.phrase import Phrase, LongPhrase
 from infrastructure.datastore.base import DatastoreRepository
 from utils import normalize_str
+
+logger = logging.getLogger(__name__)
 
 
 class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
@@ -61,7 +63,7 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
         self._cache = []
 
     def get_phrases(
-        self, search: str = "", limit: int = 0, offset: int = 0, **filters: Any
+        self, search: str = "", limit: int = 0, offset: int = 0, **filters: object
     ) -> list[Phrase]:
         results = self.load_all()
         if search:
@@ -107,11 +109,7 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
             query.keys_only()
             return len(list(query.fetch(limit=1000)))
         except Exception as e:
-            import logging
-
-            logging.getLogger(__name__).error(
-                f"Error counting phrases for user {user_id}: {e}"
-            )
+            logger.error(f"Error counting phrases for user {user_id}: {e}")
             return 0
 
 

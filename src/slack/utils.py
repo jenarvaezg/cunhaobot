@@ -1,5 +1,6 @@
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Callable, Awaitable
+from slack_sdk.web.async_client import AsyncWebClient
 from pydantic_ai.messages import (
     ModelMessage,
     ModelRequest,
@@ -8,11 +9,14 @@ from pydantic_ai.messages import (
     TextPart,
 )
 
+if TYPE_CHECKING:
+    from services.badge_service import Badge
+
 logger = logging.getLogger(__name__)
 
 
 async def get_slack_history(
-    client: Any,
+    client: AsyncWebClient,
     channel: str,
     bot_user_id: str,
     thread_ts: str | None = None,
@@ -77,7 +81,9 @@ async def get_slack_history(
         return []
 
 
-async def notify_new_badges_slack(say: Any, new_badges: list) -> None:
+async def notify_new_badges_slack(
+    say: Callable[..., Awaitable[object]], new_badges: list["Badge"]
+) -> None:
     """Sends a notification for each newly awarded badge in Slack."""
     if not new_badges:
         return

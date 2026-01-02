@@ -1,5 +1,8 @@
 import random
-from typing import Any
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from services.badge_service import Badge
 
 thumbs = [
     "https://cdn.20m.es/img2/recortes/2018/02/06/632781-600-338.jpg",
@@ -29,7 +32,7 @@ def apelativo() -> str:
     return phrase_service.get_random(long=False).text
 
 
-def format_badge_notification(badge: Any) -> str:
+def format_badge_notification(badge: "Badge") -> str:
     """Formats an achievement notification message."""
     a = apelativo()
     return (

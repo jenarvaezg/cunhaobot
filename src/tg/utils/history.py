@@ -13,7 +13,7 @@ async def record_message_in_history(message: Message, context: CallbackContext) 
     """
     Records a message in the chat_data history.
     """
-    if not message or not message.text:
+    if not message or not message.text or context.chat_data is None:
         return
 
     history = context.chat_data.get("history", [])
@@ -81,7 +81,9 @@ async def get_telegram_history(
         current = current.reply_to_message
 
     # 2. Extract from general conversational context provided by the API (chat_data)
-    chat_history = context.chat_data.get("history", [])
+    chat_history = (
+        context.chat_data.get("history", []) if context.chat_data is not None else []
+    )
     for msg in chat_history:
         # Avoid including the current message or already included messages from the reply chain
         if (

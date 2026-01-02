@@ -70,8 +70,10 @@ class ProposalService:
             disliked.add(voter_id_str)
 
         proposal.liked_by, proposal.disliked_by = list(liked), list(disliked)
-        repo = self.long_repo if isinstance(proposal, LongProposal) else self.repo
-        repo.save(proposal)  # type: ignore[arg-type]
+        if isinstance(proposal, LongProposal):
+            self.long_repo.save(proposal)
+        else:
+            self.repo.save(proposal)
 
         # Award points: 1 to proposer
         user_service.add_points(proposal.user_id, 1)

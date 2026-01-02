@@ -2,7 +2,7 @@ from io import BytesIO
 import logging
 import random
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, cast
 
 import telegram
 from fuzzywuzzy import fuzz
@@ -11,7 +11,7 @@ from infrastructure.protocols import PhraseRepository, LongPhraseRepository
 from utils import normalize_str
 
 if TYPE_CHECKING:
-    pass
+    from models.proposal import Proposal, LongProposal
 
 logger = logging.getLogger(__name__)
 
@@ -30,14 +30,15 @@ class PhraseService:
         text = phrase.text if is_long else f"¿Qué pasa, {phrase.text}?"
         return generate_png(text).getvalue()
 
-    async def create_from_proposal(self, proposal: Any, bot: telegram.Bot) -> None:
+    async def create_from_proposal(
+        self, proposal: "Proposal | LongProposal", bot: telegram.Bot
+    ) -> None:
         from models.proposal import LongProposal
         from tg.stickers import upload_sticker
         from services.user_service import user_service
 
         is_long = isinstance(proposal, LongProposal)
         model_class = LongPhrase if is_long else Phrase
-        repo = self.long_repo if is_long else self.phrase_repo
 
         phrase = model_class(
             text=proposal.text,
@@ -55,7 +56,10 @@ class PhraseService:
             phrase.stickerset_template,
             phrase.stickerset_title_template,
         )
-        repo.save(phrase)  # type: ignore[arg-type]
+        if is_long:
+            self.long_repo.save(cast(LongPhrase, phrase))
+        else:
+            self.phrase_repo.save(phrase)
 
         # Award points to the proposer
         user_service.add_points(proposal.user_id, 10)
@@ -107,8 +111,10 @@ class PhraseService:
         phrase.sticker_usages += 1
         phrase.score += 1
 
-        repo = self.long_repo if isinstance(phrase, LongPhrase) else self.phrase_repo
-        repo.save(phrase)  # type: ignore[arg-type]
+        if isinstance(phrase, LongPhrase):
+            self.long_repo.save(phrase)
+        else:
+            self.phrase_repo.save(phrase)
 
     def add_usage_by_id(self, result_id: str) -> None:
         """Increments usage count based on inline result ID."""
@@ -128,26 +134,35 @@ class PhraseService:
         if not is_long and not is_short:
             return
 
-        repo = self.long_repo if is_long else self.phrase_repo
-        # Remove mode prefix
+        # In short mode it can be multiple words separated by comma
         data = (
             clean_id.replace("long-", "", 1)
             if is_long
             else clean_id.replace("short-", "", 1)
         )
-
-        # In short mode it can be multiple words separated by comma
         items = data.split(",") if is_short else [data]
 
         for item in items:
             # Numeric ID only
             if item.isdigit():
-                phrase = repo.load(int(item))
-                if phrase:
-                    phrase.usages += 1
-                    phrase.score += 1
-                    if is_audio:
-                        phrase.audio_usages += 1
-                    if is_sticker:
-                        phrase.sticker_usages += 1
-                    repo.save(phrase)  # type: ignore[arg-type]
+                phrase_id = int(item)
+                if is_long:
+                    lp = self.long_repo.load(phrase_id)
+                    if lp:
+                        lp.usages += 1
+                        lp.score += 1
+                        if is_audio:
+                            lp.audio_usages += 1
+                        if is_sticker:
+                            lp.sticker_usages += 1
+                        self.long_repo.save(lp)
+                else:
+                    p = self.phrase_repo.load(phrase_id)
+                    if p:
+                        p.usages += 1
+                        p.score += 1
+                        if is_audio:
+                            p.audio_usages += 1
+                        if is_sticker:
+                            p.sticker_usages += 1
+                        self.phrase_repo.save(p)

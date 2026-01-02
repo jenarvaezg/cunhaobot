@@ -1,10 +1,12 @@
 import logging
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from models.usage import UsageRecord, ActionType
 from infrastructure.datastore.usage import usage_repository
 
+if TYPE_CHECKING:
+    from services.badge_service import Badge
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +22,7 @@ class UsageService:
         action: ActionType,
         phrase_id: str | int | None = None,
         metadata: dict[str, Any] | None = None,
-    ) -> list[Any]:
+    ) -> list["Badge"]:
         try:
             from services.user_service import user_service
 
@@ -51,7 +53,7 @@ class UsageService:
 
     def get_user_stats(
         self, user_id: str | int, platform: str | None = None
-    ) -> dict[str, Any]:
+    ) -> dict[str, int]:
         # If platform is provided, it will still filter, but we might want global count
         # For unified profile, we call it without platform
         count = self.repo.get_user_usage_count(str(user_id), platform)

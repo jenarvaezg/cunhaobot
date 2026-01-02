@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timedelta, timezone
+from pydantic import BaseModel
 
 from services.user_service import user_service
 from infrastructure.datastore.usage import usage_repository
@@ -8,42 +9,99 @@ from infrastructure.datastore.usage import usage_repository
 logger = logging.getLogger(__name__)
 
 
-class Badge:
-    def __init__(self, id: str, name: str, description: str, icon: str):
-        self.id = id
-        self.name = name
-        self.description = description
-        self.icon = icon
+class Badge(BaseModel):
+    id: str
+    name: str
+    description: str
+    icon: str
+
+
+class BadgeProgress(BaseModel):
+    badge: Badge
+    is_earned: bool
+    progress: int
+    current: int
+    target: int
 
 
 BADGES = [
-    Badge("novato", "El nuevo del barrio", "Primer uso del bot", "🐣"),
-    Badge("madrugador", "El del primer café", "Usar el bot antes de las 7:30 AM", "☕"),
     Badge(
-        "trasnochador",
-        "Cerrando el bar",
-        "Usar el bot entre las 02:00 y las 05:00 AM",
-        "🦉",
+        id="novato",
+        name="El nuevo del barrio",
+        description="Primer uso del bot",
+        icon="🐣",
     ),
-    Badge("fiera_total", "¡Qué pasa, fiera!", "Recibir o enviar 50 saludos", "🐯"),
-    Badge("visionario", "Ojo de Halcón", "Usar el Cuñao Vision 10 veces", "👁️"),
     Badge(
-        "pesao",
-        "El de la esquina de la barra",
-        "Usar el bot 10 veces en menos de 1 hora",
-        "🍺",
+        id="madrugador",
+        name="El del primer café",
+        description="Usar el bot antes de las 7:30 AM",
+        icon="☕",
     ),
-    Badge("poeta", "Cervantes del Palillo", "Que te acepten 5 frases propuestas", "✍️"),
-    Badge("autor", "Catedrático de barra", "Que te aprueben una frase", "🎓"),
-    Badge("incomprendido", "Adelantado a su tiempo", "Que te rechacen una frase", "🤐"),
-    Badge("charlatan", "Pico de oro", "Usar el modo IA 5 veces", "🗣️"),
-    Badge("melomano", "Dando la nota", "Usar el modo audio 5 veces", "🎶"),
-    Badge("insistente", "Martillo pilón", "Proponer 10 frases", "🔨"),
     Badge(
-        "multiplataforma",
-        "Omnipresente",
-        "Vincular cuentas de distintas plataformas",
-        "🌐",
+        id="trasnochador",
+        name="Cerrando el bar",
+        description="Usar el bot entre las 02:00 y las 05:00 AM",
+        icon="🦉",
+    ),
+    Badge(
+        id="fiera_total",
+        name="¡Qué pasa, fiera!",
+        description="Recibir o enviar 50 saludos",
+        icon="🐯",
+    ),
+    Badge(
+        id="visionario",
+        name="Ojo de Halcón",
+        description="Usar el Cuñao Vision 10 veces",
+        icon="👁️",
+    ),
+    Badge(
+        id="pesao",
+        name="El de la esquina de la barra",
+        description="Usar el bot 10 veces en menos de 1 hora",
+        icon="🍺",
+    ),
+    Badge(
+        id="poeta",
+        name="Cervantes del Palillo",
+        description="Que te acepten 5 frases propuestas",
+        icon="✍️",
+    ),
+    Badge(
+        id="autor",
+        name="Catedrático de barra",
+        description="Que te aprueben una frase",
+        icon="🎓",
+    ),
+    Badge(
+        id="incomprendido",
+        name="Adelantado a su tiempo",
+        description="Que te rechacen una frase",
+        icon="🤐",
+    ),
+    Badge(
+        id="charlatan",
+        name="Pico de oro",
+        description="Usar el modo IA 5 veces",
+        icon="🗣️",
+    ),
+    Badge(
+        id="melomano",
+        name="Dando la nota",
+        description="Usar el modo audio 5 veces",
+        icon="🎶",
+    ),
+    Badge(
+        id="insistente",
+        name="Martillo pilón",
+        description="Proponer 10 frases",
+        icon="🔨",
+    ),
+    Badge(
+        id="multiplataforma",
+        name="Omnipresente",
+        description="Vincular cuentas de distintas plataformas",
+        icon="🌐",
     ),
 ]
 
@@ -187,7 +245,7 @@ class BadgeService:
 
     async def get_all_badges_progress(
         self, user_id: str | int, platform: str
-    ) -> list[dict]:
+    ) -> list[BadgeProgress]:
         """Returns a list of all badges with current user progress."""
         from models.usage import ActionType
 
@@ -196,7 +254,7 @@ class BadgeService:
             return []
 
         current_badges = set(user.badges)
-        results = []
+        results: list[BadgeProgress] = []
 
         # Get stats
         total_usages = self.usage_repo.get_user_usage_count(str(user_id))
@@ -269,13 +327,13 @@ class BadgeService:
                     progress = min(100, int((current_val / target_val) * 100))
 
             results.append(
-                {
-                    "badge": badge,
-                    "is_earned": is_earned,
-                    "progress": progress,
-                    "current": current_val,
-                    "target": target_val,
-                }
+                BadgeProgress(
+                    badge=badge,
+                    is_earned=is_earned,
+                    progress=progress,
+                    current=current_val,
+                    target=target_val,
+                )
             )
 
         return results

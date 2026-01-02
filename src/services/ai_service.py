@@ -1,7 +1,7 @@
 import logging
 import os
 import random
-from typing import List
+from typing import cast
 from google import genai
 from pydantic import BaseModel
 from pydantic_ai import Agent
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class GeneratedPhrases(BaseModel):
     """Model for the generated cuñao phrases."""
 
-    phrases: List[str]
+    phrases: list[str]
 
 
 # Ensure API key is set for pydantic-ai (it looks for GOOGLE_API_KEY)
@@ -37,12 +37,12 @@ phrase_generator_agent: Agent[None, GeneratedPhrases] = Agent(
 
 
 class AIService:
-    def __init__(self, api_key: str = config.gemini_api_key):
+    def __init__(self, api_key: str | None = config.gemini_api_key):
         self._api_key = api_key
-        self._client = None
+        self._client: genai.Client | None = None
 
     @property
-    def client(self):
+    def client(self) -> genai.Client:
         if self._client is None:
             if not self._api_key or self._api_key == "dummy":
                 logger.error("GEMINI_API_KEY not set or invalid")
@@ -52,13 +52,13 @@ class AIService:
             except Exception:
                 logger.exception("Error initializing Gemini client:")
                 raise
-        return self._client
+        return cast(genai.Client, self._client)
 
     async def generate_cunhao_phrases(
         self,
         count: int = 5,
-        context_phrases: List[str] | None = None,
-    ) -> List[str]:
+        context_phrases: list[str] | None = None,
+    ) -> list[str]:
         """Generates cuñao-style phrases using pydantic-ai, with database context."""
 
         existing_phrases = context_phrases if context_phrases is not None else []

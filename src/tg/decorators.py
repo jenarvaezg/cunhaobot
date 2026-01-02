@@ -8,17 +8,17 @@ from utils import remove_empty_from_dict
 
 logger = logging.getLogger("cunhaobot")
 
-F = TypeVar("F", bound=Callable[..., Any])
+F = TypeVar("F", bound=Callable[..., object])
 
 
 def only_admins(f: F) -> F:
     @wraps(f)
-    async def wrapper(update: Update, *args: Any, **kwargs: Any) -> Any:
+    async def wrapper(update: Update, *args: object, **kwargs: object) -> object:
         if not (chat := update.effective_chat):
-            return
+            return None
 
         if chat.type == Chat.PRIVATE:
-            return await f(update, *args, **kwargs)
+            return await cast(Callable[..., Any], f)(update, *args, **kwargs)
 
         admins = await chat.get_administrators()
         admin_ids = [admin.user.id for admin in admins]
@@ -29,23 +29,23 @@ def only_admins(f: F) -> F:
                     f"Esto solo lo pueden hacer administradores, {p}.",
                     do_quote=True,
                 )
-            return
+            return None
 
-        return await f(update, *args, **kwargs)
+        return await cast(Callable[..., Any], f)(update, *args, **kwargs)
 
     return cast(F, wrapper)
 
 
 def log_update(f: F) -> F:
     @wraps(f)
-    async def wrapper(update: Update, *args: Any, **kwargs: Any) -> Any:
+    async def wrapper(update: Update, *args: object, **kwargs: object) -> object:
         # Actualizar o crear usuario usando el servicio
         user_service.update_or_create_user(update)
 
-        update_dict = cast(dict[str, Any], remove_empty_from_dict(update.to_dict()))
+        update_dict = cast(dict[str, object], remove_empty_from_dict(update.to_dict()))
         update_dict["method"] = f.__name__
 
         logger.info(f"{update_dict}")
-        return await f(update, *args, **kwargs)
+        return await cast(Callable[..., Any], f)(update, *args, **kwargs)
 
     return cast(F, wrapper)
