@@ -159,8 +159,6 @@ async def dismiss_proposal(
         action=ActionType.REJECT,
     )
 
-    repo.delete(proposal.id)
-
 
 async def _update_proposal_text(
     proposal: Proposal | LongProposal, callback_query: CallbackQuery

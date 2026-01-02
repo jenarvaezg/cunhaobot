@@ -193,8 +193,7 @@ class TestCallbackQuery:
                 "tg.handlers.utils.callback_query._ensure_admins",
                 new_callable=AsyncMock,
             ),
-            patch("services.proposal_repo.save"),
-            patch("services.proposal_repo.delete") as mock_delete,
+            patch("services.proposal_repo.save") as mock_save,
             patch("tg.handlers.utils.callback_query.phrase_service") as mock_ph_svc,
             patch(
                 "tg.handlers.utils.callback_query.get_vote_summary",
@@ -206,7 +205,8 @@ class TestCallbackQuery:
             await dismiss_proposal(p, bot)
 
             assert bot.send_message.call_count == 2
-            mock_delete.assert_called_once_with("123")
+            assert p.voting_ended is True
+            mock_save.assert_called_once_with(p)
 
     @pytest.mark.asyncio
     async def test_update_proposal_text_equal(self):
@@ -283,7 +283,6 @@ class TestCallbackQuery:
                 new_callable=AsyncMock,
             ),
             patch("services.proposal_repo.save"),
-            patch("services.proposal_repo.delete"),
             patch("tg.handlers.utils.callback_query.phrase_service") as mock_ph_svc,
             patch(
                 "tg.handlers.utils.callback_query.get_vote_summary",
