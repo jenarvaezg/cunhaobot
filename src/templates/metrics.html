@@ -29,6 +29,19 @@
             Datos agregados de todas las propuestas y frases aprobadas.
         </p>
     </div>
+    {% if user and user.id|string == owner_id|string %}
+    <div class="col-lg-4 text-lg-end d-flex align-items-center justify-content-lg-end mb-5 mb-lg-0">
+        <div class="admin-tools p-3 glass-card border-warning border-opacity-25">
+            <div class="small text-warning oswald mb-2 text-uppercase letter-spacing-2">Panel de Control</div>
+            <button class="btn btn-outline-warning oswald letter-spacing-1"
+                    hx-post="/admin/post-story"
+                    hx-swap="none"
+                    hx-on::after-request="if(event.detail.successful) { alert(JSON.parse(event.detail.xhr.response).message); } else { alert('Vaya chapuza: ' + JSON.parse(event.detail.xhr.response).error); }">
+                <i class="bi bi-camera-reels-fill me-2"></i> PUBLICAR STORY
+            </button>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 <!-- Summary Cards -->

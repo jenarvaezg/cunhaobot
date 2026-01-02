@@ -15,12 +15,32 @@ from infrastructure.protocols import (
 )
 from services import PhraseService, UserService, tts_service as tts_service_instance
 from services.ai_service import AIService
+from services.story_service import story_service
 from core.config import config
 
 logger = logging.getLogger(__name__)
 
 
 class WebController(Controller):
+    @post("/admin/post-story")
+    async def post_story(self, request: Request) -> Response[dict[str, Any]]:
+        user = request.session.get("user")
+        if not user or str(user.get("id")) != str(config.owner_id):
+            return Response({"error": "Unauthorized"}, status_code=401)
+
+        try:
+            from tg import get_tg_application
+
+            application = get_tg_application()
+            if not application.running:
+                await application.initialize()
+
+            result = await story_service.post_random_story(application.bot)
+            return Response({"message": result}, status_code=200)
+        except Exception as e:
+            logger.exception("Error in post_story route:")
+            return Response({"error": str(e)}, status_code=500)
+
     @get("/", sync_to_thread=True)
     def index(
         self,

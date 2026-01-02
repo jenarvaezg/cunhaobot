@@ -1,20 +1,29 @@
 # Roadmap de Ideas: cunhaobot 2026
 
-## 1. Modernización: "Paco 2.0" (Telegram Features)
-El bot original es de 2019. Toca aprovechar las nuevas APIs.
-* **Mini App (TMA):** Un Dashboard con estética de "Menú del Día" para ver el ranking de frases, proponer nuevas y ver el perfil del usuario (insignias, puntos).
-* **Reacciones:** El bot debe reaccionar automáticamente con emojis castizos (🍺, 🥘, 🇪🇸) a ciertos mensajes.
-* **Stories:** Si el bot es admin de un canal/grupo, publicar la "Frase del Día" en Stories.
-* **User Story:** "Como usuario, quiero abrir el ranking en una webview dentro de Telegram para no hacer scroll infinito en un mensaje de texto".
+## 1. Modernización: "Paco 2.0" (Nuevas Funcionalidades)
+Aprovechar las últimas capacidades de la Bot API para mejorar la interacción y presencia del bot.
+* **Telegram Mini App (TMA) 9.0:**
+    * **Dashboard de Bar:** Webview en pantalla completa con estética de "Pizarra de Menú" para ver rankings y perfiles de forma interactiva.
+    * **Shared Storage & Shortcuts:** Sincronización instantánea y posibilidad de añadir a "Paco" a la pantalla de inicio del móvil.
+* **Paco for Business:**
+    * Integrar la API de **Business Bots**. Los usuarios con cuenta Business pueden delegar sus respuestas en Paco para que atienda a sus clientes con su sabiduría cuñadil.
+* **Reacciones Inteligentes (SetMessageReaction):**
+    * Paco reaccionará automáticamente con emojis temáticos (🍺, 🇪🇸, 🥘, 🤡) basándose en el análisis de sentimiento de Gemini sobre los mensajes del grupo.
+* **Stories & Social:**
+    * Publicar automáticamente "La Perla del Día" en las Stories del bot, con imágenes y encuestas generadas por IA.
+* **User Story:** "Como dueño de un taller mecánico con cuenta Business, quiero que Paco responda a mis clientes de Telegram con su toque especial para que sepan quién manda aquí".
 
-## 2. Monetización: "Invita a Paco a una caña"
-Monetización orgánica y temática.
-* **Telegram Stars:** Pago de "Stars" para:
-    * Generar una imagen personalizada con IA basada en una frase.
-    * Roast visual prioritario (Cuñao Vision Pro).
-    * Quitar publicidad (si se añade en el futuro).
-* **Merchandising Directo:** Integración con Printful/Redbubble para comprar una camiseta con tu frase favorita directamente desde el bot.
-* **User Story:** "Como usuario fiel, quiero invitar a una 'caña' (0.99€) al bot para agradecerle las risas y desbloquear la voz premium de Antonio Resines (o similar)".
+## 2. Monetización: "La Economía de Paco" (Features de Pago)
+Estrategias para hacer el bot sostenible utilizando Telegram Stars (XTR) y otros métodos.
+* **Telegram Stars (Bienes Digitales):**
+    * **Gifts (Carajillos Digitales):** Sistema de regalos únicos. Los usuarios pueden enviarse carajillos, copas de coñac o palillos de plata que lucen en el perfil de la Mini App.
+    * **Paid Media:** Envío de "Audios Pro" o roasts de Cuñao Vision de alta definición que solo se desbloquean con Stars.
+    * **IA Image Generation:** Cobrar una pequeña cantidad de Stars por cada imagen personalizada generada para una frase.
+* **Suscripción "V.I.P." (Very Important Paco):**
+    * Acceso a voces de TTS premium (Antonio Resines style), prioridad de procesamiento y eliminación de publicidad.
+* **Merchandising Directo:**
+    * Integración para comprar camisetas o tazas con "tus frases estrella" directamente desde el bot.
+* **User Story:** "Como usuario fiel, quiero gastar mis Stars en regalarle un puro digital a mi cuñado del grupo para celebrar que su equipo ha perdido".
 
 ## 3. Gamificación: "La Liga de los Cuñados"
 * **Concepto:** Sistema de puntos por actividad y calidad de propuestas.
