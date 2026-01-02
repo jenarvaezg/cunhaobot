@@ -144,7 +144,6 @@ def test_metrics_page_empty_data(client):
         rv = client.get("/metrics")
         assert rv.status_code == HTTP_200_OK
         # Check text content because context might not be directly accessible when template is rendered
-        assert "Nadie" in rv.text
         assert "0" in rv.text  # total_phrases and total_pending
         assert "Propuestas Aprobadas" in rv.text
         assert "Propuestas Pendientes" in rv.text
@@ -172,11 +171,7 @@ def test_metrics_page_with_data(client):
         assert rv.status_code == HTTP_200_OK
         assert "2" in rv.text  # total_phrases
         assert "2" in rv.text  # total_pending
-        assert "User One" in rv.text  # top_contributor
-        assert "Ranking de Contribuidores" in rv.text
-        assert "User One" in rv.text
-        assert "User Two" in rv.text
-        assert "User Three" in rv.text
+        assert "Ecosistema de Medallas" in rv.text
 
 
 def test_phrase_detail_page(client):

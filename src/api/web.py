@@ -267,9 +267,13 @@ class WebController(Controller):
         request: Request,
         user_repo: Annotated[UserRepository, Dependency()],
     ) -> Template:
+        from services.badge_service import BADGES
+
         # Get all users with points > 0
         ranking = [u for u in user_repo.load_all() if u.points > 0 and not u.is_group]
         ranking.sort(key=lambda x: x.points, reverse=True)
+
+        badges_map = {b.id: b for b in BADGES}
 
         return Template(
             template_name="ranking.html",
@@ -277,6 +281,7 @@ class WebController(Controller):
                 "ranking": ranking,
                 "user": request.session.get("user"),
                 "owner_id": config.owner_id,
+                "badges_map": badges_map,
             },
         )
 
@@ -452,8 +457,9 @@ class WebController(Controller):
         long_proposal_repo: Annotated[LongProposalRepository, Dependency()],
         user_repo: Annotated[UserRepository, Dependency()],
     ) -> Template:
-        from collections import defaultdict
+        from collections import Counter
         import json
+        from services.badge_service import BADGES
 
         p_repo: PhraseRepository = phrase_repo
         lp_repo: LongPhraseRepository = long_phrase_repo
@@ -488,36 +494,23 @@ class WebController(Controller):
             "rejected": len(rejected_proposals),
         }
 
-        # User stats
-        user_map: dict[str, str] = {
-            str(u.id): u.name
-            for u in user_repo.load_all(ignore_gdpr=True)
-            if not u.is_group
-        }
+        # Badge Stats
+        all_users = user_repo.load_all(ignore_gdpr=True)
+        badge_counts: Counter = Counter()
+        total_badges = 0
+        for u in all_users:
+            if u.badges:
+                badge_counts.update(u.badges)
+                total_badges += len(u.badges)
 
-        stats: dict[str, dict[str, Any]] = defaultdict(
-            lambda: {"approved": 0, "pending": 0, "score": 0, "name": "Anónimo"}
-        )
+        badge_stats = []
+        for badge in BADGES:
+            count = badge_counts.get(badge.id, 0)
+            badge_stats.append({"badge": badge, "count": count})
 
-        for p in phrases:
-            s = stats[str(p.user_id)]
-            s["approved"] += 1
-            s["score"] += 10 + p.usages + p.audio_usages
-            if str(p.user_id) in user_map:
-                s["name"] = user_map[str(p.user_id)]
-
-        for p in pending_proposals:
-            if p.user_id == 0 or p.user_id == "0":
-                continue
-            s = stats[str(p.user_id)]
-            s["pending"] += 1
-            if str(p.user_id) in user_map:
-                s["name"] = user_map[str(p.user_id)]
-
-        sorted_stats = sorted(
-            stats.values(), key=lambda x: (x["score"], x["approved"]), reverse=True
-        )
-        top_contributor = sorted_stats[0]["name"] if sorted_stats else "Nadie"
+        # Sort badges by rarity (least common first) or popularity (most common first)
+        # Let's go with popularity for now
+        badge_stats.sort(key=lambda x: x["count"], reverse=True)
 
         # Chart data
         top_5_phrases_chart = {
@@ -532,8 +525,8 @@ class WebController(Controller):
                 "owner_id": config.owner_id,
                 "total_phrases": len(phrases),
                 "proposal_stats": proposal_stats,
-                "top_contributor": top_contributor,
-                "user_stats": sorted_stats,
+                "badge_stats": badge_stats,
+                "total_badges": total_badges,
                 "top_phrases": top_phrases,
                 "proposal_stats_json": json.dumps(proposal_stats),
                 "top_5_phrases_chart_json": json.dumps(top_5_phrases_chart),

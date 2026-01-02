@@ -40,6 +40,7 @@
                 <tr class="text-secondary text-uppercase x-small border-bottom border-secondary">
                     <th scope="col" class="ps-4">#</th>
                     <th scope="col">Usuario</th>
+                    <th scope="col" class="text-center">Insignias</th>
                     <th scope="col" class="text-center">Puntos Totales</th>
                     <th scope="col" class="text-end pe-4">Medalla</th>
                 </tr>
@@ -64,6 +65,18 @@
                                 {% endif %}
                             </div>
                         </div>
+                    </td>
+                    <td class="text-center">
+                        {% if user_entry.badges %}
+                            {% for badge_id in user_entry.badges %}
+                                {% set badge = badges_map.get(badge_id) %}
+                                {% if badge %}
+                                <span title="{{ badge.name }}" class="fs-5 cursor-help">{{ badge.icon }}</span>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <span class="text-secondary opacity-25 small">-</span>
+                        {% endif %}
                     </td>
                     <td class="text-center">
                         <span class="fs-4 fw-bold text-gold">{{ user_entry.points }}</span>
