@@ -226,6 +226,8 @@
                             {% if user.id == owner_id %}
                             <li><h6 class="dropdown-header text-warning">Modo Maestro</h6></li>
                             {% endif %}
+                            <li><a class="dropdown-item" href="/user/{{ user.id }}/profile"><i class="bi bi-person-badge me-2"></i>Mi Perfil</a></li>
+                            <li><hr class="dropdown-divider border-secondary"></li>
                             <li><a class="dropdown-item" href="/logout"><i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión</a></li>
                         </ul>
                     </div>

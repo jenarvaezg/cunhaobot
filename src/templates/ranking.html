@@ -59,7 +59,9 @@
                                 {{ user_entry.name[:2].upper() if user_entry.name else '??' }}
                             </div>
                             <div>
-                                <div class="fw-bold text-white">{{ user_entry.name or "Anónimo" }}</div>
+                                <a href="/user/{{ user_entry.id }}/profile" class="text-decoration-none text-white hover-text-warning transition-colors">
+                                    <div class="fw-bold">{{ user_entry.name or "Anónimo" }}</div>
+                                </a>
                                 {% if user_entry.username %}
                                 <div class="text-secondary x-small">@{{ user_entry.username }}</div>
                                 {% endif %}
