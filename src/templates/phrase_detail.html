@@ -24,40 +24,40 @@
 
             <div class="row g-4">
                 <div class="col-md-6">
-                    <div class="stat-card p-4 rounded-4 bg-dark bg-opacity-25 border border-secondary border-opacity-10">
-                        <div class="text-secondary small text-uppercase fw-bold mb-2">Impacto Total</div>
-                        <div class="d-flex align-items-baseline gap-2">
-                            <span class="display-6 fw-bold text-warning">{{ phrase.usages }}</span>
+                    <div class="stat-card p-4 rounded-4 h-100 d-flex flex-column justify-content-center">
+                        <div class="text-secondary small text-uppercase fw-bold mb-2 text-center">Impacto Total</div>
+                        <div class="d-flex align-items-baseline gap-2 justify-content-center">
+                            <span class="display-4 fw-bold text-gold-gradient">{{ phrase.usages }}</span>
                             <span class="text-secondary">intervenciones</span>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="stat-card p-4 rounded-4 bg-dark bg-opacity-25 border border-secondary border-opacity-10">
-                        <div class="text-secondary small text-uppercase fw-bold mb-2">Autoría Original</div>
+                    <div class="stat-card p-4 rounded-4 h-100 d-flex flex-column justify-content-center">
+                        <div class="text-secondary small text-uppercase fw-bold mb-3 text-center">Autoría Original</div>
                         {% if contributor %}
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="rounded-circle border border-warning border-opacity-25 d-flex align-items-center justify-content-center fw-bold text-dark overflow-hidden shadow-sm"
-                                 style="width: 56px; height: 56px; background: var(--bs-secondary);">
-                                <img src="/user/{{ contributor.user_id or contributor.chat_id }}/photo.png"
-                                     alt="{{ contributor.name }}"
-                                     class="img-fluid"
-                                     onerror="this.style.display='none'; this.parentElement.innerHTML='{{ contributor.name.lstrip('@')|first|upper }}'">
-                            </div>
-                            <div>
-                                {% if contributor.username %}
-                                <a href="https://t.me/{{ contributor.username }}" class="text-decoration-none link-light">
-                                    <div class="fw-bold fs-5">{{ contributor.name }}</div>
+                        <a href="/user/{{ contributor.id }}/profile" class="text-decoration-none text-white">
+                            <div class="d-flex align-items-center gap-3 justify-content-center p-2 rounded-pill hover-bg-light-10 transition-all">
+                                <div class="rounded-circle border border-warning border-opacity-50 d-flex align-items-center justify-content-center fw-bold text-dark overflow-hidden shadow-sm"
+                                     style="width: 56px; height: 56px; background: var(--primary-gold);">
+                                    <img src="/user/{{ contributor.id }}/photo.png"
+                                         alt="{{ contributor.name }}"
+                                         class="img-fluid"
+                                         style="width: 100%; height: 100%; object-fit: cover;"
+                                         onerror="this.style.display='none'; this.parentElement.innerHTML='{{ contributor.name.lstrip('@')|first|upper }}'">
+                                </div>
+                                <div class="text-start">
+                                    <div class="fw-bold fs-5 lh-1">{{ contributor.name }}</div>
+                                    {% if contributor.username %}
                                     <div class="small text-warning">@{{ contributor.username }}</div>
-                                </a>
-                                {% else %}
-                                <div class="fw-bold text-white fs-5">{{ contributor.name }}</div>
-                                <div class="small text-secondary">ID: {{ contributor.user_id or contributor.chat_id }}</div>
-                                {% endif %}
+                                    {% else %}
+                                    <div class="small text-secondary">Cuñao Certificado</div>
+                                    {% endif %}
+                                </div>
                             </div>
-                        </div>
+                        </a>
                         {% else %}
-                        <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center gap-3 justify-content-center">
                             <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center fw-bold text-dark shadow-sm" style="width: 56px; height: 56px;">
                                 <i class="bi bi-person-fill fs-4"></i>
                             </div>
@@ -70,28 +70,28 @@
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="text-center p-3 stat-card rounded-4">
-                        <i class="bi bi-volume-up text-info fs-3 mb-2 d-block" style="cursor: pointer;" onclick="document.getElementById('phrase-audio').play()"></i>
-                        <div class="fw-bold">{{ phrase.audio_usages }}</div>
-                        <div class="small text-secondary text-uppercase mb-2">Audios</div>
+                    <div class="text-center p-4 stat-card rounded-4 h-100">
+                        <i class="bi bi-volume-up text-info display-5 mb-3 d-block transition-transform hover-scale" style="cursor: pointer;" onclick="toggleAudio()"></i>
+                        <div class="fw-bold fs-4 mb-1">{{ phrase.audio_usages }}</div>
+                        <div class="small text-secondary text-uppercase mb-3">Audios Generados</div>
                         <audio id="phrase-audio" src="/phrase/{{ phrase.id }}/audio.ogg"></audio>
-                        <button class="btn btn-sm btn-outline-info rounded-pill px-3" onclick="document.getElementById('phrase-audio').play()">
-                            <i class="bi bi-play-fill me-1"></i> Escuchar
+                        <button class="btn btn-sm btn-outline-info rounded-pill px-4 fw-bold" onclick="toggleAudio()">
+                            <i class="bi bi-play-fill me-1"></i> Reproducir
                         </button>
                     </div>
                 </div>
-                <div class="col-md-4 border-start border-end border-secondary border-opacity-10">
-                    <div class="text-center p-3">
-                        <i class="bi bi-sticky text-warning fs-3 mb-2 d-block"></i>
-                        <div class="fw-bold">{{ phrase.sticker_usages }}</div>
-                        <div class="small text-secondary text-uppercase">Stickers</div>
+                <div class="col-md-4">
+                    <div class="text-center p-4 stat-card rounded-4 h-100 d-flex flex-column justify-content-center">
+                        <i class="bi bi-sticky text-warning display-5 mb-3 d-block"></i>
+                        <div class="fw-bold fs-4 mb-1">{{ phrase.sticker_usages }}</div>
+                        <div class="small text-secondary text-uppercase">Stickers Enviados</div>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="text-center p-3">
-                        <i class="bi bi-calendar3 text-success fs-3 mb-2 d-block"></i>
-                        <div class="fw-bold">{{ phrase.created_at.strftime('%d/%m/%Y') if phrase.created_at else '---' }}</div>
-                        <div class="small text-secondary text-uppercase">Registrada</div>
+                    <div class="text-center p-4 stat-card rounded-4 h-100 d-flex flex-column justify-content-center">
+                        <i class="bi bi-calendar3 text-success display-5 mb-3 d-block"></i>
+                        <div class="fw-bold fs-4 mb-1">{{ phrase.created_at.strftime('%d/%m/%Y') if phrase.created_at else '---' }}</div>
+                        <div class="small text-secondary text-uppercase">Fecha Registro</div>
                     </div>
                 </div>
             </div>
@@ -99,11 +99,11 @@
 
         {% if phrase.sticker_file_id %}
         <div class="glass-card p-4 text-center animate__animated animate__fadeInUp animate__delay-1s mb-4">
-            <h5 class="oswald mb-4">Sticker Oficial</h5>
-            <div class="sticker-preview mx-auto mb-3" style="width: 256px; height: 256px; background: rgba(255,255,255,0.05); border-radius: 20px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                <img src="/phrase/{{ phrase.id }}/sticker.png" alt="Sticker" class="img-fluid" style="max-height: 100%; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+            <h5 class="oswald mb-4 text-warning"> Sticker Oficial</h5>
+            <div class="sticker-preview mx-auto mb-3 shadow-lg" style="width: 256px; height: 256px; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0) 70%); border-radius: 20px; display: flex; align-items: center; justify-content: center;">
+                <img src="/phrase/{{ phrase.id }}/sticker.png" alt="Sticker" class="img-fluid" style="max-height: 220px; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5)); transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.1) rotate(2deg)'" onmouseout="this.style.transform='scale(1) rotate(0)'">
             </div>
-            <div class="small text-secondary font-monospace">{{ phrase.sticker_file_id }}</div>
+            <div class="badge bg-dark border border-secondary text-secondary font-monospace">{{ phrase.sticker_file_id }}</div>
         </div>
         {% endif %}
 
@@ -111,9 +111,34 @@
     </div>
 </div>
 
+<script>
+    function toggleAudio() {
+        const audio = document.getElementById('phrase-audio');
+        if (audio.paused) {
+            audio.play();
+        } else {
+            audio.pause();
+            audio.currentTime = 0;
+        }
+    }
+</script>
+
 <style>
     .letter-spacing-2 { letter-spacing: 2px; }
-    .stat-card { transition: all 0.3s; }
-    .stat-card:hover { background: rgba(255,255,255,0.05) !important; border-color: var(--primary-gold) !important; }
+    .stat-card {
+        background: rgba(15, 23, 42, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    .stat-card:hover {
+        background: rgba(30, 41, 59, 0.6) !important;
+        border-color: rgba(var(--primary-gold-rgb), 0.3) !important;
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+    .hover-bg-light-10:hover { background: rgba(255,255,255,0.05); }
+    .hover-scale:hover { transform: scale(1.1); }
+    .transition-all { transition: all 0.3s ease; }
+    .transition-transform { transition: transform 0.3s ease; }
 </style>
 {% endblock %}

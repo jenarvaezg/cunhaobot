@@ -14,38 +14,54 @@
                 <div class="row g-4">
                     <!-- AI Card -->
                     <div class="col-md-6">
-                        <div class="glass-card p-4 border-warning h-100 animate__animated animate__fadeIn">
-                            <h5 class="oswald text-warning mb-4 text-center"><i class="bi bi-stars me-2"></i>LO NUEVO: IA</h5>
-                            <div id="ai-phrase-container" class="p-4 bg-dark bg-opacity-25 rounded-4 border border-secondary border-opacity-10 h-100 d-flex flex-column align-items-center text-center">
-                                <i class="bi bi-robot display-6 text-warning mb-3"></i>
-                                <h6 class="oswald mb-2">Frases IA</h6>
-                                <p class="small text-secondary mb-4">Genera sabiduría cuñadil instantánea con nuestra IA.</p>
-                                <div class="mt-auto w-100">
-                                    <button class="btn btn-outline-warning rounded-pill px-4 w-100"
-                                            hx-get="/ai/phrase"
-                                            hx-target="#ai-phrase-container"
-                                            hx-swap="outerHTML"
-                                            hx-indicator="#ai-indicator">
-                                        <i class="bi bi-cpu me-2"></i>Generar
-                                        <div id="ai-indicator" class="htmx-indicator ms-2 d-inline-block">
-                                            <div class="spinner-border spinner-border-sm" role="status"></div>
-                                        </div>
-                                    </button>
+                        <div class="glass-card p-1 border-warning border-opacity-25 h-100 animate__animated animate__fadeIn">
+                            <div class="p-5 h-100 d-flex flex-column align-items-center text-center">
+                                <h5 class="oswald text-warning mb-4"><i class="bi bi-stars me-2"></i>LO NUEVO: IA</h5>
+
+                                <div id="ai-phrase-container" class="w-100 d-flex flex-column align-items-center flex-grow-1">
+                                    <div class="mb-4 p-4 rounded-circle bg-dark bg-opacity-50 border border-warning border-opacity-25 shadow-lg d-flex align-items-center justify-content-center" style="width: 120px; height: 120px;">
+                                        <i class="bi bi-robot display-1 text-warning"></i>
+                                    </div>
+
+                                    <h4 class="oswald mb-3">Generador Cuñadil</h4>
+                                    <p class="text-secondary mb-4 px-3">
+                                        ¿Sin ideas? Deja que la inteligencia artificial (que no es más lista que tu primo el informático) te ilumine.
+                                    </p>
+
+                                    <div class="mt-auto w-100">
+                                        <button class="btn btn-gold rounded-pill px-5 py-3 w-100 fw-bold shadow-lg"
+                                                hx-get="/ai/phrase"
+                                                hx-target="#ai-phrase-container"
+                                                hx-swap="outerHTML"
+                                                hx-indicator="#ai-indicator">
+                                            <i class="bi bi-cpu me-2"></i>GENERAR SABIDURÍA
+                                            <div id="ai-indicator" class="htmx-indicator ms-2 d-inline-block">
+                                                <div class="spinner-border spinner-border-sm text-dark" role="status"></div>
+                                            </div>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <!-- Slack Card -->
                     <div class="col-md-6">
-                        <div class="glass-card p-4 border-info h-100 animate__animated animate__fadeIn" style="animation-delay: 0.1s;">
-                            <h5 class="oswald text-info mb-4 text-center"><i class="bi bi-slack me-2"></i>SLACK MARKETPLACE</h5>
-                            <div class="p-4 bg-dark bg-opacity-25 rounded-4 border border-secondary border-opacity-10 h-100 d-flex flex-column align-items-center text-center">
-                                <i class="bi bi-chat-quote display-6 text-info mb-3"></i>
-                                <h6 class="oswald mb-2">Llévame a tu Slack</h6>
-                                <p class="small text-secondary mb-4">Aporta la dosis de realidad que tu equipo necesita. Stickers, frases y sabiduría pura.</p>
+                        <div class="glass-card p-1 border-info border-opacity-25 h-100 animate__animated animate__fadeIn" style="animation-delay: 0.1s;">
+                            <div class="p-5 h-100 d-flex flex-column align-items-center text-center">
+                                <h5 class="oswald text-info mb-4"><i class="bi bi-slack me-2"></i>SLACK MARKETPLACE</h5>
+
+                                <div class="mb-4 p-4 rounded-circle bg-dark bg-opacity-50 border border-info border-opacity-25 shadow-lg d-flex align-items-center justify-content-center" style="width: 120px; height: 120px;">
+                                    <i class="bi bi-chat-quote display-1 text-info"></i>
+                                </div>
+
+                                <h4 class="oswald mb-3">Llévame a tu Slack</h4>
+                                <p class="text-secondary mb-4 px-3">
+                                    Aporta la dosis de realidad que tu equipo necesita. Stickers, frases y sabiduría pura directamente en tus canales.
+                                </p>
+
                                 <div class="mt-auto w-100">
-                                    <a href="/slack/auth" class="d-inline-block">
-                                        <img alt="Add to Slack" height="40" width="139"
+                                    <a href="/slack/auth" class="d-inline-block hover-scale transition-transform">
+                                        <img alt="Add to Slack" height="48" width="166"
                                              src="https://platform.slack-edge.com/img/add_to_slack.png"
                                              srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" />
                                     </a>
