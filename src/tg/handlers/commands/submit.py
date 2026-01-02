@@ -69,24 +69,44 @@ async def submit_handling(
             parse_mode=constants.ParseMode.MARKDOWN,
         )
 
-    # Fuzzy search
-    most_similar, similarity_ratio = phrase_service.find_most_similar(
+    # Fuzzy search phrases
+    most_similar_phrase, phrase_similarity = phrase_service.find_most_similar(
         proposal.text, long=is_long
     )
 
-    if similarity_ratio > SIMILARITY_DISCARD_THRESHOLD:
-        p1 = phrase_service.get_random().text
-        p2 = phrase_service.get_random().text
-        text = f"Esa ya la tengo, {p1}, {p2}."
-        if similarity_ratio != 100:
-            text += f'\nSe parece demasiado a "<b>{most_similar.text}</b>", {phrase_service.get_random().text}.'
+    if phrase_similarity > SIMILARITY_DISCARD_THRESHOLD:
+        p_random = phrase_service.get_random().text
+        msg = f"Esa ya la tengo aprobada y en la lista, {p_random}."
+        if phrase_similarity != 100:
+            msg += f"\nSe parece demasiado a: '*{most_similar_phrase.text}*'"
+
         return await update.effective_message.reply_text(
-            text, parse_mode=constants.ParseMode.HTML
+            msg, parse_mode=constants.ParseMode.MARKDOWN
         )
+
+    # Fuzzy search proposals
+    most_similar_proposal, proposal_similarity = (
+        proposal_service.find_most_similar_proposal(proposal.text, is_long=is_long)
+    )
+
+    if proposal_similarity > SIMILARITY_DISCARD_THRESHOLD and most_similar_proposal:
+        p_random = phrase_service.get_random().text
+        if most_similar_proposal.voting_ended:
+            # Proposal existed and voting ended. Since phrase check passed (didn't exist), it must be rejected.
+            return await update.effective_message.reply_text(
+                f"Esa propuesta ya pasó por el consejo y fue rechazada, lo siento {p_random}.",
+                parse_mode=constants.ParseMode.MARKDOWN,
+            )
+        else:
+            # Proposal exists and voting is active
+            return await update.effective_message.reply_text(
+                f"Esa frase ya ha sido propuesta y está siendo votada ahora mismo, ten paciencia {p_random}.",
+                parse_mode=constants.ParseMode.MARKDOWN,
+            )
 
     repo.save(proposal)
     await _notify_proposal_to_curators(
-        bot, proposal, submitted_by, most_similar, similarity_ratio
+        bot, proposal, submitted_by, most_similar_phrase, phrase_similarity
     )
 
     return await update.effective_message.reply_text(

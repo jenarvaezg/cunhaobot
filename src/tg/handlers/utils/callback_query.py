@@ -24,7 +24,7 @@ admins: list[ChatMember] = []  # Global cache
 
 
 def get_required_votes() -> int:
-    return len(admins) // 2 + 1
+    return 4
 
 
 def get_vote_summary(proposal: Proposal) -> str:

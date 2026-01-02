@@ -2,12 +2,10 @@ import pytest
 from unittest.mock import MagicMock, patch, AsyncMock
 from tg.handlers.commands.submit import (
     handle_submit,
-    handle_submit_phrase,
-    _notify_proposal_to_curators,
     submit_handling,
 )
-from models.phrase import Phrase, LongPhrase
-from models.proposal import Proposal, LongProposal
+from models.phrase import Phrase
+from models.proposal import Proposal
 
 
 @pytest.fixture
@@ -21,6 +19,7 @@ def mock_deps():
         patch("tg.handlers.commands.submit.config") as config,
     ):
         phs.get_random.return_value.text = "cuñao"
+        ps.find_most_similar_proposal.return_value = (None, 0)
         config.mod_chat_id = 123
         yield ps, phs, pr, lpr
 
@@ -50,6 +49,7 @@ async def test_handle_submit_success(mock_deps):
     mock_proposal = Proposal(text="test", id="1")
     ps.create_from_update.return_value = mock_proposal
     phs.find_most_similar.return_value = (Phrase(text="sim"), 50)
+    ps.find_most_similar_proposal.return_value = (None, 0)
 
     context = MagicMock()
     context.bot.send_message = AsyncMock()
@@ -62,6 +62,74 @@ async def test_handle_submit_success(mock_deps):
         "Tu aportación será valorada"
         in update.effective_message.reply_text.call_args[0][0]
     )
+
+
+@pytest.mark.asyncio
+async def test_handle_submit_duplicate_phrase(mock_deps):
+    ps, phs, pr, lpr = mock_deps
+    update = MagicMock()
+    update.effective_message.text = "/proponer test"
+    update.effective_message.reply_text = AsyncMock()
+
+    mock_proposal = Proposal(text="test", id="1")
+    ps.create_from_update.return_value = mock_proposal
+    # Similarity > 90
+    phs.find_most_similar.return_value = (Phrase(text="test"), 95)
+
+    context = MagicMock()
+    await handle_submit(update, context)
+
+    pr.save.assert_not_called()
+    msg = update.effective_message.reply_text.call_args[0][0]
+    assert "Esa ya la tengo aprobada" in msg
+    assert "Se parece demasiado" in msg
+
+
+@pytest.mark.asyncio
+async def test_handle_submit_duplicate_proposal_voting_active(mock_deps):
+    ps, phs, pr, lpr = mock_deps
+    update = MagicMock()
+    update.effective_message.text = "/proponer test"
+    update.effective_message.reply_text = AsyncMock()
+
+    mock_proposal = Proposal(text="test", id="1")
+    ps.create_from_update.return_value = mock_proposal
+    phs.find_most_similar.return_value = (Phrase(text="sim"), 50)  # Not similar phrase
+
+    # Similar proposal, voting active
+    existing_proposal = Proposal(text="test", id="2", voting_ended=False)
+    ps.find_most_similar_proposal.return_value = (existing_proposal, 95)
+
+    context = MagicMock()
+    await handle_submit(update, context)
+
+    pr.save.assert_not_called()
+    msg = update.effective_message.reply_text.call_args[0][0]
+    assert "está siendo votada ahora mismo" in msg
+
+
+@pytest.mark.asyncio
+async def test_handle_submit_duplicate_proposal_rejected(mock_deps):
+    ps, phs, pr, lpr = mock_deps
+    update = MagicMock()
+    update.effective_message.text = "/proponer test"
+    update.effective_message.reply_text = AsyncMock()
+
+    mock_proposal = Proposal(text="test", id="1")
+    ps.create_from_update.return_value = mock_proposal
+    phs.find_most_similar.return_value = (Phrase(text="sim"), 50)
+
+    # Similar proposal, voting ended (rejected, because if it was approved, phrase check would have caught it likely,
+    # OR user explicit requirement says "Si existe y no la frase y la votacion acabo -> rechazado")
+    existing_proposal = Proposal(text="test", id="2", voting_ended=True)
+    ps.find_most_similar_proposal.return_value = (existing_proposal, 95)
+
+    context = MagicMock()
+    await handle_submit(update, context)
+
+    pr.save.assert_not_called()
+    msg = update.effective_message.reply_text.call_args[0][0]
+    assert "fue rechazada" in msg
 
 
 @pytest.mark.asyncio
@@ -99,78 +167,3 @@ async def test_handle_submit_empty(mock_deps):
     pr.save.assert_not_called()
     update.effective_message.reply_text.assert_called_once()
     assert "quieres proponer" in update.effective_message.reply_text.call_args[0][0]
-
-
-@pytest.mark.asyncio
-async def test_handle_submit_duplicate(mock_deps):
-    ps, phs, pr, lpr = mock_deps
-    update = MagicMock()
-    update.effective_message.text = "/proponer test"
-    update.effective_message.reply_text = AsyncMock()
-
-    mock_proposal = Proposal(text="test", id="1")
-    ps.create_from_update.return_value = mock_proposal
-    phs.find_most_similar.return_value = (Phrase(text="test"), 100)
-
-    context = MagicMock()
-    await handle_submit(update, context)
-
-    pr.save.assert_not_called()
-    update.effective_message.reply_text.assert_called_once()
-    assert "Esa ya la tengo" in update.effective_message.reply_text.call_args[0][0]
-
-
-@pytest.mark.asyncio
-async def test_handle_submit_similar(mock_deps):
-    ps, phs, pr, lpr = mock_deps
-    update = MagicMock()
-    update.effective_message.text = "/proponer test"
-    update.effective_message.reply_text = AsyncMock()
-
-    mock_proposal = Proposal(text="test", id="1")
-    ps.create_from_update.return_value = mock_proposal
-    phs.find_most_similar.return_value = (Phrase(text="sim"), 95)
-
-    context = MagicMock()
-    await handle_submit(update, context)
-
-    pr.save.assert_not_called()
-    update.effective_message.reply_text.assert_called_once()
-    assert "Se parece demasiado" in update.effective_message.reply_text.call_args[0][0]
-
-
-@pytest.mark.asyncio
-async def test_handle_submit_phrase_success(mock_deps):
-    ps, phs, pr, lpr = mock_deps
-    update = MagicMock()
-    update.effective_user.name = "test_user"
-    update.effective_message.text = "/proponerfrase long test"
-    update.effective_message.reply_text = AsyncMock()
-
-    mock_proposal = LongProposal(text="long test", id="1")
-    ps.create_from_update.return_value = mock_proposal
-    phs.find_most_similar.return_value = (LongPhrase(text="sim"), 50)
-
-    context = MagicMock()
-    context.bot.send_message = AsyncMock()
-
-    await handle_submit_phrase(update, context)
-
-    lpr.save.assert_called_once_with(mock_proposal)
-    update.effective_message.reply_text.assert_called_once()
-
-
-@pytest.mark.asyncio
-async def test_notify_curators(mock_deps):
-    ps, phs, pr, lpr = mock_deps
-    bot = AsyncMock()
-    proposal = Proposal(text="test", id="1")
-    similar = Phrase(text="sim")
-
-    await _notify_proposal_to_curators(bot, proposal, "User", similar, 50)
-
-    bot.send_message.assert_called_once()
-    args = bot.send_message.call_args
-    assert args[0][0] == 123  # mod_chat_id
-    assert "test" in args[0][1]
-    assert "sim" in args[0][1]

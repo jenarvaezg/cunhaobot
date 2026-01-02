@@ -160,3 +160,27 @@ class ProposalService:
         await app.initialize()
         await dismiss_proposal(proposal, app.bot)
         return True
+
+    def find_most_similar_proposal(
+        self, text: str, is_long: bool = False
+    ) -> tuple[Proposal | None, int]:
+        from fuzzywuzzy import fuzz
+        from utils import normalize_str
+
+        repo = self.long_repo if is_long else self.repo
+        proposals = repo.load_all()
+        if not proposals:
+            return None, 0
+
+        norm_text = normalize_str(text)
+
+        # Calculate similarity for all proposals
+        # We handle Proposal and LongProposal which have 'text' attribute
+        scored_proposals = [
+            (p, fuzz.ratio(norm_text, normalize_str(p.text))) for p in proposals
+        ]
+
+        if not scored_proposals:
+            return None, 0
+
+        return max(scored_proposals, key=lambda x: x[1])

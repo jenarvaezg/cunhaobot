@@ -87,7 +87,7 @@ class TestCallbackQuery:
         admin = MagicMock()
         admin.user.id = 1
         admin.user.name = "Admin"
-        cb_query.admins = [admin]  # 1 admin -> 1 vote required
+        cb_query.admins = [admin]
 
         p = Proposal(id="123", text="test", from_chat_id=1)
 
@@ -101,6 +101,9 @@ class TestCallbackQuery:
                 new_callable=AsyncMock,
             ) as mock_approve,
             patch("tg.decorators.user_service.update_or_create_user"),
+            patch(
+                "tg.handlers.utils.callback_query.get_required_votes", return_value=1
+            ),
         ):
             # Mock vote behavior (manually add to p since we mock the service)
             def side_effect(prop, user_id, pos):
@@ -137,6 +140,9 @@ class TestCallbackQuery:
                 new_callable=AsyncMock,
             ) as mock_dismiss,
             patch("tg.decorators.user_service.update_or_create_user"),
+            patch(
+                "tg.handlers.utils.callback_query.get_required_votes", return_value=1
+            ),
         ):
 
             def side_effect(prop, user_id, pos):
