@@ -20,7 +20,7 @@ async def get_slack_history(
     channel: str,
     bot_user_id: str,
     thread_ts: str | None = None,
-    limit: int = 15,
+    limit: int = 8,
 ) -> list[ModelMessage]:
     """
     Fetches the history in Slack using the Web API to build context for the AI agent.
@@ -63,17 +63,13 @@ async def get_slack_history(
             user_id = msg.get("user")
             text = msg.get("text", "")
 
-            if not text:
+            if not text or not isinstance(text, str):
                 continue
 
             if user_id == bot_user_id:
                 history.append(ModelResponse(parts=[TextPart(content=text)]))
             else:
-                history.append(
-                    ModelRequest(
-                        parts=[UserPromptPart(content=f"Usuario ({user_id}): {text}")]
-                    )
-                )
+                history.append(ModelRequest(parts=[UserPromptPart(content=text)]))
 
         return history
     except Exception as e:

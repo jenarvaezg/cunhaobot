@@ -39,7 +39,7 @@ async def record_message_in_history(message: Message, context: CallbackContext) 
 
 
 async def get_telegram_history(
-    message: Message, context: CallbackContext, limit: int = 15
+    message: Message, context: CallbackContext, limit: int = 8
 ) -> list[ModelMessage]:
     """
     Extracts the conversation history from the API context (chat_data) and the recursive reply chain.
@@ -51,7 +51,7 @@ async def get_telegram_history(
     # 1. Fetch from recursive reply chain (follows the specific thread)
     current = message.reply_to_message
     reply_chain_count = 0
-    while current and reply_chain_count < 5:
+    while current and reply_chain_count < 3:
         content = current.text or current.caption or ""
         if content:
             role = (
@@ -59,19 +59,11 @@ async def get_telegram_history(
                 if current.from_user and current.from_user.id == bot_id
                 else "user"
             )
-            author = "Usuario"
-            if current.from_user:
-                author = (
-                    current.from_user.username
-                    or current.from_user.first_name
-                    or "Usuario"
-                )
 
             history_items.append(
                 {
                     "role": role,
                     "content": content,
-                    "author": author,
                     "date": current.date,
                     "message_id": current.message_id,
                 }
@@ -84,7 +76,8 @@ async def get_telegram_history(
     chat_history = (
         context.chat_data.get("history", []) if context.chat_data is not None else []
     )
-    for msg in chat_history:
+    # Only take the last 'limit' messages from chat_history
+    for msg in chat_history[-(limit * 2) :]:
         # Avoid including the current message or already included messages from the reply chain
         if (
             msg["message_id"] == message.message_id
@@ -97,15 +90,15 @@ async def get_telegram_history(
             {
                 "role": role,
                 "content": msg["text"],
-                "author": msg["username"],
                 "date": msg["date"],
                 "message_id": msg["message_id"],
             }
         )
         seen_message_ids.add(msg["message_id"])
 
-    # 3. Sort chronologically
+    # 3. Sort chronologically and take only the last 'limit'
     history_items.sort(key=lambda x: x["date"])
+    history_items = history_items[-limit:]
 
     # 4. Convert to ModelMessage
     final_history: list[ModelMessage] = []
@@ -116,13 +109,7 @@ async def get_telegram_history(
             )
         else:
             final_history.append(
-                ModelRequest(
-                    parts=[
-                        UserPromptPart(
-                            content=f"{item['author']} dice: {item['content']}"
-                        )
-                    ]
-                )
+                ModelRequest(parts=[UserPromptPart(content=item["content"])])
             )
 
     return final_history
