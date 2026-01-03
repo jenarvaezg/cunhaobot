@@ -25,12 +25,9 @@ async def handle_pre_checkout(update: Update, context: CallbackContext) -> None:
         return
 
     # Verify if we have the request data
-    request_data = await poster_request_repo.get(payload)
+    request_data = await poster_request_repo.load(payload)
     if not request_data:
         # Fallback for old payloads (plain text phrases) or lost data
-        # We allow it, assuming payload is the phrase itself for legacy/transitional support
-        # But ideally we should enforce UUIDs now.
-        # For safety during rollout, we allow if it looks like a phrase (not UUID).
         pass
 
     await query.answer(ok=True)
@@ -50,7 +47,7 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
         return
 
     # Retrieve request data
-    request_data = await poster_request_repo.get(payload)
+    request_data = await poster_request_repo.load(payload)
     if request_data:
         phrase = request_data.phrase
         original_chat_id = request_data.chat_id
@@ -64,8 +61,6 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
     logger.info(f"Payment received from {user.id} ({user.first_name}): {phrase}")
 
     # Notify user that we are working on it (in the chat where payment confirmed)
-    # We send this to the original chat if possible, or reply to the service message.
-    # Service message is usually in the same chat.
     processing_msg = await context.bot.send_message(
         chat_id=original_chat_id,
         text=(

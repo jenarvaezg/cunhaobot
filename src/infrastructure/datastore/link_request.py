@@ -1,4 +1,3 @@
-import asyncio
 from typing import cast
 from google.cloud import datastore
 from models.link_request import LinkRequest
@@ -23,43 +22,18 @@ class LinkRequestRepository(DatastoreRepository[LinkRequest]):
         )
 
     def _domain_to_entity(
-        self, record: LinkRequest, key: datastore.Key
+        self, model: LinkRequest, key: datastore.Key
     ) -> datastore.Entity:
         entity = datastore.Entity(key=key)
         entity.update(
             {
-                "source_user_id": record.source_user_id,
-                "source_platform": record.source_platform,
-                "created_at": record.created_at,
-                "expires_at": record.expires_at,
+                "source_user_id": model.source_user_id,
+                "source_platform": model.source_platform,
+                "created_at": model.created_at,
+                "expires_at": model.expires_at,
             }
         )
         return entity
-
-    async def save(self, record: LinkRequest) -> None:
-        def _put():
-            key = self.client.key(self.kind, record.token)
-            entity = self._domain_to_entity(record, key)
-            self.client.put(entity)
-
-        await asyncio.to_thread(_put)
-
-    async def load(self, token: str) -> LinkRequest | None:
-        def _get():
-            key = self.client.key(self.kind, token)
-            entity = self.client.get(key)
-            if entity:
-                return self._entity_to_domain(entity)
-            return None
-
-        return await asyncio.to_thread(_get)
-
-    async def delete(self, entity_id: str | int) -> None:
-        def _delete():
-            key = self.client.key(self.kind, str(entity_id))
-            self.client.delete(key)
-
-        await asyncio.to_thread(_delete)
 
 
 link_request_repository = LinkRequestRepository()

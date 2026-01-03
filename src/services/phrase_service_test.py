@@ -126,6 +126,7 @@ class TestPhraseService:
         ):
             mock_upload.return_value = "sticker_123"
             mock_badge_service.check_badges = AsyncMock(return_value=[])
+            mock_user_service.add_points = AsyncMock()
             await service.create_from_proposal(proposal, mock_bot)
 
             service.phrase_repo.save.assert_called_once()
@@ -152,6 +153,7 @@ class TestPhraseService:
         ):
             mock_upload.return_value = "sticker_123"
             mock_badge_service.check_badges = AsyncMock(return_value=[])
+            mock_user_service.add_points = AsyncMock()
             await service.create_from_proposal(proposal, mock_bot)
 
             service.long_repo.save.assert_called_once()

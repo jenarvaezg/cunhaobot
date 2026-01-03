@@ -19,13 +19,19 @@ logger = logging.getLogger(__name__)
 class ProposalService:
     def __init__(
         self,
-        repo: ProposalRepository,
-        long_repo: LongProposalRepository,
-        user_repo: UserRepository,
+        repo: ProposalRepository | None = None,
+        long_repo: LongProposalRepository | None = None,
+        user_repo: UserRepository | None = None,
     ):
-        self.repo = repo
-        self.long_repo = long_repo
-        self.user_repo = user_repo
+        from infrastructure.datastore.proposal import (
+            proposal_repository,
+            long_proposal_repository,
+        )
+        from infrastructure.datastore.user import user_repository
+
+        self.repo = repo or proposal_repository
+        self.long_repo = long_repo or long_proposal_repository
+        self.user_repo = user_repo or user_repository
         self._curators_cache: dict[str, str] = {}
         self._last_update: datetime | None = None
 

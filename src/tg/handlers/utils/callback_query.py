@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Any, cast
 from datetime import datetime
 from telegram import (
     Bot,
@@ -69,8 +69,10 @@ async def approve_proposal(
     proposal.voting_ended = True
     proposal.voting_ended_at = datetime.now()
 
-    repo = long_proposal_repo if isinstance(proposal, LongProposal) else proposal_repo
-    await repo.save(proposal)
+    if isinstance(proposal, LongProposal):
+        await long_proposal_repo.save(cast(LongProposal, proposal))
+    else:
+        await proposal_repo.save(cast(Proposal, proposal))
 
     p_random = (await phrase_service.get_random()).text
     msg_text = (
@@ -121,8 +123,10 @@ async def dismiss_proposal(
     proposal.voting_ended = True
     proposal.voting_ended_at = datetime.now()
 
-    repo = long_proposal_repo if isinstance(proposal, LongProposal) else proposal_repo
-    await repo.save(proposal)
+    if isinstance(proposal, LongProposal):
+        await long_proposal_repo.save(cast(LongProposal, proposal))
+    else:
+        await proposal_repo.save(cast(Proposal, proposal))
 
     p_random = (await phrase_service.get_random()).text
     msg_text = (

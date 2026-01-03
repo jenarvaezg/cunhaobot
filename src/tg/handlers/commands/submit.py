@@ -1,3 +1,4 @@
+from typing import cast
 from telegram import Bot, ForceReply, InlineKeyboardMarkup, Message, Update, constants
 from telegram.ext import CallbackContext
 
@@ -67,7 +68,6 @@ async def submit_handling(
 
     # Determinar modelos y repositorios según el tipo
     name = LongPhrase.display_name if is_long else Phrase.display_name
-    repo = long_proposal_repo if is_long else proposal_repo
 
     if not proposal.text:
         random_phrase = (await phrase_service.get_random()).text
@@ -116,7 +116,10 @@ async def submit_handling(
                 parse_mode=constants.ParseMode.MARKDOWN,
             )
 
-    await repo.save(proposal)
+    if is_long:
+        await long_proposal_repo.save(cast(LongProposal, proposal))
+    else:
+        await proposal_repo.save(cast(Proposal, proposal))
     await _notify_proposal_to_curators(
         bot, proposal, submitted_by, most_similar_phrase, phrase_similarity
     )

@@ -12,7 +12,6 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
     def __init__(self, model_class: type[Phrase] | type[LongPhrase] = Phrase):
         super().__init__(model_class.kind)
         self.model_class = model_class
-        self._cache: list[Phrase] = []
 
     def _entity_to_domain(self, entity: datastore.Entity) -> Phrase:
         entity_id = None
@@ -32,45 +31,6 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
             created_at=entity.get("created_at"),
             proposal_id=entity.get("proposal_id", ""),
         )
-
-    def _domain_to_entity(self, phrase: Phrase, key: datastore.Key) -> datastore.Entity:
-        entity = datastore.Entity(key=key)
-        entity.update(phrase.model_dump())
-        return entity
-
-    async def load_all(self) -> list[Phrase]:
-        if not self._cache:
-
-            def _fetch():
-                query = self.client.query(kind=self.kind)
-                return [self._entity_to_domain(entity) for entity in query.fetch()]
-
-            self._cache = await asyncio.to_thread(_fetch)
-        return self._cache
-
-    async def load(self, entity_id: str | int) -> Phrase | None:
-        def _get():
-            key = self.get_key(entity_id)
-            entity = self.client.get(key)
-            return self._entity_to_domain(entity) if entity else None
-
-        return await asyncio.to_thread(_get)
-
-    async def save(self, phrase: Phrase) -> None:
-        def _save():
-            if phrase.id:
-                key = self.client.key(self.kind, phrase.id)
-            else:
-                key = self.client.key(self.kind)
-
-            entity = self._domain_to_entity(phrase, key)
-            self.client.put(entity)
-
-            if entity.key and entity.key.id:
-                phrase.id = entity.key.id
-
-        await asyncio.to_thread(_save)
-        self._cache = []
 
     async def get_phrases(
         self, search: str = "", limit: int = 0, offset: int = 0, **filters: object
@@ -111,8 +71,7 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
             query = self.client.query(kind=self.kind)
             for field, value in filters.items():
                 if value == "__EMPTY__":
-                    # For __EMPTY__ we might still need to filter in memory or check for property existence
-                    # For now, let's keep it simple and fallback to full load if __EMPTY__ is used
+                    # Fallback to full load if __EMPTY__ is used
                     return None
                 query.add_filter(field, "=", value)
 

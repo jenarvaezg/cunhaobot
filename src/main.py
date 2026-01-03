@@ -7,10 +7,10 @@ from litestar.contrib.jinja import JinjaTemplateEngine
 from litestar.plugins.htmx import HTMXRequest, HTMXTemplate
 from litestar.middleware.session.client_side import CookieBackendConfig
 from litestar.static_files import create_static_files_router
-from litestar.di import Provide
 from litestar.params import Dependency
 
 from core.config import config
+from core.di import dependencies
 from api import WebController, AdminController
 from api.slack import SlackController
 from api.bot import BotController
@@ -18,20 +18,6 @@ from api.utils import get_proposals_context
 from utils import verify_telegram_auth
 from utils.ui import apelativo
 from infrastructure.protocols import ProposalRepository, LongProposalRepository
-
-from services import (
-    phrase_repo,
-    long_phrase_repo,
-    proposal_repo,
-    long_proposal_repo,
-    user_repo,
-    inline_user_repo,
-    chat_repo,
-    phrase_service,
-    proposal_service,
-    ai_service,
-    user_service,
-)
 
 # Enable logging
 logging.basicConfig(format="%(message)s", level=logging.INFO)
@@ -104,19 +90,7 @@ app = Litestar(
         ping,
         create_static_files_router(directories=["src/static"], path="/static"),
     ],
-    dependencies={
-        "phrase_service": Provide(lambda: phrase_service, sync_to_thread=False),
-        "proposal_service": Provide(lambda: proposal_service, sync_to_thread=False),
-        "ai_service": Provide(lambda: ai_service, sync_to_thread=False),
-        "user_service": Provide(lambda: user_service, sync_to_thread=False),
-        "phrase_repo": Provide(lambda: phrase_repo, sync_to_thread=False),
-        "long_phrase_repo": Provide(lambda: long_phrase_repo, sync_to_thread=False),
-        "proposal_repo": Provide(lambda: proposal_repo, sync_to_thread=False),
-        "long_proposal_repo": Provide(lambda: long_proposal_repo, sync_to_thread=False),
-        "user_repo": Provide(lambda: user_repo, sync_to_thread=False),
-        "chat_repo": Provide(lambda: chat_repo, sync_to_thread=False),
-        "inline_user_repo": Provide(lambda: inline_user_repo, sync_to_thread=False),
-    },
+    dependencies=dependencies,
     middleware=[CookieBackendConfig(secret=config.session_secret.encode()).middleware],
     template_config=TemplateConfig(
         directory="src/templates", engine=JinjaTemplateEngine

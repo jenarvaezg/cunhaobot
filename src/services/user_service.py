@@ -1,24 +1,24 @@
+from __future__ import annotations
 import logging
 import secrets
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING, Any, cast
 from telegram import Update
 from models.user import User
 from models.chat import Chat
+from models.phrase import Phrase, LongPhrase
+from models.proposal import Proposal, LongProposal
 from models.link_request import LinkRequest
-from infrastructure.datastore.user import (
-    user_repository,
-    UserDatastoreRepository,
-)
-from infrastructure.datastore.chat import (
-    chat_repository,
-    ChatDatastoreRepository,
-)
-from infrastructure.datastore.link_request import link_request_repository
-from infrastructure.datastore.phrase import phrase_repository, long_phrase_repository
-from infrastructure.datastore.proposal import (
-    proposal_repository,
-    long_proposal_repository,
-)
+
+if TYPE_CHECKING:
+    from infrastructure.protocols import (
+        UserRepository,
+        ChatRepository,
+        PhraseRepository,
+        LongPhraseRepository,
+        ProposalRepository,
+        LongProposalRepository,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +26,33 @@ logger = logging.getLogger(__name__)
 class UserService:
     def __init__(
         self,
-        user_repo: UserDatastoreRepository = user_repository,
-        chat_repo: ChatDatastoreRepository = chat_repository,
+        user_repo: UserRepository | None = None,
+        chat_repo: ChatRepository | None = None,
+        phrase_repo: PhraseRepository | None = None,
+        long_phrase_repo: LongPhraseRepository | None = None,
+        proposal_repo: ProposalRepository | None = None,
+        long_proposal_repo: LongProposalRepository | None = None,
+        link_request_repo: Any = None,
     ):
-        self.user_repo = user_repo
-        self.chat_repo = chat_repo
+        from infrastructure.datastore.user import user_repository
+        from infrastructure.datastore.chat import chat_repository
+        from infrastructure.datastore.phrase import (
+            phrase_repository,
+            long_phrase_repository,
+        )
+        from infrastructure.datastore.proposal import (
+            proposal_repository,
+            long_proposal_repository,
+        )
+        from infrastructure.datastore.link_request import link_request_repository
+
+        self.user_repo = user_repo or user_repository
+        self.chat_repo = chat_repo or chat_repository
+        self.phrase_repo = phrase_repo or phrase_repository
+        self.long_phrase_repo = long_phrase_repo or long_phrase_repository
+        self.proposal_repo = proposal_repo or proposal_repository
+        self.long_proposal_repo = long_proposal_repo or long_proposal_repository
+        self.link_request_repo = link_request_repo or link_request_repository
 
     async def get_user(
         self, user_id: str | int, platform: str | None = None
@@ -282,13 +304,13 @@ class UserService:
         request = LinkRequest(
             token=token, source_user_id=user_id, source_platform=platform
         )
-        await link_request_repository.save(request)
+        await self.link_request_repo.save(request)
         return token
 
     async def complete_link(
         self, token: str, target_user_id: str | int, target_platform: str
     ) -> bool:
-        request = await link_request_repository.load(token)
+        request = await self.link_request_repo.load(token)
         if not request:
             return False
 
@@ -298,7 +320,7 @@ class UserService:
             expires_at = request.expires_at
 
         if expires_at < datetime.now(timezone.utc):
-            await link_request_repository.delete(token)
+            await self.link_request_repo.delete(token)
             return False
 
         source_user_id = request.source_user_id
@@ -331,31 +353,31 @@ class UserService:
         await self.save_user(target_user)
 
         # Migrate Content Ownership
-        phrases = await phrase_repository.get_phrases(user_id=str(source_user.id))
+        phrases = await self.phrase_repo.get_phrases(user_id=str(source_user.id))
         for p in phrases:
             p.user_id = target_user.id
-            await phrase_repository.save(p)
+            await self.phrase_repo.save(cast(Phrase, p))
 
-        long_phrases = await long_phrase_repository.get_phrases(
+        long_phrases = await self.long_phrase_repo.get_phrases(
             user_id=str(source_user.id)
         )
         for lp in long_phrases:
             lp.user_id = target_user.id
-            await long_phrase_repository.save(lp)
+            await self.long_phrase_repo.save(cast(LongPhrase, lp))
 
-        proposals = await proposal_repository.get_proposals(
+        proposals = await self.proposal_repo.get_proposals(
             user_id=str(source_user.id), limit=1000
         )
         for prop in proposals:
             prop.user_id = target_user.id
-            await proposal_repository.save(prop)
+            await self.proposal_repo.save(cast(Proposal, prop))
 
-        long_proposals = await long_proposal_repository.get_proposals(
+        long_proposals = await self.long_proposal_repo.get_proposals(
             user_id=str(source_user.id), limit=1000
         )
         for lprop in long_proposals:
             lprop.user_id = target_user.id
-            await long_proposal_repository.save(lprop)
+            await self.long_proposal_repo.save(cast(LongProposal, lprop))
 
         # Instead of deleting, we make source_user an alias of target_user
         source_user.linked_to = target_user.id
@@ -364,7 +386,7 @@ class UserService:
         source_user.badges = []
         await self.save_user(source_user)
 
-        await link_request_repository.delete(token)
+        await self.link_request_repo.delete(token)
 
         return True
 

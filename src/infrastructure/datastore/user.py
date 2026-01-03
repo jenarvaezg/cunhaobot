@@ -14,13 +14,16 @@ class UserDatastoreRepository(DatastoreRepository[User]):
         return User(**data)
 
     async def load(self, entity_id: str | int, follow_link: bool = True) -> User | None:
+        if not follow_link:
+            return await super().load(entity_id)
+
         def _get():
             key = self.get_key(entity_id)
             entity = self.client.get(key)
             if not entity:
                 return None
             user = self._entity_to_domain(entity)
-            if follow_link and user.linked_to:
+            if user.linked_to:
                 visited = {entity_id}
                 current_user = user
                 while current_user.linked_to and current_user.linked_to not in visited:
@@ -40,24 +43,10 @@ class UserDatastoreRepository(DatastoreRepository[User]):
         return await self.load(entity_id, follow_link=False)
 
     async def load_all(self, ignore_gdpr: bool = False) -> list[User]:
-        def _fetch():
-            query = self.client.query(kind=self.kind)
-            results = [self._entity_to_domain(entity) for entity in query.fetch()]
-
-            if ignore_gdpr:
-                return results
-            return [u for u in results if not u.gdpr]
-
-        return await asyncio.to_thread(_fetch)
-
-    async def save(self, user: User) -> None:
-        def _put():
-            key = self.get_key(user.id)
-            entity = datastore.Entity(key=key)
-            entity.update(user.model_dump())
-            self.client.put(entity)
-
-        await asyncio.to_thread(_put)
+        results = await super().load_all()
+        if ignore_gdpr:
+            return results
+        return [u for u in results if not u.gdpr]
 
 
 user_repository = UserDatastoreRepository()

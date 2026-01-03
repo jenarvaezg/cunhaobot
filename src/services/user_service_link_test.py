@@ -1,6 +1,6 @@
 import pytest
 from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import MagicMock, AsyncMock
 from models.user import User
 from models.link_request import LinkRequest
 from services.user_service import UserService
@@ -8,40 +8,20 @@ from services.user_service import UserService
 
 @pytest.fixture
 def mock_repos():
-    with (
-        patch(
-            "services.user_service.user_repository", new_callable=AsyncMock
-        ) as user_repo,
-        patch(
-            "services.user_service.link_request_repository", new_callable=AsyncMock
-        ) as link_repo,
-        patch(
-            "services.user_service.phrase_repository", new_callable=AsyncMock
-        ) as phrase_repo,
-        patch(
-            "services.user_service.long_phrase_repository", new_callable=AsyncMock
-        ) as long_phrase_repo,
-        patch(
-            "services.user_service.proposal_repository", new_callable=AsyncMock
-        ) as proposal_repo,
-        patch(
-            "services.user_service.long_proposal_repository", new_callable=AsyncMock
-        ) as long_proposal_repo,
-    ):
-        yield (
-            user_repo,
-            link_repo,
-            phrase_repo,
-            long_phrase_repo,
-            proposal_repo,
-            long_proposal_repo,
-        )
+    return (
+        AsyncMock(),  # user_repo
+        AsyncMock(),  # link_repo
+        AsyncMock(),  # phrase_repo
+        AsyncMock(),  # long_phrase_repo
+        AsyncMock(),  # proposal_repo
+        AsyncMock(),  # long_proposal_repo
+    )
 
 
 @pytest.mark.asyncio
 async def test_generate_link_token(mock_repos):
     user_repo, link_repo, _, _, _, _ = mock_repos
-    service = UserService(user_repo=user_repo)
+    service = UserService(user_repo=user_repo, link_request_repo=link_repo)
 
     token = await service.generate_link_token("user1", "telegram")
 
@@ -63,7 +43,14 @@ async def test_complete_link_success(mock_repos):
         proposal_repo,
         long_proposal_repo,
     ) = mock_repos
-    service = UserService(user_repo=user_repo)
+    service = UserService(
+        user_repo=user_repo,
+        phrase_repo=phrase_repo,
+        long_phrase_repo=long_phrase_repo,
+        proposal_repo=proposal_repo,
+        long_proposal_repo=long_proposal_repo,
+        link_request_repo=link_repo,
+    )
 
     # Setup Data
     token = "ABCDEF"
@@ -133,7 +120,7 @@ async def test_complete_link_success(mock_repos):
 @pytest.mark.asyncio
 async def test_complete_link_expired(mock_repos):
     user_repo, link_repo, _, _, _, _ = mock_repos
-    service = UserService(user_repo=user_repo)
+    service = UserService(user_repo=user_repo, link_request_repo=link_repo)
 
     token = "ABCDEF"
     request = LinkRequest(
@@ -153,7 +140,7 @@ async def test_complete_link_expired(mock_repos):
 @pytest.mark.asyncio
 async def test_complete_link_same_user(mock_repos):
     user_repo, link_repo, _, _, _, _ = mock_repos
-    service = UserService(user_repo=user_repo)
+    service = UserService(user_repo=user_repo, link_request_repo=link_repo)
 
     token = "ABCDEF"
     request = LinkRequest(token=token, source_user_id="u1", source_platform="telegram")

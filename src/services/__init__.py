@@ -1,3 +1,13 @@
+from typing import cast
+from infrastructure.protocols import (
+    PhraseRepository,
+    LongPhraseRepository,
+    ProposalRepository,
+    LongProposalRepository,
+    UserRepository,
+    ChatRepository,
+    UsageRepository,
+)
 from infrastructure.datastore.phrase import phrase_repository, long_phrase_repository
 from infrastructure.datastore.proposal import (
     proposal_repository,
@@ -8,17 +18,17 @@ from infrastructure.datastore.usage import usage_repository
 from infrastructure.datastore.chat import chat_repository
 from infrastructure.datastore.poster_request import poster_request_repository
 
-# Alias
-phrase_repo = phrase_repository
-long_phrase_repo = long_phrase_repository
-proposal_repo = proposal_repository
-long_proposal_repo = long_proposal_repository
-user_repo = user_repository
-usage_repo = usage_repository
-chat_repo = chat_repository
+# Alias with explicit protocol casting
+phrase_repo = cast(PhraseRepository, phrase_repository)
+long_phrase_repo = cast(LongPhraseRepository, long_phrase_repository)
+proposal_repo = cast(ProposalRepository, proposal_repository)
+long_proposal_repo = cast(LongProposalRepository, long_proposal_repository)
+user_repo = cast(UserRepository, user_repository)
+usage_repo = cast(UsageRepository, usage_repository)
+chat_repo = cast(ChatRepository, chat_repository)
 poster_request_repo = poster_request_repository
 # For backward compatibility with some codes
-inline_user_repo = user_repository
+inline_user_repo = user_repo
 
 from models.phrase import Phrase as Phrase, LongPhrase as LongPhrase  # noqa: E402
 from models.proposal import Proposal as Proposal, LongProposal as LongProposal  # noqa: E402
@@ -32,13 +42,13 @@ from services.cunhao_agent import cunhao_agent  # noqa: E402
 from services.usage_service import usage_service  # noqa: E402
 from services.badge_service import badge_service  # noqa: E402
 
-# Services
-phrase_service = PhraseService(phrase_repo, long_phrase_repo)  # type: ignore[arg-type]
-user_service = UserService(user_repo, chat_repo)  # type: ignore[arg-type]
+# Services initialized with explicit repo protocols
+phrase_service = PhraseService(phrase_repo, long_phrase_repo)
+user_service = UserService(user_repo, chat_repo)
 proposal_service = ProposalService(
-    proposal_repo,  # type: ignore[invalid-argument-type]
-    long_proposal_repo,  # type: ignore[invalid-argument-type]
-    user_repo,  # type: ignore[invalid-argument-type]
+    proposal_repo,
+    long_proposal_repo,
+    user_repo,
 )
 
 __all__ = [

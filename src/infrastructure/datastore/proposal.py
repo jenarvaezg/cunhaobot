@@ -9,7 +9,6 @@ class ProposalDatastoreRepository(DatastoreRepository[Proposal]):
     def __init__(self, model_class: type[Proposal] | type[LongProposal] = Proposal):
         super().__init__(model_class.kind)
         self.model_class = model_class
-        self._cache: list[Proposal] = []
 
     def _entity_to_domain(self, entity: datastore.Entity) -> Proposal:
         entity_id = ""
@@ -28,40 +27,6 @@ class ProposalDatastoreRepository(DatastoreRepository[Proposal]):
             voting_ended_at=entity.get("voting_ended_at"),
             created_at=entity.get("created_at"),
         )
-
-    def _domain_to_entity(
-        self, proposal: Proposal, key: datastore.Key
-    ) -> datastore.Entity:
-        entity = datastore.Entity(key=key)
-        entity.update(proposal.model_dump())
-        return entity
-
-    async def load(self, entity_id: str | int) -> Proposal | None:
-        def _get():
-            key = self.get_key(entity_id)
-            entity = self.client.get(key)
-            return self._entity_to_domain(entity) if entity else None
-
-        return await asyncio.to_thread(_get)
-
-    async def load_all(self) -> list[Proposal]:
-        if not self._cache:
-
-            def _fetch():
-                query = self.client.query(kind=self.kind)
-                return [self._entity_to_domain(entity) for entity in query.fetch()]
-
-            self._cache = await asyncio.to_thread(_fetch)
-        return self._cache
-
-    async def save(self, proposal: Proposal) -> None:
-        def _put():
-            key = self.get_key(proposal.id)
-            entity = self._domain_to_entity(proposal, key)
-            self.client.put(entity)
-
-        await asyncio.to_thread(_put)
-        self._cache = []
 
     async def get_proposals(
         self, search: str = "", limit: int = 0, offset: int = 0, **filters: object

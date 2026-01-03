@@ -28,14 +28,14 @@ The project is structured into distinct layers, each with specific responsibilit
     *   **Responsibility**: Implements the details of how data is stored and retrieved, and how external services (e.g., Telegram API, Slack API, Google Cloud Datastore) are accessed.
     *   **Characteristics**: This layer depends on the `protocols/` layer (abstractions) and specific external technologies. It contains the concrete implementations of the repository interfaces.
     *   **Sub-layers**:
-        *   **`protocols/`**: Defines abstract interfaces (Python `Protocol` classes) for repositories, ensuring dependency inversion. Services depend on these abstractions, not concrete implementations. **Avoid `Any` in protocols**; use concrete types or generic bounds.
-        *   **`datastore/`**: Contains the concrete implementations of repositories using Google Cloud Datastore.
-    *   **Examples**: `src/infrastructure/protocols.py`, `src/infrastructure/datastore/phrase.py` (implements `PhraseRepository`).
+        *   **`protocols/`**: Defines abstract interfaces (Python `Protocol` classes) for repositories, ensuring dependency inversion. Services depend on these abstractions, not concrete implementations.
+        *   **`datastore/`**: Contains the concrete implementations of repositories using Google Cloud Datastore. All repositories inherit from a generic `DatastoreRepository` base class that handles caching and async operations.
+    *   **Examples**: `src/infrastructure/protocols.py`, `src/infrastructure/datastore/base.py`, `src/infrastructure/datastore/phrase.py` (implements `PhraseRepository`).
 
-*   **`core/` (Configuration)**:
-    *   **Responsibility**: Manages application-wide configuration settings and environment variables.
-    *   **Characteristics**: Centralized access to configuration, ensuring consistency.
-    *   **Example**: `src/core/config.py`.
+*   **`core/` (Configuration & DI)**:
+    *   **Responsibility**: Manages application-wide configuration settings and handles Dependency Injection (DI) wiring.
+    *   **Characteristics**: Centralized access to configuration and DI providers.
+    *   **Examples**: `src/core/config.py`, `src/core/di.py`.
 
 *   **`utils/` (Cross-cutting Concerns)**:
     *   **Responsibility**: Provides general utility functions that are reused across different layers but do not belong to any specific domain logic.
@@ -76,16 +76,17 @@ The `infrastructure/protocols.py` module defines abstract interfaces (Python `Pr
 
 The concrete implementations in `infrastructure/datastore/` use the official `google-cloud-datastore` client library.
 
+*   **Generic Base Class**: `DatastoreRepository[T]` provides common functionality like `load()`, `load_all()`, `save()`, and `delete()` with a built-in memory cache to reduce database reads.
 *   **Synchronous Client**: The Google Client library is synchronous/blocking.
-*   **Async Wrapper**: To adhere to the async protocols and prevent blocking the main event loop, all database operations are wrapped using `asyncio.to_thread()`. This offloads the blocking I/O to a separate thread pool.
+*   **Async Wrapper**: To adhere to the async protocols, all database operations are wrapped using `asyncio.to_thread()`.
 
 ### 2.5. Dependency Injection (DI)
 
 [Litestar's Dependency Injection system](https://litestar.dev/usage/dependency-injection.html) is used to provide dependencies (services, repositories) to controllers.
 
-*   **Mechanism**: Dependencies are declared using `Annotated[Any, Dependency()]` in controller method signatures.
-*   **Configuration**: Instances of services and repositories are registered in `src/main.py` using `Provide()`. This centralizes the wiring of dependencies.
-*   **Testability**: During testing, concrete implementations can be easily swapped out for mock implementations, further enhancing isolation and testability.
+*   **Centralized Wiring**: All dependency providers are defined in `src/core/di.py`.
+*   **Mechanism**: Dependencies are declared using `Annotated[Type, Dependency()]` in controller method signatures.
+*   **Service Decoupling**: Services are designed to receive their dependencies (other services or repositories) via their constructors, avoiding global state.
 
 ## 3. Technology Stack
 

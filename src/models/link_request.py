@@ -12,3 +12,7 @@ class LinkRequest(BaseModel):
         default_factory=lambda: datetime.now() + timedelta(minutes=10)
     )
     kind: ClassVar[str] = "LinkRequest"
+
+    @property
+    def id(self) -> str:
+        return self.token

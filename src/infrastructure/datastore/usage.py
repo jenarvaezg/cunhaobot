@@ -21,23 +21,6 @@ class UsageDatastoreRepository(DatastoreRepository[UsageRecord]):
             metadata=entity.get("metadata", {}),
         )
 
-    def _domain_to_entity(
-        self, record: UsageRecord, key: datastore.Key
-    ) -> datastore.Entity:
-        entity = datastore.Entity(key=key)
-        # Convert timestamp to something Datastore likes if needed,
-        # but datastore client usually handles datetime objects fine.
-        entity.update(record.model_dump())
-        return entity
-
-    async def save(self, record: UsageRecord) -> None:
-        def _put():
-            key = self.client.key(self.kind)
-            entity = self._domain_to_entity(record, key)
-            self.client.put(entity)
-
-        await asyncio.to_thread(_put)
-
     async def get_user_usage_count(
         self, user_id: str, platform: str | None = None
     ) -> int:

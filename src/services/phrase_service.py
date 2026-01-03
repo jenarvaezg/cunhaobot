@@ -1,3 +1,4 @@
+from __future__ import annotations
 from io import BytesIO
 import logging
 import random
@@ -12,16 +13,45 @@ from utils import normalize_str
 
 if TYPE_CHECKING:
     from models.proposal import Proposal, LongProposal
+    from services.user_service import UserService
+    from services.badge_service import BadgeService
 
 logger = logging.getLogger(__name__)
 
 
 class PhraseService:
     def __init__(
-        self, phrase_repo: PhraseRepository, long_phrase_repo: LongPhraseRepository
+        self,
+        phrase_repo: PhraseRepository | None = None,
+        long_phrase_repo: LongPhraseRepository | None = None,
+        user_service: "UserService | None" = None,
+        badge_service: "BadgeService | None" = None,
     ):
-        self.phrase_repo = phrase_repo
-        self.long_repo = long_phrase_repo
+        from infrastructure.datastore.phrase import (
+            phrase_repository,
+            long_phrase_repository,
+        )
+
+        self.phrase_repo = phrase_repo or phrase_repository
+        self.long_repo = long_phrase_repo or long_phrase_repository
+        self._user_service = user_service
+        self._badge_service = badge_service
+
+    @property
+    def user_service(self) -> "UserService":
+        if self._user_service is None:
+            from services.user_service import user_service
+
+            return user_service
+        return self._user_service
+
+    @property
+    def badge_service(self) -> "BadgeService":
+        if self._badge_service is None:
+            from services.badge_service import badge_service
+
+            return badge_service
+        return self._badge_service
 
     def create_sticker_image(self, phrase: Phrase | LongPhrase) -> bytes:
         from utils.image_utils import generate_png
@@ -35,7 +65,6 @@ class PhraseService:
     ) -> None:
         from models.proposal import LongProposal
         from tg.stickers import upload_sticker
-        from services.user_service import user_service
 
         is_long = isinstance(proposal, LongProposal)
         model_class = LongPhrase if is_long else Phrase
@@ -62,13 +91,12 @@ class PhraseService:
             await self.phrase_repo.save(phrase)
 
         # Award points to the proposer
-        user_service.add_points(proposal.user_id, 10)
+        await self.user_service.add_points(proposal.user_id, 10)
 
         # Check for badges (Poeta) and notify
-        from services.badge_service import badge_service
         from utils.ui import format_badge_notification
 
-        new_badges = await badge_service.check_badges(proposal.user_id, "telegram")
+        new_badges = await self.badge_service.check_badges(proposal.user_id, "telegram")
         for badge in new_badges:
             try:
                 await bot.send_message(
@@ -159,7 +187,7 @@ class PhraseService:
                             lp.audio_usages += 1
                         if is_sticker:
                             lp.sticker_usages += 1
-                        await self.long_repo.save(lp)
+                        await self.long_repo.save(cast(LongPhrase, lp))
                 else:
                     p = await self.phrase_repo.load(phrase_id)
                     if p:
@@ -169,4 +197,4 @@ class PhraseService:
                             p.audio_usages += 1
                         if is_sticker:
                             p.sticker_usages += 1
-                        await self.phrase_repo.save(p)
+                        await self.phrase_repo.save(cast(Phrase, p))

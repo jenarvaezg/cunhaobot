@@ -1,3 +1,4 @@
+from __future__ import annotations
 import logging
 import asyncio
 import json
@@ -9,9 +10,9 @@ from litestar.exceptions import HTTPException
 from litestar.datastructures import UploadFile
 
 from services.proposal_service import ProposalService
-from infrastructure.protocols import UserRepository, ChatRepository
 from core.config import config
 from tg import get_tg_application
+from infrastructure.protocols import UserRepository, ChatRepository
 
 logger = logging.getLogger(__name__)
 
