@@ -6,6 +6,7 @@ from infrastructure.datastore.proposal import (
 from infrastructure.datastore.user import user_repository
 from infrastructure.datastore.usage import usage_repository
 from infrastructure.datastore.chat import chat_repository
+from infrastructure.datastore.poster_request import poster_request_repository
 
 # Alias
 phrase_repo = phrase_repository
@@ -15,6 +16,7 @@ long_proposal_repo = long_proposal_repository
 user_repo = user_repository
 usage_repo = usage_repository
 chat_repo = chat_repository
+poster_request_repo = poster_request_repository
 # For backward compatibility with some codes
 inline_user_repo = user_repository
 
@@ -54,4 +56,5 @@ __all__ = [
     "cunhao_agent",
     "usage_service",
     "badge_service",
+    "poster_request_repo",
 ]

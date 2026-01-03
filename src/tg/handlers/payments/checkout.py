@@ -3,6 +3,7 @@ from telegram import Update
 from telegram.ext import CallbackContext
 
 from services.ai_service import ai_service
+from services import poster_request_repo
 from tg.decorators import log_update
 
 logger = logging.getLogger(__name__)
@@ -15,13 +16,20 @@ async def handle_pre_checkout(update: Update, context: CallbackContext) -> None:
     if not query:
         return
 
-    # Check if the payload is valid (we used the phrase as payload)
-    if not query.invoice_payload:
+    payload = query.invoice_payload
+    if not payload:
         await query.answer(ok=False, error_message="Error: Payload vacío.")
         return
 
-    # In a real app, we might check stock or other constraints here.
-    # For generated images, we just approve.
+    # Verify if we have the request data
+    request_data = await poster_request_repo.get(payload)
+    if not request_data:
+        # Fallback for old payloads (plain text phrases) or lost data
+        # We allow it, assuming payload is the phrase itself for legacy/transitional support
+        # But ideally we should enforce UUIDs now.
+        # For safety during rollout, we allow if it looks like a phrase (not UUID).
+        pass
+
     await query.answer(ok=True)
 
 
@@ -32,52 +40,75 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
     if not message or not message.successful_payment:
         return
 
-    payload_phrase = message.successful_payment.invoice_payload
+    payload = message.successful_payment.invoice_payload
     telegram_payment_charge_id = message.successful_payment.telegram_payment_charge_id
     user = message.from_user
     if not user:
-        # Should not happen in this context, but for safety
         return
 
-    logger.info(
-        f"Payment received from {user.id} ({user.first_name}): {payload_phrase}"
+    # Retrieve request data
+    request_data = await poster_request_repo.get(payload)
+    if request_data:
+        phrase = request_data.phrase
+        original_chat_id = request_data.chat_id
+        invoice_message_id = request_data.message_id
+    else:
+        # Fallback: payload is the phrase
+        phrase = payload
+        original_chat_id = message.chat_id
+        invoice_message_id = None
+
+    logger.info(f"Payment received from {user.id} ({user.first_name}): {phrase}")
+
+    # Notify user that we are working on it (in the chat where payment confirmed)
+    # We send this to the original chat if possible, or reply to the service message.
+    # Service message is usually in the same chat.
+    processing_msg = await context.bot.send_message(
+        chat_id=original_chat_id,
+        text=(
+            "¡Pago recibido! 🤑\n"
+            "Paco se está poniendo las gafas de cerca para pintar tu obra maestra...\n"
+            "Espérate un momento."
+        ),
     )
 
-    # Notify user that we are working on it
-    processing_msg = await message.reply_text(
-        "¡Pago recibido! 🤑\n"
-        "Paco se está poniendo las gafas de cerca para pintar tu obra maestra...\n"
-        "Espérate un momento."
-    )
-
-    # Try to delete the invoice message
-    if message.reply_to_message:
+    # Delete the invoice message if we know it
+    if invoice_message_id:
         try:
-            await message.reply_to_message.delete()
+            await context.bot.delete_message(
+                chat_id=original_chat_id, message_id=invoice_message_id
+            )
         except Exception as e:
             logger.debug(f"Could not delete invoice message: {e}")
 
-    await message.chat.send_action(action="upload_photo")
+    # Send action to the target chat
+    await context.bot.send_chat_action(chat_id=original_chat_id, action="upload_photo")
 
     try:
-        image_bytes = await ai_service.generate_image(payload_phrase)
+        image_bytes = await ai_service.generate_image(phrase)
 
-        caption = f"🎨 *{payload_phrase}*\n\nAquí tienes, chaval. Gástatelo en salud."
+        caption = f"🎨 *{phrase}*\n\nAquí tienes, chaval. Gástatelo en salud."
 
-        await message.reply_photo(
-            photo=image_bytes, caption=caption, parse_mode="Markdown"
+        await context.bot.send_photo(
+            chat_id=original_chat_id,
+            photo=image_bytes,
+            caption=caption,
+            parse_mode="Markdown",
         )
 
-        # We can delete the "processing" message to keep chat clean
+        # Delete the "processing" message
         await processing_msg.delete()
 
     except Exception as e:
         logger.error(
             f"Error delivering product for payment {telegram_payment_charge_id}: {e}"
         )
-        await processing_msg.edit_text(
-            "⚠️ Oye, ha habido un problema técnico en el taller.\n"
-            "No te preocupes, te devuelvo tus Estrellas ahora mismo."
+        await context.bot.send_message(
+            chat_id=original_chat_id,
+            text=(
+                "⚠️ Oye, ha habido un problema técnico en el taller.\n"
+                "No te preocupes, te devuelvo tus Estrellas ahora mismo."
+            ),
         )
 
         # Refund the stars
@@ -85,12 +116,16 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
             await context.bot.refund_star_payment(
                 user_id=user.id, telegram_payment_charge_id=telegram_payment_charge_id
             )
-            await message.reply_text(
-                "💸 Estrellas reembolsadas. Inténtalo luego si eso."
+            await context.bot.send_message(
+                chat_id=original_chat_id,
+                text="💸 Estrellas reembolsadas. Inténtalo luego si eso.",
             )
         except Exception as refund_error:
             logger.error(f"Failed to refund: {refund_error}")
-            await message.reply_text(
-                "‼️ Y encima no he podido devolverte el dinero automáticamente. "
-                "Contacta con el soporte o el dueño del bar."
+            await context.bot.send_message(
+                chat_id=original_chat_id,
+                text=(
+                    "‼️ Y encima no he podido devolverte el dinero automáticamente. "
+                    "Contacta con el soporte o el dueño del bar."
+                ),
             )

@@ -76,13 +76,18 @@ async def test_handle_poster_success_non_owner():
     context = MagicMock()
     context.args = ["El", "futuro", "es", "el", "diésel"]
 
-    with patch("tg.handlers.commands.poster.config") as mock_config:
+    with (
+        patch("tg.handlers.commands.poster.config") as mock_config,
+        patch("tg.handlers.commands.poster.poster_request_repo") as mock_poster_repo,
+    ):
         mock_config.owner_id = "123"
+        mock_poster_repo.save = AsyncMock()
         await handle_poster(update, context)
 
     message.reply_invoice.assert_called_once()
     call_kwargs = message.reply_invoice.call_args[1]
     assert call_kwargs["prices"][0].amount == 50
+    mock_poster_repo.save.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -105,10 +110,15 @@ async def test_handle_poster_success_owner():
     context = MagicMock()
     context.args = ["El", "futuro", "es", "el", "diésel"]
 
-    with patch("tg.handlers.commands.poster.config") as mock_config:
+    with (
+        patch("tg.handlers.commands.poster.config") as mock_config,
+        patch("tg.handlers.commands.poster.poster_request_repo") as mock_poster_repo,
+    ):
         mock_config.owner_id = "123"
+        mock_poster_repo.save = AsyncMock()
         await handle_poster(update, context)
 
     message.reply_invoice.assert_called_once()
     call_kwargs = message.reply_invoice.call_args[1]
     assert call_kwargs["prices"][0].amount == 1
+    mock_poster_repo.save.assert_called_once()

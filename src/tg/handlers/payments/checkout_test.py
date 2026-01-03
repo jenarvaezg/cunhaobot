@@ -23,7 +23,9 @@ async def test_handle_pre_checkout_success():
 
     context = MagicMock()
 
-    await handle_pre_checkout(update, context)
+    with patch("tg.handlers.payments.checkout.poster_request_repo") as mock_repo:
+        mock_repo.get = AsyncMock(return_value=None)
+        await handle_pre_checkout(update, context)
 
     query.answer.assert_called_once_with(ok=True)
 
@@ -70,7 +72,7 @@ async def test_handle_successful_payment_success():
     message.chat_id = 123
 
     payment = MagicMock(spec=SuccessfulPayment)
-    payment.invoice_payload = "phrase"
+    payment.invoice_payload = "uuid-payload"
     payment.telegram_payment_charge_id = "charge_id"
     message.successful_payment = payment
 
@@ -79,31 +81,39 @@ async def test_handle_successful_payment_success():
     user.first_name = "Pepe"
     message.from_user = user
 
-    message.reply_text = AsyncMock()
-    message.chat.send_action = AsyncMock()
-    message.reply_photo = AsyncMock()
-
-    invoice_msg = MagicMock()
-    invoice_msg.delete = AsyncMock()
-    message.reply_to_message = invoice_msg
+    context = MagicMock()
+    context.bot.send_message = AsyncMock()
+    context.bot.send_chat_action = AsyncMock()
+    context.bot.send_photo = AsyncMock()
+    context.bot.delete_message = AsyncMock()
 
     processing_msg = MagicMock()
     processing_msg.delete = AsyncMock()
-    message.reply_text.return_value = processing_msg
+    context.bot.send_message.return_value = processing_msg
 
-    context = MagicMock()
+    mock_request = MagicMock()
+    mock_request.phrase = "phrase"
+    mock_request.chat_id = 999
+    mock_request.message_id = 888
 
-    with patch(
-        "services.ai_service.ai_service.generate_image", new_callable=AsyncMock
-    ) as mock_gen:
+    with (
+        patch(
+            "services.ai_service.ai_service.generate_image", new_callable=AsyncMock
+        ) as mock_gen,
+        patch("tg.handlers.payments.checkout.poster_request_repo") as mock_repo,
+    ):
         mock_gen.return_value = b"image_bytes"
+        mock_repo.get = AsyncMock(return_value=mock_request)
 
         await handle_successful_payment(update, context)
 
         mock_gen.assert_called_once_with("phrase")
-        message.reply_photo.assert_called_once()
+        context.bot.send_photo.assert_called_once()
+        # Verify it sent to the stored chat_id
+        assert context.bot.send_photo.call_args[1]["chat_id"] == 999
+
         processing_msg.delete.assert_called_once()
-        invoice_msg.delete.assert_called_once()
+        context.bot.delete_message.assert_called_once_with(chat_id=999, message_id=888)
 
 
 @pytest.mark.asyncio
@@ -122,7 +132,7 @@ async def test_handle_successful_payment_failure_refund():
     message.chat_id = 123
 
     payment = MagicMock(spec=SuccessfulPayment)
-    payment.invoice_payload = "phrase"
+    payment.invoice_payload = "uuid-payload"
     payment.telegram_payment_charge_id = "charge_id"
     message.successful_payment = payment
 
@@ -131,24 +141,33 @@ async def test_handle_successful_payment_failure_refund():
     user.first_name = "Pepe"
     message.from_user = user
 
-    message.reply_text = AsyncMock()
-    message.chat.send_action = AsyncMock()
+    context = MagicMock()
+    context.bot.send_message = AsyncMock()
+    context.bot.send_chat_action = AsyncMock()
+    context.bot.refund_star_payment = AsyncMock()
 
     processing_msg = MagicMock()
     processing_msg.edit_text = AsyncMock()
-    message.reply_text.return_value = processing_msg
+    context.bot.send_message.return_value = processing_msg
 
-    context = MagicMock()
-    context.bot.refund_star_payment = AsyncMock()
+    mock_request = MagicMock()
+    mock_request.phrase = "phrase"
+    mock_request.chat_id = 999
+    mock_request.message_id = 888
 
-    with patch(
-        "services.ai_service.ai_service.generate_image", new_callable=AsyncMock
-    ) as mock_gen:
+    with (
+        patch(
+            "services.ai_service.ai_service.generate_image", new_callable=AsyncMock
+        ) as mock_gen,
+        patch("tg.handlers.payments.checkout.poster_request_repo") as mock_repo,
+    ):
         mock_gen.side_effect = Exception("AI Error")
+        mock_repo.get = AsyncMock(return_value=mock_request)
 
         await handle_successful_payment(update, context)
 
         context.bot.refund_star_payment.assert_called_once_with(
             user_id=123, telegram_payment_charge_id="charge_id"
         )
-        processing_msg.edit_text.assert_called_once()
+        # Verify messages sent to stored chat_id
+        assert context.bot.send_message.call_args_list[0].kwargs["chat_id"] == 999

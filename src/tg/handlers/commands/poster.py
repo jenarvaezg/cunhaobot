@@ -1,8 +1,11 @@
+import uuid
 from telegram import LabeledPrice, Update
 from telegram.ext import CallbackContext
 
 from tg.decorators import log_update
 from core.config import config
+from services import poster_request_repo
+from models.poster_request import PosterRequest
 
 
 @log_update
@@ -33,8 +36,9 @@ async def handle_poster(update: Update, context: CallbackContext) -> None:
 
     title = "Poster Cuñao IA"
     description = f"Generación de imagen única para: '{phrase}'"
-    # Payload contains the phrase to retrieve it later upon successful payment
-    payload = phrase
+
+    # Use UUID as payload to allow mapping to the original message and storing extra info
+    payload = str(uuid.uuid4())
     provider_token = ""  # Empty for XTR (Stars)
     currency = "XTR"
 
@@ -42,7 +46,7 @@ async def handle_poster(update: Update, context: CallbackContext) -> None:
     price_amount = 1 if str(update.effective_user.id) == str(config.owner_id) else 50
     prices = [LabeledPrice("Poster IA", price_amount)]
 
-    await message.reply_invoice(
+    sent_message = await message.reply_invoice(
         title=title,
         description=description,
         payload=payload,
@@ -50,4 +54,15 @@ async def handle_poster(update: Update, context: CallbackContext) -> None:
         currency=currency,
         prices=prices,
         start_parameter="poster-generation",
+    )
+
+    # Save request to Datastore
+    await poster_request_repo.save(
+        PosterRequest(
+            id=payload,
+            phrase=phrase,
+            user_id=update.effective_user.id,
+            chat_id=message.chat_id,
+            message_id=sent_message.message_id,
+        )
     )
