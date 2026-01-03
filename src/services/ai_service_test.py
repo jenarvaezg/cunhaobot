@@ -221,3 +221,69 @@ class TestAIService:
 
             roast = await service.analyze_image(b"fake_image_bytes")
             assert "Error" in roast
+
+    @pytest.mark.asyncio
+    async def test_analyze_sentiment_and_react_success(self):
+        """Test successful sentiment reaction."""
+        service = AIService(api_key="valid_key")
+        mock_client = MagicMock()
+        with patch.object(
+            AIService, "client", new_callable=PropertyMock
+        ) as mock_client_prop:
+            mock_client_prop.return_value = mock_client
+
+            mock_response = MagicMock()
+            mock_response.text = "🍺"
+            mock_client.models.generate_content.return_value = mock_response
+
+            emoji = await service.analyze_sentiment_and_react("Quiero una caña")
+            assert emoji == "🍺"
+            mock_client.models.generate_content.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_analyze_sentiment_and_react_none(self):
+        """Test reaction when sentiment is neutral (NONE)."""
+        service = AIService(api_key="valid_key")
+        mock_client = MagicMock()
+        with patch.object(
+            AIService, "client", new_callable=PropertyMock
+        ) as mock_client_prop:
+            mock_client_prop.return_value = mock_client
+
+            mock_response = MagicMock()
+            mock_response.text = "NONE"
+            mock_client.models.generate_content.return_value = mock_response
+
+            emoji = await service.analyze_sentiment_and_react("Hola")
+            assert emoji is None
+
+    @pytest.mark.asyncio
+    async def test_analyze_sentiment_and_react_invalid(self):
+        """Test reaction when response is not an emoji."""
+        service = AIService(api_key="valid_key")
+        mock_client = MagicMock()
+        with patch.object(
+            AIService, "client", new_callable=PropertyMock
+        ) as mock_client_prop:
+            mock_client_prop.return_value = mock_client
+
+            mock_response = MagicMock()
+            mock_response.text = "Esto es un texto largo que no es un emoji"
+            mock_client.models.generate_content.return_value = mock_response
+
+            emoji = await service.analyze_sentiment_and_react("Texto")
+            assert emoji is None
+
+    @pytest.mark.asyncio
+    async def test_analyze_sentiment_and_react_error(self):
+        """Test error handling in sentiment reaction."""
+        service = AIService(api_key="valid_key")
+        mock_client = MagicMock()
+        with patch.object(
+            AIService, "client", new_callable=PropertyMock
+        ) as mock_client_prop:
+            mock_client_prop.return_value = mock_client
+            mock_client.models.generate_content.side_effect = Exception("API Error")
+
+            emoji = await service.analyze_sentiment_and_react("Texto")
+            assert emoji is None

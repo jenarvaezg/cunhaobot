@@ -103,6 +103,12 @@ BADGES = [
         description="Vincular cuentas de distintas plataformas",
         icon="🌐",
     ),
+    Badge(
+        id="centro_atencion",
+        name="El Centro de Atención",
+        description="Que Paco te reaccione a un mensaje",
+        icon="🌟",
+    ),
 ]
 
 
@@ -225,6 +231,14 @@ class BadgeService:
                 if any(u.linked_to == user.id for u in all_users):
                     new_badge_ids.append("multiplataforma")
 
+        # 13. Centro de Atención (1 reaction received)
+        if "centro_atencion" not in current_badges:
+            reaction_count = self.usage_repo.get_user_action_count(
+                str(user_id), action=ActionType.REACTION_RECEIVED.value
+            )
+            if reaction_count >= 1:
+                new_badge_ids.append("centro_atencion")
+
         # Always save user because last_usages has been updated
         if new_badge_ids:
             user.badges.extend(new_badge_ids)
@@ -276,6 +290,9 @@ class BadgeService:
         reject_count = self.usage_repo.get_user_action_count(
             str(user_id), action=ActionType.REJECT.value
         )
+        reaction_count = self.usage_repo.get_user_action_count(
+            str(user_id), action=ActionType.REACTION_RECEIVED.value
+        )
 
         from infrastructure.datastore.phrase import phrase_repository
 
@@ -321,6 +338,9 @@ class BadgeService:
                     target_val = 10
                 elif badge.id == "novato":
                     current_val = 1 if total_usages > 0 else 0
+                    target_val = 1
+                elif badge.id == "centro_atencion":
+                    current_val = reaction_count
                     target_val = 1
 
                 if target_val > 0:

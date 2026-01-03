@@ -13,6 +13,7 @@ from services import (
     user_service,
     usage_service,
     badge_service,
+    ai_service,
 )
 from models.usage import ActionType
 from slack.attachments import (
@@ -23,6 +24,17 @@ from slack.attachments import (
 from slack.utils import notify_new_badges_slack
 
 logger = logging.getLogger(__name__)
+
+EMOJI_MAP = {
+    "🍺": "beer",
+    "🇪🇸": "flag-es",
+    "🥘": "shallow_pan_of_food",
+    "🤡": "clown_face",
+    "👎": "thumbsdown",
+    "❤️": "heart",
+    "🔥": "fire",
+    "😂": "joy",
+}
 
 
 async def _register_slack_user(body: dict[str, Any], client: AsyncWebClient) -> None:
@@ -558,6 +570,26 @@ def register_listeners(app: AsyncApp) -> None:
         )
         await say(response, thread_ts=event.get("ts"))
 
+        # Smart Reaction
+        try:
+            reaction_unicode = await ai_service.analyze_sentiment_and_react(text)
+            if reaction_unicode and reaction_unicode in EMOJI_MAP:
+                await client.reactions_add(
+                    name=EMOJI_MAP[reaction_unicode],
+                    channel=event.get("channel"),
+                    timestamp=event.get("ts"),
+                )
+
+                # Log usage and check badges
+                reaction_badges = await usage_service.log_usage(
+                    user_id=event.get("user"),
+                    platform="slack",
+                    action=ActionType.REACTION_RECEIVED,
+                )
+                await notify_new_badges_slack(say, reaction_badges)
+        except Exception as e:
+            logger.warning(f"Failed to react on Slack: {e}")
+
     @app.event("message")
     async def handle_message_event(
         ack: Any, body: dict[str, Any], say: Any, client: Any, context: Any
@@ -577,3 +609,23 @@ def register_listeners(app: AsyncApp) -> None:
                 action=ActionType.AI_ASK,
             )
             await say(response)
+
+            # Smart Reaction
+            try:
+                reaction_unicode = await ai_service.analyze_sentiment_and_react(text)
+                if reaction_unicode and reaction_unicode in EMOJI_MAP:
+                    await client.reactions_add(
+                        name=EMOJI_MAP[reaction_unicode],
+                        channel=event.get("channel"),
+                        timestamp=event.get("ts"),
+                    )
+
+                    # Log usage and check badges
+                    reaction_badges = await usage_service.log_usage(
+                        user_id=event.get("user"),
+                        platform="slack",
+                        action=ActionType.REACTION_RECEIVED,
+                    )
+                    await notify_new_badges_slack(say, reaction_badges)
+            except Exception as e:
+                logger.warning(f"Failed to react on Slack: {e}")

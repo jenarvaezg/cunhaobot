@@ -169,6 +169,53 @@ Set the scene in a typical Spanish bar with a wooden counter and beer tapas.
             logger.error(f"Error generating image: {e}")
             raise e
 
+    async def analyze_sentiment_and_react(self, text: str) -> str | None:
+        """Analyzes text sentiment and returns a reaction emoji or None."""
+        if not text:
+            return None
+
+        prompt = (
+            f"Eres el CuñaoBot. Analiza este mensaje: '{text}'. "
+            "Si merece una reacción típica de cuñado (risas, indignación, patriotismo, cerveza, comida), "
+            "responde ÚNICAMENTE con UNO de estos emojis: 🍺, 🇪🇸, 🥘, 🤡, 👎, ❤️, 🔥, 😂. "
+            "Si es neutro o no te provoca nada, responde 'NONE'. "
+            "NO expliques nada, solo el emoji o NONE."
+        )
+
+        try:
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+            )
+
+            if not response or not response.text:
+                return None
+
+            result = response.text.strip()
+            if result == "NONE":
+                return None
+
+            # Simple validation to ensure it's likely an emoji
+            if (
+                len(result) > 4
+            ):  # Emojis are short, usually 1-2 chars but some complex ones are longer. 4 is safe limit for single emoji usually.
+                # Maybe it returned text. Let's be strict.
+                # Check if it matches one of the allowed emojis roughly
+                allowed = ["🍺", "🇪🇸", "🥘", "🤡", "👎", "❤️", "🔥", "😂"]
+                if not any(e in result for e in allowed):
+                    return None
+
+                # clean up
+                for e in allowed:
+                    if e in result:
+                        return e
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Error in analyze_sentiment_and_react: {e}")
+            return None
+
 
 # Singleton instance
 ai_service = AIService()

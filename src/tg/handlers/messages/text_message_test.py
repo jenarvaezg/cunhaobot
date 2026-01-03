@@ -15,9 +15,11 @@ async def test_handle_message_mention_trigger():
     update = MagicMock()
     update.effective_message.text = "Hola @TestBot"
     update.effective_message.reply_text = AsyncMock()
+    update.effective_message.set_reaction = AsyncMock()
     update.effective_message.chat.send_action = AsyncMock()
     update.effective_message.chat.type = "group"
     update.effective_message.reply_to_message = None
+    update.effective_message.from_user.id = 123
 
     context = MagicMock()
     context.bot.username = "TestBot"
@@ -33,12 +35,20 @@ async def test_handle_message_mention_trigger():
             new_callable=AsyncMock,
             return_value=[],
         ),
+        patch(
+            "tg.handlers.messages.text_message.ai_service.analyze_sentiment_and_react",
+            new_callable=AsyncMock,
+        ) as mock_react,
         patch("tg.decorators.user_service.update_or_create_user"),
     ):
         mock_answer.return_value = "AI Response"
+        mock_react.return_value = "🍺"
+
         await handle_message(update, context)
 
         mock_answer.assert_called_once()
         update.effective_message.reply_text.assert_called_once_with(
             "AI Response", do_quote=True
         )
+        mock_react.assert_called_once_with("Hola")
+        update.effective_message.set_reaction.assert_called_once_with(reaction="🍺")

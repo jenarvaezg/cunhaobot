@@ -14,6 +14,7 @@ class ActionType(str, Enum):
     APPROVE = "approve"
     REJECT = "reject"
     AUDIO = "audio"
+    REACTION_RECEIVED = "reaction_received"
 
 
 class UsageRecord(BaseModel):
