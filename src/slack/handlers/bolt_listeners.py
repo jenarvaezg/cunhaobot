@@ -20,7 +20,7 @@ from slack.attachments import (
     build_saludo_attachments,
     build_sticker_attachments,
 )
-from slack.utils import get_slack_history, notify_new_badges_slack
+from slack.utils import notify_new_badges_slack
 
 logger = logging.getLogger(__name__)
 
@@ -549,18 +549,8 @@ def register_listeners(app: AsyncApp) -> None:
         await _register_slack_user(body, client)
         event = body["event"]
         text = event.get("text", "")
-        thread_ts = event.get("thread_ts")
-        bot_user_id = context.get("bot_user_id")
 
-        # Extract history using API (either thread or general channel context)
-        history = await get_slack_history(
-            client,
-            event.get("channel"),
-            bot_user_id,
-            thread_ts=thread_ts or event.get("ts"),
-        )
-
-        response = await cunhao_agent.answer(text, history=history)
+        response = await cunhao_agent.answer(text)
         await usage_service.log_usage(
             user_id=event.get("user"),
             platform="slack",
@@ -579,15 +569,8 @@ def register_listeners(app: AsyncApp) -> None:
         # Only handle DMs here, avoid double replying in channels (handled by app_mention)
         if channel_type == "im" and "subtype" not in event:
             text = event.get("text", "")
-            thread_ts = event.get("thread_ts")
-            bot_user_id = context.get("bot_user_id")
 
-            # Extract history using API
-            history = await get_slack_history(
-                client, event.get("channel"), bot_user_id, thread_ts=thread_ts
-            )
-
-            response = await cunhao_agent.answer(text, history=history)
+            response = await cunhao_agent.answer(text)
             await usage_service.log_usage(
                 user_id=event.get("user"),
                 platform="slack",

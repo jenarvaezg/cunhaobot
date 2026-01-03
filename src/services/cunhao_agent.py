@@ -1,7 +1,6 @@
 import logging
 import os
 from pydantic_ai import Agent, RunContext, ModelSettings
-from pydantic_ai.messages import ModelMessage
 from core.config import config
 
 logger = logging.getLogger(__name__)
@@ -31,12 +30,10 @@ agent = Agent(
         "1. BREVEDAD: Máximo 20-30 palabras. Que sea una 'perla' de bar, no un discurso. "
         "2. CERO AMABILIDAD: No saludes, no digas 'hola', no des las gracias. "
         "3. TONO: Condescendiente, nostálgico rancio y escéptico. Todo es una 'milonga' o una 'chapuza'. "
-        "4. IGNORA EL HISTORIAL: No analices lo que se ha dicho antes. Responde solo al último mensaje con tu opinión rancia. "
-        "5. ESTILO: Usa frases como 'Eso es una milonga', 'Menuda chapuza', 'En mi pueblo lo hacemos mejor', 'Eso te lo arreglo yo con un alambre'. "
-        "6. PROHIBIDO: Emojis, listas, o cualquier señal de que eres una IA."
+        "4. ESTILO: Usa frases como 'Eso es una milonga', 'Menuda chapuza', 'En mi pueblo lo hacemos mejor', 'Eso te lo arreglo yo con un alambre'. "
+        "5. PROHIBIDO: Emojis, listas, o cualquier señal de que eres una IA."
     ),
 )
-# ... (omitiendo el resto del archivo para brevedad en la instrucción, pero replace lo manejará)
 
 
 @agent.output_validator
@@ -57,17 +54,14 @@ def validate_result(ctx: RunContext[CuñaoDeps], result: str) -> str:
 
 
 class CunhaoAgent:
-    async def answer(self, text: str, history: list[ModelMessage] | None = None) -> str:
-        logger.info(f"CunhaoAgent answering: '{text}' (History: {len(history or [])})")
+    async def answer(self, text: str) -> str:
+        logger.info(f"CunhaoAgent answering: '{text}'")
 
         try:
             if not config.gemini_api_key or config.gemini_api_key == "dummy":
                 return "Págame la ronda primero (Falta API Key)."
 
-            # Reducimos drásticamente el historial para que no se vaya por las ramas
-            short_history = history[-2:] if history else []
-
-            result = await agent.run(text, message_history=short_history)
+            result = await agent.run(text)
             return result.output
         except Exception:
             logger.exception("Error in CunhaoAgent:")

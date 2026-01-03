@@ -4,7 +4,6 @@ from telegram.ext import CallbackContext
 from services import cunhao_agent, usage_service
 from models.usage import ActionType
 from tg.decorators import log_update
-from tg.utils.history import get_telegram_history
 from tg.utils.badges import notify_new_badges
 
 logger = logging.getLogger(__name__)
@@ -42,10 +41,7 @@ async def handle_message(update: Update, context: CallbackContext) -> None:
         # Indicate typing status
         await message.chat.send_action(action="typing")
 
-        # Get context history from replies and general chat (extracted from context)
-        history = await get_telegram_history(message, context)
-
-        response = await cunhao_agent.answer(clean_text, history=history)
+        response = await cunhao_agent.answer(clean_text)
         new_badges = await usage_service.log_usage(
             user_id=message.from_user.id if message.from_user else "unknown",
             platform="telegram",
