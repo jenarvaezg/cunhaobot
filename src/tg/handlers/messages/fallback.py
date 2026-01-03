@@ -8,22 +8,22 @@ from tg.decorators import log_update
 logger = logging.getLogger(__name__)
 
 
-def _on_kick(chat_id: int) -> None:
-    user = user_repo.load(chat_id)
+async def _on_kick(chat_id: int) -> None:
+    user = await user_repo.load(chat_id)
     if user:
         user.gdpr = True
-        user_repo.save(user)
+        await user_repo.save(user)
 
 
 async def _on_other_kicked(bot: Bot, user: TGUser, chat_id: int) -> None:
-    p = phrase_service.get_random().text
+    p = (await phrase_service.get_random()).text
     await bot.send_message(
         chat_id, f"Vaya {p} el {user.name or user.first_name}, ya me jodería."
     )
 
 
 async def _on_join(bot: Bot, chat_id: int) -> None:
-    p = phrase_service.get_random().text
+    p = (await phrase_service.get_random()).text
     await bot.send_message(
         chat_id,
         "¡Muchas gracias por meterme en el grupo! Te recomiendo usar /help para explicarte qué puedo hacer, "
@@ -33,9 +33,8 @@ async def _on_join(bot: Bot, chat_id: int) -> None:
 
 async def _on_other_joined(bot: Bot, user: TGUser, chat_id: int) -> None:
     n_words = random.choice([2, 3, 4])
-    phrases = [user.name or user.first_name] + [
-        phrase_service.get_random().text for _ in range(n_words)
-    ]
+    random_phrases = [(await phrase_service.get_random()).text for _ in range(n_words)]
+    phrases = [user.name or user.first_name] + random_phrases
     await bot.send_message(chat_id, ", ".join(phrases) + "!")
 
 
@@ -53,7 +52,7 @@ async def handle_fallback_message(update: Update, context: CallbackContext) -> N
 
     if message.left_chat_member:
         if message.left_chat_member.username == me.username:
-            _on_kick(message.chat_id)
+            await _on_kick(message.chat_id)
         else:
             await _on_other_kicked(bot, message.left_chat_member, message.chat_id)
 

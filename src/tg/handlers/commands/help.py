@@ -19,9 +19,9 @@ async def handle_help(update: Update, context: CallbackContext) -> None:
     )
     await notify_new_badges(update, context, new_badges)
 
-    p1 = phrase_service.get_random(long=False).text
-    p2 = phrase_service.get_random(long=False).text
-    p3 = phrase_service.get_random(long=False).text
+    p1 = (await phrase_service.get_random(long=False)).text
+    p2 = (await phrase_service.get_random(long=False)).text
+    p3 = (await phrase_service.get_random(long=False)).text
 
     text = (
         f"¿Perdido, {p1}? No te preocupes, que aquí te lo explico yo en un momento, que esto no tiene ciencia.\n\n"

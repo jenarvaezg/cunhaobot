@@ -36,7 +36,7 @@ class DatastoreOAuthStateStore(AsyncOAuthStateStore):
         key = self.repo.get_key(state)
         entity = self.repo.client.get(key)
         if entity:
-            self.repo.delete(state)
+            await self.repo.delete(state)
             created_at = entity.get("created_at", 0)
             if time.time() - created_at <= self.expiration_seconds:
                 return True
@@ -120,7 +120,7 @@ class DatastoreInstallationStore(AsyncInstallationStore):
         enterprise_id: str | None,
         team_id: str | None,
     ) -> None:
-        self.bot_repo.delete(team_id or "enterprise")
+        await self.bot_repo.delete(team_id or "enterprise")
 
     async def async_delete_installation(
         self,
@@ -130,4 +130,4 @@ class DatastoreInstallationStore(AsyncInstallationStore):
         user_id: str | None = None,
     ) -> None:
         if user_id:
-            self.installation_repo.delete(f"{team_id or ''}-{user_id}")
+            await self.installation_repo.delete(f"{team_id or ''}-{user_id}")

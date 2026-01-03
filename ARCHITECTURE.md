@@ -68,10 +68,18 @@ All domain entities (e.g., `Phrase`, `User`, `Proposal`) are implemented using [
 
 The `infrastructure/protocols.py` module defines abstract interfaces (Python `Protocol` classes) for all repositories (e.g., `PhraseRepository`, `UserRepository`).
 
+*   **Asynchronous Interfaces**: All repository methods are defined as `async def`. This is crucial for maintaining a non-blocking event loop in the async Application (Litestar, Telegram Bot).
 *   **Dependency Inversion**: Services depend on these abstract `Protocol` definitions, not on the concrete `Datastore*Repository` implementations. This means that if the underlying database changes (e.g., from Datastore to PostgreSQL), only the `infrastructure/datastore` implementations need to be updated; the `services` layer remains untouched.
 *   **Testability**: Mocking repositories for unit testing services becomes straightforward by providing mock objects that adhere to the `Protocol` interface.
 
-### 2.4. Dependency Injection (DI)
+### 2.4. Google Datastore Implementation
+
+The concrete implementations in `infrastructure/datastore/` use the official `google-cloud-datastore` client library.
+
+*   **Synchronous Client**: The Google Client library is synchronous/blocking.
+*   **Async Wrapper**: To adhere to the async protocols and prevent blocking the main event loop, all database operations are wrapped using `asyncio.to_thread()`. This offloads the blocking I/O to a separate thread pool.
+
+### 2.5. Dependency Injection (DI)
 
 [Litestar's Dependency Injection system](https://litestar.dev/usage/dependency-injection.html) is used to provide dependencies (services, repositories) to controllers.
 

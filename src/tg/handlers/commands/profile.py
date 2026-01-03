@@ -20,13 +20,13 @@ async def handle_profile(update: Update, context: CallbackContext) -> None:
     platform = "telegram"
 
     # Ensure ID is handled as string for consistent lookup
-    user = user_service.get_user(str(user_id), platform)
+    user = await user_service.get_user(str(user_id), platform)
     if not user:
         # Try numeric lookup as fallback just in case
-        user = user_service.get_user(user_id, platform)
+        user = await user_service.get_user(user_id, platform)
 
     if not user:
-        p = phrase_service.get_random(long=False).text
+        p = (await phrase_service.get_random(long=False)).text
         await message.reply_text(
             f"Todavía no tengo tu ficha, {p}. ¡Empieza a usar el bot!"
         )
@@ -42,7 +42,7 @@ async def handle_profile(update: Update, context: CallbackContext) -> None:
         )
         await notify_new_badges(update, context, new_badges)
 
-        stats = usage_service.get_user_stats(user_id, platform)
+        stats = await usage_service.get_user_stats(user_id, platform)
         all_badges_progress = await badge_service.get_all_badges_progress(
             user_id, platform
         )

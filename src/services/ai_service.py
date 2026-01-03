@@ -97,8 +97,8 @@ class AIService:
 
             try:
                 # Get a sample of existing phrases to avoid repetition and set style
-                all_short = phrase_service.get_phrases("", long=False)
-                all_long = phrase_service.get_phrases("", long=True)
+                all_short = await phrase_service.get_phrases("", long=False)
+                all_long = await phrase_service.get_phrases("", long=True)
 
                 sample_short = random.sample(all_short, min(len(all_short), 10))
                 sample_long = random.sample(all_long, min(len(all_long), 10))

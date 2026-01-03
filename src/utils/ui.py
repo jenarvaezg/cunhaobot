@@ -27,14 +27,32 @@ def get_thumb() -> str:
 
 
 def apelativo() -> str:
+    """Synchronous version for UI/Templates to avoid async issues."""
+    common = [
+        "mákina",
+        "figura",
+        "fenómeno",
+        "titán",
+        "maestro",
+        "artista",
+        "jefe",
+        "crack",
+        "fiera",
+        "campeón",
+    ]
+    return random.choice(common)
+
+
+async def async_apelativo() -> str:
+    """Asynchronous version using real phrases from DB."""
     from services import phrase_service
 
-    return phrase_service.get_random(long=False).text
+    return (await phrase_service.get_random(long=False)).text
 
 
-def format_badge_notification(badge: "Badge") -> str:
+async def format_badge_notification(badge: "Badge") -> str:
     """Formats an achievement notification message."""
-    a = apelativo()
+    a = await async_apelativo()
     return (
         f"🎊 <b>¡LOGRO DESBLOQUEADO, {a.upper()}!</b> 🎊\n"
         f"━━━━━━━━━━━━━━━\n"

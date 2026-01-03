@@ -48,7 +48,7 @@ class AdminController(Controller):
             include_groups = request.query_params.get("include_groups") == "true"
 
             # Use CHATS as the source of truth for messaging
-            chats = chat_repo.load_all()
+            chats = await chat_repo.load_all()
 
             # Filter targets: active telegram chats
             targets = [c for c in chats if c.platform == "telegram" and c.is_active]
@@ -101,7 +101,7 @@ class AdminController(Controller):
                     logger.warning(f"Error sending broadcast to chat {target.id}: {e}")
                     # Mark chat as inactive if we can't send messages
                     target.is_active = False
-                    chat_repo.save(target)
+                    await chat_repo.save(target)
                     fail_count += 1
 
                 await asyncio.sleep(0.05)
@@ -148,7 +148,7 @@ class AdminController(Controller):
             )
 
         # Get targets from Chat repository
-        all_chats = chat_repo.load_all()
+        all_chats = await chat_repo.load_all()
         targets = [c for c in all_chats if c.platform == "telegram" and c.is_active]
 
         if not include_groups:
@@ -184,7 +184,7 @@ class AdminController(Controller):
             except Exception as e:
                 logger.warning(f"Error sending broadcast to chat {target.id}: {e}")
                 target.is_active = False
-                chat_repo.save(target)
+                await chat_repo.save(target)
                 fail_count += 1
 
         return Response(

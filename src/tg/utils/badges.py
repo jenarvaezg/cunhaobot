@@ -19,7 +19,7 @@ async def notify_new_badges(
 
     for badge in new_badges:
         try:
-            text = format_badge_notification(badge)
+            text = await format_badge_notification(badge)
             if update.effective_message:
                 await update.effective_message.reply_text(
                     text, parse_mode=constants.ParseMode.HTML

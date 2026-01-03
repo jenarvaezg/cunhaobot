@@ -8,11 +8,12 @@ from services.user_service import UserService
 class TestUserService:
     @pytest.fixture
     def service(self):
-        self.user_repo = MagicMock()
-        self.chat_repo = MagicMock()
+        self.user_repo = AsyncMock()
+        self.chat_repo = AsyncMock()
         return UserService(self.user_repo, self.chat_repo)
 
-    def test_update_or_create_user_new(self, service):
+    @pytest.mark.asyncio
+    async def test_update_or_create_user_new(self, service):
         update = MagicMock()
         update.effective_message.chat_id = 123
         update.effective_message.chat.type = ChatType.PRIVATE
@@ -25,14 +26,15 @@ class TestUserService:
         service.user_repo.load.return_value = None
         service.chat_repo.load.return_value = None
 
-        user = service.update_or_create_user(update)
+        user = await service.update_or_create_user(update)
         assert user.id == 123
         assert user.name == "New User"
         assert user.username == "new_user"
         service.user_repo.save.assert_called_once()
         service.chat_repo.save.assert_called_once()
 
-    def test_update_or_create_user_update(self, service):
+    @pytest.mark.asyncio
+    async def test_update_or_create_user_update(self, service):
         update = MagicMock()
         update.effective_message.chat_id = 123
         update.effective_message.chat.type = ChatType.PRIVATE
@@ -46,13 +48,14 @@ class TestUserService:
         service.user_repo.load.return_value = existing
         service.chat_repo.load.return_value = MagicMock()
 
-        user = service.update_or_create_user(update)
+        user = await service.update_or_create_user(update)
         assert user.name == "Updated User"
         assert user.username == "updated_user"
         assert user.gdpr is False
         service.user_repo.save.assert_called_once_with(existing)
 
-    def test_update_or_create_user_group(self, service):
+    @pytest.mark.asyncio
+    async def test_update_or_create_user_group(self, service):
         update = MagicMock()
         update.effective_message.chat_id = -456
         update.effective_message.chat.type = ChatType.GROUP
@@ -65,7 +68,7 @@ class TestUserService:
         service.user_repo.load.return_value = None
         service.chat_repo.load.return_value = None
 
-        user = service.update_or_create_user(update)
+        user = await service.update_or_create_user(update)
         # Should return the person, not the group
         assert user.id == 123
         assert user.name == "Person"
@@ -80,12 +83,14 @@ class TestUserService:
         assert chat_call.title == "My Group"
         assert chat_call.type == ChatType.GROUP
 
-    def test_update_or_create_user_no_message(self, service):
+    @pytest.mark.asyncio
+    async def test_update_or_create_user_no_message(self, service):
         update = MagicMock()
         update.effective_message = None
-        assert service.update_or_create_user(update) is None
+        assert await service.update_or_create_user(update) is None
 
-    def test_update_or_create_inline_user_new(self, service):
+    @pytest.mark.asyncio
+    async def test_update_or_create_inline_user_new(self, service):
         update = MagicMock()
         update.effective_user.id = 789
         update.effective_user.name = "New Inline"
@@ -93,48 +98,54 @@ class TestUserService:
 
         service.user_repo.load.return_value = None
 
-        user = service.update_or_create_inline_user(update)
+        user = await service.update_or_create_inline_user(update)
         assert user.id == 789
         assert user.username == "new_inline"
         service.user_repo.save.assert_called_once()
 
-    def test_delete_user_hard(self, service):
+    @pytest.mark.asyncio
+    async def test_delete_user_hard(self, service):
         user = User(id=123)
-        service.delete_user(user, hard=True)
+        await service.delete_user(user, hard=True)
         service.user_repo.delete.assert_called_once_with(123)
 
-    def test_delete_user_soft(self, service):
+    @pytest.mark.asyncio
+    async def test_delete_user_soft(self, service):
         user = User(id=123, gdpr=False)
-        service.delete_user(user, hard=False)
+        await service.delete_user(user, hard=False)
         assert user.gdpr is True
         service.user_repo.save.assert_called_once_with(user)
 
-    def test_add_inline_usage(self, service):
+    @pytest.mark.asyncio
+    async def test_add_inline_usage(self, service):
         user = User(id=123, usages=5, points=0)
-        service.add_inline_usage(user)
+        await service.add_inline_usage(user)
         assert user.usages == 6
         assert user.points == 1
         service.user_repo.save.assert_called_once_with(user)
 
-    def test_add_points(self, service):
+    @pytest.mark.asyncio
+    async def test_add_points(self, service):
         user_id = 123
         points = 10
 
         user = User(id=user_id, points=5)
         service.user_repo.load.return_value = user
 
-        service.add_points(user_id, points)
+        await service.add_points(user_id, points)
 
         assert user.points == 15
         service.user_repo.save.assert_called_once_with(user)
 
-    def test_add_points_not_found(self, service):
+    @pytest.mark.asyncio
+    async def test_add_points_not_found(self, service):
         service.user_repo.load.return_value = None
-        service.add_points(123, 10)
+        await service.add_points(123, 10)
         service.user_repo.save.assert_not_called()
 
-    def test_add_points_zero_id(self, service):
-        service.add_points(0, 10)
+    @pytest.mark.asyncio
+    async def test_add_points_zero_id(self, service):
+        await service.add_points(0, 10)
         service.user_repo.load.assert_not_called()
 
     @pytest.mark.asyncio
@@ -198,7 +209,8 @@ class TestUserService:
             photo = await service.get_user_photo(12345)
             assert photo is None
 
-    def test_get_user_fallback(self, service):
+    @pytest.mark.asyncio
+    async def test_get_user_fallback(self, service):
         user = User(id=123)
 
         def load_side_effect(uid):
@@ -211,11 +223,12 @@ class TestUserService:
         service.user_repo.load.side_effect = load_side_effect
 
         # Call with string, expecting fallback to int
-        result = service.get_user("123")
+        result = await service.get_user("123")
         assert result == user
         assert result.id == 123
 
-    def test_get_user_fallback_negative(self, service):
+    @pytest.mark.asyncio
+    async def test_get_user_fallback_negative(self, service):
         user = User(id=-456)
 
         def load_side_effect(uid):
@@ -227,6 +240,6 @@ class TestUserService:
 
         service.user_repo.load.side_effect = load_side_effect
 
-        result = service.get_user("-456")
+        result = await service.get_user("-456")
         assert result == user
         assert result.id == -456

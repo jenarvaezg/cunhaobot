@@ -4,17 +4,20 @@ from telegram.ext import (
     CommandHandler,
     InlineQueryHandler,
     MessageHandler,
+    PreCheckoutQueryHandler,
     filters,
 )
 
 from .commands.about import handle_about
 from .utils.callback_query import handle_callback_query
 from .commands.cancel import handle_cancel
+from .payments.checkout import handle_pre_checkout, handle_successful_payment
 from .inline.chosen_inline_result import handle_chosen_inline_result
 from .utils.error import error_handler as error_handler
 from .messages.fallback import handle_fallback_message as handle_fallback_message
 from .commands.help import handle_help as handle_help
 from .commands.link import handle_link
+from .commands.poster import handle_poster
 from .commands.profile import handle_profile
 from .inline.inline_query import handle_inline_query as handle_inline_query
 from .commands.ping import handle_ping as handle_ping
@@ -39,6 +42,9 @@ handlers = [
     CommandHandler("about", handle_about),
     CommandHandler("stop", handle_stop),
     CommandHandler("cancelar", handle_cancel),
+    CommandHandler("poster", handle_poster),
+    PreCheckoutQueryHandler(handle_pre_checkout),
+    MessageHandler(filters.SUCCESSFUL_PAYMENT, handle_successful_payment),
     MessageHandler(filters.REPLY, handle_reply),
     MessageHandler(filters.PHOTO, photo_roast),
     MessageHandler(filters.TEXT, handle_message),

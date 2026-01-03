@@ -10,7 +10,7 @@ async def handle_cancel(update: Update, context: CallbackContext) -> None:
     if not update.effective_message:
         return
 
-    p = phrase_service.get_random().text
+    p = (await phrase_service.get_random()).text
     await update.effective_message.reply_text(
         f"Pues vale, {p}.",
         reply_markup=ReplyKeyboardRemove(selective=True),

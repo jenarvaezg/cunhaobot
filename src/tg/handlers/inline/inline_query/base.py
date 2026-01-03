@@ -43,7 +43,7 @@ async def handle_inline_query(update: Update, context: CallbackContext) -> None:
 
     results_func = MODE_HANDLERS.get(mode)
     if not results_func:
-        p = phrase_service.get_random().text
+        p = (await phrase_service.get_random()).text
         await update.inline_query.answer(
             [
                 InlineQueryResultArticle(
@@ -62,7 +62,7 @@ async def handle_inline_query(update: Update, context: CallbackContext) -> None:
         )
         return
 
-    results = results_func(rest)
+    results = await results_func(rest)
 
     switch_pm_param = f"{mode}-{normalize_str(rest.replace(' ', '-'))}"
     await update.inline_query.answer(

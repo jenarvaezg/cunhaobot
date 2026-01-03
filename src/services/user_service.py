@@ -32,13 +32,15 @@ class UserService:
         self.user_repo = user_repo
         self.chat_repo = chat_repo
 
-    def get_user(self, user_id: str | int, platform: str | None = None) -> User | None:
-        user = self.user_repo.load(user_id)
+    async def get_user(
+        self, user_id: str | int, platform: str | None = None
+    ) -> User | None:
+        user = await self.user_repo.load(user_id)
 
         # Fallback: try converting string to int if it's a digit string (handling numeric IDs)
         if not user and isinstance(user_id, str) and user_id.lstrip("-").isdigit():
             try:
-                user = self.user_repo.load(int(user_id))
+                user = await self.user_repo.load(int(user_id))
             except ValueError:
                 pass
 
@@ -52,26 +54,28 @@ class UserService:
 
         return user
 
-    def get_chat(self, chat_id: str | int, platform: str | None = None) -> Chat | None:
-        chat = self.chat_repo.load(chat_id)
+    async def get_chat(
+        self, chat_id: str | int, platform: str | None = None
+    ) -> Chat | None:
+        chat = await self.chat_repo.load(chat_id)
         if chat and platform and chat.platform != platform:
             return None
         return chat
 
-    def save_user(self, user: User) -> None:
-        self.user_repo.save(user)
+    async def save_user(self, user: User) -> None:
+        await self.user_repo.save(user)
 
-    def save_chat(self, chat: Chat) -> None:
-        self.chat_repo.save(chat)
+    async def save_chat(self, chat: Chat) -> None:
+        await self.chat_repo.save(chat)
 
-    def _update_or_create_user(
+    async def _update_or_create_user(
         self,
         user_id: str | int,
         name: str,
         username: str | None = None,
         platform: str = "telegram",
     ) -> User:
-        user = self.user_repo.load(user_id)
+        user = await self.user_repo.load(user_id)
 
         if user:
             changed = False
@@ -93,7 +97,7 @@ class UserService:
                 changed = True
 
             if changed:
-                self.user_repo.save(user)
+                await self.user_repo.save(user)
             return user
 
         user = User(
@@ -102,10 +106,10 @@ class UserService:
             username=username,
             platform=platform,
         )
-        self.user_repo.save(user)
+        await self.user_repo.save(user)
         return user
 
-    def _update_or_create_chat(
+    async def _update_or_create_chat(
         self,
         chat_id: str | int,
         title: str,
@@ -113,7 +117,7 @@ class UserService:
         username: str | None = None,
         platform: str = "telegram",
     ) -> Chat:
-        chat = self.chat_repo.load(chat_id)
+        chat = await self.chat_repo.load(chat_id)
         now = datetime.now(timezone.utc)
 
         if chat:
@@ -131,7 +135,7 @@ class UserService:
             chat.is_active = True
             chat.usages += 1
 
-            self.chat_repo.save(chat)
+            await self.chat_repo.save(chat)
             return chat
 
         chat = Chat(
@@ -144,21 +148,21 @@ class UserService:
             is_active=True,
             last_seen_at=now,
         )
-        self.chat_repo.save(chat)
+        await self.chat_repo.save(chat)
         return chat
 
-    def update_or_create_inline_user(self, update: Update) -> User | None:
+    async def update_or_create_inline_user(self, update: Update) -> User | None:
         if not (update_user := update.effective_user):
             return None
 
-        return self._update_or_create_user(
+        return await self._update_or_create_user(
             user_id=update_user.id,
             name=update_user.name,
             username=update_user.username,
             platform="telegram",
         )
 
-    def update_or_create_user(self, update: Update) -> User | None:
+    async def update_or_create_user(self, update: Update) -> User | None:
         """Updates or creates both User (the person) and Chat (the context)."""
         message = update.effective_message
         user = update.effective_user
@@ -170,7 +174,7 @@ class UserService:
         user_name = user.name
         user_username = user.username
 
-        db_user = self._update_or_create_user(
+        db_user = await self._update_or_create_user(
             user_id=user_id,
             name=user_name,
             username=user_username,
@@ -187,7 +191,7 @@ class UserService:
         chat_type = message.chat.type
         chat_username = message.chat.username
 
-        self._update_or_create_chat(
+        await self._update_or_create_chat(
             chat_id=chat_id,
             title=chat_title or "Unknown",
             chat_type=chat_type,
@@ -197,48 +201,48 @@ class UserService:
 
         return db_user
 
-    def update_or_create_slack_user(
+    async def update_or_create_slack_user(
         self,
         slack_user_id: str,
         name: str,
         username: str | None = None,
     ) -> User:
-        return self._update_or_create_user(
+        return await self._update_or_create_user(
             user_id=slack_user_id,
             name=name,
             username=username,
             platform="slack",
         )
 
-    def delete_user(self, user: User, hard: bool = False) -> None:
+    async def delete_user(self, user: User, hard: bool = False) -> None:
         if hard:
-            self.user_repo.delete(user.id)
+            await self.user_repo.delete(user.id)
         else:
             user.gdpr = True
-            self.user_repo.save(user)
+            await self.user_repo.save(user)
 
-    def add_inline_usage(self, user: User) -> None:
+    async def add_inline_usage(self, user: User) -> None:
         user.usages += 1
         user.points += 1
-        self.user_repo.save(user)
+        await self.user_repo.save(user)
 
-    def toggle_privacy(self, user_id: str | int, platform: str) -> bool | None:
-        user = self.get_user(user_id, platform)
+    async def toggle_privacy(self, user_id: str | int, platform: str) -> bool | None:
+        user = await self.get_user(user_id, platform)
         if not user:
             return None
 
         user.is_private = not user.is_private
-        self.save_user(user)
+        await self.save_user(user)
         return user.is_private
 
-    def add_points(self, user_id: str | int, points: int) -> None:
+    async def add_points(self, user_id: str | int, points: int) -> None:
         if user_id == 0:
             return
 
-        user = self.user_repo.load(user_id)
+        user = await self.user_repo.load(user_id)
         if user:
             user.points += points
-            self.user_repo.save(user)
+            await self.user_repo.save(user)
         else:
             # If user not found, we don't award points until they interact
             pass
@@ -273,18 +277,18 @@ class UserService:
             logger.error(f"Error getting user photo for {target_id}: {e}")
         return None
 
-    def generate_link_token(self, user_id: str | int, platform: str) -> str:
+    async def generate_link_token(self, user_id: str | int, platform: str) -> str:
         token = secrets.token_hex(3).upper()
         request = LinkRequest(
             token=token, source_user_id=user_id, source_platform=platform
         )
-        link_request_repository.save(request)
+        await link_request_repository.save(request)
         return token
 
-    def complete_link(
+    async def complete_link(
         self, token: str, target_user_id: str | int, target_platform: str
     ) -> bool:
-        request = link_request_repository.load(token)
+        request = await link_request_repository.load(token)
         if not request:
             return False
 
@@ -294,7 +298,7 @@ class UserService:
             expires_at = request.expires_at
 
         if expires_at < datetime.now(timezone.utc):
-            link_request_repository.delete(token)
+            await link_request_repository.delete(token)
             return False
 
         source_user_id = request.source_user_id
@@ -306,8 +310,8 @@ class UserService:
         ):
             return False
 
-        source_user = self.user_repo.load_raw(source_user_id)
-        target_user = self.user_repo.load(
+        source_user = await self.user_repo.load_raw(source_user_id)
+        target_user = await self.user_repo.load(
             target_user_id
         )  # Target should be the ultimate master
 
@@ -324,41 +328,43 @@ class UserService:
         if "multiplataforma" not in target_user.badges:
             target_user.badges.append("multiplataforma")
 
-        self.save_user(target_user)
+        await self.save_user(target_user)
 
         # Migrate Content Ownership
-        phrases = phrase_repository.get_phrases(user_id=str(source_user.id))
+        phrases = await phrase_repository.get_phrases(user_id=str(source_user.id))
         for p in phrases:
             p.user_id = target_user.id
-            phrase_repository.save(p)
+            await phrase_repository.save(p)
 
-        long_phrases = long_phrase_repository.get_phrases(user_id=str(source_user.id))
+        long_phrases = await long_phrase_repository.get_phrases(
+            user_id=str(source_user.id)
+        )
         for lp in long_phrases:
             lp.user_id = target_user.id
-            long_phrase_repository.save(lp)
+            await long_phrase_repository.save(lp)
 
-        proposals = proposal_repository.get_proposals(
+        proposals = await proposal_repository.get_proposals(
             user_id=str(source_user.id), limit=1000
         )
         for prop in proposals:
             prop.user_id = target_user.id
-            proposal_repository.save(prop)
+            await proposal_repository.save(prop)
 
-        long_proposals = long_proposal_repository.get_proposals(
+        long_proposals = await long_proposal_repository.get_proposals(
             user_id=str(source_user.id), limit=1000
         )
         for lprop in long_proposals:
             lprop.user_id = target_user.id
-            long_proposal_repository.save(lprop)
+            await long_proposal_repository.save(lprop)
 
         # Instead of deleting, we make source_user an alias of target_user
         source_user.linked_to = target_user.id
         source_user.points = 0
         source_user.usages = 0
         source_user.badges = []
-        self.save_user(source_user)
+        await self.save_user(source_user)
 
-        link_request_repository.delete(token)
+        await link_request_repository.delete(token)
 
         return True
 

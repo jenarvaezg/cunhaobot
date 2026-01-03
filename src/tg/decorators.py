@@ -24,7 +24,7 @@ def only_admins(f: F) -> F:
         admin_ids = [admin.user.id for admin in admins]
         if not update.effective_user or update.effective_user.id not in admin_ids:
             if update.effective_message:
-                p = phrase_service.get_random().text
+                p = (await phrase_service.get_random()).text
                 await update.effective_message.reply_text(
                     f"Esto solo lo pueden hacer administradores, {p}.",
                     do_quote=True,
@@ -40,7 +40,7 @@ def log_update(f: F) -> F:
     @wraps(f)
     async def wrapper(update: Update, *args: object, **kwargs: object) -> object:
         # Actualizar o crear usuario usando el servicio
-        user_service.update_or_create_user(update)
+        await user_service.update_or_create_user(update)
 
         update_dict = cast(dict[str, object], remove_empty_from_dict(update.to_dict()))
         update_dict["method"] = f.__name__

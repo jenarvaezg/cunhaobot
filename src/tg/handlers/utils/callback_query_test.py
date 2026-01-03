@@ -41,9 +41,13 @@ class TestCallbackQuery:
 
         with (
             patch(
-                "tg.handlers.utils.callback_query.phrase_service.get_random"
+                "tg.handlers.utils.callback_query.phrase_service.get_random",
+                new_callable=AsyncMock,
             ) as mock_random,
-            patch("tg.decorators.user_service.update_or_create_user"),
+            patch(
+                "tg.decorators.user_service.update_or_create_user",
+                new_callable=AsyncMock,
+            ),
         ):
             mock_random.return_value.text = "cuñao"
             await handle_callback_query(update, context)
@@ -64,11 +68,17 @@ class TestCallbackQuery:
         cb_query.admins = [admin]
 
         with (
-            patch("services.proposal_repo.load", return_value=None),
             patch(
-                "tg.handlers.utils.callback_query.phrase_service.get_random"
+                "services.proposal_repo.load", new_callable=AsyncMock, return_value=None
+            ),
+            patch(
+                "tg.handlers.utils.callback_query.phrase_service.get_random",
+                new_callable=AsyncMock,
             ) as mock_random,
-            patch("tg.decorators.user_service.update_or_create_user"),
+            patch(
+                "tg.decorators.user_service.update_or_create_user",
+                new_callable=AsyncMock,
+            ),
         ):
             mock_random.return_value.text = "cuñao"
             await handle_callback_query(update, context)
@@ -92,21 +102,27 @@ class TestCallbackQuery:
         p = Proposal(id="123", text="test", from_chat_id=1)
 
         with (
-            patch("services.proposal_repo.load", return_value=p),
             patch(
-                "tg.handlers.utils.callback_query.proposal_service.vote"
+                "services.proposal_repo.load", new_callable=AsyncMock, return_value=p
+            ),
+            patch(
+                "tg.handlers.utils.callback_query.proposal_service.vote",
+                new_callable=AsyncMock,
             ) as mock_vote,
             patch(
                 "tg.handlers.utils.callback_query.approve_proposal",
                 new_callable=AsyncMock,
             ) as mock_approve,
-            patch("tg.decorators.user_service.update_or_create_user"),
+            patch(
+                "tg.decorators.user_service.update_or_create_user",
+                new_callable=AsyncMock,
+            ),
             patch(
                 "tg.handlers.utils.callback_query.get_required_votes", return_value=1
             ),
         ):
             # Mock vote behavior (manually add to p since we mock the service)
-            def side_effect(prop, user_id, pos):
+            async def side_effect(prop, user_id, pos):
                 prop.liked_by.append(str(user_id))
 
             mock_vote.side_effect = side_effect
@@ -131,21 +147,29 @@ class TestCallbackQuery:
         p = LongProposal(id="123", text="test")
 
         with (
-            patch("services.long_proposal_repo.load", return_value=p),
             patch(
-                "tg.handlers.utils.callback_query.proposal_service.vote"
+                "services.long_proposal_repo.load",
+                new_callable=AsyncMock,
+                return_value=p,
+            ),
+            patch(
+                "tg.handlers.utils.callback_query.proposal_service.vote",
+                new_callable=AsyncMock,
             ) as mock_vote,
             patch(
                 "tg.handlers.utils.callback_query.dismiss_proposal",
                 new_callable=AsyncMock,
             ) as mock_dismiss,
-            patch("tg.decorators.user_service.update_or_create_user"),
+            patch(
+                "tg.decorators.user_service.update_or_create_user",
+                new_callable=AsyncMock,
+            ),
             patch(
                 "tg.handlers.utils.callback_query.get_required_votes", return_value=1
             ),
         ):
 
-            def side_effect(prop, user_id, pos):
+            async def side_effect(prop, user_id, pos):
                 prop.disliked_by.append(str(user_id))
 
             mock_vote.side_effect = side_effect
@@ -166,13 +190,14 @@ class TestCallbackQuery:
                 "tg.handlers.utils.callback_query._ensure_admins",
                 new_callable=AsyncMock,
             ),
-            patch("services.proposal_repo.save"),
+            patch("services.proposal_repo.save", new_callable=AsyncMock),
             patch("tg.handlers.utils.callback_query.phrase_service") as mock_ph_svc,
             patch(
                 "tg.handlers.utils.callback_query.get_vote_summary",
                 return_value="summary",
             ),
         ):
+            mock_ph_svc.get_random = AsyncMock()
             mock_ph_svc.get_random.return_value.text = "cuñao"
             mock_ph_svc.create_from_proposal = AsyncMock()
 
@@ -193,13 +218,14 @@ class TestCallbackQuery:
                 "tg.handlers.utils.callback_query._ensure_admins",
                 new_callable=AsyncMock,
             ),
-            patch("services.proposal_repo.save") as mock_save,
+            patch("services.proposal_repo.save", new_callable=AsyncMock) as mock_save,
             patch("tg.handlers.utils.callback_query.phrase_service") as mock_ph_svc,
             patch(
                 "tg.handlers.utils.callback_query.get_vote_summary",
                 return_value="summary",
             ),
         ):
+            mock_ph_svc.get_random = AsyncMock()
             mock_ph_svc.get_random.return_value.text = "cuñao"
 
             await dismiss_proposal(p, bot)
@@ -257,13 +283,14 @@ class TestCallbackQuery:
                 "tg.handlers.utils.callback_query._ensure_admins",
                 new_callable=AsyncMock,
             ),
-            patch("services.proposal_repo.save"),
+            patch("services.proposal_repo.save", new_callable=AsyncMock),
             patch("tg.handlers.utils.callback_query.phrase_service") as mock_ph_svc,
             patch(
                 "tg.handlers.utils.callback_query.get_vote_summary",
                 return_value="summary",
             ),
         ):
+            mock_ph_svc.get_random = AsyncMock()
             mock_ph_svc.get_random.return_value.text = "cuñao"
             mock_ph_svc.create_from_proposal = AsyncMock()
 
@@ -282,13 +309,14 @@ class TestCallbackQuery:
                 "tg.handlers.utils.callback_query._ensure_admins",
                 new_callable=AsyncMock,
             ),
-            patch("services.proposal_repo.save"),
+            patch("services.proposal_repo.save", new_callable=AsyncMock),
             patch("tg.handlers.utils.callback_query.phrase_service") as mock_ph_svc,
             patch(
                 "tg.handlers.utils.callback_query.get_vote_summary",
                 return_value="summary",
             ),
         ):
+            mock_ph_svc.get_random = AsyncMock()
             mock_ph_svc.get_random.return_value.text = "cuñao"
 
             # Should not raise exception

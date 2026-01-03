@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch, AsyncMock
 import pytest
 from models.proposal import Proposal, LongProposal
 from infrastructure.datastore.proposal import ProposalDatastoreRepository
@@ -54,22 +54,24 @@ class TestProposalRepository:
         assert proposal.voting_ended_at is None
         assert proposal.created_at is None
 
-    def test_load(self, repo, mock_datastore_client):
+    @pytest.mark.asyncio
+    async def test_load(self, repo, mock_datastore_client):
         data = {"from_chat_id": 1, "from_message_id": 2, "text": "val"}
         entity = create_mock_entity(data, entity_id="ID1")
         mock_datastore_client.get.return_value = entity
 
-        p = repo.load("ID1")
+        p = await repo.load("ID1")
         assert p.id == "ID1"
         mock_datastore_client.get.assert_called_once_with(repo.get_key("ID1"))
         mock_datastore_client.reset_mock()  # Reset mock calls
 
         # Test load not found
         mock_datastore_client.get.return_value = None
-        p = repo.load("non_existent")
+        p = await repo.load("non_existent")
         assert p is None
 
-    def test_load_all(self, repo, mock_datastore_client):
+    @pytest.mark.asyncio
+    async def test_load_all(self, repo, mock_datastore_client):
         mock_query = MagicMock()
         mock_datastore_client.query.return_value = mock_query
 
@@ -78,28 +80,34 @@ class TestProposalRepository:
         )
         mock_query.fetch.return_value = [entity1]
 
-        proposals = repo.load_all()
+        proposals = await repo.load_all()
         assert len(proposals) == 1
         assert proposals[0].id == "1"
         mock_datastore_client.query.assert_called_with(kind="Proposal")
 
-    def test_get_proposals_filter(self, repo, mock_datastore_client):
+    @pytest.mark.asyncio
+    async def test_get_proposals_filter(self, repo, mock_datastore_client):
         p1 = Proposal(id="1", user_id=100)
         p2 = Proposal(id="2", user_id=0)
-        repo.load_all = MagicMock(return_value=[p1, p2])
 
-        # Test __EMPTY__ filter (user_id=0 is considered empty if we check truthiness,
-        # but the code uses not getattr(p, field, None))
-        res = repo.get_proposals(user_id="__EMPTY__")
-        assert len(res) == 1
-        assert res[0].id == "2"
+        # Use patch to mock load_all which is async
+        with patch.object(repo, "load_all", new_callable=AsyncMock) as mock_load_all:
+            mock_load_all.return_value = [p1, p2]
 
-    def test_save(self, repo, mock_datastore_client):
+            # Test __EMPTY__ filter (user_id=0 is considered empty if we check truthiness,
+            # but the code uses not getattr(p, field, None))
+            res = await repo.get_proposals(user_id="__EMPTY__")
+            assert len(res) == 1
+            assert res[0].id == "2"
+
+    @pytest.mark.asyncio
+    async def test_save(self, repo, mock_datastore_client):
         p = Proposal(id="123", from_chat_id=456, from_message_id=789, text="test")
-        repo.save(p)
+        await repo.save(p)
         mock_datastore_client.put.assert_called_once()
 
-    def test_get_proposals_search_filter_limit_offset(
+    @pytest.mark.asyncio
+    async def test_get_proposals_search_filter_limit_offset(
         self, repo, mock_datastore_client
     ):
         p1 = Proposal(
@@ -133,12 +141,12 @@ class TestProposalRepository:
         ]
 
         # Test search
-        results = repo.get_proposals(search="cuñao")
+        results = await repo.get_proposals(search="cuñao")
         assert len(results) == 2
         assert {p.id for p in results} == {"1", "3"}
 
         # Test filter by field and value
-        results = repo.get_proposals(from_chat_id=1)
+        results = await repo.get_proposals(from_chat_id=1)
         assert len(results) == 2
         assert {p.id for p in results} == {"1", "3"}
 
@@ -148,7 +156,7 @@ class TestProposalRepository:
             create_mock_entity(p1.model_dump(), entity_id="1"),
             create_mock_entity(p2.model_dump(), entity_id="2"),
         ]
-        results = repo.get_proposals(liked_by="__EMPTY__")
+        results = await repo.get_proposals(liked_by="__EMPTY__")
         assert len(results) == 1
         assert results[0].id == "2"  # p2 has empty liked_by
 
@@ -158,7 +166,7 @@ class TestProposalRepository:
             create_mock_entity(p2.model_dump(), entity_id="2"),
             create_mock_entity(p3.model_dump(), entity_id="3"),
         ]
-        results = repo.get_proposals(limit=2, offset=1)
+        results = await repo.get_proposals(limit=2, offset=1)
         assert len(results) == 2
         assert results[0].id == "2"
         assert results[1].id == "3"

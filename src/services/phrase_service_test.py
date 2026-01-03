@@ -8,8 +8,8 @@ from services.phrase_service import PhraseService
 class TestPhraseService:
     @pytest.fixture
     def service(self):
-        self.phrase_repo = MagicMock()
-        self.long_repo = MagicMock()
+        self.phrase_repo = AsyncMock()
+        self.long_repo = AsyncMock()
         return PhraseService(self.phrase_repo, self.long_repo)
 
     @pytest.mark.asyncio
@@ -38,64 +38,72 @@ class TestPhraseService:
             assert img_data == b"png_data"
             mock_png.assert_called_once()
 
-    def test_get_random(self, service):
+    @pytest.mark.asyncio
+    async def test_get_random(self, service):
         p1 = Phrase(text="foo")
-        self.phrase_repo.load_all.return_value = [p1]
+        service.phrase_repo.load_all.return_value = [p1]
 
-        result = service.get_random(long=False)
+        result = await service.get_random(long=False)
         assert result == p1
 
-    def test_get_random_empty(self, service):
-        self.phrase_repo.load_all.return_value = []
-        result = service.get_random(long=False)
+    @pytest.mark.asyncio
+    async def test_get_random_empty(self, service):
+        service.phrase_repo.load_all.return_value = []
+        result = await service.get_random(long=False)
         assert result.text == "¡Cuñado!"
         assert isinstance(result, Phrase)
 
-    def test_get_random_long_empty(self, service):
-        self.long_repo.load_all.return_value = []
-        result = service.get_random(long=True)
+    @pytest.mark.asyncio
+    async def test_get_random_long_empty(self, service):
+        service.long_repo.load_all.return_value = []
+        result = await service.get_random(long=True)
         assert result.text == "¡Cuñado!"
         assert isinstance(result, LongPhrase)
 
-    def test_get_phrases(self, service):
+    @pytest.mark.asyncio
+    async def test_get_phrases(self, service):
         p1 = Phrase(text="hola")
         p2 = Phrase(text="adios")
-        self.phrase_repo.load_all.return_value = [p1, p2]
+        service.phrase_repo.load_all.return_value = [p1, p2]
 
-        results = service.get_phrases("hola")
+        results = await service.get_phrases("hola")
         assert len(results) == 1
         assert results[0] == p1
 
-    def test_find_most_similar(self, service):
+    @pytest.mark.asyncio
+    async def test_find_most_similar(self, service):
         p1 = Phrase(text="hola")
         p2 = Phrase(text="adios")
-        self.phrase_repo.load_all.return_value = [p1, p2]
+        service.phrase_repo.load_all.return_value = [p1, p2]
 
-        result, score = service.find_most_similar("holaa")
+        result, score = await service.find_most_similar("holaa")
         assert result == p1
         assert score > 80
 
-    def test_find_most_similar_empty(self, service):
-        self.phrase_repo.load_all.return_value = []
-        result, score = service.find_most_similar("holaa")
+    @pytest.mark.asyncio
+    async def test_find_most_similar_empty(self, service):
+        service.phrase_repo.load_all.return_value = []
+        result, score = await service.find_most_similar("holaa")
         assert result.text == ""
         assert score == 0
         assert isinstance(result, Phrase)
 
-    def test_find_most_similar_long_empty(self, service):
-        self.long_repo.load_all.return_value = []
-        result, score = service.find_most_similar("holaa", long=True)
+    @pytest.mark.asyncio
+    async def test_find_most_similar_long_empty(self, service):
+        service.long_repo.load_all.return_value = []
+        result, score = await service.find_most_similar("holaa", long=True)
         assert result.text == ""
         assert score == 0
         assert isinstance(result, LongPhrase)
 
-    def test_register_sticker_usage(self, service):
+    @pytest.mark.asyncio
+    async def test_register_sticker_usage(self, service):
         p = Phrase(text="test", score=10)
-        service.register_sticker_usage(p)
+        await service.register_sticker_usage(p)
         assert p.usages == 1
         assert p.sticker_usages == 1
         assert p.score == 11
-        self.phrase_repo.save.assert_called_once_with(p)
+        service.phrase_repo.save.assert_called_once_with(p)
 
     @pytest.mark.asyncio
     async def test_create_from_proposal(self, service):
@@ -114,8 +122,10 @@ class TestPhraseService:
             patch.object(service, "create_sticker_image", return_value=b"img"),
             patch("tg.stickers.upload_sticker", new_callable=AsyncMock) as mock_upload,
             patch("services.user_service.user_service") as mock_user_service,
+            patch("services.badge_service.badge_service") as mock_badge_service,
         ):
             mock_upload.return_value = "sticker_123"
+            mock_badge_service.check_badges = AsyncMock(return_value=[])
             await service.create_from_proposal(proposal, mock_bot)
 
             service.phrase_repo.save.assert_called_once()
@@ -127,6 +137,7 @@ class TestPhraseService:
             assert saved_phrase.score == 10
             # Award 10 points
             mock_user_service.add_points.assert_called_once_with(1, 10)
+            mock_badge_service.check_badges.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_create_from_proposal_long(self, service):
@@ -137,8 +148,10 @@ class TestPhraseService:
             patch.object(service, "create_sticker_image", return_value=b"img"),
             patch("tg.stickers.upload_sticker", new_callable=AsyncMock) as mock_upload,
             patch("services.user_service.user_service") as mock_user_service,
+            patch("services.badge_service.badge_service") as mock_badge_service,
         ):
             mock_upload.return_value = "sticker_123"
+            mock_badge_service.check_badges = AsyncMock(return_value=[])
             await service.create_from_proposal(proposal, mock_bot)
 
             service.long_repo.save.assert_called_once()
@@ -149,22 +162,24 @@ class TestPhraseService:
             # Award 10 points
             mock_user_service.add_points.assert_called_once_with(1, 10)
 
-    def test_add_usage_by_id_short_text(self, service):
+    @pytest.mark.asyncio
+    async def test_add_usage_by_id_short_text(self, service):
         p1 = Phrase(text="foo", id=1, score=5)
         service.phrase_repo.load.return_value = p1
 
-        service.add_usage_by_id("short-1")
+        await service.add_usage_by_id("short-1")
 
         assert p1.usages == 1
         assert p1.score == 6
         service.phrase_repo.load.assert_called_with(1)
         service.phrase_repo.save.assert_called_once_with(p1)
 
-    def test_add_usage_by_id_short_combination(self, service):
+    @pytest.mark.asyncio
+    async def test_add_usage_by_id_short_combination(self, service):
         p1 = Phrase(text="foo", id=1)
         p2 = Phrase(text="bar", id=2)
 
-        def mock_load(pid):
+        async def mock_load(pid):
             if pid == 1:
                 return p1
             if pid == 2:
@@ -173,35 +188,38 @@ class TestPhraseService:
 
         service.phrase_repo.load.side_effect = mock_load
 
-        service.add_usage_by_id("short-1,2")
+        await service.add_usage_by_id("short-1,2")
 
         assert p1.usages == 1
         assert p2.usages == 1
         assert service.phrase_repo.save.call_count == 2
 
-    def test_add_usage_by_id_long_audio(self, service):
+    @pytest.mark.asyncio
+    async def test_add_usage_by_id_long_audio(self, service):
         p1 = LongPhrase(text="long phrase", id=10)
         service.long_repo.load.return_value = p1
 
-        service.add_usage_by_id("audio-long-10")
+        await service.add_usage_by_id("audio-long-10")
 
         assert p1.usages == 1
         assert p1.audio_usages == 1
         service.long_repo.load.assert_called_with(10)
         service.long_repo.save.assert_called_once_with(p1)
 
-    def test_add_usage_by_id_short_sticker(self, service):
+    @pytest.mark.asyncio
+    async def test_add_usage_by_id_short_sticker(self, service):
         p1 = Phrase(text="sticker text", id=5)
         service.phrase_repo.load.return_value = p1
 
-        service.add_usage_by_id("sticker-short-5")
+        await service.add_usage_by_id("sticker-short-5")
 
         assert p1.usages == 1
         assert p1.sticker_usages == 1
         service.phrase_repo.load.assert_called_with(5)
         service.phrase_repo.save.assert_called_once_with(p1)
 
-    def test_add_usage_by_id_invalid(self, service):
-        service.add_usage_by_id("invalid-id")
+    @pytest.mark.asyncio
+    async def test_add_usage_by_id_invalid(self, service):
+        await service.add_usage_by_id("invalid-id")
         service.phrase_repo.save.assert_not_called()
         service.long_repo.save.assert_not_called()

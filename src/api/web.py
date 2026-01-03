@@ -21,15 +21,15 @@ logger = logging.getLogger(__name__)
 
 
 class WebController(Controller):
-    @get("/", sync_to_thread=True)
-    def index(
+    @get("/")
+    async def index(
         self,
         request: Request,
         phrase_repo: Annotated[PhraseRepository, Dependency()],
         long_phrase_repo: Annotated[LongPhraseRepository, Dependency()],
     ) -> Template:
-        short_phrases = phrase_repo.get_phrases(limit=50)
-        long_phrases = long_phrase_repo.get_phrases(limit=50)
+        short_phrases = await phrase_repo.get_phrases(limit=50)
+        long_phrases = await long_phrase_repo.get_phrases(limit=50)
 
         return Template(
             template_name="index.html",
@@ -56,14 +56,16 @@ class WebController(Controller):
         long_phrase_repo: Annotated[LongPhraseRepository, Dependency()],
         user_repo: Annotated[UserRepository, Dependency()],
     ) -> Template:
-        phrase = phrase_repo.load(phrase_id) or long_phrase_repo.load(phrase_id)
+        phrase = await phrase_repo.load(phrase_id) or await long_phrase_repo.load(
+            phrase_id
+        )
 
         if not phrase:
             raise HTTPException(status_code=404, detail="Phrase not found")
 
         contributor = None
         if phrase.user_id:
-            contributor = user_repo.load(phrase.user_id)
+            contributor = await user_repo.load(phrase.user_id)
 
             # If not in DB, try to fetch from Telegram
             if not contributor:
@@ -81,7 +83,7 @@ class WebController(Controller):
                         username=chat.username,
                     )
                     # Save for next time
-                    user_repo.save(contributor)
+                    await user_repo.save(contributor)
                 except Exception as e:
                     logger.warning(
                         f"Could not fetch user info from Telegram for {phrase.user_id}: {e}"
@@ -140,11 +142,11 @@ class WebController(Controller):
         from services.usage_service import usage_service
 
         # Try to find user (load will follow links)
-        profile_user = user_repo.load(user_id)
+        profile_user = await user_repo.load(user_id)
         if not profile_user:
             # Try numeric ID if string failed (legacy compatibility)
             try:
-                profile_user = user_repo.load(int(user_id))
+                profile_user = await user_repo.load(int(user_id))
             except ValueError:
                 pass
 
@@ -160,7 +162,7 @@ class WebController(Controller):
             )
 
         # Get stats
-        stats = usage_service.get_user_stats(profile_user.id)
+        stats = await usage_service.get_user_stats(profile_user.id)
 
         # Get badges progress
         badges_progress = await badge_service.get_all_badges_progress(
@@ -168,8 +170,10 @@ class WebController(Controller):
         )
 
         # Get user phrases
-        user_phrases = phrase_repo.get_phrases(user_id=str(profile_user.id))
-        user_long_phrases = long_phrase_repo.get_phrases(user_id=str(profile_user.id))
+        user_phrases = await phrase_repo.get_phrases(user_id=str(profile_user.id))
+        user_long_phrases = await long_phrase_repo.get_phrases(
+            user_id=str(profile_user.id)
+        )
         all_user_phrases = sorted(
             user_phrases + user_long_phrases, key=lambda x: x.usages, reverse=True
         )
@@ -229,7 +233,9 @@ class WebController(Controller):
         phrase_repo: Annotated[PhraseRepository, Dependency()],
         long_phrase_repo: Annotated[LongPhraseRepository, Dependency()],
     ) -> Response:
-        phrase = phrase_repo.load(phrase_id) or long_phrase_repo.load(phrase_id)
+        phrase = await phrase_repo.load(phrase_id) or await long_phrase_repo.load(
+            phrase_id
+        )
         if not phrase:
             raise HTTPException(status_code=404, detail="Phrase not found")
 
@@ -258,15 +264,17 @@ class WebController(Controller):
             headers={"Location": audio_url},
         )
 
-    @get("/phrase/{phrase_id:int}/sticker.png", sync_to_thread=True)
-    def phrase_sticker(
+    @get("/phrase/{phrase_id:int}/sticker.png")
+    async def phrase_sticker(
         self,
         phrase_id: int,
         phrase_repo: Annotated[PhraseRepository, Dependency()],
         long_phrase_repo: Annotated[LongPhraseRepository, Dependency()],
         phrase_service: Annotated[PhraseService, Dependency()],
     ) -> Response:
-        phrase = phrase_repo.load(phrase_id) or long_phrase_repo.load(phrase_id)
+        phrase = await phrase_repo.load(phrase_id) or await long_phrase_repo.load(
+            phrase_id
+        )
 
         if not phrase:
             raise HTTPException(status_code=404, detail="Phrase not found")
@@ -294,8 +302,8 @@ class WebController(Controller):
             headers={"Cache-Control": "public, max-age=3600"},
         )
 
-    @get("/proposals", sync_to_thread=True)
-    def proposals(
+    @get("/proposals")
+    async def proposals(
         self,
         request: Request,
         proposal_repo: Annotated[ProposalRepository, Dependency()],
@@ -305,11 +313,13 @@ class WebController(Controller):
 
         return Template(
             template_name="proposals.html",
-            context=get_proposals_context(request, proposal_repo, long_proposal_repo),
+            context=await get_proposals_context(
+                request, proposal_repo, long_proposal_repo
+            ),
         )
 
-    @get("/ranking", sync_to_thread=True)
-    def ranking(
+    @get("/ranking")
+    async def ranking(
         self,
         request: Request,
         user_repo: Annotated[UserRepository, Dependency()],
@@ -318,7 +328,7 @@ class WebController(Controller):
 
         # Get all users with points > 0.
         # After refactor, User kind only contains people.
-        ranking = [u for u in user_repo.load_all() if u.points > 0]
+        ranking = [u for u in await user_repo.load_all() if u.points > 0]
         ranking.sort(key=lambda x: x.points, reverse=True)
 
         badges_map = {b.id: b for b in BADGES}
@@ -367,8 +377,8 @@ class WebController(Controller):
             },
         )
 
-    @get("/search", sync_to_thread=True)
-    def search(
+    @get("/search")
+    async def search(
         self,
         request: Request,
         phrase_repo: Annotated[PhraseRepository, Dependency()],
@@ -376,8 +386,8 @@ class WebController(Controller):
         search: str = "",
         **filters: Any,
     ) -> HTMXTemplate:
-        short_phrases = phrase_repo.get_phrases(search=search, **filters)
-        long_phrases = long_phrase_repo.get_phrases(search=search, **filters)
+        short_phrases = await phrase_repo.get_phrases(search=search, **filters)
+        long_phrases = await long_phrase_repo.get_phrases(search=search, **filters)
         return HTMXTemplate(
             template_name="partials/phrases_list.html",
             context={
@@ -405,8 +415,8 @@ class WebController(Controller):
 
         try:
             # Fetch all phrases for context
-            context_phrases = [p.text for p in phrase_repo.load_all()] + [
-                p.text for p in long_phrase_repo.load_all()
+            context_phrases = [p.text for p in await phrase_repo.load_all()] + [
+                p.text for p in await long_phrase_repo.load_all()
             ]
 
             phrases = await ai_service.generate_cunhao_phrases(
@@ -439,8 +449,8 @@ class WebController(Controller):
                 )
 
             # Fetch all phrases for context
-            context_phrases = [p.text for p in phrase_repo.load_all()] + [
-                p.text for p in long_phrase_repo.load_all()
+            context_phrases = [p.text for p in await phrase_repo.load_all()] + [
+                p.text for p in await long_phrase_repo.load_all()
             ]
 
             phrases = await ai_service.generate_cunhao_phrases(
@@ -482,7 +492,9 @@ class WebController(Controller):
                 status_code=401,
             )
 
-        phrase = phrase_repo.load(phrase_id) or long_phrase_repo.load(phrase_id)
+        phrase = await phrase_repo.load(phrase_id) or await long_phrase_repo.load(
+            phrase_id
+        )
         if not phrase:
             raise HTTPException(status_code=404, detail="Phrase not found")
 
@@ -511,8 +523,8 @@ class WebController(Controller):
                 context={"error": str(e), "phrase": phrase},
             )
 
-    @get("/metrics", sync_to_thread=True)
-    def metrics(
+    @get("/metrics")
+    async def metrics(
         self,
         request: Request,
         phrase_repo: Annotated[PhraseRepository, Dependency()],
@@ -531,7 +543,7 @@ class WebController(Controller):
         l_prop_repo: LongProposalRepository = long_proposal_repo
 
         # Top phrases
-        phrases = p_repo.get_phrases() + lp_repo.get_phrases()
+        phrases = await p_repo.get_phrases() + await lp_repo.get_phrases()
         top_phrases = sorted(
             phrases,
             key=lambda p: p.usages + p.audio_usages,
@@ -539,7 +551,7 @@ class WebController(Controller):
         )[:10]
 
         # Proposal stats
-        proposals = prop_repo.load_all() + l_prop_repo.load_all()
+        proposals = await prop_repo.load_all() + await l_prop_repo.load_all()
         pending_proposals = [p for p in proposals if not p.voting_ended]
         ended_proposals = [p for p in proposals if p.voting_ended]
 
@@ -559,7 +571,7 @@ class WebController(Controller):
         }
 
         # Badge Stats
-        all_users = user_repo.load_all(ignore_gdpr=True)
+        all_users = await user_repo.load_all(ignore_gdpr=True)
         badge_counts: Counter = Counter()
         total_badges = 0
         for u in all_users:

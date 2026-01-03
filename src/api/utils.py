@@ -4,7 +4,7 @@ from core.config import config
 from infrastructure.protocols import ProposalRepository, LongProposalRepository
 
 
-def get_proposals_context(
+async def get_proposals_context(
     request: Request,
     proposal_repo: ProposalRepository,
     long_proposal_repo: LongProposalRepository,
@@ -15,8 +15,10 @@ def get_proposals_context(
     if "voting_ended" not in filters:
         filters["voting_ended"] = False
 
-    all_short = proposal_repo.get_proposals(search=search_query, limit=50, **filters)
-    all_long = long_proposal_repo.get_proposals(
+    all_short = await proposal_repo.get_proposals(
+        search=search_query, limit=50, **filters
+    )
+    all_long = await long_proposal_repo.get_proposals(
         search=search_query, limit=50, **filters
     )
 

@@ -28,8 +28,8 @@ class BotController(Controller):
         await handle_telegram_ping(application.bot)
         return "OK"
 
-    @get("/twitter/ping", sync_to_thread=False)
-    def twitter_ping_handler(
+    @get("/twitter/ping")
+    async def twitter_ping_handler(
         self, phrase_service: Annotated[PhraseService, Dependency()]
     ) -> str:
         client = tweepy.Client(
@@ -38,6 +38,6 @@ class BotController(Controller):
             access_token=config.twitter_access_token,
             access_token_secret=config.twitter_access_secret,
         )
-        phrase = phrase_service.get_random(long=True)
+        phrase = await phrase_service.get_random(long=True)
         client.create_tweet(text=phrase.text)
         return ""

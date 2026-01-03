@@ -1,3 +1,4 @@
+import asyncio
 from google.cloud import datastore
 from models.proposal import Proposal, LongProposal
 from infrastructure.datastore.base import DatastoreRepository
@@ -34,24 +35,33 @@ class ProposalDatastoreRepository(DatastoreRepository[Proposal]):
         entity.update(proposal.model_dump())
         return entity
 
-    def load(self, entity_id: str | int) -> Proposal | None:
-        key = self.get_key(entity_id)
-        entity = self.client.get(key)
-        return self._entity_to_domain(entity) if entity else None
+    async def load(self, entity_id: str | int) -> Proposal | None:
+        def _get():
+            key = self.get_key(entity_id)
+            entity = self.client.get(key)
+            return self._entity_to_domain(entity) if entity else None
 
-    def load_all(self) -> list[Proposal]:
-        query = self.client.query(kind=self.kind)
-        return [self._entity_to_domain(entity) for entity in query.fetch()]
+        return await asyncio.to_thread(_get)
 
-    def save(self, proposal: Proposal) -> None:
-        key = self.get_key(proposal.id)
-        entity = self._domain_to_entity(proposal, key)
-        self.client.put(entity)
+    async def load_all(self) -> list[Proposal]:
+        def _fetch():
+            query = self.client.query(kind=self.kind)
+            return [self._entity_to_domain(entity) for entity in query.fetch()]
 
-    def get_proposals(
+        return await asyncio.to_thread(_fetch)
+
+    async def save(self, proposal: Proposal) -> None:
+        def _put():
+            key = self.get_key(proposal.id)
+            entity = self._domain_to_entity(proposal, key)
+            self.client.put(entity)
+
+        await asyncio.to_thread(_put)
+
+    async def get_proposals(
         self, search: str = "", limit: int = 0, offset: int = 0, **filters: object
     ) -> list[Proposal]:
-        results = self.load_all()
+        results = await self.load_all()
         if search:
             norm_search = normalize_str(search)
             results = [p for p in results if norm_search in normalize_str(p.text)]

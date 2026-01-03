@@ -155,20 +155,26 @@ class TestFallbackHandlers:
             await handle_fallback_message(update, context)
             mock_mig.assert_called_once_with(123, update.effective_message.chat_id)
 
-    def test_on_kick(self):
+    @pytest.mark.asyncio
+    async def test_on_kick(self):
         with (
-            patch("services.user_repo.load", return_value=User(chat_id=123)),
-            patch("services.user_repo.save") as mock_save,
+            patch(
+                "services.user_repo.load",
+                new_callable=AsyncMock,
+                return_value=User(chat_id=123),
+            ),
+            patch("services.user_repo.save", new_callable=AsyncMock) as mock_save,
         ):
-            _on_kick(123)
+            await _on_kick(123)
             mock_save.assert_called_once()
 
-    def test_on_kick_no_user(self):
+    @pytest.mark.asyncio
+    async def test_on_kick_no_user(self):
         with (
-            patch("services.user_repo.load", return_value=None),
-            patch("services.user_repo.save") as mock_save,
+            patch("services.user_repo.load", new_callable=AsyncMock, return_value=None),
+            patch("services.user_repo.save", new_callable=AsyncMock) as mock_save,
         ):
-            _on_kick(123)
+            await _on_kick(123)
             mock_save.assert_not_called()
 
     def test_on_migrate(self):

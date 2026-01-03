@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from google.cloud import datastore
 from models.phrase import Phrase, LongPhrase
 from infrastructure.datastore.base import DatastoreRepository
@@ -37,35 +38,44 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
         entity.update(phrase.model_dump())
         return entity
 
-    def load_all(self) -> list[Phrase]:
+    async def load_all(self) -> list[Phrase]:
         if not self._cache:
-            query = self.client.query(kind=self.kind)
-            self._cache = [self._entity_to_domain(entity) for entity in query.fetch()]
+
+            def _fetch():
+                query = self.client.query(kind=self.kind)
+                return [self._entity_to_domain(entity) for entity in query.fetch()]
+
+            self._cache = await asyncio.to_thread(_fetch)
         return self._cache
 
-    def load(self, entity_id: str | int) -> Phrase | None:
-        key = self.get_key(entity_id)
-        entity = self.client.get(key)
-        return self._entity_to_domain(entity) if entity else None
+    async def load(self, entity_id: str | int) -> Phrase | None:
+        def _get():
+            key = self.get_key(entity_id)
+            entity = self.client.get(key)
+            return self._entity_to_domain(entity) if entity else None
 
-    def save(self, phrase: Phrase) -> None:
-        if phrase.id:
-            key = self.client.key(self.kind, phrase.id)
-        else:
-            key = self.client.key(self.kind)
+        return await asyncio.to_thread(_get)
 
-        entity = self._domain_to_entity(phrase, key)
-        self.client.put(entity)
+    async def save(self, phrase: Phrase) -> None:
+        def _save():
+            if phrase.id:
+                key = self.client.key(self.kind, phrase.id)
+            else:
+                key = self.client.key(self.kind)
 
-        if entity.key and entity.key.id:
-            phrase.id = entity.key.id
+            entity = self._domain_to_entity(phrase, key)
+            self.client.put(entity)
 
+            if entity.key and entity.key.id:
+                phrase.id = entity.key.id
+
+        await asyncio.to_thread(_save)
         self._cache = []
 
-    def get_phrases(
+    async def get_phrases(
         self, search: str = "", limit: int = 0, offset: int = 0, **filters: object
     ) -> list[Phrase]:
-        results = self.load_all()
+        results = await self.load_all()
         if search:
             norm_search = normalize_str(search)
             results = [p for p in results if norm_search in normalize_str(p.text)]
@@ -80,9 +90,9 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
 
         return results[offset : offset + limit] if limit > 0 else results
 
-    def add_usage(self, phrase_text: str, usage_type: str) -> None:
+    async def add_usage(self, phrase_text: str, usage_type: str) -> None:
         # Find phrase by text since ID is now numeric
-        phrases = self.get_phrases(search=phrase_text, limit=1)
+        phrases = await self.get_phrases(search=phrase_text, limit=1)
         # Verify exact match because get_phrases does fuzzy/partial search
         phrase = next((p for p in phrases if p.text == phrase_text), None)
 
@@ -93,24 +103,28 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
                 phrase.audio_usages += 1
             elif usage_type == "sticker":
                 phrase.sticker_usages += 1
-            self.save(phrase)
+            await self.save(phrase)
 
-    def add_usage_by_id(self, phrase_id: str | int) -> None:
-        phrase = self.load(phrase_id)
+    async def add_usage_by_id(self, phrase_id: str | int) -> None:
+        phrase = await self.load(phrase_id)
         if phrase:
             phrase.usages += 1
-            self.save(phrase)
+            await self.save(phrase)
 
-    def get_user_phrase_count(self, user_id: str) -> int:
+    async def get_user_phrase_count(self, user_id: str) -> int:
         """Counts phrases authored by a specific user."""
-        try:
-            query = self.client.query(kind=self.kind)
-            query.add_filter("user_id", "=", str(user_id))
-            query.keys_only()
-            return len(list(query.fetch(limit=1000)))
-        except Exception as e:
-            logger.error(f"Error counting phrases for user {user_id}: {e}")
-            return 0
+
+        def _count():
+            try:
+                query = self.client.query(kind=self.kind)
+                query.add_filter("user_id", "=", str(user_id))
+                query.keys_only()
+                return len(list(query.fetch(limit=1000)))
+            except Exception as e:
+                logger.error(f"Error counting phrases for user {user_id}: {e}")
+                return 0
+
+        return await asyncio.to_thread(_count)
 
 
 # Instances

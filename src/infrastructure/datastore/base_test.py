@@ -1,8 +1,10 @@
+import pytest
 from unittest.mock import MagicMock, patch
 from infrastructure.datastore.base import DatastoreRepository
 
 
-def test_datastore_repository_delete():
+@pytest.mark.asyncio
+async def test_datastore_repository_delete():
     with (
         patch("infrastructure.datastore.base.get_datastore_client") as mock_get_client,
         patch("google.cloud.datastore.Client"),
@@ -14,7 +16,7 @@ def test_datastore_repository_delete():
         entity_id = "test_id"
 
         # Call the delete method
-        repo.delete(entity_id)
+        await repo.delete(entity_id)
 
         # Assert that client.delete was called with the correct key
         mock_client_instance.key.assert_called_once_with("TestKind", entity_id)

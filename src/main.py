@@ -38,8 +38,8 @@ logging.basicConfig(format="%(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-@get("/auth/telegram", sync_to_thread=True)
-def auth_telegram(request: Request) -> Redirect:
+@get("/auth/telegram")
+async def auth_telegram(request: Request) -> Redirect:
     if not verify_telegram_auth(dict(request.query_params), config.tg_token):
         return Redirect(path="/")
     request.set_session(
@@ -55,26 +55,26 @@ def auth_telegram(request: Request) -> Redirect:
     return Redirect(path="/")
 
 
-@get("/logout", sync_to_thread=True)
-def logout(request: Request) -> Redirect:
+@get("/logout")
+async def logout(request: Request) -> Redirect:
     request.clear_session()
     return Redirect(path="/")
 
 
-@get("/proposals/search", sync_to_thread=True)
-def proposals_search(
+@get("/proposals/search")
+async def proposals_search(
     request: Request,
     proposal_repo: Annotated[ProposalRepository, Dependency()],
     long_proposal_repo: Annotated[LongProposalRepository, Dependency()],
 ) -> HTMXTemplate:
     return HTMXTemplate(
         template_name="partials/proposals_list.html",
-        context=get_proposals_context(request, proposal_repo, long_proposal_repo),
+        context=await get_proposals_context(request, proposal_repo, long_proposal_repo),
     )
 
 
-@get("/ping", sync_to_thread=True)
-def ping() -> str:
+@get("/ping")
+async def ping() -> str:
     return "I am alive"
 
 

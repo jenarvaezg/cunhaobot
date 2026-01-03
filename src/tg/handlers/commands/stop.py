@@ -13,11 +13,11 @@ async def handle_stop(update: Update, context: CallbackContext) -> None:
     ):
         return
 
-    user = user_repo.load(update.effective_chat.id)
+    user = await user_repo.load(update.effective_chat.id)
     if user:
         user_service.delete_user(user)
 
-    p = phrase_service.get_random().text
+    p = (await phrase_service.get_random()).text
     await update.effective_message.reply_text(
         f"Vale, ya me voy a por tabaco, {p}.", do_quote=True
     )

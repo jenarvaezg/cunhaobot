@@ -57,7 +57,9 @@ class ProposalService:
             user_id=user.id,
         )
 
-    def vote(self, proposal: Proposal, voter_id: str | int, positive: bool) -> None:
+    async def vote(
+        self, proposal: Proposal, voter_id: str | int, positive: bool
+    ) -> None:
         voter_id_str = str(voter_id)
         liked = set(proposal.liked_by)
         disliked = set(proposal.disliked_by)
@@ -71,12 +73,12 @@ class ProposalService:
 
         proposal.liked_by, proposal.disliked_by = list(liked), list(disliked)
         if isinstance(proposal, LongProposal):
-            self.long_repo.save(proposal)
+            await self.long_repo.save(proposal)
         else:
-            self.repo.save(proposal)
+            await self.repo.save(proposal)
 
         # Award points: 1 to proposer
-        user_service.add_points(proposal.user_id, 1)
+        await user_service.add_points(proposal.user_id, 1)
 
     async def get_curators(self) -> dict[str, str]:
         now = datetime.now()
@@ -99,7 +101,7 @@ class ProposalService:
                         admin.user.name or admin.user.first_name
                     )
 
-            all_proposals = self.repo.load_all() + self.long_repo.load_all()
+            all_proposals = await self.repo.load_all() + await self.long_repo.load_all()
             active_ids = {str(p.user_id) for p in all_proposals}
             for p in all_proposals:
                 active_ids.update(str(uid) for uid in p.liked_by)
@@ -125,7 +127,8 @@ class ProposalService:
 
             # Unify db names lookup
             db_names: dict[str, str] = {
-                str(u.id): u.name for u in self.user_repo.load_all(ignore_gdpr=True)
+                str(u.id): u.name
+                for u in await self.user_repo.load_all(ignore_gdpr=True)
             }
 
             for mid in member_ids:
@@ -139,7 +142,7 @@ class ProposalService:
 
     async def approve(self, proposal_kind: str, proposal_id: str) -> bool:
         repo = self.long_repo if proposal_kind == LongProposal.kind else self.repo
-        proposal = repo.load(proposal_id)
+        proposal = await repo.load(proposal_id)
         if not proposal:
             return False
         from tg.handlers.utils.callback_query import approve_proposal
@@ -152,7 +155,7 @@ class ProposalService:
 
     async def reject(self, proposal_kind: str, proposal_id: str) -> bool:
         repo = self.long_repo if proposal_kind == LongProposal.kind else self.repo
-        proposal = repo.load(proposal_id)
+        proposal = await repo.load(proposal_id)
         if not proposal:
             return False
         from tg.handlers.utils.callback_query import dismiss_proposal
@@ -163,14 +166,14 @@ class ProposalService:
         await dismiss_proposal(proposal, app.bot)
         return True
 
-    def find_most_similar_proposal(
+    async def find_most_similar_proposal(
         self, text: str, is_long: bool = False
     ) -> tuple[Proposal | None, int]:
         from fuzzywuzzy import fuzz
         from utils import normalize_str
 
         repo = self.long_repo if is_long else self.repo
-        proposals = repo.load_all()
+        proposals = await repo.load_all()
         if not proposals:
             return None, 0
 

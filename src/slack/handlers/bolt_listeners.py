@@ -69,7 +69,7 @@ async def _register_slack_user(body: dict[str, Any], client: AsyncWebClient) -> 
                 username = cast(str | None, slack_user.get("name"))
 
         if user_id:
-            user_service.update_or_create_slack_user(
+            await user_service.update_or_create_slack_user(
                 slack_user_id=user_id,
                 name=user_name,
                 username=username,
@@ -93,7 +93,7 @@ def register_listeners(app: AsyncApp) -> None:
 
         if not text:
             # Generate Token
-            token = user_service.generate_link_token(user_id, "slack")
+            token = await user_service.generate_link_token(user_id, "slack")
             await respond(
                 f"🔗 *Vincular Cuenta*\n\n"
                 f"Tu código de vinculación es: `{token}`\n\n"
@@ -106,7 +106,7 @@ def register_listeners(app: AsyncApp) -> None:
         else:
             # Consume Token
             token = text.upper()
-            success = user_service.complete_link(token, user_id, "slack")
+            success = await user_service.complete_link(token, user_id, "slack")
             if success:
                 await respond(
                     "✅ *Cuentas Vinculadas con Éxito*\n\n"
@@ -136,7 +136,7 @@ def register_listeners(app: AsyncApp) -> None:
             )
             return
 
-        phrases = phrase_service.get_phrases(search=text, long=False)
+        phrases = await phrase_service.get_phrases(search=text, long=False)
         if not phrases:
             await respond(
                 f'No tengo ningún saludo que encaje con la búsqueda "{text}".'
@@ -170,9 +170,9 @@ def register_listeners(app: AsyncApp) -> None:
             return
 
         if text:
-            phrases = phrase_service.get_phrases(search=text, long=True)
+            phrases = await phrase_service.get_phrases(search=text, long=True)
             if not phrases:
-                phrase, score = phrase_service.find_most_similar(text, long=True)
+                phrase, score = await phrase_service.find_most_similar(text, long=True)
                 if score < 60:
                     await respond(
                         f'No tengo ninguna frase que encaje con "{text}". ¿Querías decir algo como "{phrase.text}"?'
@@ -183,7 +183,7 @@ def register_listeners(app: AsyncApp) -> None:
             else:
                 selected_phrase = random.choice(phrases)
         else:
-            selected_phrase = phrase_service.get_random(long=True)
+            selected_phrase = await phrase_service.get_random(long=True)
 
         if not selected_phrase:
             await respond("No hay frases disponibles en este momento.")
@@ -216,16 +216,16 @@ def register_listeners(app: AsyncApp) -> None:
         text: str = body.get("text", "").strip()
 
         if text == "help":
-            random_phrase = phrase_service.get_random().text
+            random_phrase = (await phrase_service.get_random()).text
             await respond(
                 f"Usando /cuñao <texto> te doy frases de cuñao que incluyan texto en su contenido. "
                 f"Si no me das texto para buscar, tendrás una frase al azar, {random_phrase}"
             )
             return
 
-        phrases = phrase_service.get_phrases(search=text, long=True)
+        phrases = await phrase_service.get_phrases(search=text, long=True)
         if not phrases:
-            random_phrase = phrase_service.get_random().text
+            random_phrase = (await phrase_service.get_random()).text
             await respond(
                 f'No tengo ninguna frase que encaje con la busqueda "{text}", {random_phrase}.'
             )
@@ -262,7 +262,7 @@ def register_listeners(app: AsyncApp) -> None:
             # We need to find the phrase to get the key and build the URL again
             # or we could have passed the URL in the value, but it might be too long.
             # Let's search for the exact text.
-            phrases = phrase_service.get_phrases(search=text, long=True)
+            phrases = await phrase_service.get_phrases(search=text, long=True)
             # Find exact match
             selected_phrase = next((p for p in phrases if p.text == text), None)
 
@@ -273,7 +273,7 @@ def register_listeners(app: AsyncApp) -> None:
             else:
                 encoded_id = urllib.parse.quote(str(selected_phrase.id))
                 sticker_url = f"{config.base_url}/phrase/{encoded_id}/sticker.png"
-                phrase_service.register_sticker_usage(selected_phrase)
+                await phrase_service.register_sticker_usage(selected_phrase)
 
             await respond(
                 delete_original=True,
@@ -346,10 +346,10 @@ def register_listeners(app: AsyncApp) -> None:
             )
         elif value.startswith("shuffle-sticker-"):
             search: str = value[len("shuffle-sticker-") :]
-            phrases = phrase_service.get_phrases(search=search, long=True)
+            phrases = await phrase_service.get_phrases(search=search, long=True)
             if not phrases:
                 # Fallback to random if search yields nothing now
-                selected_phrase = phrase_service.get_random(long=True)
+                selected_phrase = await phrase_service.get_random(long=True)
             else:
                 selected_phrase = random.choice(phrases)
 
@@ -370,7 +370,7 @@ def register_listeners(app: AsyncApp) -> None:
             )
         elif value.startswith("shuffle-saludo-"):
             search: str = value[len("shuffle-saludo-") :]
-            phrases = phrase_service.get_phrases(search=search, long=False)
+            phrases = await phrase_service.get_phrases(search=search, long=False)
             if not phrases:
                 await respond(delete_original=True)
                 return
@@ -384,7 +384,7 @@ def register_listeners(app: AsyncApp) -> None:
             )
         elif value.startswith("shuffle-"):
             search: str = value[len("shuffle-") :]
-            phrases = phrase_service.get_phrases(search=search, long=True)
+            phrases = await phrase_service.get_phrases(search=search, long=True)
             if not phrases:
                 await respond(delete_original=True)
                 return
@@ -466,9 +466,9 @@ def register_listeners(app: AsyncApp) -> None:
             action=ActionType.COMMAND,
             metadata={"command": "help"},
         )
-        p1 = phrase_service.get_random(long=False).text
-        p2 = phrase_service.get_random(long=False).text
-        p3 = phrase_service.get_random(long=False).text
+        p1 = (await phrase_service.get_random(long=False)).text
+        p2 = (await phrase_service.get_random(long=False)).text
+        p3 = (await phrase_service.get_random(long=False)).text
         await respond(
             "*Guía Rápida de Supervivencia Cuñadil:*\n\n"
             "• `/cuñao [texto]` - Busca una frase mítica que contenga ese texto.\n"
@@ -497,13 +497,13 @@ def register_listeners(app: AsyncApp) -> None:
             metadata={"command": "profile"},
         )
 
-        user = user_service.get_user(user_id, platform)
+        user = await user_service.get_user(user_id, platform)
         if not user:
-            p = phrase_service.get_random(long=False).text
+            p = (await phrase_service.get_random(long=False)).text
             await respond(f"Todavía no tengo tu ficha, {p}. ¡Empieza a usar el bot!")
             return
 
-        stats = usage_service.get_user_stats(user_id, platform)
+        stats = await usage_service.get_user_stats(user_id, platform)
         all_badges_progress = await badge_service.get_all_badges_progress(
             user_id, platform
         )

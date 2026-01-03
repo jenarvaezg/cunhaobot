@@ -20,7 +20,7 @@ def _result_id_for_combination(combination: tuple) -> str:
     return f"short-{safe_id}"[:63]
 
 
-def get_short_mode_results(input_text: str) -> list[InlineQueryResultArticle]:
+async def get_short_mode_results(input_text: str) -> list[InlineQueryResultArticle]:
     input_text = input_text.strip()
     if input_text == "":
         size, search = 1, ""
@@ -33,7 +33,7 @@ def get_short_mode_results(input_text: str) -> list[InlineQueryResultArticle]:
             size = 1
             search = input_text
 
-    phrases = phrase_repo.load_all()
+    phrases = await phrase_repo.load_all()
     if not phrases:
         return []
 

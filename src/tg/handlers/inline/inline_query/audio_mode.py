@@ -25,7 +25,7 @@ def _phrase_to_inline_audio(
     )
 
 
-def get_audio_mode_results(input: str) -> list[InlineQueryResultVoice]:
+async def get_audio_mode_results(input: str) -> list[InlineQueryResultVoice]:
     from services import phrase_repo, long_phrase_repo
 
     mode, rest = get_query_mode(input)
@@ -34,10 +34,10 @@ def get_audio_mode_results(input: str) -> list[InlineQueryResultVoice]:
     result_type = "short"
     if mode == SHORT_MODE:
         result_type = "short"
-        phrases = phrase_repo.get_phrases(search=rest)
+        phrases = await phrase_repo.get_phrases(search=rest)
     elif mode == LONG_MODE:
         result_type = "long"
-        phrases = long_phrase_repo.get_phrases(search=rest)
+        phrases = await long_phrase_repo.get_phrases(search=rest)
 
     random.shuffle(phrases)
 

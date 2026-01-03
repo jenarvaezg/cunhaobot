@@ -13,15 +13,23 @@ def mock_deps():
     with (
         patch("tg.handlers.commands.submit.proposal_service") as ps,
         patch("tg.handlers.commands.submit.phrase_service") as phs,
-        patch("tg.handlers.commands.submit.proposal_repo") as pr,
-        patch("tg.handlers.commands.submit.long_proposal_repo") as lpr,
-        patch("tg.decorators.user_service.update_or_create_user"),
+        patch(
+            "tg.handlers.commands.submit.proposal_repo", new_callable=AsyncMock
+        ) as pr,
+        patch(
+            "tg.handlers.commands.submit.long_proposal_repo", new_callable=AsyncMock
+        ) as lpr,
+        patch(
+            "tg.decorators.user_service.update_or_create_user", new_callable=AsyncMock
+        ),
         patch("tg.handlers.commands.submit.usage_service") as us,
         patch("tg.handlers.commands.submit.notify_new_badges") as nnb,
         patch("tg.handlers.commands.submit.config") as config,
     ):
+        phs.get_random = AsyncMock()
         phs.get_random.return_value.text = "cuñao"
-        ps.find_most_similar_proposal.return_value = (None, 0)
+        phs.find_most_similar = AsyncMock()
+        ps.find_most_similar_proposal = AsyncMock(return_value=(None, 0))
         config.mod_chat_id = 123
         us.log_usage = AsyncMock(return_value=[])
         nnb.return_value = AsyncMock()

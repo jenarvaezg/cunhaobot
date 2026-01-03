@@ -82,96 +82,103 @@ class TestPhraseRepository:
         assert phrase.created_at == now
         assert phrase.proposal_id == "prop999"
 
-    def test_load_all(self, repo, mock_datastore_client):
+    @pytest.mark.asyncio
+    async def test_load_all(self, repo, mock_datastore_client):
         mock_query = MagicMock()
         mock_datastore_client.query.return_value = mock_query
 
         entity1 = create_mock_entity({"text": "phrase1"})
         mock_query.fetch.return_value = [entity1]
 
-        phrases = repo.load_all()
+        phrases = await repo.load_all()
         assert len(phrases) == 1
         assert phrases[0].text == "phrase1"
         mock_datastore_client.query.assert_called_with(kind="Phrase")
 
         # Test cache hit
         mock_datastore_client.query.reset_mock()
-        phrases = repo.load_all()
+        phrases = await repo.load_all()
         mock_datastore_client.query.assert_not_called()  # Should not be called again
 
-    def test_load_not_found(self, repo, mock_datastore_client):
+    @pytest.mark.asyncio
+    async def test_load_not_found(self, repo, mock_datastore_client):
         mock_datastore_client.get.return_value = None
-        phrase = repo.load("non_existent")
+        phrase = await repo.load("non_existent")
         assert phrase is None
         mock_datastore_client.get.assert_called_once()
 
-    def test_save_clears_cache(self, repo, mock_datastore_client):
+    @pytest.mark.asyncio
+    async def test_save_clears_cache(self, repo, mock_datastore_client):
         # Populate cache
         repo._cache = [Phrase(text="cached")]
         p = Phrase(text="new_phrase", usages=1)
-        repo.save(p)
+        await repo.save(p)
         assert not repo._cache  # Cache should be cleared
         mock_datastore_client.put.assert_called_once()
 
-    def test_get_phrases_with_empty_filter(self, repo):
+    @pytest.mark.asyncio
+    async def test_get_phrases_with_empty_filter(self, repo):
         p1 = Phrase(text="phrase 1", proposal_id="prop1")
         p2 = Phrase(text="phrase 2", proposal_id="")
         repo._cache = [p1, p2]
 
-        results = repo.get_phrases(proposal_id="__EMPTY__")
+        results = await repo.get_phrases(proposal_id="__EMPTY__")
         assert len(results) == 1
         assert results[0].text == "phrase 2"
 
-    def test_get_phrases_with_value_filter_and_limit(self, repo):
+    @pytest.mark.asyncio
+    async def test_get_phrases_with_value_filter_and_limit(self, repo):
         p1 = Phrase(text="foo", usages=10, chat_id=123)
         p2 = Phrase(text="bar", usages=5, chat_id=456)
         p3 = Phrase(text="foobar", usages=15, chat_id=123)
         repo._cache = [p1, p2, p3]
 
-        results = repo.get_phrases(search="foo", limit=1)
+        results = await repo.get_phrases(search="foo", limit=1)
         assert len(results) == 1
         assert results[0].text in [
             "foo",
             "foobar",
         ]  # Order might vary depending on initial cache order
 
-        results = repo.get_phrases(usages=10)
+        results = await repo.get_phrases(usages=10)
         assert len(results) == 1
         assert results[0].text == "foo"
 
-        results = repo.get_phrases(chat_id=123)
+        results = await repo.get_phrases(chat_id=123)
         assert len(results) == 2
         assert {p.text for p in results} == {"foo", "foobar"}
 
-        results = repo.get_phrases(chat_id="456")  # Test string conversion
+        results = await repo.get_phrases(chat_id="456")  # Test string conversion
         assert len(results) == 1
         assert results[0].text == "bar"
 
-        results = repo.get_phrases(limit=2, offset=1)
+        results = await repo.get_phrases(limit=2, offset=1)
         assert len(results) == 2
         assert results[0].text == "bar"
         assert results[1].text == "foobar"
 
-    def test_get_phrases_filter(self, repo, mock_datastore_client):
+    @pytest.mark.asyncio
+    async def test_get_phrases_filter(self, repo, mock_datastore_client):
         p1 = Phrase(text="foo", proposal_id="123")
         p2 = Phrase(text="bar", proposal_id="")
         repo._cache = [p1, p2]
 
         # Test __EMPTY__ filter
-        results = repo.get_phrases(proposal_id="__EMPTY__")
+        results = await repo.get_phrases(proposal_id="__EMPTY__")
         assert len(results) == 1
         assert results[0].text == "bar"
 
         # Test value filter
-        results = repo.get_phrases(proposal_id="123")
+        results = await repo.get_phrases(proposal_id="123")
         assert len(results) == 1
         assert results[0].text == "foo"
 
-    def test_add_usage(self, repo, mock_datastore_client):
+    @pytest.mark.asyncio
+    async def test_add_usage(self, repo, mock_datastore_client):
         p1 = Phrase(text="target", usages=5, score=10)
         repo._cache = [p1]
 
-        repo.add_usage("target", "audio")
+        await repo.add_usage("target", "audio")
 
         assert p1.usages == 6
         assert p1.audio_usages == 1

@@ -1,3 +1,4 @@
+import asyncio
 from typing import Generic, TypeVar
 from google.cloud import datastore
 from pydantic import BaseModel
@@ -17,5 +18,5 @@ class DatastoreRepository(Generic[T]):
     def get_key(self, entity_id: str | int) -> datastore.Key:
         return self.client.key(self.kind, entity_id)
 
-    def delete(self, entity_id: str | int) -> None:
-        self.client.delete(self.get_key(entity_id))
+    async def delete(self, entity_id: str | int) -> None:
+        await asyncio.to_thread(self.client.delete, self.get_key(entity_id))

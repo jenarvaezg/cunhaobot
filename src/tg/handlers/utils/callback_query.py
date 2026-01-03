@@ -46,7 +46,7 @@ def get_vote_summary(proposal: Proposal) -> str:
 async def _add_vote(
     proposal: Proposal | LongProposal, vote: str, callback_query: CallbackQuery
 ) -> None:
-    proposal_service.vote(proposal, callback_query.from_user.id, vote == LIKE)
+    await proposal_service.vote(proposal, callback_query.from_user.id, vote == LIKE)
     await callback_query.answer(f"Tu voto: {vote} ha sido añadido.")
 
 
@@ -70,9 +70,9 @@ async def approve_proposal(
     proposal.voting_ended_at = datetime.now()
 
     repo = long_proposal_repo if isinstance(proposal, LongProposal) else proposal_repo
-    repo.save(proposal)
+    await repo.save(proposal)
 
-    p_random = phrase_service.get_random().text
+    p_random = (await phrase_service.get_random()).text
     msg_text = (
         f"La propuesta '{proposal.text}' queda formalmente aprobada y añadida a la lista.\n\n"
         f"{get_vote_summary(proposal)}"
@@ -122,9 +122,9 @@ async def dismiss_proposal(
     proposal.voting_ended_at = datetime.now()
 
     repo = long_proposal_repo if isinstance(proposal, LongProposal) else proposal_repo
-    repo.save(proposal)
+    await repo.save(proposal)
 
-    p_random = phrase_service.get_random().text
+    p_random = (await phrase_service.get_random()).text
     msg_text = (
         f"La propuesta '{proposal.text}' queda formalmente rechazada.\n\n"
         f"{get_vote_summary(proposal)}"
@@ -205,7 +205,7 @@ async def handle_callback_query(update: Update, context: CallbackContext) -> Non
     admins = admins or list(await bot.get_chat_administrators(config.mod_chat_id))
 
     if callback_query.from_user.id not in [a.user.id for a in admins]:
-        p = phrase_service.get_random().text
+        p = (await phrase_service.get_random()).text
         await callback_query.answer(
             f"Tener una silla en el consejo no te hace maestro cuñao, {p}"
         )
@@ -213,10 +213,10 @@ async def handle_callback_query(update: Update, context: CallbackContext) -> Non
 
     vote, proposal_id, kind = data.split(":")
     repo = long_proposal_repo if kind == LongProposal.kind else proposal_repo
-    proposal = repo.load(proposal_id)
+    proposal = await repo.load(proposal_id)
 
     if proposal is None:
-        p = phrase_service.get_random().text
+        p = (await phrase_service.get_random()).text
         await callback_query.answer(f"Esa propuesta ha muerto, {p}")
         return
 

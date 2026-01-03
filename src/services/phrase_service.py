@@ -57,9 +57,9 @@ class PhraseService:
             phrase.stickerset_title_template,
         )
         if is_long:
-            self.long_repo.save(cast(LongPhrase, phrase))
+            await self.long_repo.save(cast(LongPhrase, phrase))
         else:
-            self.phrase_repo.save(phrase)
+            await self.phrase_repo.save(phrase)
 
         # Award points to the proposer
         user_service.add_points(proposal.user_id, 10)
@@ -73,7 +73,7 @@ class PhraseService:
             try:
                 await bot.send_message(
                     chat_id=proposal.user_id,
-                    text=format_badge_notification(badge),
+                    text=await format_badge_notification(badge),
                     parse_mode=telegram.constants.ParseMode.HTML,
                 )
             except Exception as e:
@@ -81,21 +81,25 @@ class PhraseService:
                     f"Could not notify badge {badge.id} to user {proposal.user_id}: {e}"
                 )
 
-    def get_random(self, long: bool = False) -> Phrase:
+    async def get_random(self, long: bool = False) -> Phrase:
         repo = self.long_repo if long else self.phrase_repo
-        phrases = repo.load_all()
+        phrases = await repo.load_all()
         if not phrases:
             return LongPhrase(text="¡Cuñado!") if long else Phrase(text="¡Cuñado!")
         return random.choice(phrases)
 
-    def get_phrases(self, search: str, long: bool = False) -> list[Phrase | LongPhrase]:
+    async def get_phrases(
+        self, search: str, long: bool = False
+    ) -> list[Phrase | LongPhrase]:
         repo = self.long_repo if long else self.phrase_repo
-        phrases = repo.load_all()
+        phrases = await repo.load_all()
         return [p for p in phrases if search.lower() in p.text.lower()]
 
-    def find_most_similar(self, text: str, long: bool = False) -> tuple[Phrase, int]:
+    async def find_most_similar(
+        self, text: str, long: bool = False
+    ) -> tuple[Phrase, int]:
         repo = self.long_repo if long else self.phrase_repo
-        phrases = repo.load_all()
+        phrases = await repo.load_all()
         if not phrases:
             return (LongPhrase(text="") if long else Phrase(text="")), 0
 
@@ -105,18 +109,18 @@ class PhraseService:
             key=lambda x: x[1],
         )
 
-    def register_sticker_usage(self, phrase: Phrase | LongPhrase) -> None:
+    async def register_sticker_usage(self, phrase: Phrase | LongPhrase) -> None:
         """Increments sticker usage counters for a phrase."""
         phrase.usages += 1
         phrase.sticker_usages += 1
         phrase.score += 1
 
         if isinstance(phrase, LongPhrase):
-            self.long_repo.save(phrase)
+            await self.long_repo.save(phrase)
         else:
-            self.phrase_repo.save(phrase)
+            await self.phrase_repo.save(phrase)
 
-    def add_usage_by_id(self, result_id: str) -> None:
+    async def add_usage_by_id(self, result_id: str) -> None:
         """Increments usage count based on inline result ID."""
         is_audio = result_id.startswith("audio-")
         is_sticker = result_id.startswith("sticker-")
@@ -147,7 +151,7 @@ class PhraseService:
             if item.isdigit():
                 phrase_id = int(item)
                 if is_long:
-                    lp = self.long_repo.load(phrase_id)
+                    lp = await self.long_repo.load(phrase_id)
                     if lp:
                         lp.usages += 1
                         lp.score += 1
@@ -155,9 +159,9 @@ class PhraseService:
                             lp.audio_usages += 1
                         if is_sticker:
                             lp.sticker_usages += 1
-                        self.long_repo.save(lp)
+                        await self.long_repo.save(lp)
                 else:
-                    p = self.phrase_repo.load(phrase_id)
+                    p = await self.phrase_repo.load(phrase_id)
                     if p:
                         p.usages += 1
                         p.score += 1
@@ -165,4 +169,4 @@ class PhraseService:
                             p.audio_usages += 1
                         if is_sticker:
                             p.sticker_usages += 1
-                        self.phrase_repo.save(p)
+                        await self.phrase_repo.save(p)

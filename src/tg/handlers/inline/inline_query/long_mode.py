@@ -4,9 +4,9 @@ from services import long_phrase_repo, phrase_service
 from utils import get_thumb, normalize_str
 
 
-def get_long_mode_results(input_text: str) -> list[InlineQueryResultArticle]:
+async def get_long_mode_results(input_text: str) -> list[InlineQueryResultArticle]:
     max_results_number = 10
-    phrases = long_phrase_repo.get_phrases(search=input_text)
+    phrases = await long_phrase_repo.get_phrases(search=input_text)
 
     # Randomize results
     random.shuffle(phrases)
@@ -25,7 +25,7 @@ def get_long_mode_results(input_text: str) -> list[InlineQueryResultArticle]:
 
     if not results:
         result_id = f"long-bad-search-{normalize_str(input_text)}"
-        random_phrase = phrase_service.get_random(long=True).text
+        random_phrase = (await phrase_service.get_random(long=True)).text
         results = [
             InlineQueryResultArticle(
                 id=result_id[:63],

@@ -19,10 +19,10 @@ async def handle_start(update: Update, context: CallbackContext) -> None:
     )
     await notify_new_badges(update, context, new_badges)
 
-    p1 = phrase_service.get_random(long=False).text
-    p2 = phrase_service.get_random(long=False).text
-    p3 = phrase_service.get_random(long=False).text
-    p4 = phrase_service.get_random(long=False).text
+    p1 = (await phrase_service.get_random(long=False)).text
+    p2 = (await phrase_service.get_random(long=False)).text
+    p3 = (await phrase_service.get_random(long=False)).text
+    p4 = (await phrase_service.get_random(long=False)).text
 
     text = (
         f"¡Qué pasa, {p1}! Bienvenido a **CuñaoBot**, el sistema de soporte a la toma de decisiones "

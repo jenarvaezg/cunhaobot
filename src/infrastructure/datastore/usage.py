@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from google.cloud import datastore
 from models.usage import UsageRecord
@@ -29,34 +30,48 @@ class UsageDatastoreRepository(DatastoreRepository[UsageRecord]):
         entity.update(record.model_dump())
         return entity
 
-    def save(self, record: UsageRecord) -> None:
-        key = self.client.key(self.kind)
-        entity = self._domain_to_entity(record, key)
-        self.client.put(entity)
+    async def save(self, record: UsageRecord) -> None:
+        def _put():
+            key = self.client.key(self.kind)
+            entity = self._domain_to_entity(record, key)
+            self.client.put(entity)
 
-    def get_user_usage_count(self, user_id: str, platform: str | None = None) -> int:
-        try:
-            query = self.client.query(kind=self.kind)
-            query.add_filter("user_id", "=", user_id)
-            if platform:
-                query.add_filter("platform", "=", platform)
-            query.keys_only()
-            return len(list(query.fetch(limit=5000)))  # Limit to 5000 to avoid timeouts
-        except Exception as e:
-            logger.error(f"Error counting usage for {user_id}: {e}")
-            return 0
+        await asyncio.to_thread(_put)
 
-    def get_user_action_count(self, user_id: str, action: str) -> int:
+    async def get_user_usage_count(
+        self, user_id: str, platform: str | None = None
+    ) -> int:
+        def _count():
+            try:
+                query = self.client.query(kind=self.kind)
+                query.add_filter("user_id", "=", user_id)
+                if platform:
+                    query.add_filter("platform", "=", platform)
+                query.keys_only()
+                return len(
+                    list(query.fetch(limit=5000))
+                )  # Limit to 5000 to avoid timeouts
+            except Exception as e:
+                logger.error(f"Error counting usage for {user_id}: {e}")
+                return 0
+
+        return await asyncio.to_thread(_count)
+
+    async def get_user_action_count(self, user_id: str, action: str) -> int:
         """Counts how many times a user has performed a specific action."""
-        try:
-            query = self.client.query(kind=self.kind)
-            query.add_filter("user_id", "=", str(user_id))
-            query.add_filter("action", "=", action)
-            query.keys_only()
-            return len(list(query.fetch(limit=5000)))
-        except Exception as e:
-            logger.error(f"Error counting action {action} for {user_id}: {e}")
-            return 0
+
+        def _count():
+            try:
+                query = self.client.query(kind=self.kind)
+                query.add_filter("user_id", "=", str(user_id))
+                query.add_filter("action", "=", action)
+                query.keys_only()
+                return len(list(query.fetch(limit=5000)))
+            except Exception as e:
+                logger.error(f"Error counting action {action} for {user_id}: {e}")
+                return 0
+
+        return await asyncio.to_thread(_count)
 
 
 usage_repository = UsageDatastoreRepository()

@@ -121,7 +121,7 @@ class BadgeService:
         """Checks and awards new badges to a user. Returns list of NEWLY awarded Badge objects."""
         from models.usage import ActionType
 
-        user = self.user_service.get_user(user_id, platform)
+        user = await self.user_service.get_user(user_id, platform)
         if not user:
             return []
 
@@ -152,13 +152,13 @@ class BadgeService:
 
         # 3. Fiera Total (50 saludos)
         if "fiera_total" not in current_badges:
-            stats = usage_repository.get_user_usage_count(str(user_id))
+            stats = await self.usage_repo.get_user_usage_count(str(user_id))
             if stats >= 50:
                 new_badge_ids.append("fiera_total")
 
         # 4. Visionario (5 vision usages)
         if "visionario" not in current_badges:
-            vision_count = self.usage_repo.get_user_action_count(
+            vision_count = await self.usage_repo.get_user_action_count(
                 str(user_id), action=ActionType.VISION.value
             )
             if vision_count >= 5:
@@ -168,7 +168,9 @@ class BadgeService:
         if "poeta" not in current_badges:
             from infrastructure.datastore.phrase import phrase_repository
 
-            user_phrases_count = phrase_repository.get_user_phrase_count(str(user_id))
+            user_phrases_count = await phrase_repository.get_user_phrase_count(
+                str(user_id)
+            )
             if user_phrases_count >= 5:
                 new_badge_ids.append("poeta")
 
@@ -181,7 +183,7 @@ class BadgeService:
 
         # 7. Autor (1 phrase approved)
         if "autor" not in current_badges:
-            approve_count = self.usage_repo.get_user_action_count(
+            approve_count = await self.usage_repo.get_user_action_count(
                 str(user_id), action=ActionType.APPROVE.value
             )
             if approve_count >= 1:
@@ -189,7 +191,7 @@ class BadgeService:
 
         # 8. Incomprendido (1 phrase rejected)
         if "incomprendido" not in current_badges:
-            reject_count = self.usage_repo.get_user_action_count(
+            reject_count = await self.usage_repo.get_user_action_count(
                 str(user_id), action=ActionType.REJECT.value
             )
             if reject_count >= 1:
@@ -197,7 +199,7 @@ class BadgeService:
 
         # 9. Charlatán (5 AI usages)
         if "charlatan" not in current_badges:
-            ai_count = self.usage_repo.get_user_action_count(
+            ai_count = await self.usage_repo.get_user_action_count(
                 str(user_id), action=ActionType.AI_ASK.value
             )
             if ai_count >= 5:
@@ -205,7 +207,7 @@ class BadgeService:
 
         # 10. Melómano (5 Audio usages)
         if "melomano" not in current_badges:
-            audio_count = self.usage_repo.get_user_action_count(
+            audio_count = await self.usage_repo.get_user_action_count(
                 str(user_id), action=ActionType.AUDIO.value
             )
             if audio_count >= 5:
@@ -213,7 +215,7 @@ class BadgeService:
 
         # 11. Insistente (10 proposals)
         if "insistente" not in current_badges:
-            propose_count = self.usage_repo.get_user_action_count(
+            propose_count = await self.usage_repo.get_user_action_count(
                 str(user_id), action=ActionType.PROPOSE.value
             )
             if propose_count >= 10:
@@ -222,18 +224,18 @@ class BadgeService:
         # 12. Multiplataforma (Has linked accounts)
         if "multiplataforma" not in current_badges:
             # Check if user is linked or has others linked to them
-            raw_user = self.user_service.user_repo.load_raw(user.id)
+            raw_user = await self.user_service.user_repo.load_raw(user.id)
             if raw_user and raw_user.linked_to:
                 new_badge_ids.append("multiplataforma")
             else:
                 # This check is slightly more expensive, but only runs if they don't have the badge
-                all_users = self.user_service.user_repo.load_all(ignore_gdpr=True)
+                all_users = await self.user_service.user_repo.load_all(ignore_gdpr=True)
                 if any(u.linked_to == user.id for u in all_users):
                     new_badge_ids.append("multiplataforma")
 
         # 13. Centro de Atención (1 reaction received)
         if "centro_atencion" not in current_badges:
-            reaction_count = self.usage_repo.get_user_action_count(
+            reaction_count = await self.usage_repo.get_user_action_count(
                 str(user_id), action=ActionType.REACTION_RECEIVED.value
             )
             if reaction_count >= 1:
@@ -244,7 +246,7 @@ class BadgeService:
             user.badges.extend(new_badge_ids)
             logger.info(f"User {user_id} awarded badges: {new_badge_ids}")
 
-        self.user_service.save_user(user)
+        await self.user_service.save_user(user)
 
         new_badges = []
         for b_id in new_badge_ids:
@@ -263,7 +265,7 @@ class BadgeService:
         """Returns a list of all badges with current user progress."""
         from models.usage import ActionType
 
-        user = self.user_service.get_user(user_id, platform)
+        user = await self.user_service.get_user(user_id, platform)
         if not user:
             return []
 
@@ -271,32 +273,32 @@ class BadgeService:
         results: list[BadgeProgress] = []
 
         # Get stats
-        total_usages = self.usage_repo.get_user_usage_count(str(user_id))
-        vision_count = self.usage_repo.get_user_action_count(
+        total_usages = await self.usage_repo.get_user_usage_count(str(user_id))
+        vision_count = await self.usage_repo.get_user_action_count(
             str(user_id), action=ActionType.VISION.value
         )
-        ai_count = self.usage_repo.get_user_action_count(
+        ai_count = await self.usage_repo.get_user_action_count(
             str(user_id), action=ActionType.AI_ASK.value
         )
-        audio_count = self.usage_repo.get_user_action_count(
+        audio_count = await self.usage_repo.get_user_action_count(
             str(user_id), action=ActionType.AUDIO.value
         )
-        propose_count = self.usage_repo.get_user_action_count(
+        propose_count = await self.usage_repo.get_user_action_count(
             str(user_id), action=ActionType.PROPOSE.value
         )
-        approve_count = self.usage_repo.get_user_action_count(
+        approve_count = await self.usage_repo.get_user_action_count(
             str(user_id), action=ActionType.APPROVE.value
         )
-        reject_count = self.usage_repo.get_user_action_count(
+        reject_count = await self.usage_repo.get_user_action_count(
             str(user_id), action=ActionType.REJECT.value
         )
-        reaction_count = self.usage_repo.get_user_action_count(
+        reaction_count = await self.usage_repo.get_user_action_count(
             str(user_id), action=ActionType.REACTION_RECEIVED.value
         )
 
         from infrastructure.datastore.phrase import phrase_repository
 
-        user_phrases_count = phrase_repository.get_user_phrase_count(str(user_id))
+        user_phrases_count = await phrase_repository.get_user_phrase_count(str(user_id))
 
         for badge in BADGES:
             is_earned = badge.id in current_badges

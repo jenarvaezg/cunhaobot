@@ -1,19 +1,6 @@
 # Roadmap de Ideas: cunhaobot 2026
 
-## 1. Modernización: "Paco 2.0" (Nuevas Funcionalidades)
-Aprovechar las últimas capacidades de la Bot API para mejorar la interacción y presencia del bot.
-* **Telegram Mini App (TMA) 9.0:**
-    * **Dashboard de Bar:** Webview en pantalla completa con estética de "Pizarra de Menú" para ver rankings y perfiles de forma interactiva.
-    * **Shared Storage & Shortcuts:** Sincronización instantánea y posibilidad de añadir a "Paco" a la pantalla de inicio del móvil.
-* **Paco for Business:**
-    * Integrar la API de **Business Bots**. Los usuarios con cuenta Business pueden delegar sus respuestas en Paco para que atienda a sus clientes con su sabiduría cuñadil.
-* **Reacciones Inteligentes (SetMessageReaction):**
-    * Paco reaccionará automáticamente con emojis temáticos (🍺, 🇪🇸, 🥘, 🤡) basándose en el análisis de sentimiento de Gemini sobre los mensajes del grupo.
-* **Stories & Social:**
-    * Publicar automáticamente "La Perla del Día" en las Stories del bot, con imágenes y encuestas generadas por IA.
-* **User Story:** "Como dueño de un taller mecánico con cuenta Business, quiero que Paco responda a mis clientes de Telegram con su toque especial para que sepan quién manda aquí".
-
-## 2. Monetización: "La Economía de Paco" (Features de Pago)
+## 1. Monetización: "La Economía de Paco" (Features de Pago)
 Estrategias para hacer el bot sostenible utilizando Telegram Stars (XTR) y otros métodos.
 * **Telegram Stars (Bienes Digitales):**
     * **Gifts (Carajillos Digitales):** Sistema de regalos únicos. Los usuarios pueden enviarse carajillos, copas de coñac o palillos de plata que lucen en el perfil de la Mini App.

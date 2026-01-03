@@ -63,17 +63,19 @@ class TestUserRepository:
         assert user_slack.id == "U123"
         assert user_slack.platform == "slack"
 
-    def test_load_user(self, repo, mock_datastore_client):
+    @pytest.mark.asyncio
+    async def test_load_user(self, repo, mock_datastore_client):
         data = {"id": 123, "name": "Test User"}
         entity = create_mock_entity(data, kind="User", entity_id=123)
         mock_datastore_client.get.return_value = entity
 
-        user = repo.load(123)
+        user = await repo.load(123)
         assert user is not None
         assert user.id == 123
         assert mock_datastore_client.get.called
 
-    def test_load_all_users(self, repo, mock_datastore_client):
+    @pytest.mark.asyncio
+    async def test_load_all_users(self, repo, mock_datastore_client):
         user1_data = {"id": 1, "name": "User 1", "gdpr": False}
         user2_data = {"id": 2, "name": "User 2", "gdpr": True}
         entity1 = create_mock_entity(user1_data)
@@ -94,16 +96,17 @@ class TestUserRepository:
 
         mock_datastore_client.query.side_effect = mock_query_side_effect
 
-        users = repo.load_all()
+        users = await repo.load_all()
         # 1 (from User kind, not GDPR)
         assert len(users) == 1
         ids = {u.id for u in users}
         assert 1 in ids
 
-        users_ignore_gdpr = repo.load_all(ignore_gdpr=True)
+        users_ignore_gdpr = await repo.load_all(ignore_gdpr=True)
         assert len(users_ignore_gdpr) == 2
         assert {u.id for u in users_ignore_gdpr} == {1, 2}
 
-    def test_save_user(self, repo):
+    @pytest.mark.asyncio
+    async def test_save_user(self, repo):
         user = User(id=123, name="Test")
-        repo.save(user)
+        await repo.save(user)

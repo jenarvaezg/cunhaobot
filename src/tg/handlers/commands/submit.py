@@ -70,7 +70,7 @@ async def submit_handling(
     repo = long_proposal_repo if is_long else proposal_repo
 
     if not proposal.text:
-        random_phrase = phrase_service.get_random().text
+        random_phrase = (await phrase_service.get_random()).text
         return await update.effective_message.reply_text(
             f"¿Qué *{name}* quieres proponer, {random_phrase}?\n"
             "Si no quieres proponer nada, puedes usar /cancelar.",
@@ -79,12 +79,12 @@ async def submit_handling(
         )
 
     # Fuzzy search phrases
-    most_similar_phrase, phrase_similarity = phrase_service.find_most_similar(
+    most_similar_phrase, phrase_similarity = await phrase_service.find_most_similar(
         proposal.text, long=is_long
     )
 
     if phrase_similarity > SIMILARITY_DISCARD_THRESHOLD:
-        p_random = phrase_service.get_random().text
+        p_random = (await phrase_service.get_random()).text
         msg = f"Esa ya la tengo aprobada y en la lista, {p_random}."
         if phrase_similarity != 100:
             msg += f"\nSe parece demasiado a: '*{most_similar_phrase.text}*'"
@@ -94,12 +94,15 @@ async def submit_handling(
         )
 
     # Fuzzy search proposals
-    most_similar_proposal, proposal_similarity = (
-        proposal_service.find_most_similar_proposal(proposal.text, is_long=is_long)
+    (
+        most_similar_proposal,
+        proposal_similarity,
+    ) = await proposal_service.find_most_similar_proposal(
+        proposal.text, is_long=is_long
     )
 
     if proposal_similarity > SIMILARITY_DISCARD_THRESHOLD and most_similar_proposal:
-        p_random = phrase_service.get_random().text
+        p_random = (await phrase_service.get_random()).text
         if most_similar_proposal.voting_ended:
             # Proposal existed and voting ended. Since phrase check passed (didn't exist), it must be rejected.
             return await update.effective_message.reply_text(
@@ -113,7 +116,7 @@ async def submit_handling(
                 parse_mode=constants.ParseMode.MARKDOWN,
             )
 
-    repo.save(proposal)
+    await repo.save(proposal)
     await _notify_proposal_to_curators(
         bot, proposal, submitted_by, most_similar_phrase, phrase_similarity
     )
@@ -129,7 +132,7 @@ async def submit_handling(
 
     return await update.effective_message.reply_text(
         f"Tu aportación será valorada por un consejo de cuñaos expertos y te avisaré una vez haya sido evaluada, "
-        f"{phrase_service.get_random().text}.",
+        f"{(await phrase_service.get_random()).text}.",
         reply_to_message_id=update.effective_message.message_id,
     )
 
@@ -140,7 +143,7 @@ async def handle_submit(update: Update, context: CallbackContext) -> None:
         return
 
     if len(message.text.split(" ")) > 5:
-        p = phrase_service.get_random().text
+        p = (await phrase_service.get_random()).text
         await message.reply_text(
             f"¿Estás seguro de que esto es una frase corta, {p}?\n"
             f"Mejor prueba con /proponerfrase {p}.",

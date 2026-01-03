@@ -1,14 +1,16 @@
-from unittest.mock import MagicMock
+import pytest
+from unittest.mock import AsyncMock
 from models.user import User
 from services.user_service import UserService
 
 
-def test_update_or_create_slack_user():
-    user_repo = MagicMock()
+@pytest.mark.asyncio
+async def test_update_or_create_slack_user():
+    user_repo = AsyncMock()
     user_repo.load.return_value = None
     service = UserService(user_repo=user_repo)
 
-    user = service.update_or_create_slack_user(
+    user = await service.update_or_create_slack_user(
         slack_user_id="U123456", name="Slack User", username="slackuser"
     )
 
@@ -19,13 +21,14 @@ def test_update_or_create_slack_user():
     user_repo.save.assert_called_once()
 
 
-def test_update_slack_user_existing():
+@pytest.mark.asyncio
+async def test_update_slack_user_existing():
     existing_user = User(id="U123456", name="Old Name", platform="slack")
-    user_repo = MagicMock()
+    user_repo = AsyncMock()
     user_repo.load.return_value = existing_user
     service = UserService(user_repo=user_repo)
 
-    user = service.update_or_create_slack_user(
+    user = await service.update_or_create_slack_user(
         slack_user_id="U123456", name="New Name", username="newuser"
     )
 
