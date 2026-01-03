@@ -55,9 +55,13 @@ class TestFallbackHandlers:
         with (
             patch(
                 "tg.handlers.messages.fallback.phrase_service.get_random",
+                new_callable=AsyncMock,
                 return_value=mock_phrase,
             ),
-            patch("tg.decorators.user_service.update_or_create_user"),
+            patch(
+                "tg.decorators.user_service.update_or_create_user",
+                new_callable=AsyncMock,
+            ),
         ):
             await handle_fallback_message(update, context)
             bot.send_message.assert_called_once()
@@ -80,8 +84,13 @@ class TestFallbackHandlers:
         context.bot = bot
 
         with (
-            patch("tg.handlers.messages.fallback._on_kick") as mock_kick,
-            patch("tg.decorators.user_service.update_or_create_user"),
+            patch(
+                "tg.handlers.messages.fallback._on_kick", new_callable=AsyncMock
+            ) as mock_kick,
+            patch(
+                "tg.decorators.user_service.update_or_create_user",
+                new_callable=AsyncMock,
+            ),
         ):
             await handle_fallback_message(update, context)
             mock_kick.assert_called_once_with(update.effective_message.chat_id)

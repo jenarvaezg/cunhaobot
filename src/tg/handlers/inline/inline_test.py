@@ -15,12 +15,16 @@ class TestInlineQuery:
         update.effective_user.name = "Test User"  # Provide a string value
 
         with (
-            patch("services.phrase_repo.load_all", return_value=[MagicMock(text="p1")]),
+            patch(
+                "services.phrase_repo.load_all",
+                new_callable=AsyncMock,
+                return_value=[MagicMock(text="p1")],
+            ),
             patch.object(
-                UserService, "update_or_create_inline_user"
+                UserService, "update_or_create_inline_user", new_callable=AsyncMock
             ) as mock_update_inline_user,
             patch.object(
-                UserService, "update_or_create_user"
+                UserService, "update_or_create_user", new_callable=AsyncMock
             ),  # Patch the decorator's call
         ):
             await handle_inline_query(update, MagicMock())
@@ -45,9 +49,10 @@ class TestInlineQuery:
                 "tg.handlers.inline.inline_query.base.get_query_mode",
                 return_value=("", ""),
             ),
-            patch.object(UserService, "update_or_create_user"),
+            patch.object(UserService, "update_or_create_user", new_callable=AsyncMock),
             patch(
                 "tg.handlers.inline.inline_query.base.phrase_service.get_random",
+                new_callable=AsyncMock,
                 return_value=mock_phrase,
             ),
         ):

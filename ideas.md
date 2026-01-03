@@ -21,6 +21,7 @@ Estrategias para hacer el bot sostenible utilizando Telegram Stars (XTR) y otros
 
 # Plan de MVP (V1.0: "El Paco Moderno")
 
+
 **Objetivo:** Relanzar el bot con una funcionalidad estrella y mejorar la UX base.
 
 ### Fase 1: Core Multimodal (Completado ✅)

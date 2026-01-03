@@ -24,14 +24,21 @@ async def test_handle_stop():
     mock_phrase.text = "cuñao"
 
     with (
-        patch("tg.handlers.commands.stop.user_repo.load", return_value=mock_user),
-        patch("tg.handlers.commands.stop.user_service.delete_user") as mock_delete,
+        patch(
+            "tg.handlers.commands.stop.user_repo.load",
+            new_callable=AsyncMock,
+            return_value=mock_user,
+        ),
+        patch(
+            "tg.handlers.commands.stop.user_service.delete_user", new_callable=AsyncMock
+        ) as mock_delete,
         patch(
             "tg.handlers.commands.stop.phrase_service.get_random",
+            new_callable=AsyncMock,
             return_value=mock_phrase,
         ),
         patch.object(
-            UserService, "update_or_create_user"
+            UserService, "update_or_create_user", new_callable=AsyncMock
         ),  # Patch the method on the class
     ):
         await handle_stop(update, context)

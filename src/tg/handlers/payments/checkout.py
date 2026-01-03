@@ -49,6 +49,14 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
         "Paco se está poniendo las gafas de cerca para pintar tu obra maestra...\n"
         "Espérate un momento."
     )
+
+    # Try to delete the invoice message
+    if message.reply_to_message:
+        try:
+            await message.reply_to_message.delete()
+        except Exception as e:
+            logger.debug(f"Could not delete invoice message: {e}")
+
     await message.chat.send_action(action="upload_photo")
 
     try:

@@ -11,6 +11,16 @@ async def test_handle_pre_checkout_success():
     update.pre_checkout_query = query
     query.invoice_payload = "valid payload"
     query.answer = AsyncMock()
+
+    # Fix Pydantic warnings by providing strings
+    update.effective_user.name = "Test User"
+    update.effective_user.username = "testuser"
+    update.effective_user.id = 123
+    update.effective_message.chat_id = 123
+    update.effective_message.chat.title = "Test Chat"
+    update.effective_message.chat.username = "testchat"
+    update.effective_message.chat.type = "private"
+
     context = MagicMock()
 
     await handle_pre_checkout(update, context)
@@ -25,6 +35,16 @@ async def test_handle_pre_checkout_empty_payload():
     update.pre_checkout_query = query
     query.invoice_payload = ""
     query.answer = AsyncMock()
+
+    # Fix Pydantic warnings by providing strings
+    update.effective_user.name = "Test User"
+    update.effective_user.username = "testuser"
+    update.effective_user.id = 123
+    update.effective_message.chat_id = 123
+    update.effective_message.chat.title = "Test Chat"
+    update.effective_message.chat.username = "testchat"
+    update.effective_message.chat.type = "private"
+
     context = MagicMock()
 
     await handle_pre_checkout(update, context)
@@ -40,6 +60,15 @@ async def test_handle_successful_payment_success():
     message = MagicMock(spec=Message)
     update.effective_message = message
 
+    # Fix Pydantic warnings
+    update.effective_user.id = 123
+    update.effective_user.name = "Pepe"
+    update.effective_user.username = "pepe"
+    message.chat.type = "private"
+    message.chat.title = "Test Chat"
+    message.chat.username = "testchat"
+    message.chat_id = 123
+
     payment = MagicMock(spec=SuccessfulPayment)
     payment.invoice_payload = "phrase"
     payment.telegram_payment_charge_id = "charge_id"
@@ -53,6 +82,10 @@ async def test_handle_successful_payment_success():
     message.reply_text = AsyncMock()
     message.chat.send_action = AsyncMock()
     message.reply_photo = AsyncMock()
+
+    invoice_msg = MagicMock()
+    invoice_msg.delete = AsyncMock()
+    message.reply_to_message = invoice_msg
 
     processing_msg = MagicMock()
     processing_msg.delete = AsyncMock()
@@ -70,6 +103,7 @@ async def test_handle_successful_payment_success():
         mock_gen.assert_called_once_with("phrase")
         message.reply_photo.assert_called_once()
         processing_msg.delete.assert_called_once()
+        invoice_msg.delete.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -77,6 +111,15 @@ async def test_handle_successful_payment_failure_refund():
     update = MagicMock(spec=Update)
     message = MagicMock(spec=Message)
     update.effective_message = message
+
+    # Fix Pydantic warnings
+    update.effective_user.id = 123
+    update.effective_user.name = "Pepe"
+    update.effective_user.username = "pepe"
+    message.chat.type = "private"
+    message.chat.title = "Test Chat"
+    message.chat.username = "testchat"
+    message.chat_id = 123
 
     payment = MagicMock(spec=SuccessfulPayment)
     payment.invoice_payload = "phrase"

@@ -1,3 +1,7 @@
 name = "push"
 description = "Lanza y arregla tests, verifica pre-commit hooks, y realiza commit y push."
-prompt = "lanza y arregla tests hasta tener todos funcionando, asegurate de que los pre-commit hooks funcionan bien, haz commit y push"
+prompt = """
+Lanza y arregla tests hasta tener todos funcionando
+Asegurate de que los pre-commit hooks funcionan bien y todos los warning del proyecto se resuelvan
+Luego haz commit y push.
+"""

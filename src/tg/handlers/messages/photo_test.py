@@ -9,8 +9,19 @@ async def test_photo_roast_private_success():
     update = MagicMock()
     update.message.photo = [MagicMock()]
     update.message.message_id = 123
+
+    # Fix Pydantic warnings by aliasing and setting attributes
+    update.effective_message = update.message
     update.effective_chat.type = "private"
+    update.effective_chat.title = "Test Chat"
+    update.effective_chat.username = "testchat"
+    update.message.chat.type = "private"
+    update.message.chat.title = "Test Chat"
+    update.message.chat.username = "testchat"
+    update.message.chat_id = 456
     update.effective_user.id = 456
+    update.effective_user.name = "Test User"
+    update.effective_user.username = "testuser"
     update.message.reply_voice = AsyncMock()
 
     # Mock get_file().download_as_bytearray()
@@ -58,8 +69,19 @@ async def test_photo_roast_group_mentioned_success():
     update.message.photo = [MagicMock()]
     update.message.caption = "Mira esto @TestBot"
     update.message.message_id = 123
+
+    # Fix Pydantic warnings
+    update.effective_message = update.message
     update.effective_chat.type = "group"
+    update.effective_chat.title = "Test Group"
+    update.effective_chat.username = "testgroup"
+    update.message.chat.type = "group"
+    update.message.chat.title = "Test Group"
+    update.message.chat.username = "testgroup"
+    update.message.chat_id = 789
     update.effective_user.id = 456
+    update.effective_user.name = "Test User"
+    update.effective_user.username = "testuser"
     update.message.reply_voice = AsyncMock()
 
     # Mock get_file().download_as_bytearray()
@@ -97,9 +119,20 @@ async def test_photo_roast_group_mentioned_success():
 @pytest.mark.asyncio
 async def test_photo_roast_group_not_mentioned_ignored():
     update = MagicMock()
+    # Fix Pydantic warnings
+    update.effective_message = update.message
     update.effective_chat.type = "group"
+    update.effective_chat.title = "Test Group"
+    update.effective_chat.username = "testgroup"
+    update.message.chat.type = "group"
+    update.message.chat.title = "Test Group"
+    update.message.chat.username = "testgroup"
+    update.message.chat_id = 789
     update.message.photo = [MagicMock()]
     update.message.caption = "Una foto normal"
+    update.effective_user.name = "Test User"
+    update.effective_user.username = "testuser"
+    update.effective_user.id = 456
 
     context = MagicMock()
     context.bot.username = "TestBot"
@@ -113,9 +146,20 @@ async def test_photo_roast_group_not_mentioned_ignored():
 @pytest.mark.asyncio
 async def test_photo_roast_error():
     update = MagicMock()
+    # Fix Pydantic warnings
+    update.effective_message = update.message
     update.message.photo = [MagicMock()]
     update.effective_chat.type = "private"
+    update.effective_chat.title = "Test Chat"
+    update.effective_chat.username = "testchat"
+    update.message.chat.type = "private"
+    update.message.chat.title = "Test Chat"
+    update.message.chat.username = "testchat"
+    update.message.chat_id = 456
     update.message.reply_text = AsyncMock()
+    update.effective_user.name = "Test User"
+    update.effective_user.username = "testuser"
+    update.effective_user.id = 456
 
     # Mock error
     update.message.photo[-1].get_file = AsyncMock(
