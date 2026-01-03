@@ -47,10 +47,13 @@ class UsageDatastoreRepository(DatastoreRepository[UsageRecord]):
                 query.add_filter("user_id", "=", user_id)
                 if platform:
                     query.add_filter("platform", "=", platform)
-                query.keys_only()
-                return len(
-                    list(query.fetch(limit=5000))
-                )  # Limit to 5000 to avoid timeouts
+
+                count_query = self.client.aggregation_query(query=query)
+                count_query.count(alias="all")
+                results = list(count_query.fetch())
+                if results and len(results) > 0 and len(results[0]) > 0:
+                    return int(results[0][0].value)
+                return 0
             except Exception as e:
                 logger.error(f"Error counting usage for {user_id}: {e}")
                 return 0
@@ -65,8 +68,13 @@ class UsageDatastoreRepository(DatastoreRepository[UsageRecord]):
                 query = self.client.query(kind=self.kind)
                 query.add_filter("user_id", "=", str(user_id))
                 query.add_filter("action", "=", action)
-                query.keys_only()
-                return len(list(query.fetch(limit=5000)))
+
+                count_query = self.client.aggregation_query(query=query)
+                count_query.count(alias="all")
+                results = list(count_query.fetch())
+                if results and len(results) > 0 and len(results[0]) > 0:
+                    return int(results[0][0].value)
+                return 0
             except Exception as e:
                 logger.error(f"Error counting action {action} for {user_id}: {e}")
                 return 0

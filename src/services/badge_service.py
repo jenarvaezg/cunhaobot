@@ -1,9 +1,14 @@
 import logging
+import asyncio
 from datetime import datetime, timedelta, timezone
+from typing import TYPE_CHECKING
 from pydantic import BaseModel
 
 from services.user_service import user_service
 from infrastructure.datastore.usage import usage_repository
+
+if TYPE_CHECKING:
+    from models.user import User
 
 
 logger = logging.getLogger(__name__)
@@ -135,7 +140,9 @@ class BadgeService:
         self.user_service = u_service
         self.usage_repo = u_repo
 
-    async def check_badges(self, user_id: str | int, platform: str) -> list[Badge]:
+    async def check_badges(
+        self, user_id: str | int, platform: str, save: bool = True
+    ) -> list[Badge]:
         """Checks and awards new badges to a user. Returns list of NEWLY awarded Badge objects."""
         from models.usage import ActionType
 
@@ -278,7 +285,8 @@ class BadgeService:
             user.badges.extend(new_badge_ids)
             logger.info(f"User {user_id} awarded badges: {new_badge_ids}")
 
-        await self.user_service.save_user(user)
+        if save:
+            await self.user_service.save_user(user)
 
         new_badges = []
         for b_id in new_badge_ids:
@@ -292,47 +300,64 @@ class BadgeService:
         return next((b for b in BADGES if b.id == badge_id), None)
 
     async def get_all_badges_progress(
-        self, user_id: str | int, platform: str
+        self,
+        user_id: str | int,
+        platform: str,
+        user: User | None = None,
     ) -> list[BadgeProgress]:
         """Returns a list of all badges with current user progress."""
         from models.usage import ActionType
 
-        user = await self.user_service.get_user(user_id, platform)
+        if not user:
+            user = await self.user_service.get_user(user_id, platform)
+
         if not user:
             return []
 
         current_badges = set(user.badges)
         results: list[BadgeProgress] = []
 
-        # Get stats
-        total_usages = await self.usage_repo.get_user_usage_count(str(user_id))
-        vision_count = await self.usage_repo.get_user_action_count(
-            str(user_id), action=ActionType.VISION.value
-        )
-        ai_count = await self.usage_repo.get_user_action_count(
-            str(user_id), action=ActionType.AI_ASK.value
-        )
-        audio_count = await self.usage_repo.get_user_action_count(
-            str(user_id), action=ActionType.AUDIO.value
-        )
-        propose_count = await self.usage_repo.get_user_action_count(
-            str(user_id), action=ActionType.PROPOSE.value
-        )
-        approve_count = await self.usage_repo.get_user_action_count(
-            str(user_id), action=ActionType.APPROVE.value
-        )
-        reject_count = await self.usage_repo.get_user_action_count(
-            str(user_id), action=ActionType.REJECT.value
-        )
-        reaction_count = await self.usage_repo.get_user_action_count(
-            str(user_id), action=ActionType.REACTION_RECEIVED.value
-        )
-
         from infrastructure.datastore.phrase import phrase_repository
         from services import poster_request_repo
 
-        user_phrases_count = await phrase_repository.get_user_phrase_count(str(user_id))
-        poster_count = await poster_request_repo.count_completed_by_user(user_id)
+        # Get stats in parallel
+        (
+            total_usages,
+            vision_count,
+            ai_count,
+            audio_count,
+            propose_count,
+            approve_count,
+            reject_count,
+            reaction_count,
+            user_phrases_count,
+            poster_count,
+        ) = await asyncio.gather(
+            self.usage_repo.get_user_usage_count(str(user_id)),
+            self.usage_repo.get_user_action_count(
+                str(user_id), action=ActionType.VISION.value
+            ),
+            self.usage_repo.get_user_action_count(
+                str(user_id), action=ActionType.AI_ASK.value
+            ),
+            self.usage_repo.get_user_action_count(
+                str(user_id), action=ActionType.AUDIO.value
+            ),
+            self.usage_repo.get_user_action_count(
+                str(user_id), action=ActionType.PROPOSE.value
+            ),
+            self.usage_repo.get_user_action_count(
+                str(user_id), action=ActionType.APPROVE.value
+            ),
+            self.usage_repo.get_user_action_count(
+                str(user_id), action=ActionType.REJECT.value
+            ),
+            self.usage_repo.get_user_action_count(
+                str(user_id), action=ActionType.REACTION_RECEIVED.value
+            ),
+            phrase_repository.get_user_phrase_count(str(user_id)),
+            poster_request_repo.count_completed_by_user(user_id),
+        )
 
         for badge in BADGES:
             is_earned = badge.id in current_badges

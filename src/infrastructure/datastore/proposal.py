@@ -9,6 +9,7 @@ class ProposalDatastoreRepository(DatastoreRepository[Proposal]):
     def __init__(self, model_class: type[Proposal] | type[LongProposal] = Proposal):
         super().__init__(model_class.kind)
         self.model_class = model_class
+        self._cache: list[Proposal] = []
 
     def _entity_to_domain(self, entity: datastore.Entity) -> Proposal:
         entity_id = ""
@@ -44,11 +45,14 @@ class ProposalDatastoreRepository(DatastoreRepository[Proposal]):
         return await asyncio.to_thread(_get)
 
     async def load_all(self) -> list[Proposal]:
-        def _fetch():
-            query = self.client.query(kind=self.kind)
-            return [self._entity_to_domain(entity) for entity in query.fetch()]
+        if not self._cache:
 
-        return await asyncio.to_thread(_fetch)
+            def _fetch():
+                query = self.client.query(kind=self.kind)
+                return [self._entity_to_domain(entity) for entity in query.fetch()]
+
+            self._cache = await asyncio.to_thread(_fetch)
+        return self._cache
 
     async def save(self, proposal: Proposal) -> None:
         def _put():
@@ -57,15 +61,74 @@ class ProposalDatastoreRepository(DatastoreRepository[Proposal]):
             self.client.put(entity)
 
         await asyncio.to_thread(_put)
+        self._cache = []
 
     async def get_proposals(
         self, search: str = "", limit: int = 0, offset: int = 0, **filters: object
     ) -> list[Proposal]:
-        results = await self.load_all()
+        # If cache is populated, use it instead of going to Datastore
+        if self._cache:
+            results = self._cache
+            if search:
+                norm_search = normalize_str(search)
+                results = [p for p in results if norm_search in normalize_str(p.text)]
+
+            for field, value in filters.items():
+                if value is None or value == "":
+                    continue
+                if value == "__EMPTY__":
+                    results = [p for p in results if not getattr(p, field, None)]
+                else:
+                    str_val = str(value).lower()
+                    results = [
+                        p
+                        for p in results
+                        if str(getattr(p, field, None)).lower() == str_val
+                    ]
+            return results[offset : offset + limit] if limit > 0 else results
+
+        # If there's a search, we still might need the full load for memory filtering
         if search:
+            results = await self.load_all()
             norm_search = normalize_str(search)
             results = [p for p in results if norm_search in normalize_str(p.text)]
 
+            for field, value in filters.items():
+                if value is None or value == "":
+                    continue
+                if value == "__EMPTY__":
+                    results = [p for p in results if not getattr(p, field, None)]
+                else:
+                    str_val = str(value).lower()
+                    results = [
+                        p
+                        for p in results
+                        if str(getattr(p, field, None)).lower() == str_val
+                    ]
+            return results[offset : offset + limit] if limit > 0 else results
+
+        # If no search, use Datastore filtering for better performance
+        def _fetch():
+            query = self.client.query(kind=self.kind)
+            for field, value in filters.items():
+                if value is None or value == "" or value == "__EMPTY__":
+                    return None
+                query.add_filter(field, "=", value)
+
+            # Datastore fetch
+            return [
+                self._entity_to_domain(entity)
+                for entity in query.fetch(
+                    limit=limit if limit > 0 else None, offset=offset
+                )
+            ]
+
+        results_or_none = await asyncio.to_thread(_fetch)
+        if results_or_none is not None:
+            return results_or_none
+
+        # Fallback to load_all for complex filters or search
+        results = await self.load_all()
         for field, value in filters.items():
             if value is None or value == "":
                 continue

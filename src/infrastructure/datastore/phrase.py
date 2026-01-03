@@ -75,11 +75,61 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
     async def get_phrases(
         self, search: str = "", limit: int = 0, offset: int = 0, **filters: object
     ) -> list[Phrase]:
-        results = await self.load_all()
+        # If cache is populated, use it instead of going to Datastore
+        if self._cache:
+            results = self._cache
+            if search:
+                norm_search = normalize_str(search)
+                results = [p for p in results if norm_search in normalize_str(p.text)]
+
+            for field, value in filters.items():
+                if value == "__EMPTY__":
+                    results = [p for p in results if not getattr(p, field, None)]
+                elif value:
+                    results = [
+                        p for p in results if str(getattr(p, field, None)) == str(value)
+                    ]
+            return results[offset : offset + limit] if limit > 0 else results
+
+        # If there's a search and no cache, we still might need the full load for memory filtering
         if search:
+            results = await self.load_all()
             norm_search = normalize_str(search)
             results = [p for p in results if norm_search in normalize_str(p.text)]
 
+            for field, value in filters.items():
+                if value == "__EMPTY__":
+                    results = [p for p in results if not getattr(p, field, None)]
+                elif value:
+                    results = [
+                        p for p in results if str(getattr(p, field, None)) == str(value)
+                    ]
+            return results[offset : offset + limit] if limit > 0 else results
+
+        # If no search, use Datastore filtering for better performance
+        def _fetch():
+            query = self.client.query(kind=self.kind)
+            for field, value in filters.items():
+                if value == "__EMPTY__":
+                    # For __EMPTY__ we might still need to filter in memory or check for property existence
+                    # For now, let's keep it simple and fallback to full load if __EMPTY__ is used
+                    return None
+                query.add_filter(field, "=", value)
+
+            # Datastore fetch
+            return [
+                self._entity_to_domain(entity)
+                for entity in query.fetch(
+                    limit=limit if limit > 0 else None, offset=offset
+                )
+            ]
+
+        results_or_none = await asyncio.to_thread(_fetch)
+        if results_or_none is not None:
+            return results_or_none
+
+        # Fallback to load_all for complex filters or search
+        results = await self.load_all()
         for field, value in filters.items():
             if value == "__EMPTY__":
                 results = [p for p in results if not getattr(p, field, None)]
@@ -118,8 +168,13 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
             try:
                 query = self.client.query(kind=self.kind)
                 query.add_filter("user_id", "=", str(user_id))
-                query.keys_only()
-                return len(list(query.fetch(limit=1000)))
+
+                count_query = self.client.aggregation_query(query=query)
+                count_query.count(alias="all")
+                results = list(count_query.fetch())
+                if results and len(results) > 0 and len(results[0]) > 0:
+                    return int(results[0][0].value)
+                return 0
             except Exception as e:
                 logger.error(f"Error counting phrases for user {user_id}: {e}")
                 return 0

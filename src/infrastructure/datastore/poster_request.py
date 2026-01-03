@@ -37,7 +37,13 @@ class PosterRequestRepository(DatastoreRepository[PosterRequest]):
             query.add_filter(
                 filter=datastore.query.PropertyFilter("status", "=", "completed")
             )
-            return len(list(query.fetch()))
+
+            count_query = self.client.aggregation_query(query=query)
+            count_query.count(alias="all")
+            results = list(count_query.fetch())
+            if results and len(results) > 0 and len(results[0]) > 0:
+                return int(results[0][0].value)
+            return 0
 
         return await asyncio.to_thread(_count)
 

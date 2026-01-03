@@ -5,7 +5,7 @@ from telegram.ext import Application, MessageHandler, filters, CallbackContext
 from tg.handlers import error_handler, handlers
 from tg.utils.history import record_message_in_history
 
-TG_TOKEN = os.environ["TG_TOKEN"]
+TG_TOKEN = os.environ.get("TG_TOKEN", "dummy_token")
 
 _application: Application | None = None
 

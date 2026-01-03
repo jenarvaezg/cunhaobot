@@ -36,7 +36,7 @@
 <div class="row justify-content-center">
     <!-- User Info Card -->
     <div class="col-lg-4 mb-4">
-        <div class="glass-card h-100 text-center p-4 animate__animated animate__fadeInLeft">
+        <div class="glass-card h-100 text-center p-4">
             <div class="position-relative d-inline-block mb-3">
                 {% if show_private %}
                 <div class="rounded-circle border border-2 border-secondary shadow d-flex align-items-center justify-content-center bg-dark mx-auto"
@@ -49,7 +49,8 @@
                      alt="Avatar de {{ profile_user.name }}"
                      class="rounded-circle border border-2 border-warning shadow"
                      width="120" height="120"
-                     style="object-fit: cover;">
+                     style="object-fit: cover;"
+                     fetchpriority="high">
                 {% else %}
                 <div class="rounded-circle border border-2 border-warning shadow d-flex align-items-center justify-content-center bg-dark mx-auto"
                      style="width: 120px; height: 120px;">
@@ -122,7 +123,7 @@
     <!-- Badges & Content -->
     <div class="col-lg-8 mb-4">
         <!-- Badges Section -->
-        <div class="glass-card p-4 mb-4 animate__animated animate__fadeInRight">
+        <div class="glass-card p-4 mb-4">
             <h4 class="oswald mb-4 border-bottom border-secondary pb-2">
                 <i class="bi bi-award-fill text-warning me-2"></i>Medallero
             </h4>

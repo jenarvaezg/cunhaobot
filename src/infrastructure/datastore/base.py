@@ -20,3 +20,7 @@ class DatastoreRepository(Generic[T]):
 
     async def delete(self, entity_id: str | int) -> None:
         await asyncio.to_thread(self.client.delete, self.get_key(entity_id))
+
+    def clear_cache(self) -> None:
+        if hasattr(self, "_cache"):
+            self._cache = []

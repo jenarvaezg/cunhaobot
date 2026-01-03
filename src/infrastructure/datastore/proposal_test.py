@@ -156,16 +156,26 @@ class TestProposalRepository:
             create_mock_entity(p1.model_dump(), entity_id="1"),
             create_mock_entity(p2.model_dump(), entity_id="2"),
         ]
+        repo.clear_cache()
         results = await repo.get_proposals(liked_by="__EMPTY__")
         assert len(results) == 1
         assert results[0].id == "2"  # p2 has empty liked_by
 
         # Test limit and offset
-        mock_query.fetch.return_value = [
+        entities = [
             create_mock_entity(p1.model_dump(), entity_id="1"),
             create_mock_entity(p2.model_dump(), entity_id="2"),
             create_mock_entity(p3.model_dump(), entity_id="3"),
         ]
+
+        def mock_fetch(limit=None, offset=0):
+            res = entities[offset:]
+            if limit:
+                res = res[:limit]
+            return res
+
+        mock_query.fetch.side_effect = mock_fetch
+        repo.clear_cache()
         results = await repo.get_proposals(limit=2, offset=1)
         assert len(results) == 2
         assert results[0].id == "2"

@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from typing import Any, Annotated
 from litestar import Controller, Request, get, post
 from litestar.exceptions import HTTPException
@@ -162,25 +163,32 @@ class WebController(Controller):
                 headers={"Location": f"/user/{profile_user.id}/profile"},
             )
 
-        # Get stats
-        stats = await usage_service.get_user_stats(profile_user.id)
+        # Parallelize data fetching
+        stats_task = usage_service.get_user_stats(profile_user.id)
+        badges_task = badge_service.get_all_badges_progress(
+            profile_user.id, profile_user.platform, user=profile_user
+        )
+        phrases_task = phrase_repo.get_phrases(user_id=str(profile_user.id))
+        long_phrases_task = long_phrase_repo.get_phrases(user_id=str(profile_user.id))
+        posters_task = poster_request_repo.get_completed_by_user(profile_user.id)
 
-        # Get badges progress
-        badges_progress = await badge_service.get_all_badges_progress(
-            profile_user.id, profile_user.platform
+        (
+            stats,
+            badges_progress,
+            user_phrases,
+            user_long_phrases,
+            user_posters,
+        ) = await asyncio.gather(
+            stats_task,
+            badges_task,
+            phrases_task,
+            long_phrases_task,
+            posters_task,
         )
 
-        # Get user phrases
-        user_phrases = await phrase_repo.get_phrases(user_id=str(profile_user.id))
-        user_long_phrases = await long_phrase_repo.get_phrases(
-            user_id=str(profile_user.id)
-        )
         all_user_phrases = sorted(
             user_phrases + user_long_phrases, key=lambda x: x.usages, reverse=True
         )
-
-        # Get user posters
-        user_posters = await poster_request_repo.get_completed_by_user(profile_user.id)
 
         # Calculate Level (simple formula)
         level = 1 + int(profile_user.points / 100)
