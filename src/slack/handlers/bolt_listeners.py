@@ -473,6 +473,7 @@ def register_listeners(app: AsyncApp) -> None:
             "*Guía Rápida de Supervivencia Cuñadil:*\n\n"
             "• `/cuñao [texto]` - Busca una frase mítica que contenga ese texto.\n"
             "• `/sticker [texto]` - Genera un sticker con una frase para cerrar debates.\n"
+            "• `/poster [frase]` - (Próximamente en Slack) Inmortaliza tu sabiduría con IA.\n"
             f"• `/saludo [nombre]` - Envía un saludo personalizado (ej: `/saludo {p1}`).\n"
             f"• `/perfil` - Mira tus puntos y medallas de {p2}.\n"
             "• `/link` - Vincula tus cuentas de Telegram y Slack para unificar puntos.\n"

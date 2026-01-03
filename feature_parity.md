@@ -16,7 +16,7 @@ Este documento registra las funcionalidades disponibles en cada plataforma integ
 | **Vinculación de Cuentas** | ✅ | ✅ | ❌ | ❌ |
 | **Propuesta de Frases** | ✅ | ❌ | ✅ (Admin) | ❌ |
 | **Votación / Moderación** | ❌ | ❌ | ✅ (Admin) | ❌ |
-| **Generación Imagen IA (DALL-E/Gemini)** | ❌ | ❌ | ✅ (Owner) | ❌ |
+| **Generación Imagen IA (DALL-E/Gemini)** | ✅ (Stars) | ❌ | ✅ (Owner) | ❌ |
 | **Estadísticas / Métricas** | ❌ | ❌ | ✅ | ❌ |
 | **Publicación Automática** | ❌ | ❌ | ❌ | ✅ (Cron) |
 | **App Home / Dashboard** | ❌ | ✅ | ✅ | ❌ |
@@ -28,8 +28,9 @@ Este documento registra las funcionalidades disponibles en cada plataforma integ
 ### 🔵 Telegram
 * **IA Conversacional:** Paco responde a mensajes directos, menciones en grupos y respuestas (replies).
 * **Cuñao Vision:** Roast visual de fotos enviadas por privado o mencionando al bot en grupos.
+* **Generación de Pósters:** Comando `/poster` para generar imágenes personalizadas pagando con Telegram Stars.
 * **Modo Inline:** Permite buscar y enviar frases cortas, largas, stickers y audios en cualquier chat escribiendo `@CunhaoBot`.
-* **Comandos:** `/perfil`, `/link`, `/submit`, `/help`, `/about`, `/stop`.
+* **Comandos:** `/perfil`, `/link`, `/submit`, `/poster`, `/help`, `/about`, `/stop`.
 * **Notificaciones:** El bot te avisa en tiempo real cuando consigues una medalla.
 
 ### 🟣 Slack

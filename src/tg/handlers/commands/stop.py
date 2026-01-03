@@ -15,7 +15,7 @@ async def handle_stop(update: Update, context: CallbackContext) -> None:
 
     user = await user_repo.load(update.effective_chat.id)
     if user:
-        user_service.delete_user(user)
+        await user_service.delete_user(user)
 
     p = (await phrase_service.get_random()).text
     await update.effective_message.reply_text(

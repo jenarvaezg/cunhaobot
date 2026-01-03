@@ -159,11 +159,13 @@ class TestFallbackHandlers:
     async def test_on_kick(self):
         with (
             patch(
-                "services.user_repo.load",
+                "tg.handlers.messages.fallback.user_repo.load",
                 new_callable=AsyncMock,
-                return_value=User(chat_id=123),
+                return_value=User(id=123),
             ),
-            patch("services.user_repo.save", new_callable=AsyncMock) as mock_save,
+            patch(
+                "tg.handlers.messages.fallback.user_repo.save", new_callable=AsyncMock
+            ) as mock_save,
         ):
             await _on_kick(123)
             mock_save.assert_called_once()
@@ -171,8 +173,14 @@ class TestFallbackHandlers:
     @pytest.mark.asyncio
     async def test_on_kick_no_user(self):
         with (
-            patch("services.user_repo.load", new_callable=AsyncMock, return_value=None),
-            patch("services.user_repo.save", new_callable=AsyncMock) as mock_save,
+            patch(
+                "tg.handlers.messages.fallback.user_repo.load",
+                new_callable=AsyncMock,
+                return_value=None,
+            ),
+            patch(
+                "tg.handlers.messages.fallback.user_repo.save", new_callable=AsyncMock
+            ) as mock_save,
         ):
             await _on_kick(123)
             mock_save.assert_not_called()

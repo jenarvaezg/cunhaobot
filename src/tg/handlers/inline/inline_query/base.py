@@ -74,4 +74,4 @@ async def handle_inline_query(update: Update, context: CallbackContext) -> None:
         ),
     )
 
-    user_service.update_or_create_inline_user(update)
+    await user_service.update_or_create_inline_user(update)
