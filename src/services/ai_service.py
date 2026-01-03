@@ -178,9 +178,17 @@ Set the scene in a typical Spanish bar with a wooden counter and beer tapas.
             f"Eres el CuñaoBot. Analiza este mensaje: '{text}'. "
             "Tu misión es reaccionar SOLO si el mensaje es un 'caramelo' para un cuñado. "
             "Si es una conversación normal, aburrida o neutra, responde 'NONE'. "
-            "Solo si detectas ALGO MUY CLARO (mención de alcohol/comida, patriotismo exaltado, algo indignante o una tontería digna de burla), "
-            "responde ÚNICAMENTE con UNO de estos emojis: 🍺, 🇪🇸, 🥘, 🤡, 👎, ❤️, 🔥, 😂. "
-            "Ante la duda, NO HAGAS NADA (responde 'NONE'). Sé selectivo."
+            "Solo si detectas ALGO MUY CLARO responde ÚNICAMENTE con UNO de estos emojis: 🍺, 🇪🇸, 🥘, 🤡, 👎, ❤️, 🔥, 😂. "
+            "\nEJEMPLOS CLAROS:\n"
+            "- 'Viva España', 'Arriba': 🇪🇸\n"
+            "- 'Me voy de cañas', 'Cerveza': 🍺\n"
+            "- 'Esto es una vergüenza', 'Vaya estafa': 👎\n"
+            "- 'Qué buena está la paella', 'Cocido': 🥘\n"
+            "- 'La tierra es plana', 'El 5G nos controla' (SOLO verdaderas estupideces): 🤡\n"
+            "- 'Te quiero', 'Grande': ❤️\n"
+            "- 'Hola', '¿Qué tal?', 'Luego nos vemos' (Conversación normal): NONE\n"
+            "- Opiniones moderadas o datos: NONE\n"
+            "\nREGLA DE ORO: Ante la duda, responde 'NONE'. No seas un spammer de reacciones, especialmente con el 🤡."
         )
 
         try:
