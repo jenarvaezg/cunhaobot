@@ -5,7 +5,7 @@ from pydantic import BaseModel
 class PosterRequest(BaseModel):
     id: str
     phrase: str
-    user_id: int
+    user_id: str
     chat_id: int
     message_id: int | None = None
     image_url: str | None = None

@@ -265,9 +265,7 @@ class BadgeService:
         ):
             from services import poster_request_repo
 
-            poster_count = await poster_request_repo.count_completed_by_user(
-                int(user.id)
-            )
+            poster_count = await poster_request_repo.count_completed_by_user(user.id)
             if "mecenas" not in current_badges and poster_count >= 1:
                 new_badge_ids.append("mecenas")
             if "coleccionista" not in current_badges and poster_count >= 5:
@@ -334,7 +332,7 @@ class BadgeService:
         from services import poster_request_repo
 
         user_phrases_count = await phrase_repository.get_user_phrase_count(str(user_id))
-        poster_count = await poster_request_repo.count_completed_by_user(int(user_id))
+        poster_count = await poster_request_repo.count_completed_by_user(user_id)
 
         for badge in BADGES:
             is_earned = badge.id in current_badges

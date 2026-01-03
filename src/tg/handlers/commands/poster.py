@@ -61,7 +61,7 @@ async def handle_poster(update: Update, context: CallbackContext) -> None:
         PosterRequest(
             id=payload,
             phrase=phrase,
-            user_id=update.effective_user.id,
+            user_id=str(update.effective_user.id),
             chat_id=message.chat_id,
             message_id=sent_message.message_id,
         )

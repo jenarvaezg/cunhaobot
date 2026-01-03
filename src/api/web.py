@@ -180,9 +180,7 @@ class WebController(Controller):
         )
 
         # Get user posters
-        user_posters = await poster_request_repo.get_completed_by_user(
-            int(profile_user.id)
-        )
+        user_posters = await poster_request_repo.get_completed_by_user(profile_user.id)
 
         # Calculate Level (simple formula)
         level = 1 + int(profile_user.points / 100)
