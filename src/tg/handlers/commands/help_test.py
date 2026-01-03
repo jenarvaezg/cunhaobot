@@ -31,7 +31,7 @@ async def test_handle_help():
         update.effective_message.reply_text.assert_called_once()
         args, _ = update.effective_message.reply_text.call_args
         msg = args[0]
-        assert "cuñao" in msg
-        assert "/cuñao" in msg
+        assert "Cuñao Vision" in msg
+        assert "/poster" in msg
         assert "/perfil" in msg
         assert "@cunhaobot" in msg
