@@ -24,7 +24,7 @@ async def test_handle_pre_checkout_success():
     context = MagicMock()
 
     with patch("tg.handlers.payments.checkout.poster_request_repo") as mock_repo:
-        mock_repo.get = AsyncMock(return_value=None)
+        mock_repo.load = AsyncMock(return_value=None)
         await handle_pre_checkout(update, context)
 
     query.answer.assert_called_once_with(ok=True)
@@ -109,7 +109,7 @@ async def test_handle_successful_payment_success():
         ) as mock_notify,
     ):
         mock_gen.return_value = b"image_bytes"
-        mock_repo.get = AsyncMock(return_value=mock_request)
+        mock_repo.load = AsyncMock(return_value=mock_request)
         mock_storage.upload_bytes = AsyncMock(return_value="http://gcs/image.png")
         mock_badge_service.check_badges = AsyncMock(return_value=[])
         mock_usage_service.log_usage = AsyncMock()
@@ -181,7 +181,7 @@ async def test_handle_successful_payment_failure_refund():
         patch("tg.handlers.payments.checkout.poster_request_repo") as mock_repo,
     ):
         mock_gen.side_effect = Exception("AI Error")
-        mock_repo.get = AsyncMock(return_value=mock_request)
+        mock_repo.load = AsyncMock(return_value=mock_request)
         mock_repo.save = AsyncMock()
 
         await handle_successful_payment(update, context)
