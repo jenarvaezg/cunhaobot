@@ -50,20 +50,18 @@ async def handle_message(update: Update, context: CallbackContext) -> None:
         await message.reply_text(response, do_quote=True)
         await notify_new_badges(update, context, new_badges)
 
-        # Smart Reaction
-        try:
-            reaction_emoji = await ai_service.analyze_sentiment_and_react(clean_text)
-            if reaction_emoji:
-                await message.set_reaction(reaction=reaction_emoji)
+    # Smart Reaction (runs for EVERY message)
+    try:
+        reaction_emoji = await ai_service.analyze_sentiment_and_react(message.text)
+        if reaction_emoji:
+            await message.set_reaction(reaction=reaction_emoji)
 
-                # Log usage for "Centro de Atención" badge
-                reaction_badges = await usage_service.log_usage(
-                    user_id=message.from_user.id if message.from_user else "unknown",
-                    platform="telegram",
-                    action=ActionType.REACTION_RECEIVED,
-                )
-                await notify_new_badges(update, context, reaction_badges)
-        except Exception as e:
-            logger.warning(f"Failed to set reaction: {e}")
-
-        return
+            # Log usage for "Centro de Atención" badge
+            reaction_badges = await usage_service.log_usage(
+                user_id=message.from_user.id if message.from_user else "unknown",
+                platform="telegram",
+                action=ActionType.REACTION_RECEIVED,
+            )
+            await notify_new_badges(update, context, reaction_badges)
+    except Exception as e:
+        logger.warning(f"Failed to set reaction: {e}")

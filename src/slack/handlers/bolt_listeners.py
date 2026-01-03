@@ -590,42 +590,69 @@ def register_listeners(app: AsyncApp) -> None:
         except Exception as e:
             logger.warning(f"Failed to react on Slack: {e}")
 
-    @app.event("message")
-    async def handle_message_event(
-        ack: Any, body: dict[str, Any], say: Any, client: Any, context: Any
-    ):
-        await ack()
-        await _register_slack_user(body, client)
-        event = body["event"]
-        channel_type = event.get("channel_type")
-        # Only handle DMs here, avoid double replying in channels (handled by app_mention)
-        if channel_type == "im" and "subtype" not in event:
+        @app.event("message")
+        async def handle_message_event(
+            ack: Any, body: dict[str, Any], say: Any, client: Any, context: Any
+        ):
+            await ack()
+
+            await _register_slack_user(body, client)
+
+            event = body["event"]
+
+            # Skip bot messages
+
+            if event.get("bot_id") or event.get("subtype") == "bot_message":
+                return
+
             text = event.get("text", "")
 
-            response = await cunhao_agent.answer(text)
-            await usage_service.log_usage(
-                user_id=event.get("user"),
-                platform="slack",
-                action=ActionType.AI_ASK,
-            )
-            await say(response)
+            channel_type = event.get("channel_type")
 
-            # Smart Reaction
-            try:
-                reaction_unicode = await ai_service.analyze_sentiment_and_react(text)
-                if reaction_unicode and reaction_unicode in EMOJI_MAP:
-                    await client.reactions_add(
-                        name=EMOJI_MAP[reaction_unicode],
-                        channel=event.get("channel"),
-                        timestamp=event.get("ts"),
+            bot_user_id = context.get("bot_user_id")
+
+            is_mentioned = bot_user_id and f"<@{bot_user_id}>" in text
+
+            # Answering logic: Only for DMs (IMs)
+
+            if channel_type == "im" and "subtype" not in event:
+                response = await cunhao_agent.answer(text)
+
+                await usage_service.log_usage(
+                    user_id=event.get("user"),
+                    platform="slack",
+                    action=ActionType.AI_ASK,
+                )
+
+                await say(response)
+
+            # Smart Reaction: For any message (unless already mentioned, which is handled by app_mention)
+
+            if not is_mentioned:
+                try:
+                    reaction_unicode = await ai_service.analyze_sentiment_and_react(
+                        text
                     )
 
-                    # Log usage and check badges
-                    reaction_badges = await usage_service.log_usage(
-                        user_id=event.get("user"),
-                        platform="slack",
-                        action=ActionType.REACTION_RECEIVED,
-                    )
-                    await notify_new_badges_slack(say, reaction_badges)
-            except Exception as e:
-                logger.warning(f"Failed to react on Slack: {e}")
+                    if reaction_unicode and reaction_unicode in EMOJI_MAP:
+                        await client.reactions_add(
+                            name=EMOJI_MAP[reaction_unicode],
+                            channel=event.get("channel"),
+                            timestamp=event.get("ts"),
+                        )
+
+                        # Log usage and check badges
+
+                        reaction_badges = await usage_service.log_usage(
+                            user_id=event.get("user"),
+                            platform="slack",
+                            action=ActionType.REACTION_RECEIVED,
+                        )
+
+                        await notify_new_badges_slack(say, reaction_badges)
+
+                except Exception as e:
+                    # Silently fail if reaction already exists or other Slack errors
+
+                    if "already_reacted" not in str(e):
+                        logger.warning(f"Failed to react on Slack: {e}")
