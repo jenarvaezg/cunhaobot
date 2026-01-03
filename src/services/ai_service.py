@@ -195,22 +195,15 @@ Set the scene in a typical Spanish bar with a wooden counter and beer tapas.
             if result == "NONE":
                 return None
 
-            # Simple validation to ensure it's likely an emoji
-            if (
-                len(result) > 4
-            ):  # Emojis are short, usually 1-2 chars but some complex ones are longer. 4 is safe limit for single emoji usually.
-                # Maybe it returned text. Let's be strict.
-                # Check if it matches one of the allowed emojis roughly
-                allowed = ["🍺", "🇪🇸", "🥘", "🤡", "👎", "❤️", "🔥", "😂"]
-                if not any(e in result for e in allowed):
-                    return None
+            # Strict validation: Only allow specific emojis
+            allowed = ["🍺", "🇪🇸", "🥘", "🤡", "👎", "❤️", "🔥", "😂"]
 
-                # clean up
-                for e in allowed:
-                    if e in result:
-                        return e
+            # Check if any allowed emoji is in the result
+            for e in allowed:
+                if e in result:
+                    return e
 
-            return result
+            return None
 
         except Exception as e:
             logger.error(f"Error in analyze_sentiment_and_react: {e}")

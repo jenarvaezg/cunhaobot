@@ -1,5 +1,5 @@
 import logging
-from telegram import Update
+from telegram import Update, ReactionTypeEmoji
 from telegram.ext import CallbackContext
 from services import cunhao_agent, usage_service, ai_service
 from models.usage import ActionType
@@ -54,7 +54,7 @@ async def handle_message(update: Update, context: CallbackContext) -> None:
     try:
         reaction_emoji = await ai_service.analyze_sentiment_and_react(message.text)
         if reaction_emoji:
-            await message.set_reaction(reaction=reaction_emoji)
+            await message.set_reaction(reaction=ReactionTypeEmoji(reaction_emoji))
 
             # Log usage for "Centro de Atención" badge
             reaction_badges = await usage_service.log_usage(

@@ -1,5 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, AsyncMock, patch
+from telegram import ReactionTypeEmoji
 from tg.handlers.messages.text_message import handle_message
 
 
@@ -51,7 +52,9 @@ async def test_handle_message_mention_trigger():
             "AI Response", do_quote=True
         )
         mock_react.assert_called_once_with("Hola @TestBot")
-        update.effective_message.set_reaction.assert_called_once_with(reaction="🍺")
+        update.effective_message.set_reaction.assert_called_once_with(
+            reaction=ReactionTypeEmoji("🍺")
+        )
 
 
 @pytest.mark.asyncio
@@ -95,4 +98,6 @@ async def test_handle_message_no_trigger_only_reaction():
 
         # Should react
         mock_react.assert_called_once_with("Solo un mensaje en el grupo")
-        update.effective_message.set_reaction.assert_called_once_with(reaction="🇪🇸")
+        update.effective_message.set_reaction.assert_called_once_with(
+            reaction=ReactionTypeEmoji("🇪🇸")
+        )
