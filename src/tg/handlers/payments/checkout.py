@@ -3,8 +3,11 @@ from telegram import Update
 from telegram.ext import CallbackContext
 
 from services.ai_service import ai_service
-from services import poster_request_repo
+from services import poster_request_repo, badge_service, usage_service
+from models.usage import ActionType
 from tg.decorators import log_update
+from tg.utils.badges import notify_new_badges
+from utils.storage import storage_service
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +90,16 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
     try:
         image_bytes = await ai_service.generate_image(phrase)
 
+        # Upload to Storage
+        filename = f"posters/{payload}.png"
+        image_url = await storage_service.upload_bytes(image_bytes, filename)
+
+        # Update Request Status
+        if request_data:
+            request_data.image_url = image_url
+            request_data.status = "completed"
+            await poster_request_repo.save(request_data)
+
         caption = f"🎨 *{phrase}*\n\nAquí tienes, chaval. Gástatelo en salud."
 
         await context.bot.send_photo(
@@ -99,10 +112,26 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
         # Delete the "processing" message
         await processing_msg.delete()
 
+        # Log usage
+        await usage_service.log_usage(
+            user_id=user.id,
+            platform="telegram",
+            action=ActionType.POSTER,
+            metadata={"phrase": phrase, "image_url": image_url},
+        )
+
+        # Check badges
+        new_badges = await badge_service.check_badges(user.id, "telegram")
+        await notify_new_badges(update, context, new_badges)
+
     except Exception as e:
         logger.error(
             f"Error delivering product for payment {telegram_payment_charge_id}: {e}"
         )
+        if request_data:
+            request_data.status = "failed"
+            await poster_request_repo.save(request_data)
+
         await context.bot.send_message(
             chat_id=original_chat_id,
             text=(

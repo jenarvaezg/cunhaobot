@@ -26,6 +26,7 @@ class Config:
     twitter_consumer_secret: str
     twitter_access_token: str
     twitter_access_secret: str
+    bucket_name: str
 
     @classmethod
     def from_env(cls) -> "Config":
@@ -59,6 +60,7 @@ class Config:
             twitter_consumer_secret=os.environ.get("TWITTER_CONSUMER_KEY_SECRET", ""),
             twitter_access_token=os.environ.get("TWITTER_ACCESS_TOKEN", ""),
             twitter_access_secret=os.environ.get("TWITTER_ACCESS_TOKEN_SECRET", ""),
+            bucket_name=os.environ.get("BUCKET_NAME", "cunhaobot-assets"),
         )
 
 

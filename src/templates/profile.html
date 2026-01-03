@@ -172,6 +172,38 @@
             </div>
         </div>
 
+        <!-- User Posters Gallery -->
+        {% if user_posters %}
+        <div class="glass-card p-4 mb-4 animate__animated animate__fadeInUp">
+            <h4 class="oswald mb-3 border-bottom border-secondary pb-2">
+                <i class="bi bi-palette-fill text-info me-2"></i>Galería de Pósters
+            </h4>
+            <div class="row g-3">
+                {% for poster in user_posters %}
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="poster-card position-relative overflow-hidden rounded border border-secondary shadow-sm" style="aspect-ratio: 1/1;">
+                        {% if poster.image_url %}
+                        <a href="{{ poster.image_url }}" target="_blank">
+                            <img src="{{ poster.image_url }}"
+                                 alt="{{ poster.phrase }}"
+                                 class="w-100 h-100 object-fit-cover transition-transform"
+                                 loading="lazy">
+                        </a>
+                        {% else %}
+                        <div class="d-flex align-items-center justify-content-center h-100 bg-dark text-muted p-2 text-center">
+                            <small>{{ poster.phrase }}</small>
+                        </div>
+                        {% endif %}
+                        <div class="poster-overlay position-absolute bottom-0 start-0 end-0 p-2 bg-dark bg-opacity-75 text-white small text-truncate">
+                            {{ poster.phrase }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
         <!-- User Phrases -->
         {% if user_phrases %}
         <div class="glass-card p-4 animate__animated animate__fadeInUp animate__delay-1s">
@@ -195,5 +227,9 @@
 
 <style>
     .ultra-tiny { font-size: 0.6rem; padding: 2px 4px; }
+    .poster-card img { transition: transform 0.3s ease; }
+    .poster-card:hover img { transform: scale(1.1); }
+    .poster-overlay { opacity: 0; transition: opacity 0.3s ease; }
+    .poster-card:hover .poster-overlay { opacity: 1; }
 </style>
 {% endblock %}

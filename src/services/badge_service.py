@@ -109,6 +109,24 @@ BADGES = [
         description="Que Paco te reaccione a un mensaje",
         icon="🌟",
     ),
+    Badge(
+        id="mecenas",
+        name="El Mecenas",
+        description="Generar 1 póster con IA",
+        icon="🎨",
+    ),
+    Badge(
+        id="coleccionista",
+        name="El Coleccionista",
+        description="Generar 5 pósters con IA",
+        icon="🖼️",
+    ),
+    Badge(
+        id="galerista",
+        name="El Galerista",
+        description="Generar 10 pósters con IA",
+        icon="🏛️",
+    ),
 ]
 
 
@@ -241,6 +259,22 @@ class BadgeService:
             if reaction_count >= 1:
                 new_badge_ids.append("centro_atencion")
 
+        # 14, 15, 16. Poster badges (Mecenas, Coleccionista, Galerista)
+        if any(
+            b not in current_badges for b in ["mecenas", "coleccionista", "galerista"]
+        ):
+            from services import poster_request_repo
+
+            poster_count = await poster_request_repo.count_completed_by_user(
+                int(user.id)
+            )
+            if "mecenas" not in current_badges and poster_count >= 1:
+                new_badge_ids.append("mecenas")
+            if "coleccionista" not in current_badges and poster_count >= 5:
+                new_badge_ids.append("coleccionista")
+            if "galerista" not in current_badges and poster_count >= 10:
+                new_badge_ids.append("galerista")
+
         # Always save user because last_usages has been updated
         if new_badge_ids:
             user.badges.extend(new_badge_ids)
@@ -297,8 +331,10 @@ class BadgeService:
         )
 
         from infrastructure.datastore.phrase import phrase_repository
+        from services import poster_request_repo
 
         user_phrases_count = await phrase_repository.get_user_phrase_count(str(user_id))
+        poster_count = await poster_request_repo.count_completed_by_user(int(user_id))
 
         for badge in BADGES:
             is_earned = badge.id in current_badges
@@ -344,6 +380,15 @@ class BadgeService:
                 elif badge.id == "centro_atencion":
                     current_val = reaction_count
                     target_val = 1
+                elif badge.id == "mecenas":
+                    current_val = poster_count
+                    target_val = 1
+                elif badge.id == "coleccionista":
+                    current_val = poster_count
+                    target_val = 5
+                elif badge.id == "galerista":
+                    current_val = poster_count
+                    target_val = 10
 
                 if target_val > 0:
                     progress = min(100, int((current_val / target_val) * 100))

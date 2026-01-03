@@ -140,6 +140,7 @@ class WebController(Controller):
     ) -> Template | Response:
         from services.badge_service import badge_service
         from services.usage_service import usage_service
+        from services import poster_request_repo
 
         # Try to find user (load will follow links)
         profile_user = await user_repo.load(user_id)
@@ -178,6 +179,11 @@ class WebController(Controller):
             user_phrases + user_long_phrases, key=lambda x: x.usages, reverse=True
         )
 
+        # Get user posters
+        user_posters = await poster_request_repo.get_completed_by_user(
+            int(profile_user.id)
+        )
+
         # Calculate Level (simple formula)
         level = 1 + int(profile_user.points / 100)
 
@@ -196,6 +202,7 @@ class WebController(Controller):
                 "stats": stats,
                 "badges_progress": badges_progress,
                 "user_phrases": all_user_phrases,
+                "user_posters": user_posters,
                 "phrases_count": len(all_user_phrases),
                 "level": level,
                 "fun_stats": fun_stats,

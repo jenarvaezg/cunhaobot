@@ -101,19 +101,38 @@ async def test_handle_successful_payment_success():
             "services.ai_service.ai_service.generate_image", new_callable=AsyncMock
         ) as mock_gen,
         patch("tg.handlers.payments.checkout.poster_request_repo") as mock_repo,
+        patch("tg.handlers.payments.checkout.storage_service") as mock_storage,
+        patch("tg.handlers.payments.checkout.badge_service") as mock_badge_service,
+        patch("tg.handlers.payments.checkout.usage_service") as mock_usage_service,
+        patch(
+            "tg.handlers.payments.checkout.notify_new_badges", new_callable=AsyncMock
+        ) as mock_notify,
     ):
         mock_gen.return_value = b"image_bytes"
         mock_repo.get = AsyncMock(return_value=mock_request)
+        mock_storage.upload_bytes = AsyncMock(return_value="http://gcs/image.png")
+        mock_badge_service.check_badges = AsyncMock(return_value=[])
+        mock_usage_service.log_usage = AsyncMock()
+        mock_repo.save = AsyncMock()
 
         await handle_successful_payment(update, context)
 
         mock_gen.assert_called_once_with("phrase")
+        mock_storage.upload_bytes.assert_called_once()
+        mock_repo.save.assert_called_once()
+        assert mock_request.status == "completed"
+        assert mock_request.image_url == "http://gcs/image.png"
+
         context.bot.send_photo.assert_called_once()
         # Verify it sent to the stored chat_id
         assert context.bot.send_photo.call_args[1]["chat_id"] == 999
 
         processing_msg.delete.assert_called_once()
         context.bot.delete_message.assert_called_once_with(chat_id=999, message_id=888)
+
+        mock_badge_service.check_badges.assert_called_once()
+        mock_usage_service.log_usage.assert_called_once()
+        mock_notify.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -163,8 +182,12 @@ async def test_handle_successful_payment_failure_refund():
     ):
         mock_gen.side_effect = Exception("AI Error")
         mock_repo.get = AsyncMock(return_value=mock_request)
+        mock_repo.save = AsyncMock()
 
         await handle_successful_payment(update, context)
+
+        mock_repo.save.assert_called_once()
+        assert mock_request.status == "failed"
 
         context.bot.refund_star_payment.assert_called_once_with(
             user_id=123, telegram_payment_charge_id="charge_id"
