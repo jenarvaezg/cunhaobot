@@ -36,7 +36,7 @@ async def handle_poster(update: Update, context: CallbackContext) -> None:
     payload = phrase
     provider_token = ""  # Empty for XTR (Stars)
     currency = "XTR"
-    prices = [LabeledPrice("Poster IA", 1)]  # 1 Star
+    prices = [LabeledPrice("Poster IA", 50)]  # 50 Stars
 
     await message.reply_invoice(
         title=title,

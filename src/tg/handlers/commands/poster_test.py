@@ -50,4 +50,4 @@ async def test_handle_poster_success():
     assert call_kwargs["title"] == "Poster Cuñao IA"
     assert call_kwargs["payload"] == "El futuro es el diésel"
     assert call_kwargs["currency"] == "XTR"
-    assert call_kwargs["prices"][0].amount == 1
+    assert call_kwargs["prices"][0].amount == 50
