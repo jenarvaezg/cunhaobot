@@ -176,10 +176,11 @@ Set the scene in a typical Spanish bar with a wooden counter and beer tapas.
 
         prompt = (
             f"Eres el CuñaoBot. Analiza este mensaje: '{text}'. "
-            "Si merece una reacción típica de cuñado (risas, indignación, patriotismo, cerveza, comida), "
+            "Tu misión es reaccionar SOLO si el mensaje es un 'caramelo' para un cuñado. "
+            "Si es una conversación normal, aburrida o neutra, responde 'NONE'. "
+            "Solo si detectas ALGO MUY CLARO (mención de alcohol/comida, patriotismo exaltado, algo indignante o una tontería digna de burla), "
             "responde ÚNICAMENTE con UNO de estos emojis: 🍺, 🇪🇸, 🥘, 🤡, 👎, ❤️, 🔥, 😂. "
-            "Si es neutro o no te provoca nada, responde 'NONE'. "
-            "NO expliques nada, solo el emoji o NONE."
+            "Ante la duda, NO HAGAS NADA (responde 'NONE'). Sé selectivo."
         )
 
         try:
