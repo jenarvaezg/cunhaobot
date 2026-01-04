@@ -69,6 +69,15 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
 
             await chat_repository.save(chat)
 
+            # Log usage for badge (El Patrón)
+            # Use the user who paid, regardless of who the chat belongs to
+            new_badges = await usage_service.log_usage(
+                user_id=user.id,
+                platform="telegram",
+                action=ActionType.SUBSCRIPTION,
+                metadata={"target_chat_id": target_chat_id, "amount": 100},
+            )
+
             await context.bot.send_message(
                 chat_id=target_chat_id,
                 text=(
@@ -77,6 +86,10 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
                     "Disfrutad de vuestros privilegios."
                 ),
             )
+
+            # Notify badges in the chat where payment happened (likely the same)
+            await notify_new_badges(update, context, new_badges)
+
         except Exception as e:
             logger.error(f"Error activating subscription for {payload}: {e}")
             await context.bot.send_message(

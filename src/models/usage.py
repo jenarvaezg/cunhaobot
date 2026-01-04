@@ -16,6 +16,7 @@ class ActionType(str, Enum):
     AUDIO = "audio"
     REACTION_RECEIVED = "reaction_received"
     POSTER = "poster"
+    SUBSCRIPTION = "subscription"
 
 
 class UsageRecord(BaseModel):

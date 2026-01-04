@@ -132,6 +132,12 @@ BADGES = [
         description="Generar 10 pósters con IA",
         icon="🏛️",
     ),
+    Badge(
+        id="vip",
+        name="El Patrón",
+        description="Pagar una suscripción Premium",
+        icon="💎",
+    ),
 ]
 
 
@@ -266,6 +272,14 @@ class BadgeService:
             if reaction_count >= 1:
                 new_badge_ids.append("centro_atencion")
 
+        # 17. VIP (Subscription)
+        if "vip" not in current_badges:
+            sub_count = await self.usage_repo.get_user_action_count(
+                str(user_id), action=ActionType.SUBSCRIPTION.value
+            )
+            if sub_count >= 1:
+                new_badge_ids.append("vip")
+
         # 14, 15, 16. Poster badges (Mecenas, Coleccionista, Galerista)
         if any(
             b not in current_badges for b in ["mecenas", "coleccionista", "galerista"]
@@ -330,6 +344,7 @@ class BadgeService:
             approve_count,
             reject_count,
             reaction_count,
+            sub_count,
             user_phrases_count,
             poster_count,
         ) = await asyncio.gather(
@@ -354,6 +369,9 @@ class BadgeService:
             ),
             self.usage_repo.get_user_action_count(
                 str(user_id), action=ActionType.REACTION_RECEIVED.value
+            ),
+            self.usage_repo.get_user_action_count(
+                str(user_id), action=ActionType.SUBSCRIPTION.value
             ),
             phrase_repository.get_user_phrase_count(str(user_id)),
             poster_request_repo.count_completed_by_user(user_id),
@@ -402,6 +420,16 @@ class BadgeService:
                     target_val = 1
                 elif badge.id == "centro_atencion":
                     current_val = reaction_count
+                    target_val = 1
+                elif badge.id == "vip":
+                    # subscription_count is the 9th element in the gathered tuple (index 8, but shifted because user_phrase_count is 8th in old tuple)
+                    # Ah, I added subscription_count before user_phrase_count in the gather call in my instruction above?
+                    # Let's double check the unpacking.
+                    # Wait, I am replacing the gather call block. I need to update the unpacking variable names too.
+                    # It's better to update the whole unpacking block.
+                    current_val = (
+                        sub_count  # Using variable name from unpacking (see below)
+                    )
                     target_val = 1
                 elif badge.id == "mecenas":
                     current_val = poster_count
