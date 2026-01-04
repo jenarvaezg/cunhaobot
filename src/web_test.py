@@ -14,8 +14,8 @@ def test_index_page(client):
     lp1 = LongPhrase(text="esto es una prueba", usages=5)
 
     with (
-        patch("services.phrase_repo.get_phrases", return_value=[p1]),
-        patch("services.long_phrase_repo.get_phrases", return_value=[lp1]),
+        patch("services.phrase_repo.load_all", return_value=[p1]),
+        patch("services.long_phrase_repo.load_all", return_value=[lp1]),
     ):
         rv = client.get("/")
         assert rv.status_code == HTTP_200_OK

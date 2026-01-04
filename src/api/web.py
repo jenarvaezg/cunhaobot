@@ -29,18 +29,18 @@ class WebController(Controller):
         phrase_repo: Annotated[PhraseRepository, Dependency()],
         long_phrase_repo: Annotated[LongPhraseRepository, Dependency()],
     ) -> Template:
-        short_phrases = await phrase_repo.get_phrases(limit=50)
-        long_phrases = await long_phrase_repo.get_phrases(limit=50)
+        short_phrases = await phrase_repo.load_all()
+        long_phrases = await long_phrase_repo.load_all()
 
         return Template(
             template_name="index.html",
             context={
                 "short_phrases": sorted(
                     short_phrases, key=lambda x: x.usages, reverse=True
-                ),
+                )[:50],
                 "long_phrases": sorted(
                     long_phrases, key=lambda x: x.usages, reverse=True
-                ),
+                )[:50],
                 "user": request.session.get("user"),
                 "owner_id": config.owner_id,
                 "is_htmx": bool(getattr(request, "htmx", False)),
