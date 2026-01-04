@@ -6,7 +6,8 @@ Estrategias para hacer el bot sostenible utilizando Telegram Stars (XTR) y otros
     * **Gifts (Carajillos Digitales):** Sistema de regalos únicos. Los usuarios pueden enviarse carajillos, copas de coñac o palillos de plata que lucen en el perfil de la Mini App.
     * **Paid Media:** Envío de "Audios Pro" o roasts de Cuñao Vision de alta definición que solo se desbloquean con Stars.
     * **IA Image Generation:** Cobrar una pequeña cantidad de Stars por cada imagen personalizada generada para una frase.
-* **Suscripción "V.I.P." (Very Important Paco):**
+* **Suscripción "V.I.P." (Very Important Paco) / Premium:**
+    * Desbloqueo de IA Conversacional, Cuñao Vision y Reacciones Inteligentes (Completado ✅).
     * Acceso a voces de TTS premium (Antonio Resines style), prioridad de procesamiento y eliminación de publicidad.
 * **Merchandising Directo:**
     * Integración para comprar camisetas o tazas con "tus frases estrella" directamente desde el bot.
@@ -29,10 +30,11 @@ Estrategias para hacer el bot sostenible utilizando Telegram Stars (XTR) y otros
 * Integrar `vision` con `tts_service` para respuestas vocales.
 * Comando `/vision` o simplemente detectar fotos en chats privados.
 
-### Fase 2: Modernización UI (Semana 3)
+### Fase 2: Modernización UI (Completado ✅)
 * Crear la primera versión de la **Mini App de Ranking** usando HTMX (integrado en Litestar).
 * Implementar el sistema de "Cuñao Points" básico en Datastore.
 
-### Fase 3: Monetización "La Caña" (Semana 4)
-* Integrar pagos con Telegram Stars para la generación de imágenes IA.
+### Fase 3: Monetización "La Caña" (En Progreso 🚧)
+* Integrar pagos con Telegram Stars para la generación de imágenes IA (/poster) (Completado ✅).
+* Implementar Suscripción Premium Mensual (100 Stars) para desbloquear features de IA (/premium) (Completado ✅).
 * Setup de "Support the bot" temático.

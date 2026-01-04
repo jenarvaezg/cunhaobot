@@ -11,6 +11,7 @@ class Chat(BaseModel):
     type: str = "private"  # private, group, supergroup, channel
     usages: int = 0
     is_active: bool = True
+    premium_until: datetime | None = None
     created_at: datetime | None = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
@@ -19,3 +20,14 @@ class Chat(BaseModel):
     )
 
     kind: ClassVar[str] = "Chat"
+
+    @property
+    def is_premium(self) -> bool:
+        if not self.premium_until:
+            return False
+        # Ensure comparison is timezone-aware
+        now = datetime.now(timezone.utc)
+        if self.premium_until.tzinfo is None:
+            # If stored without timezone (naive), assume UTC or force it
+            self.premium_until = self.premium_until.replace(tzinfo=timezone.utc)
+        return self.premium_until > now

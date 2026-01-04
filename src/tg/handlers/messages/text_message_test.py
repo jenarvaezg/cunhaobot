@@ -28,6 +28,10 @@ async def test_handle_message_mention_trigger():
 
     with (
         patch(
+            "tg.handlers.messages.text_message.chat_repository.load",
+            new_callable=AsyncMock,
+        ) as mock_chat_load,
+        patch(
             "tg.handlers.messages.text_message.cunhao_agent.answer",
             new_callable=AsyncMock,
         ) as mock_answer,
@@ -42,6 +46,10 @@ async def test_handle_message_mention_trigger():
         ) as mock_react,
         patch("tg.decorators.user_service.update_or_create_user"),
     ):
+        mock_chat = MagicMock()
+        mock_chat.is_premium = True
+        mock_chat_load.return_value = mock_chat
+
         mock_answer.return_value = "AI Response"
         mock_react.return_value = "🍺"
 
@@ -74,6 +82,10 @@ async def test_handle_message_no_trigger_only_reaction():
 
     with (
         patch(
+            "tg.handlers.messages.text_message.chat_repository.load",
+            new_callable=AsyncMock,
+        ) as mock_chat_load,
+        patch(
             "tg.handlers.messages.text_message.cunhao_agent.answer",
             new_callable=AsyncMock,
         ) as mock_answer,
@@ -88,6 +100,10 @@ async def test_handle_message_no_trigger_only_reaction():
         ) as mock_react,
         patch("tg.decorators.user_service.update_or_create_user"),
     ):
+        mock_chat = MagicMock()
+        mock_chat.is_premium = True
+        mock_chat_load.return_value = mock_chat
+
         mock_react.return_value = "🇪🇸"
 
         await handle_message(update, context)

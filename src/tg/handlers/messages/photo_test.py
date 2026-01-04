@@ -33,6 +33,9 @@ async def test_photo_roast_private_success():
 
     with (
         patch(
+            "tg.handlers.messages.photo.chat_repository.load", new_callable=AsyncMock
+        ) as mock_chat_load,
+        patch(
             "tg.handlers.messages.photo.ai_service.analyze_image",
             new_callable=AsyncMock,
         ) as mock_analyze,
@@ -47,6 +50,10 @@ async def test_photo_roast_private_success():
         ) as mock_log,
         patch("tg.handlers.messages.photo.notify_new_badges") as mock_notify,
     ):
+        mock_chat = MagicMock()
+        mock_chat.is_premium = True
+        mock_chat_load.return_value = mock_chat
+
         mock_analyze.return_value = "Eso está mal alicatao"
 
         await photo_roast(update, context)
@@ -94,6 +101,9 @@ async def test_photo_roast_group_mentioned_success():
 
     with (
         patch(
+            "tg.handlers.messages.photo.chat_repository.load", new_callable=AsyncMock
+        ) as mock_chat_load,
+        patch(
             "tg.handlers.messages.photo.ai_service.analyze_image",
             new_callable=AsyncMock,
         ) as mock_analyze,
@@ -108,6 +118,10 @@ async def test_photo_roast_group_mentioned_success():
         ),
         patch("tg.handlers.messages.photo.notify_new_badges"),
     ):
+        mock_chat = MagicMock()
+        mock_chat.is_premium = True
+        mock_chat_load.return_value = mock_chat
+
         mock_analyze.return_value = "Eso está mal alicatao"
 
         await photo_roast(update, context)
@@ -166,7 +180,14 @@ async def test_photo_roast_error():
         side_effect=Exception("Download failed")
     )
 
-    await photo_roast(update, MagicMock())
+    with patch(
+        "tg.handlers.messages.photo.chat_repository.load", new_callable=AsyncMock
+    ) as mock_chat_load:
+        mock_chat = MagicMock()
+        mock_chat.is_premium = True
+        mock_chat_load.return_value = mock_chat
+
+        await photo_roast(update, MagicMock())
 
     update.message.reply_text.assert_called_once_with(
         "Mira, eso es una chapuza tan grande que no me deja ni ver la foto."

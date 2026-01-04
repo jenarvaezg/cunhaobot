@@ -5,6 +5,7 @@ from services.ai_service import ai_service
 from services.tts_service import tts_service
 from services import usage_service
 from models.usage import ActionType
+from infrastructure.datastore.chat import chat_repository
 from tg.decorators import log_update
 from tg.utils.badges import notify_new_badges
 
@@ -27,6 +28,17 @@ async def photo_roast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     is_mentioned = bot_username and f"@{bot_username.lower()}" in caption
 
     if not (is_private or is_mentioned):
+        return
+
+    # Premium Check
+    chat = await chat_repository.load(update.effective_chat.id)
+    if not chat or not chat.is_premium:
+        await message.reply_text(
+            "⛔️ **Función Premium**\n\n"
+            "El análisis de visión (Cuñao Vision) requiere una suscripción activa.\n"
+            "Usa /premium para activar la barra libre.",
+            parse_mode="Markdown",
+        )
         return
 
     user_id = update.effective_user.id

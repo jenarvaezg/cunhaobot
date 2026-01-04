@@ -25,12 +25,14 @@ from .messages.reply import handle_reply
 from .commands.start import handle_start
 from .commands.stop import handle_stop
 from .commands.submit import handle_submit, handle_submit_phrase
+from .commands.premium import handle_premium
 from .messages.text_message import handle_message
 from .messages.photo import photo_roast
 
 handlers = [
     CommandHandler("start", handle_start),
     CommandHandler("help", handle_help),
+    CommandHandler("premium", handle_premium),
     CommandHandler("submit", handle_submit),
     CommandHandler("proponer", handle_submit),
     CommandHandler("submitphrase", handle_submit_phrase),

@@ -1,10 +1,13 @@
 import logging
+from datetime import datetime, timedelta, timezone
 from telegram import Update
 from telegram.ext import CallbackContext
 
 from services.ai_service import ai_service
 from services import poster_request_repo, badge_service, usage_service
 from models.usage import ActionType
+from models.chat import Chat
+from infrastructure.datastore.chat import chat_repository
 from tg.decorators import log_update
 from tg.utils.badges import notify_new_badges
 from utils.storage import storage_service
@@ -22,6 +25,10 @@ async def handle_pre_checkout(update: Update, context: CallbackContext) -> None:
     payload = query.invoice_payload
     if not payload:
         await query.answer(ok=False, error_message="Error: Payload vacío.")
+        return
+
+    if payload.startswith("subs_month_"):
+        await query.answer(ok=True)
         return
 
     # Verify if we have the request data
@@ -44,6 +51,38 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
     telegram_payment_charge_id = message.successful_payment.telegram_payment_charge_id
     user = message.from_user
     if not user:
+        return
+
+    if payload.startswith("subs_month_"):
+        try:
+            target_chat_id = int(payload.replace("subs_month_", ""))
+            chat = await chat_repository.load(target_chat_id)
+            if not chat:
+                chat = Chat(id=target_chat_id)
+
+            now = datetime.now(timezone.utc)
+            # If already premium and not expired, extend. Else start from now.
+            if chat.is_premium and chat.premium_until and chat.premium_until > now:
+                chat.premium_until += timedelta(days=30)
+            else:
+                chat.premium_until = now + timedelta(days=30)
+
+            await chat_repository.save(chat)
+
+            await context.bot.send_message(
+                chat_id=target_chat_id,
+                text=(
+                    "¡Pago recibido! ⭐️\n"
+                    "¡Sois VIPs! La barra libre de Cuñadismo IA está abierta por 30 días.\n"
+                    "Disfrutad de vuestros privilegios."
+                ),
+            )
+        except Exception as e:
+            logger.error(f"Error activating subscription for {payload}: {e}")
+            await context.bot.send_message(
+                chat_id=message.chat_id,
+                text="Hubo un error activando la suscripción. Contacta con el soporte.",
+            )
         return
 
     # Retrieve request data

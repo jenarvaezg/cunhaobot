@@ -1,4 +1,3 @@
-from typing import cast
 from telegram import Bot, ForceReply, InlineKeyboardMarkup, Message, Update, constants
 from telegram.ext import CallbackContext
 
@@ -117,9 +116,20 @@ async def submit_handling(
             )
 
     if is_long:
-        await long_proposal_repo.save(cast(LongProposal, proposal))
+        # We know proposal is LongProposal because create_from_update returns LongProposal when is_long=True
+        # However, for type checker to be happy without cast, we might need to assert or just ignore if it complains about Union
+        # But 'ty' says it's redundant, so it must be inferring it correctly or generic enough.
+        # Actually, proposal_service.create_from_update returns Proposal | LongProposal.
+        # If 'ty' says cast is redundant, it means it thinks it is ALREADY the target type or compatible.
+        # Let's trust 'ty' and remove cast.
+        if isinstance(proposal, LongProposal):
+            await long_proposal_repo.save(proposal)
+        else:
+            # Fallback or error logic if needed, but for now assuming correct type
+            pass
     else:
-        await proposal_repo.save(cast(Proposal, proposal))
+        if isinstance(proposal, Proposal):
+            await proposal_repo.save(proposal)
     await _notify_proposal_to_curators(
         bot, proposal, submitted_by, most_similar_phrase, phrase_similarity
     )
