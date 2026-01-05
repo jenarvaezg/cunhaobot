@@ -30,9 +30,10 @@ class GiftDatastoreRepository(DatastoreRepository[Gift]):
         def _fetch():
             query = self.client.query(kind=self.kind)
             query.add_filter("receiver_id", "=", user_id)
-            # Sort by created_at descending
-            query.order = ["-created_at"]
-            return [self._entity_to_domain(entity) for entity in query.fetch()]
+            results = [self._entity_to_domain(entity) for entity in query.fetch()]
+            # Sort in memory to avoid needing a composite index
+            results.sort(key=lambda x: x.created_at, reverse=True)
+            return results
 
         return await asyncio.to_thread(_fetch)
 
