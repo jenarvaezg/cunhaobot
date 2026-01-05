@@ -8,6 +8,7 @@ from infrastructure.datastore.user import user_repository
 from infrastructure.datastore.chat import chat_repository
 from infrastructure.datastore.usage import usage_repository
 from infrastructure.datastore.poster_request import poster_request_repository
+from infrastructure.datastore.gift import gift_repository
 
 from services.phrase_service import PhraseService
 from services.proposal_service import ProposalService
@@ -62,6 +63,7 @@ dependencies = {
     "poster_request_repo": Provide(
         lambda: poster_request_repository, sync_to_thread=False
     ),
+    "gift_repo": Provide(lambda: gift_repository, sync_to_thread=False),
     "phrase_service": Provide(provide_phrase_service, sync_to_thread=False),
     "user_service": Provide(provide_user_service, sync_to_thread=False),
     "proposal_service": Provide(provide_proposal_service, sync_to_thread=False),

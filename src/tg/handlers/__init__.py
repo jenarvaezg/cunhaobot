@@ -18,6 +18,7 @@ from .messages.fallback import handle_fallback_message as handle_fallback_messag
 from .commands.help import handle_help as handle_help
 from .commands.link import handle_link
 from .commands.poster import handle_poster
+from .commands.gift import handle_gift_command, handle_gift_selection
 from .commands.profile import handle_profile
 from .inline.inline_query import handle_inline_query as handle_inline_query
 from .commands.ping import handle_ping as handle_ping
@@ -33,6 +34,8 @@ handlers = [
     CommandHandler("start", handle_start),
     CommandHandler("help", handle_help),
     CommandHandler("premium", handle_premium),
+    CommandHandler("regalar", handle_gift_command),
+    CommandHandler("gift", handle_gift_command),
     CommandHandler("submit", handle_submit),
     CommandHandler("proponer", handle_submit),
     CommandHandler("submitphrase", handle_submit_phrase),
@@ -51,6 +54,7 @@ handlers = [
     MessageHandler(filters.PHOTO, photo_roast),
     MessageHandler(filters.TEXT, handle_message),
     InlineQueryHandler(handle_inline_query),
+    CallbackQueryHandler(handle_gift_selection, pattern="^gift_sel:"),
     CallbackQueryHandler(handle_callback_query),
     ChosenInlineResultHandler(handle_chosen_inline_result),
     MessageHandler(filters.ALL, handle_fallback_message),

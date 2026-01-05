@@ -7,7 +7,9 @@ from services.ai_service import ai_service
 from services import poster_request_repo, badge_service, usage_service
 from models.usage import ActionType
 from models.chat import Chat
+from models.gift import Gift, GiftType, GIFT_PRICES, GIFT_EMOJIS
 from infrastructure.datastore.chat import chat_repository
+from infrastructure.datastore.gift import gift_repository
 from tg.decorators import log_update
 from tg.utils.badges import notify_new_badges
 from utils.storage import storage_service
@@ -27,7 +29,7 @@ async def handle_pre_checkout(update: Update, context: CallbackContext) -> None:
         await query.answer(ok=False, error_message="Error: Payload vacío.")
         return
 
-    if payload.startswith("subs_month_"):
+    if payload.startswith("subs_month_") or payload.startswith("gift:"):
         await query.answer(ok=True)
         return
 
@@ -51,6 +53,57 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
     telegram_payment_charge_id = message.successful_payment.telegram_payment_charge_id
     user = message.from_user
     if not user:
+        return
+
+    if payload.startswith("gift:"):
+        try:
+            # Payload format: gift:receiver_id:gift_type
+            _, receiver_id_str, gift_type_str = payload.split(":")
+            receiver_id = int(receiver_id_str)
+            gift_type = GiftType(gift_type_str)
+
+            # Save gift
+            gift = Gift(
+                sender_id=user.id,
+                sender_name=user.first_name,
+                receiver_id=receiver_id,
+                gift_type=gift_type,
+                cost=GIFT_PRICES[gift_type],
+            )
+            await gift_repository.save(gift)
+
+            # Notify sender/group
+            text = f"¡{GIFT_EMOJIS[gift_type]} Regalo entregado! Eres un grande, {user.first_name}."
+            await context.bot.send_message(
+                chat_id=message.chat_id,
+                text=text,
+                reply_to_message_id=message.message_id,
+            )
+
+            # Log usage (GIFT_SENT)
+            await usage_service.log_usage(
+                user_id=user.id,
+                platform="telegram",
+                action=ActionType.GIFT_SENT,  # Need to add this action type
+                metadata={"gift_type": gift_type, "receiver_id": receiver_id},
+            )
+
+            # Log usage for receiver? (GIFT_RECEIVED) - Optional
+
+        except Exception as e:
+            logger.error(f"Error processing gift {payload}: {e}")
+            await context.bot.send_message(
+                chat_id=message.chat_id,
+                text="Hubo un error entregando el regalo. Contacta con soporte.",
+            )
+            # Refund attempt
+            try:
+                await context.bot.refund_star_payment(
+                    user_id=user.id,
+                    telegram_payment_charge_id=telegram_payment_charge_id,
+                )
+            except Exception as refund_error:
+                logger.error(f"Failed to refund gift: {refund_error}")
         return
 
     if payload.startswith("subs_month_"):

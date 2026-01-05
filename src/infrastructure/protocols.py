@@ -4,6 +4,7 @@ from models.proposal import Proposal, LongProposal
 from models.user import User
 from models.chat import Chat
 from models.usage import UsageRecord
+from models.gift import Gift
 
 T = TypeVar("T")
 
@@ -14,6 +15,11 @@ class Repository(Protocol[T]):
     async def delete(self, entity_id: str | int) -> None: ...
     async def load(self, entity_id: str | int) -> T | None: ...
     async def load_all(self) -> list[T]: ...
+
+
+@runtime_checkable
+class GiftRepository(Repository[Gift], Protocol):
+    async def get_gifts_for_user(self, user_id: int) -> list[Gift]: ...
 
 
 @runtime_checkable

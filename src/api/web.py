@@ -13,6 +13,7 @@ from infrastructure.protocols import (
     ProposalRepository,
     LongProposalRepository,
     UserRepository,
+    GiftRepository,
 )
 from services import PhraseService, UserService, tts_service as tts_service_instance
 from services.ai_service import AIService
@@ -138,10 +139,12 @@ class WebController(Controller):
         user_repo: Annotated[UserRepository, Dependency()],
         phrase_repo: Annotated[PhraseRepository, Dependency()],
         long_phrase_repo: Annotated[LongPhraseRepository, Dependency()],
+        gift_repo: Annotated[GiftRepository, Dependency()],
     ) -> Template | Response:
         from services.badge_service import badge_service
         from services.usage_service import usage_service
         from services import poster_request_repo
+        from models.gift import GIFT_EMOJIS, GIFT_NAMES
 
         # Try to find user (load will follow links)
         profile_user = await user_repo.load(user_id)
@@ -171,6 +174,7 @@ class WebController(Controller):
         phrases_task = phrase_repo.get_phrases(user_id=str(profile_user.id))
         long_phrases_task = long_phrase_repo.get_phrases(user_id=str(profile_user.id))
         posters_task = poster_request_repo.get_completed_by_user(profile_user.id)
+        gifts_task = gift_repo.get_gifts_for_user(int(profile_user.id))
 
         (
             stats,
@@ -178,12 +182,14 @@ class WebController(Controller):
             user_phrases,
             user_long_phrases,
             user_posters,
+            user_gifts,
         ) = await asyncio.gather(
             stats_task,
             badges_task,
             phrases_task,
             long_phrases_task,
             posters_task,
+            gifts_task,
         )
 
         all_user_phrases = sorted(
@@ -209,6 +215,9 @@ class WebController(Controller):
                 "badges_progress": badges_progress,
                 "user_phrases": all_user_phrases,
                 "user_posters": user_posters,
+                "user_gifts": user_gifts,
+                "gift_emojis": GIFT_EMOJIS,
+                "gift_names": GIFT_NAMES,
                 "phrases_count": len(all_user_phrases),
                 "level": level,
                 "fun_stats": fun_stats,
