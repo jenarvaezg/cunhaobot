@@ -4,11 +4,6 @@
 Estrategias para hacer el bot sostenible utilizando Telegram Stars (XTR) y otros métodos.
 * **Telegram Stars (Bienes Digitales):**
     * **Gifts (Carajillos Digitales):** Sistema de regalos únicos. Los usuarios pueden enviarse carajillos, copas de coñac o palillos de plata que lucen en el perfil de la Mini App.
-    * **Paid Media:** Envío de "Audios Pro" o roasts de Cuñao Vision de alta definición que solo se desbloquean con Stars.
-    * **IA Image Generation:** Cobrar una pequeña cantidad de Stars por cada imagen personalizada generada para una frase.
-* **Suscripción "V.I.P." (Very Important Paco) / Premium:**
-    * Desbloqueo de IA Conversacional, Cuñao Vision y Reacciones Inteligentes (Completado ✅).
-    * Acceso a voces de TTS premium (Antonio Resines style), prioridad de procesamiento y eliminación de publicidad.
 * **Merchandising Directo:**
     * Integración para comprar camisetas o tazas con "tus frases estrella" directamente desde el bot.
 * **User Story:** "Como usuario fiel, quiero gastar mis Stars en regalarle un puro digital a mi cuñado del grupo para celebrar que su equipo ha perdido".

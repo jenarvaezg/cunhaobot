@@ -138,6 +138,18 @@ BADGES = [
         description="Pagar una suscripción Premium",
         icon="💎",
     ),
+    Badge(
+        id="rey_mago",
+        name="El Rey Mago",
+        description="Enviar un regalo digital",
+        icon="🤴",
+    ),
+    Badge(
+        id="consentido",
+        name="El Consentido",
+        description="Recibir un regalo digital",
+        icon="🎁",
+    ),
 ]
 
 
@@ -280,6 +292,22 @@ class BadgeService:
             if sub_count >= 1:
                 new_badge_ids.append("vip")
 
+        # 18. El Rey Mago (Sent a gift)
+        if "rey_mago" not in current_badges:
+            gift_sent_count = await self.usage_repo.get_user_action_count(
+                str(user_id), action=ActionType.GIFT_SENT.value
+            )
+            if gift_sent_count >= 1:
+                new_badge_ids.append("rey_mago")
+
+        # 19. El Consentido (Received a gift)
+        if "consentido" not in current_badges:
+            gift_received_count = await self.usage_repo.get_user_action_count(
+                str(user_id), action=ActionType.GIFT_RECEIVED.value
+            )
+            if gift_received_count >= 1:
+                new_badge_ids.append("consentido")
+
         # 14, 15, 16. Poster badges (Mecenas, Coleccionista, Galerista)
         if any(
             b not in current_badges for b in ["mecenas", "coleccionista", "galerista"]
@@ -345,6 +373,8 @@ class BadgeService:
             reject_count,
             reaction_count,
             sub_count,
+            gift_sent_count,
+            gift_received_count,
             user_phrases_count,
             poster_count,
         ) = await asyncio.gather(
@@ -372,6 +402,12 @@ class BadgeService:
             ),
             self.usage_repo.get_user_action_count(
                 str(user_id), action=ActionType.SUBSCRIPTION.value
+            ),
+            self.usage_repo.get_user_action_count(
+                str(user_id), action=ActionType.GIFT_SENT.value
+            ),
+            self.usage_repo.get_user_action_count(
+                str(user_id), action=ActionType.GIFT_RECEIVED.value
             ),
             phrase_repository.get_user_phrase_count(str(user_id)),
             poster_request_repo.count_completed_by_user(user_id),
@@ -422,14 +458,13 @@ class BadgeService:
                     current_val = reaction_count
                     target_val = 1
                 elif badge.id == "vip":
-                    # subscription_count is the 9th element in the gathered tuple (index 8, but shifted because user_phrase_count is 8th in old tuple)
-                    # Ah, I added subscription_count before user_phrase_count in the gather call in my instruction above?
-                    # Let's double check the unpacking.
-                    # Wait, I am replacing the gather call block. I need to update the unpacking variable names too.
-                    # It's better to update the whole unpacking block.
-                    current_val = (
-                        sub_count  # Using variable name from unpacking (see below)
-                    )
+                    current_val = sub_count
+                    target_val = 1
+                elif badge.id == "rey_mago":
+                    current_val = gift_sent_count
+                    target_val = 1
+                elif badge.id == "consentido":
+                    current_val = gift_received_count
                     target_val = 1
                 elif badge.id == "mecenas":
                     current_val = poster_count

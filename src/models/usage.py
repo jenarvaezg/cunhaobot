@@ -18,6 +18,7 @@ class ActionType(str, Enum):
     POSTER = "poster"
     SUBSCRIPTION = "subscription"
     GIFT_SENT = "gift_sent"
+    GIFT_RECEIVED = "gift_received"
 
 
 class UsageRecord(BaseModel):

@@ -107,13 +107,40 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
                 parse_mode="HTML",
             )
 
-            # Log usage (GIFT_SENT)
-            await usage_service.log_usage(
+            # Log usage (GIFT_SENT) for sender
+            new_badges_sender = await usage_service.log_usage(
                 user_id=user.id,
                 platform="telegram",
                 action=ActionType.GIFT_SENT,
                 metadata={"gift_type": gift_type, "receiver_id": receiver_id},
             )
+
+            # Log usage (GIFT_RECEIVED) for receiver
+            # We don't have a direct context for receiver update, but we can log usage and check badges
+            new_badges_receiver = await usage_service.log_usage(
+                user_id=receiver_id,
+                platform="telegram",
+                action=ActionType.GIFT_RECEIVED,
+                metadata={"gift_type": gift_type, "sender_id": user.id},
+            )
+
+            # Notify badges for sender
+            await notify_new_badges(update, context, new_badges_sender)
+
+            # Notify badges for receiver (if any)
+            if new_badges_receiver:
+                # We can't use notify_new_badges easily because it replies to update.
+                # We'll send a direct message to receiver if they have badges.
+                badge_names = ", ".join([b.name for b in new_badges_receiver])
+                try:
+                    await context.bot.send_message(
+                        chat_id=receiver_id,
+                        text=f"🏅 ¡Has desbloqueado logros!: {badge_names}",
+                    )
+                except Exception as e:
+                    logger.warning(
+                        f"Could not notify receiver {receiver_id} of badges: {e}"
+                    )
 
         except Exception as e:
             logger.error(f"Error processing gift {payload}: {e}")

@@ -90,24 +90,29 @@ async def approve_proposal(
         except Exception as e:
             logger.error(f"Error sending web approval notification: {e}")
 
+    # Log action for badges
+    new_badges = await usage_service.log_usage(
+        user_id=proposal.user_id,
+        platform="telegram",
+        action=ActionType.APPROVE,
+    )
+
     if isinstance(proposal.from_chat_id, int) and proposal.from_chat_id > 0:
         try:
+            text = f"Tu propuesta '{proposal.text}' ha sido aprobada, felicidades, {p_random}"
+            if new_badges:
+                badge_names = ", ".join([b.name for b in new_badges])
+                text += f"\n\n🏅 ¡Has desbloqueado logros!: {badge_names}"
+
             await bot.send_message(
                 proposal.from_chat_id,
-                f"Tu propuesta '{proposal.text}' ha sido aprobada, felicidades, {p_random}",
+                text,
                 reply_to_message_id=proposal.from_message_id
                 if isinstance(proposal.from_message_id, int)
                 else None,
             )
         except Exception as e:
             logger.error(f"Error enviando notificación de aprobación: {e}")
-
-    # Log action for badges
-    await usage_service.log_usage(
-        user_id=proposal.user_id,
-        platform="telegram",
-        action=ActionType.APPROVE,
-    )
 
     # Delegar creación de la frase al servicio
     await phrase_service.create_from_proposal(proposal, bot)
@@ -144,24 +149,29 @@ async def dismiss_proposal(
         except Exception as e:
             logger.error(f"Error sending web dismissal notification: {e}")
 
+    # Log action for badges
+    new_badges = await usage_service.log_usage(
+        user_id=proposal.user_id,
+        platform="telegram",
+        action=ActionType.REJECT,
+    )
+
     if isinstance(proposal.from_chat_id, int) and proposal.from_chat_id > 0:
         try:
+            text = f"Tu propuesta '{proposal.text}' ha sido rechazada, lo siento {p_random}"
+            if new_badges:
+                badge_names = ", ".join([b.name for b in new_badges])
+                text += f"\n\n🏅 ¡Has desbloqueado logros!: {badge_names}"
+
             await bot.send_message(
                 proposal.from_chat_id,
-                f"Tu propuesta '{proposal.text}' ha sido rechazada, lo siento {p_random}",
+                text,
                 reply_to_message_id=proposal.from_message_id
                 if isinstance(proposal.from_message_id, int)
                 else None,
             )
         except Exception as e:
             logger.error(f"Error enviando notificación de rechazo: {e}")
-
-    # Log action for badges
-    await usage_service.log_usage(
-        user_id=proposal.user_id,
-        platform="telegram",
-        action=ActionType.REJECT,
-    )
 
 
 async def _update_proposal_text(
