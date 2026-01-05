@@ -79,18 +79,20 @@ async def handle_gift_selection(update: Update, context: CallbackContext) -> Non
     price = GIFT_PRICES[gift_type]
     title = f"{GIFT_EMOJIS[gift_type]} Regalo: {GIFT_NAMES[gift_type]}"
     description = f"Un {GIFT_NAMES[gift_type]} digital para el chaval."
-    # Payload: gift:receiver_id:gift_type
-    payload = f"gift:{receiver_id}:{gift_type.value}"
-
-    prices = [LabeledPrice(title, price)]
 
     if not query.message:
         return
 
     message = cast(Message, query.message)
+    chat_id = message.chat_id
+
+    # Payload: gift:chat_id:receiver_id:gift_type
+    payload = f"gift:{chat_id}:{receiver_id}:{gift_type.value}"
+
+    prices = [LabeledPrice(title, price)]
 
     await context.bot.send_invoice(
-        chat_id=message.chat_id,
+        chat_id=chat_id,
         title=title,
         description=description,
         payload=payload,

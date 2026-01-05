@@ -119,5 +119,7 @@ async def test_handle_gift_selection_success():
     await handle_gift_selection(update, context)
 
     query.answer.assert_called_once()
+
     context.bot.send_invoice.assert_called_once()
-    assert context.bot.send_invoice.call_args[1]["payload"] == "gift:2:carajillo"
+
+    assert context.bot.send_invoice.call_args[1]["payload"] == "gift:123:2:carajillo"

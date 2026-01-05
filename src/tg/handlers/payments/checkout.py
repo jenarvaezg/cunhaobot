@@ -57,8 +57,17 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
 
     if payload.startswith("gift:"):
         try:
-            # Payload format: gift:receiver_id:gift_type
-            _, receiver_id_str, gift_type_str = payload.split(":")
+            # Payload format: gift:chat_id:receiver_id:gift_type
+            parts = payload.split(":")
+            # Handle potential backward compatibility or just parse
+            if len(parts) == 4:
+                _, chat_id_str, receiver_id_str, gift_type_str = parts
+                target_chat_id = int(chat_id_str)
+            else:
+                # Fallback for old payloads
+                _, receiver_id_str, gift_type_str = parts
+                target_chat_id = message.chat_id
+
             receiver_id = int(receiver_id_str)
             gift_type = GiftType(gift_type_str)
 
@@ -76,18 +85,24 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
             from infrastructure.datastore.user import user_repository
 
             receiver_user = await user_repository.load(receiver_id)
-            receiver_name = receiver_user.name if receiver_user else "el chaval"
+
+            receiver_display_name = "el chaval"
+            if receiver_user:
+                if receiver_user.username:
+                    receiver_display_name = f"@{receiver_user.username}"
+                else:
+                    receiver_display_name = receiver_user.name
 
             # Notify sender/group
             text = (
                 f"¡{GIFT_EMOJIS[gift_type]} <b>Regalo entregado!</b>\n\n"
-                f"{user.first_name} le ha invitado a un <b>{GIFT_NAMES[gift_type]}</b> a {receiver_name}.\n"
+                f"{user.first_name} le ha invitado a un <b>{GIFT_NAMES[gift_type]}</b> a {receiver_display_name}.\n"
                 f"¡Qué clase tiene este grupo!\n\n"
                 f"<i>Podéis ver vuestros tesoros en el /perfil</i>"
             )
 
             await context.bot.send_message(
-                chat_id=message.chat_id,
+                chat_id=target_chat_id,
                 text=text,
                 parse_mode="HTML",
             )
@@ -99,8 +114,6 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
                 action=ActionType.GIFT_SENT,
                 metadata={"gift_type": gift_type, "receiver_id": receiver_id},
             )
-
-            # Log usage for receiver? (GIFT_RECEIVED) - Optional
 
         except Exception as e:
             logger.error(f"Error processing gift {payload}: {e}")
