@@ -99,3 +99,9 @@ async def handle_gift_selection(update: Update, context: CallbackContext) -> Non
         prices=prices,
         start_parameter="gift-giving",
     )
+
+    # Clean up the selection menu
+    try:
+        await message.delete()
+    except Exception:
+        pass

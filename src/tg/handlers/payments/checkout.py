@@ -7,7 +7,7 @@ from services.ai_service import ai_service
 from services import poster_request_repo, badge_service, usage_service
 from models.usage import ActionType
 from models.chat import Chat
-from models.gift import Gift, GiftType, GIFT_PRICES, GIFT_EMOJIS
+from models.gift import Gift, GiftType, GIFT_PRICES, GIFT_EMOJIS, GIFT_NAMES
 from infrastructure.datastore.chat import chat_repository
 from infrastructure.datastore.gift import gift_repository
 from tg.decorators import log_update
@@ -72,19 +72,31 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
             )
             await gift_repository.save(gift)
 
+            # Get receiver name for the message
+            from infrastructure.datastore.user import user_repository
+
+            receiver_user = await user_repository.load(receiver_id)
+            receiver_name = receiver_user.name if receiver_user else "el chaval"
+
             # Notify sender/group
-            text = f"¡{GIFT_EMOJIS[gift_type]} Regalo entregado! Eres un grande, {user.first_name}."
+            text = (
+                f"¡{GIFT_EMOJIS[gift_type]} <b>Regalo entregado!</b>\n\n"
+                f"{user.first_name} le ha invitado a un <b>{GIFT_NAMES[gift_type]}</b> a {receiver_name}.\n"
+                f"¡Qué clase tiene este grupo!\n\n"
+                f"<i>Podéis ver vuestros tesoros en el /perfil</i>"
+            )
+
             await context.bot.send_message(
                 chat_id=message.chat_id,
                 text=text,
-                reply_to_message_id=message.message_id,
+                parse_mode="HTML",
             )
 
             # Log usage (GIFT_SENT)
             await usage_service.log_usage(
                 user_id=user.id,
                 platform="telegram",
-                action=ActionType.GIFT_SENT,  # Need to add this action type
+                action=ActionType.GIFT_SENT,
                 metadata={"gift_type": gift_type, "receiver_id": receiver_id},
             )
 
