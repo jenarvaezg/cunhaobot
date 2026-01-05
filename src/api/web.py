@@ -174,7 +174,15 @@ class WebController(Controller):
         phrases_task = phrase_repo.get_phrases(user_id=str(profile_user.id))
         long_phrases_task = long_phrase_repo.get_phrases(user_id=str(profile_user.id))
         posters_task = poster_request_repo.get_completed_by_user(profile_user.id)
-        gifts_task = gift_repo.get_gifts_for_user(int(profile_user.id))
+
+        try:
+            gifts_task = gift_repo.get_gifts_for_user(int(profile_user.id))
+        except ValueError:
+            # Handle non-numeric IDs (e.g. Slack)
+            async def _empty_gifts():
+                return []
+
+            gifts_task = _empty_gifts()
 
         (
             stats,
