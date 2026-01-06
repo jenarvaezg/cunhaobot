@@ -1,9 +1,12 @@
+import logging
 from telegram import Update
 from telegram.ext import CallbackContext
 
 from tg.decorators import log_update
 from core.container import services
 from core.config import config
+
+logger = logging.getLogger(__name__)
 
 
 @log_update
@@ -42,7 +45,10 @@ async def handle_game_callback(update: Update, context: CallbackContext) -> None
 
     # Answer the callback query with the URL.
     # This is what opens the Telegram WebView/Browser.
-    await query.answer(url=game_url)
+    try:
+        await query.answer(url=game_url)
+    except Exception as e:
+        logger.error(f"Error answering game callback: {e}")
 
 
 @log_update
