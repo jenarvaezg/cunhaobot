@@ -11,21 +11,11 @@ async def test_handle_help():
 
     mock_phrase1 = MagicMock()
     mock_phrase1.text = "cuñao"
-    mock_phrase2 = MagicMock()
-    mock_phrase2.text = "frase"
-    mock_phrase_long = MagicMock()
-    mock_phrase_long.text = "frase larga"
 
-    with (
-        patch("tg.handlers.commands.help.phrase_service.get_random") as mock_get_random,
-        patch(
-            "tg.handlers.commands.help.usage_service.log_usage",
-            new_callable=AsyncMock,
-            return_value=[],
-        ),
-        patch("tg.decorators.user_service.update_or_create_user"),
-    ):
-        mock_get_random.return_value = mock_phrase1
+    with patch("tg.handlers.commands.help.services") as mock_services:
+        mock_services.phrase_service.get_random = AsyncMock(return_value=mock_phrase1)
+        mock_services.usage_service.log_usage = AsyncMock(return_value=[])
+        mock_services.user_service.update_or_create_user = AsyncMock()
 
         await handle_help(update, context)
         update.effective_message.reply_text.assert_called_once()

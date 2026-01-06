@@ -1,15 +1,19 @@
-from google.cloud import texttospeech
-from utils.gcp import get_bucket
 import logging
-from models.phrase import Phrase, LongPhrase
+from typing import TYPE_CHECKING
+from google.cloud import texttospeech
 from utils.text import improve_punctuation
+
+if TYPE_CHECKING:
+    from models.phrase import Phrase, LongPhrase
+    from google.cloud.storage import Bucket
 
 logger = logging.getLogger(__name__)
 
 
 class TTSService:
-    def __init__(self):
-        self._client = None
+    def __init__(self, bucket: Bucket):
+        self._client: texttospeech.TextToSpeechClient | None = None
+        self._bucket = bucket
         self.voice = texttospeech.VoiceSelectionParams(
             language_code="es-ES", name="es-ES-Neural2-B"
         )
@@ -46,8 +50,7 @@ class TTSService:
             return ""
 
         file_name = f"audios/{result_type}-{phrase.id}.ogg"
-        bucket = get_bucket()
-        blob = bucket.blob(file_name)
+        blob = self._bucket.blob(file_name)
 
         if blob.exists():
             return blob.public_url
@@ -67,6 +70,3 @@ class TTSService:
         except Exception as e:
             logger.error(f"Error generating audio: {e}")
             return ""
-
-
-tts_service = TTSService()

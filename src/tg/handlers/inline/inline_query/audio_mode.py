@@ -1,19 +1,16 @@
 import random
+from typing import cast
 from telegram import InlineQueryResultVoice
 
 from models.phrase import LongPhrase, Phrase
+from core.container import services
 from tg.text_router import LONG_MODE, SHORT_MODE, get_query_mode
 
 
-phrase_t = Phrase | LongPhrase
-
-
 def _phrase_to_inline_audio(
-    phrase: phrase_t, result_type: str
+    phrase: Phrase | LongPhrase, result_type: str
 ) -> InlineQueryResultVoice | None:
-    from services import tts_service
-
-    audio_url = tts_service.get_audio_url(phrase, result_type)
+    audio_url = services.tts_service.get_audio_url(phrase, result_type)
     if not audio_url or phrase.id is None:
         return None
 
@@ -26,22 +23,26 @@ def _phrase_to_inline_audio(
 
 
 async def get_audio_mode_results(input: str) -> list[InlineQueryResultVoice]:
-    from services import phrase_repo, long_phrase_repo
-
     mode, rest = get_query_mode(input)
 
-    phrases = []
+    phrases: list[Phrase | LongPhrase] = []
     result_type = "short"
     if mode == SHORT_MODE:
         result_type = "short"
-        phrases = await phrase_repo.get_phrases(search=rest)
+        phrases = cast(
+            list[Phrase | LongPhrase],
+            await services.phrase_repo.get_phrases(search=rest),
+        )
     elif mode == LONG_MODE:
         result_type = "long"
-        phrases = await long_phrase_repo.get_phrases(search=rest)
+        phrases = cast(
+            list[Phrase | LongPhrase],
+            await services.long_phrase_repo.get_phrases(search=rest),
+        )
 
     random.shuffle(phrases)
 
-    results = []
+    results: list[InlineQueryResultVoice] = []
     for p in phrases:
         if res := _phrase_to_inline_audio(p, result_type):
             results.append(res)

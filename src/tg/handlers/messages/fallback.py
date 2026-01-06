@@ -2,28 +2,28 @@ import random
 import logging
 from telegram import Update, User as TGUser, Bot
 from telegram.ext import CallbackContext
-from services import phrase_service, user_repo
+from core.container import services
 from tg.decorators import log_update
 
 logger = logging.getLogger(__name__)
 
 
 async def _on_kick(chat_id: int) -> None:
-    user = await user_repo.load(chat_id)
+    user = await services.user_repo.load(chat_id)
     if user:
         user.gdpr = True
-        await user_repo.save(user)
+        await services.user_repo.save(user)
 
 
 async def _on_other_kicked(bot: Bot, user: TGUser, chat_id: int) -> None:
-    p = (await phrase_service.get_random()).text
+    p = (await services.phrase_service.get_random()).text
     await bot.send_message(
         chat_id, f"Vaya {p} el {user.name or user.first_name}, ya me jodería."
     )
 
 
 async def _on_join(bot: Bot, chat_id: int) -> None:
-    p = (await phrase_service.get_random()).text
+    p = (await services.phrase_service.get_random()).text
     await bot.send_message(
         chat_id,
         "¡Muchas gracias por meterme en el grupo! Te recomiendo usar /help para explicarte qué puedo hacer, "
@@ -33,7 +33,9 @@ async def _on_join(bot: Bot, chat_id: int) -> None:
 
 async def _on_other_joined(bot: Bot, user: TGUser, chat_id: int) -> None:
     n_words = random.choice([2, 3, 4])
-    random_phrases = [(await phrase_service.get_random()).text for _ in range(n_words)]
+    random_phrases = [
+        (await services.phrase_service.get_random()).text for _ in range(n_words)
+    ]
     phrases = [user.name or user.first_name] + random_phrases
     await bot.send_message(chat_id, ", ".join(phrases) + "!")
 

@@ -1,32 +1,37 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-from services.cunhao_agent import cunhao_agent, agent
+from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
+from services.cunhao_agent import CunhaoAgent
 
 
 @pytest.mark.asyncio
 async def test_answer_calls_agent():
-    with (
-        patch.object(agent, "run", new_callable=AsyncMock) as mock_run,
-        patch("services.cunhao_agent.config") as mock_config,
-    ):
-        mock_config.gemini_api_key = "valid_key"
-        mock_run.return_value = MagicMock(output="Respuesta de prueba")
+    service = CunhaoAgent(api_key="valid_key")
+    mock_agent = AsyncMock()
+    mock_agent.run.return_value = MagicMock(output="Respuesta de prueba")
 
-        response = await cunhao_agent.answer("Hola")
+    with patch.object(
+        CunhaoAgent, "agent", new_callable=PropertyMock
+    ) as mock_agent_prop:
+        mock_agent_prop.return_value = mock_agent
+        response = await service.answer("Hola")
 
         assert response == "Respuesta de prueba"
-        mock_run.assert_called_once_with("Hola")
+        # In the new version we pass deps
+        mock_agent.run.assert_called_once()
+        args, kwargs = mock_agent.run.call_args
+        assert args[0] == "Hola"
 
 
 @pytest.mark.asyncio
 async def test_answer_handles_error():
-    with (
-        patch.object(agent, "run", new_callable=AsyncMock) as mock_run,
-        patch("services.cunhao_agent.config") as mock_config,
-    ):
-        mock_config.gemini_api_key = "valid_key"
-        mock_run.side_effect = Exception("Error de API")
+    service = CunhaoAgent(api_key="valid_key")
+    mock_agent = AsyncMock()
+    mock_agent.run.side_effect = Exception("Error de API")
 
-        response = await cunhao_agent.answer("Hola")
+    with patch.object(
+        CunhaoAgent, "agent", new_callable=PropertyMock
+    ) as mock_agent_prop:
+        mock_agent_prop.return_value = mock_agent
+        response = await service.answer("Hola")
 
         assert "(Error)" in response

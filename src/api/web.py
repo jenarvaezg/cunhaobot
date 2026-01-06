@@ -14,9 +14,16 @@ from infrastructure.protocols import (
     LongProposalRepository,
     UserRepository,
     GiftRepository,
+    PosterRequestRepository,
 )
-from services import PhraseService, UserService, tts_service as tts_service_instance
-from services.ai_service import AIService
+from services import (
+    PhraseService,
+    UserService,
+    AIService,
+    TTSService,
+    UsageService,
+    BadgeService,
+)
 from core.config import config
 
 logger = logging.getLogger(__name__)
@@ -140,10 +147,10 @@ class WebController(Controller):
         phrase_repo: Annotated[PhraseRepository, Dependency()],
         long_phrase_repo: Annotated[LongPhraseRepository, Dependency()],
         gift_repo: Annotated[GiftRepository, Dependency()],
+        badge_service: Annotated[BadgeService, Dependency()],
+        usage_service: Annotated[UsageService, Dependency()],
+        poster_request_repo: Annotated[PosterRequestRepository, Dependency()],
     ) -> Template | Response:
-        from services.badge_service import badge_service
-        from services.usage_service import usage_service
-        from services import poster_request_repo
         from models.gift import GIFT_EMOJIS, GIFT_NAMES
 
         # Try to find user (load will follow links)
@@ -209,9 +216,6 @@ class WebController(Controller):
 
         # Mock fun stats for now (could be improved with more complex queries)
         fun_stats = {}
-        if stats["total_usages"] > 0:
-            # If we had detailed usage logs we could do more here
-            pass
 
         return Template(
             template_name="profile.html",
@@ -246,7 +250,7 @@ class WebController(Controller):
         user_id = user_session.get("id")
         platform = user_session.get("platform", "telegram")
 
-        is_private = user_service.toggle_privacy(user_id, platform)
+        is_private = await user_service.toggle_privacy(user_id, platform)
         if is_private is None:
             return Response({"error": "User not found"}, status_code=404)
 
@@ -262,6 +266,8 @@ class WebController(Controller):
         phrase_id: int,
         phrase_repo: Annotated[PhraseRepository, Dependency()],
         long_phrase_repo: Annotated[LongPhraseRepository, Dependency()],
+        tts_service: Annotated[TTSService, Dependency()],
+        usage_service: Annotated[UsageService, Dependency()],
     ) -> Response:
         phrase = await phrase_repo.load(phrase_id) or await long_phrase_repo.load(
             phrase_id
@@ -272,7 +278,6 @@ class WebController(Controller):
         # Log usage if user is logged in
         user_session = request.session.get("user")
         if user_session:
-            from services.usage_service import usage_service
             from models.usage import ActionType
 
             await usage_service.log_usage(
@@ -283,7 +288,7 @@ class WebController(Controller):
             )
 
         result_type = "long" if phrase.kind == "LongPhrase" else "short"
-        audio_url = tts_service_instance.get_audio_url(phrase, result_type)
+        audio_url = tts_service.get_audio_url(phrase, result_type)
 
         if not audio_url:
             raise HTTPException(status_code=500, detail="Could not generate audio")
@@ -374,39 +379,6 @@ class WebController(Controller):
             },
         )
 
-    @get("/privacy", sync_to_thread=True)
-    def privacy(self, request: Request) -> Template:
-        return Template(
-            template_name="privacy.html",
-            context={
-                "user": request.session.get("user"),
-                "owner_id": config.owner_id,
-                "request": request,
-            },
-        )
-
-    @get("/terms", sync_to_thread=True)
-    def terms(self, request: Request) -> Template:
-        return Template(
-            template_name="terms.html",
-            context={
-                "user": request.session.get("user"),
-                "owner_id": config.owner_id,
-                "request": request,
-            },
-        )
-
-    @get("/data-policy", sync_to_thread=True)
-    def data_policy(self, request: Request) -> Template:
-        return Template(
-            template_name="data_policy.html",
-            context={
-                "user": request.session.get("user"),
-                "owner_id": config.owner_id,
-                "request": request,
-            },
-        )
-
     @get("/search")
     async def search(
         self,
@@ -463,13 +435,13 @@ class WebController(Controller):
         ai_service: Annotated[AIService, Dependency()],
         phrase_repo: Annotated[PhraseRepository, Dependency()],
         long_phrase_repo: Annotated[LongPhraseRepository, Dependency()],
+        usage_service: Annotated[UsageService, Dependency()],
         request: Request,
     ) -> HTMXTemplate:
         try:
             # Log usage if user is logged in
             user_session = request.session.get("user")
             if user_session:
-                from services.usage_service import usage_service
                 from models.usage import ActionType
 
                 await usage_service.log_usage(
@@ -567,13 +539,8 @@ class WebController(Controller):
         import json
         from services.badge_service import BADGES
 
-        p_repo: PhraseRepository = phrase_repo
-        lp_repo: LongPhraseRepository = long_phrase_repo
-        prop_repo: ProposalRepository = proposal_repo
-        l_prop_repo: LongProposalRepository = long_proposal_repo
-
         # Top phrases
-        phrases = await p_repo.get_phrases() + await lp_repo.get_phrases()
+        phrases = await phrase_repo.get_phrases() + await long_phrase_repo.get_phrases()
         top_phrases = sorted(
             phrases,
             key=lambda p: p.usages + p.audio_usages,
@@ -581,12 +548,11 @@ class WebController(Controller):
         )[:10]
 
         # Proposal stats
-        proposals = await prop_repo.load_all() + await l_prop_repo.load_all()
+        proposals = await proposal_repo.load_all() + await long_proposal_repo.load_all()
         pending_proposals = [p for p in proposals if not p.voting_ended]
         ended_proposals = [p for p in proposals if p.voting_ended]
 
-        # This is a simplification. A proposal is approved if a phrase is created from it.
-        # For this metric, we'll assume likes > dislikes means approved.
+        # Approved if likes > dislikes
         approved_proposals = [
             p for p in ended_proposals if len(p.liked_by) > len(p.disliked_by)
         ]
@@ -614,8 +580,6 @@ class WebController(Controller):
             count = badge_counts.get(badge.id, 0)
             badge_stats.append({"badge": badge, "count": count})
 
-        # Sort badges by rarity (least common first) or popularity (most common first)
-        # Let's go with popularity for now
         badge_stats.sort(key=lambda x: x["count"], reverse=True)
 
         # Chart data
@@ -663,5 +627,38 @@ class WebController(Controller):
                 "secret": config.session_secret,
                 "music_pattern": music_pattern,
                 "is_web": True,
+            },
+        )
+
+    @get("/privacy")
+    async def privacy(self, request: Request) -> Template:
+        return Template(
+            template_name="privacy.html",
+            context={
+                "user": request.session.get("user"),
+                "owner_id": config.owner_id,
+                "request": request,
+            },
+        )
+
+    @get("/terms")
+    async def terms(self, request: Request) -> Template:
+        return Template(
+            template_name="terms.html",
+            context={
+                "user": request.session.get("user"),
+                "owner_id": config.owner_id,
+                "request": request,
+            },
+        )
+
+    @get("/data-policy")
+    async def data_policy(self, request: Request) -> Template:
+        return Template(
+            template_name="data_policy.html",
+            context={
+                "user": request.session.get("user"),
+                "owner_id": config.owner_id,
+                "request": request,
             },
         )

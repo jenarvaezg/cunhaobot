@@ -1,4 +1,3 @@
-from __future__ import annotations
 from io import BytesIO
 import logging
 import random
@@ -8,7 +7,10 @@ from typing import TYPE_CHECKING, cast
 import telegram
 from fuzzywuzzy import fuzz
 from models.phrase import Phrase, LongPhrase
-from infrastructure.protocols import PhraseRepository, LongPhraseRepository
+from infrastructure.protocols import (
+    PhraseRepository,
+    LongPhraseRepository,
+)
 from utils import normalize_str
 
 if TYPE_CHECKING:
@@ -22,36 +24,15 @@ logger = logging.getLogger(__name__)
 class PhraseService:
     def __init__(
         self,
-        phrase_repo: PhraseRepository | None = None,
-        long_phrase_repo: LongPhraseRepository | None = None,
-        user_service: "UserService | None" = None,
-        badge_service: "BadgeService | None" = None,
+        phrase_repo: PhraseRepository,
+        long_phrase_repo: LongPhraseRepository,
+        user_service: UserService,
+        badge_service: BadgeService,
     ):
-        from infrastructure.datastore.phrase import (
-            phrase_repository,
-            long_phrase_repository,
-        )
-
-        self.phrase_repo = phrase_repo or phrase_repository
-        self.long_repo = long_phrase_repo or long_phrase_repository
-        self._user_service = user_service
-        self._badge_service = badge_service
-
-    @property
-    def user_service(self) -> "UserService":
-        if self._user_service is None:
-            from services.user_service import user_service
-
-            return user_service
-        return self._user_service
-
-    @property
-    def badge_service(self) -> "BadgeService":
-        if self._badge_service is None:
-            from services.badge_service import badge_service
-
-            return badge_service
-        return self._badge_service
+        self.phrase_repo = phrase_repo
+        self.long_repo = long_phrase_repo
+        self.user_service = user_service
+        self.badge_service = badge_service
 
     def create_sticker_image(self, phrase: Phrase | LongPhrase) -> bytes:
         from utils.image_utils import generate_png
@@ -61,7 +42,7 @@ class PhraseService:
         return generate_png(text).getvalue()
 
     async def create_from_proposal(
-        self, proposal: "Proposal | LongProposal", bot: telegram.Bot
+        self, proposal: Proposal | LongProposal, bot: telegram.Bot
     ) -> None:
         from models.proposal import LongProposal
         from tg.stickers import upload_sticker

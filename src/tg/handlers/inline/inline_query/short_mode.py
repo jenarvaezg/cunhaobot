@@ -1,13 +1,13 @@
 import random
 from telegram import InlineQueryResultArticle, InputTextMessageContent
-from services import phrase_repo
+from core.container import services
 from utils import get_thumb, normalize_str, random_combination
 
 BASE_TEMPLATE = "¿Qué pasa, {}?"
 
 
 def _result_id_for_combination(combination: tuple) -> str:
-    parts = []
+    parts: list[str] = []
     for c in combination:
         if hasattr(c, "id") and c.id is not None:
             parts.append(str(c.id))
@@ -33,7 +33,7 @@ async def get_short_mode_results(input_text: str) -> list[InlineQueryResultArtic
             size = 1
             search = input_text
 
-    phrases = await phrase_repo.load_all()
+    phrases = await services.phrase_repo.load_all()
     if not phrases:
         return []
 
@@ -59,7 +59,7 @@ async def get_short_mode_results(input_text: str) -> list[InlineQueryResultArtic
     random.shuffle(phrases_to_sample)
 
     size = max(1, min(size, len(phrases_to_sample)))
-    combinations = set()
+    combinations: set[tuple] = set()
 
     # Try to get 10 different combinations
     for _ in range(20):

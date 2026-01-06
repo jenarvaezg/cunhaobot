@@ -9,9 +9,14 @@ def test_profile_page_success(client):
     p1 = Phrase(text="p1", usages=10, user_id="123")
 
     with (
-        patch("services.user_repo.load", return_value=user),
+        patch(
+            "infrastructure.datastore.user.user_repository.load",
+            new_callable=AsyncMock,
+            return_value=user,
+        ),
         patch(
             "services.usage_service.UsageService.get_user_stats",
+            new_callable=AsyncMock,
             return_value={"total_usages": 50},
         ),
         patch(
@@ -19,8 +24,21 @@ def test_profile_page_success(client):
             new_callable=AsyncMock,
             return_value=[],
         ),
-        patch("services.phrase_repo.get_phrases", return_value=[p1]),
-        patch("services.long_phrase_repo.get_phrases", return_value=[]),
+        patch(
+            "infrastructure.datastore.phrase.phrase_repository.get_phrases",
+            new_callable=AsyncMock,
+            return_value=[p1],
+        ),
+        patch(
+            "infrastructure.datastore.phrase.long_phrase_repository.get_phrases",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
+        patch(
+            "infrastructure.datastore.poster_request.poster_request_repository.get_completed_by_user",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
     ):
         rv = client.get("/user/123/profile")
         assert rv.status_code == HTTP_200_OK
@@ -31,7 +49,11 @@ def test_profile_page_success(client):
 
 
 def test_profile_page_not_found(client):
-    with patch("services.user_repo.load", return_value=None):
+    with patch(
+        "infrastructure.datastore.user.user_repository.load",
+        new_callable=AsyncMock,
+        return_value=None,
+    ):
         rv = client.get("/user/999/profile")
         assert rv.status_code == HTTP_404_NOT_FOUND
 
@@ -41,9 +63,14 @@ def test_profile_page_slack_user(client):
     user = User(id="U12345", name="Slack User", points=100, platform="slack")
 
     with (
-        patch("services.user_repo.load", return_value=user),
+        patch(
+            "infrastructure.datastore.user.user_repository.load",
+            new_callable=AsyncMock,
+            return_value=user,
+        ),
         patch(
             "services.usage_service.UsageService.get_user_stats",
+            new_callable=AsyncMock,
             return_value={"total_usages": 10},
         ),
         patch(
@@ -51,9 +78,21 @@ def test_profile_page_slack_user(client):
             new_callable=AsyncMock,
             return_value=[],
         ),
-        patch("services.phrase_repo.get_phrases", return_value=[]),
-        patch("services.long_phrase_repo.get_phrases", return_value=[]),
-        patch("services.poster_request_repo.get_completed_by_user", return_value=[]),
+        patch(
+            "infrastructure.datastore.phrase.phrase_repository.get_phrases",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
+        patch(
+            "infrastructure.datastore.phrase.long_phrase_repository.get_phrases",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
+        patch(
+            "infrastructure.datastore.poster_request.poster_request_repository.get_completed_by_user",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
         patch(
             "infrastructure.datastore.gift.gift_repository.get_gifts_for_user",
             new_callable=AsyncMock,

@@ -1,4 +1,3 @@
-from __future__ import annotations
 import logging
 import asyncio
 import json
@@ -12,7 +11,7 @@ from litestar.datastructures import UploadFile
 from services.proposal_service import ProposalService
 from core.config import config
 from tg import get_tg_application
-from infrastructure.protocols import UserRepository, ChatRepository
+from infrastructure.protocols import ChatRepository
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +22,7 @@ class AdminController(Controller):
     @get("/broadcast")
     async def broadcast_page(self, request: Request) -> Template:
         user = request.session.get("user")
-        if not user or str(user.get("id")) != config.owner_id:
+        if not user or str(user.get("id")) != str(config.owner_id):
             raise HTTPException(status_code=401, detail="Unauthorized")
         return Template(
             template_name="broadcast.html",
@@ -37,11 +36,10 @@ class AdminController(Controller):
     async def broadcast_status(
         self,
         request: Request,
-        user_repo: Annotated[UserRepository, Dependency()],
         chat_repo: Annotated[ChatRepository, Dependency()],
     ) -> ServerSentEvent:
         user = request.session.get("user")
-        if not user or str(user.get("id")) != config.owner_id:
+        if not user or str(user.get("id")) != str(config.owner_id):
             raise HTTPException(status_code=401, detail="Unauthorized")
 
         async def progress_generator() -> AsyncIterable[str]:
@@ -56,7 +54,6 @@ class AdminController(Controller):
 
             if not include_groups:
                 targets = [c for c in targets if c.type == "private"]
-            # If include_groups is True, we take all active chats (both private and groups)
 
             total = len(targets)
 
@@ -71,7 +68,8 @@ class AdminController(Controller):
                 return
 
             application = get_tg_application()
-            await application.initialize()
+            if not application.running:
+                await application.initialize()
             bot = application.bot
 
             success_count = 0
@@ -121,11 +119,10 @@ class AdminController(Controller):
     async def broadcast_send(
         self,
         request: Request,
-        user_repo: Annotated[UserRepository, Dependency()],
         chat_repo: Annotated[ChatRepository, Dependency()],
     ) -> Response[str]:
         user = request.session.get("user")
-        if not user or str(user.get("id")) != config.owner_id:
+        if not user or str(user.get("id")) != str(config.owner_id):
             return Response("Unauthorized", status_code=401)
 
         form_data = await request.form()
@@ -156,7 +153,8 @@ class AdminController(Controller):
             targets = [c for c in targets if c.type == "private"]
 
         application = get_tg_application()
-        await application.initialize()
+        if not application.running:
+            await application.initialize()
         bot = application.bot
 
         success_count = 0
@@ -202,7 +200,7 @@ class AdminController(Controller):
         proposal_service: Annotated[ProposalService, Dependency()],
     ) -> Response[str]:
         user = request.session.get("user")
-        if not user or str(user.get("id")) != config.owner_id:
+        if not user or str(user.get("id")) != str(config.owner_id):
             return Response("Unauthorized", status_code=401)
 
         if await proposal_service.approve(kind, proposal_id):
@@ -218,7 +216,7 @@ class AdminController(Controller):
         proposal_service: Annotated[ProposalService, Dependency()],
     ) -> Response[str]:
         user = request.session.get("user")
-        if not user or str(user.get("id")) != config.owner_id:
+        if not user or str(user.get("id")) != str(config.owner_id):
             return Response("Unauthorized", status_code=401)
 
         if await proposal_service.reject(kind, proposal_id):

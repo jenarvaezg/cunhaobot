@@ -4,16 +4,12 @@ from telegram import Update
 from telegram.ext import CallbackContext
 from telegram.error import TelegramError
 
-from services.ai_service import ai_service
-from services import poster_request_repo, badge_service, usage_service
+from core.container import services
 from models.usage import ActionType
 from models.chat import Chat
 from models.gift import Gift, GiftType, GIFT_PRICES, GIFT_NAMES
-from infrastructure.datastore.chat import chat_repository
-from infrastructure.datastore.gift import gift_repository
 from tg.decorators import log_update
 from tg.utils.badges import notify_new_badges
-from utils.storage import storage_service
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +31,7 @@ async def handle_pre_checkout(update: Update, context: CallbackContext) -> None:
         return
 
     # Verify if we have the request data
-    request_data = await poster_request_repo.load(payload)
+    request_data = await services.poster_request_repo.load(payload)
     if not request_data:
         # Fallback for old payloads (plain text phrases) or lost data
         pass
@@ -80,12 +76,10 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
                 gift_type=gift_type,
                 cost=GIFT_PRICES[gift_type],
             )
-            await gift_repository.save(gift)
+            await services.gift_repo.save(gift)
 
             # Get receiver name for the message
-            from infrastructure.datastore.user import user_repository
-
-            receiver_user = await user_repository.load(receiver_id)
+            receiver_user = await services.user_repo.load(receiver_id)
 
             receiver_display_name = "el chaval"
             if receiver_user:
@@ -153,7 +147,7 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
                         )
 
             # Log usage (GIFT_SENT) for sender
-            new_badges_sender = await usage_service.log_usage(
+            new_badges_sender = await services.usage_service.log_usage(
                 user_id=user.id,
                 platform="telegram",
                 action=ActionType.GIFT_SENT,
@@ -161,8 +155,7 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
             )
 
             # Log usage (GIFT_RECEIVED) for receiver
-            # We don't have a direct context for receiver update, but we can log usage and check badges
-            new_badges_receiver = await usage_service.log_usage(
+            new_badges_receiver = await services.usage_service.log_usage(
                 user_id=receiver_id,
                 platform="telegram",
                 action=ActionType.GIFT_RECEIVED,
@@ -174,8 +167,6 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
 
             # Notify badges for receiver (if any)
             if new_badges_receiver:
-                # We can't use notify_new_badges easily because it replies to update.
-                # We'll send a direct message to receiver if they have badges.
                 badge_names = ", ".join([b.name for b in new_badges_receiver])
                 try:
                     await context.bot.send_message(
@@ -206,7 +197,7 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
     if payload.startswith("subs_month_"):
         try:
             target_chat_id = int(payload.replace("subs_month_", ""))
-            chat = await chat_repository.load(target_chat_id)
+            chat = await services.chat_repo.load(target_chat_id)
             if not chat:
                 chat = Chat(id=target_chat_id)
 
@@ -217,11 +208,10 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
             else:
                 chat.premium_until = now + timedelta(days=30)
 
-            await chat_repository.save(chat)
+            await services.chat_repo.save(chat)
 
             # Log usage for badge (El Patrón)
-            # Use the user who paid, regardless of who the chat belongs to
-            new_badges = await usage_service.log_usage(
+            new_badges = await services.usage_service.log_usage(
                 user_id=user.id,
                 platform="telegram",
                 action=ActionType.SUBSCRIPTION,
@@ -237,7 +227,7 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
                 ),
             )
 
-            # Notify badges in the chat where payment happened (likely the same)
+            # Notify badges
             await notify_new_badges(update, context, new_badges)
 
         except Exception as e:
@@ -249,7 +239,7 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
         return
 
     # Retrieve request data
-    request_data = await poster_request_repo.load(payload)
+    request_data = await services.poster_request_repo.load(payload)
     if request_data:
         phrase = request_data.phrase
         original_chat_id = request_data.chat_id
@@ -262,7 +252,7 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
 
     logger.info(f"Payment received from {user.id} ({user.first_name}): {phrase}")
 
-    # Notify user that we are working on it (in the chat where payment confirmed)
+    # Notify user that we are working on it
     processing_msg = await context.bot.send_message(
         chat_id=original_chat_id,
         text=(
@@ -285,17 +275,17 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
     await context.bot.send_chat_action(chat_id=original_chat_id, action="upload_photo")
 
     try:
-        image_bytes = await ai_service.generate_image(phrase)
+        image_bytes = await services.ai_service.generate_image(phrase)
 
         # Upload to Storage
         filename = f"posters/{payload}.png"
-        image_url = await storage_service.upload_bytes(image_bytes, filename)
+        image_url = await services.storage_service.upload_bytes(image_bytes, filename)
 
         # Update Request Status
         if request_data:
             request_data.image_url = image_url
             request_data.status = "completed"
-            await poster_request_repo.save(request_data)
+            await services.poster_request_repo.save(request_data)
 
         caption = f"🎨 *{phrase}*\n\nAquí tienes, chaval. Gástatelo en salud."
 
@@ -310,7 +300,7 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
         await processing_msg.delete()
 
         # Log usage
-        await usage_service.log_usage(
+        await services.usage_service.log_usage(
             user_id=user.id,
             platform="telegram",
             action=ActionType.POSTER,
@@ -318,7 +308,7 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
         )
 
         # Check badges
-        new_badges = await badge_service.check_badges(user.id, "telegram")
+        new_badges = await services.badge_service.check_badges(user.id, "telegram")
         await notify_new_badges(update, context, new_badges)
 
     except Exception as e:
@@ -327,7 +317,7 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
         )
         if request_data:
             request_data.status = "failed"
-            await poster_request_repo.save(request_data)
+            await services.poster_request_repo.save(request_data)
 
         await context.bot.send_message(
             chat_id=original_chat_id,

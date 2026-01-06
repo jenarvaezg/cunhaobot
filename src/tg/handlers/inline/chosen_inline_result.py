@@ -1,20 +1,20 @@
 from telegram import Update
 from telegram.ext import CallbackContext
 
-from services import user_service, phrase_service, usage_service
+from core.container import services
 from models.usage import ActionType
 from tg.decorators import log_update
 
 
 @log_update
-async def handle_chosen_inline_result(update: Update, context: CallbackContext):
-    if user := await user_service.update_or_create_inline_user(update):
-        await user_service.add_inline_usage(user)
+async def handle_chosen_inline_result(update: Update, context: CallbackContext) -> None:
+    if user := await services.user_service.update_or_create_inline_user(update):
+        await services.user_service.add_inline_usage(user)
 
     if not (result := update.chosen_inline_result):
         return
 
-    await phrase_service.add_usage_by_id(result.result_id)
+    await services.phrase_service.add_usage_by_id(result.result_id)
 
     # Log usage
     is_sticker = result.result_id.startswith("sticker-")
@@ -27,7 +27,7 @@ async def handle_chosen_inline_result(update: Update, context: CallbackContext):
     else:
         action = ActionType.PHRASE
 
-    new_badges = await usage_service.log_usage(
+    new_badges = await services.usage_service.log_usage(
         user_id=result.from_user.id,
         platform="telegram",
         action=action,

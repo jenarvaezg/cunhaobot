@@ -1,9 +1,8 @@
 import logging
 from telegram import Update, ReactionTypeEmoji
 from telegram.ext import CallbackContext
-from services import cunhao_agent, usage_service, ai_service
+from core.container import services
 from models.usage import ActionType
-from infrastructure.datastore.chat import chat_repository
 from tg.decorators import log_update
 from tg.utils.badges import notify_new_badges
 
@@ -32,7 +31,7 @@ async def handle_message(update: Update, context: CallbackContext) -> None:
     )
 
     # Check Premium Status
-    chat = await chat_repository.load(message.chat.id)
+    chat = await services.chat_repo.load(message.chat.id)
     is_premium = chat and chat.is_premium
 
     if is_private or is_reply_to_bot or is_mentioned:
@@ -55,8 +54,8 @@ async def handle_message(update: Update, context: CallbackContext) -> None:
         # Indicate typing status
         await message.chat.send_action(action="typing")
 
-        response = await cunhao_agent.answer(clean_text)
-        new_badges = await usage_service.log_usage(
+        response = await services.cunhao_agent.answer(clean_text)
+        new_badges = await services.usage_service.log_usage(
             user_id=message.from_user.id if message.from_user else "unknown",
             platform="telegram",
             action=ActionType.AI_ASK,
@@ -67,12 +66,14 @@ async def handle_message(update: Update, context: CallbackContext) -> None:
     # Smart Reaction (runs for EVERY message) - ONLY PREMIUM
     if is_premium:
         try:
-            reaction_emoji = await ai_service.analyze_sentiment_and_react(message.text)
+            reaction_emoji = await services.ai_service.analyze_sentiment_and_react(
+                message.text
+            )
             if reaction_emoji:
                 await message.set_reaction(reaction=ReactionTypeEmoji(reaction_emoji))
 
                 # Log usage for "Centro de Atención" badge
-                reaction_badges = await usage_service.log_usage(
+                reaction_badges = await services.usage_service.log_usage(
                     user_id=message.from_user.id if message.from_user else "unknown",
                     platform="telegram",
                     action=ActionType.REACTION_RECEIVED,

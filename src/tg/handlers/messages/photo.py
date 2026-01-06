@@ -1,11 +1,8 @@
 import logging
 from telegram import Update
-from telegram.ext import ContextTypes
-from services.ai_service import ai_service
-from services.tts_service import tts_service
-from services import usage_service
+from telegram.ext import CallbackContext
+from core.container import services
 from models.usage import ActionType
-from infrastructure.datastore.chat import chat_repository
 from tg.decorators import log_update
 from tg.utils.badges import notify_new_badges
 
@@ -13,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 @log_update
-async def photo_roast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def photo_roast(update: Update, context: CallbackContext) -> None:
     """Handles photos by generating a vision roast and a voice message."""
     if not (message := update.message) or not message.photo:
         return
@@ -31,7 +28,7 @@ async def photo_roast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         return
 
     # Premium Check
-    chat = await chat_repository.load(update.effective_chat.id)
+    chat = await services.chat_repo.load(update.effective_chat.id)
     if not chat or not chat.is_premium:
         await message.reply_text(
             "⛔️ **Función Premium**\n\n"
@@ -53,15 +50,15 @@ async def photo_roast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         image_bytes = await photo_file.download_as_bytearray()
 
         # Generate roast text
-        roast_text = await ai_service.analyze_image(bytes(image_bytes))
+        roast_text = await services.ai_service.analyze_image(bytes(image_bytes))
 
         # Log usage and check for badges
-        new_badges = await usage_service.log_usage(
+        new_badges = await services.usage_service.log_usage(
             user_id=user_id, platform="telegram", action=ActionType.VISION
         )
 
         # Generate audio bytes
-        audio_content = tts_service.generate_audio(roast_text)
+        audio_content = services.tts_service.generate_audio(roast_text)
 
         # Send voice message (as voice note) with text as caption
         await message.reply_voice(

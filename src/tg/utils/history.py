@@ -45,7 +45,7 @@ async def get_telegram_history(
     Extracts the conversation history from the API context (chat_data) and the recursive reply chain.
     """
     bot_id = context.bot.id
-    history_items = []
+    history_items: list[dict] = []
     seen_message_ids = set()
 
     # 1. Fetch from recursive reply chain (follows the specific thread)

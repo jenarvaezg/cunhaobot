@@ -14,8 +14,16 @@ def test_index_page(client):
     lp1 = LongPhrase(text="esto es una prueba", usages=5)
 
     with (
-        patch("services.phrase_repo.load_all", return_value=[p1]),
-        patch("services.long_phrase_repo.load_all", return_value=[lp1]),
+        patch(
+            "infrastructure.datastore.phrase.phrase_repository.load_all",
+            new_callable=AsyncMock,
+            return_value=[p1],
+        ),
+        patch(
+            "infrastructure.datastore.phrase.long_phrase_repository.load_all",
+            new_callable=AsyncMock,
+            return_value=[lp1],
+        ),
     ):
         rv = client.get("/")
         assert rv.status_code == HTTP_200_OK
@@ -30,8 +38,16 @@ def test_search_endpoint(client):
     p1 = Phrase(text="match", usages=10)
 
     with (
-        patch("services.phrase_repo.get_phrases", return_value=[p1]),
-        patch("services.long_phrase_repo.get_phrases", return_value=[]),
+        patch(
+            "infrastructure.datastore.phrase.phrase_repository.get_phrases",
+            new_callable=AsyncMock,
+            return_value=[p1],
+        ),
+        patch(
+            "infrastructure.datastore.phrase.long_phrase_repository.get_phrases",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
     ):
         rv = client.get("/search", params={"search": "match"})
         assert rv.status_code == HTTP_200_OK
@@ -48,8 +64,16 @@ def test_ping(client):
 
 def test_auth_telegram_fail(client):
     with (
-        patch("services.phrase_repo.get_phrases", return_value=[]),
-        patch("services.long_phrase_repo.get_phrases", return_value=[]),
+        patch(
+            "infrastructure.datastore.phrase.phrase_repository.get_phrases",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
+        patch(
+            "infrastructure.datastore.phrase.long_phrase_repository.get_phrases",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
     ):
         rv = client.get("/auth/telegram", params={"hash": "wrong"})
         assert rv.status_code == HTTP_200_OK  # After redirect to /
@@ -58,8 +82,16 @@ def test_auth_telegram_fail(client):
 
 def test_logout(client):
     with (
-        patch("services.phrase_repo.get_phrases", return_value=[]),
-        patch("services.long_phrase_repo.get_phrases", return_value=[]),
+        patch(
+            "infrastructure.datastore.phrase.phrase_repository.get_phrases",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
+        patch(
+            "infrastructure.datastore.phrase.long_phrase_repository.get_phrases",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
     ):
         rv = client.get("/logout")
         assert rv.status_code == HTTP_200_OK  # After redirect to /
@@ -68,8 +100,16 @@ def test_logout(client):
 
 def test_proposals(client):
     with (
-        patch("services.proposal_repo.get_proposals", return_value=[]),
-        patch("services.long_proposal_repo.get_proposals", return_value=[]),
+        patch(
+            "infrastructure.datastore.proposal.proposal_repository.get_proposals",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
+        patch(
+            "infrastructure.datastore.proposal.long_proposal_repository.get_proposals",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
     ):
         rv = client.get("/proposals")
         assert rv.status_code == HTTP_200_OK
@@ -78,8 +118,16 @@ def test_proposals(client):
 
 def test_proposals_search(client):
     with (
-        patch("services.proposal_repo.get_proposals", return_value=[]),
-        patch("services.long_proposal_repo.get_proposals", return_value=[]),
+        patch(
+            "infrastructure.datastore.proposal.proposal_repository.get_proposals",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
+        patch(
+            "infrastructure.datastore.proposal.long_proposal_repository.get_proposals",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
     ):
         rv = client.get("/proposals/search", headers={"HX-Request": "true"})
         assert rv.status_code == HTTP_200_OK
@@ -135,11 +183,31 @@ def test_generate_ai_phrases_authorized_exception(client):
 
 def test_metrics_page_empty_data(client):
     with (
-        patch("services.phrase_repo.get_phrases", return_value=[]),
-        patch("services.long_phrase_repo.get_phrases", return_value=[]),
-        patch("services.proposal_repo.load_all", return_value=[]),
-        patch("services.long_proposal_repo.load_all", return_value=[]),
-        patch("services.user_repo.load_all", return_value=[]),
+        patch(
+            "infrastructure.datastore.phrase.phrase_repository.get_phrases",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
+        patch(
+            "infrastructure.datastore.phrase.long_phrase_repository.get_phrases",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
+        patch(
+            "infrastructure.datastore.proposal.proposal_repository.load_all",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
+        patch(
+            "infrastructure.datastore.proposal.long_proposal_repository.load_all",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
+        patch(
+            "infrastructure.datastore.user.user_repository.load_all",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
     ):
         rv = client.get("/metrics")
         assert rv.status_code == HTTP_200_OK
@@ -161,11 +229,31 @@ def test_metrics_page_with_data(client):
     user3 = User(id=3, name="User Three")
 
     with (
-        patch("services.phrase_repo.get_phrases", return_value=[p1]),
-        patch("services.long_phrase_repo.get_phrases", return_value=[lp1]),
-        patch("services.proposal_repo.load_all", return_value=[prop1]),
-        patch("services.long_proposal_repo.load_all", return_value=[lprop1]),
-        patch("services.user_repo.load_all", return_value=[user1, user2, user3]),
+        patch(
+            "infrastructure.datastore.phrase.phrase_repository.get_phrases",
+            new_callable=AsyncMock,
+            return_value=[p1],
+        ),
+        patch(
+            "infrastructure.datastore.phrase.long_phrase_repository.get_phrases",
+            new_callable=AsyncMock,
+            return_value=[lp1],
+        ),
+        patch(
+            "infrastructure.datastore.proposal.proposal_repository.load_all",
+            new_callable=AsyncMock,
+            return_value=[prop1],
+        ),
+        patch(
+            "infrastructure.datastore.proposal.long_proposal_repository.load_all",
+            new_callable=AsyncMock,
+            return_value=[lprop1],
+        ),
+        patch(
+            "infrastructure.datastore.user.user_repository.load_all",
+            new_callable=AsyncMock,
+            return_value=[user1, user2, user3],
+        ),
     ):
         rv = client.get("/metrics")
         assert rv.status_code == HTTP_200_OK
@@ -186,9 +274,21 @@ def test_phrase_detail_page(client):
     )
 
     with (
-        patch("services.phrase_repo.load", return_value=p1),
-        patch("services.long_phrase_repo.load", return_value=None),
-        patch("services.user_repo.load", return_value=None),
+        patch(
+            "infrastructure.datastore.phrase.phrase_repository.load",
+            new_callable=AsyncMock,
+            return_value=p1,
+        ),
+        patch(
+            "infrastructure.datastore.phrase.long_phrase_repository.load",
+            new_callable=AsyncMock,
+            return_value=None,
+        ),
+        patch(
+            "infrastructure.datastore.user.user_repository.load",
+            new_callable=AsyncMock,
+            return_value=None,
+        ),
     ):
         rv = client.get("/phrase/123")
         assert rv.status_code == HTTP_200_OK
@@ -200,8 +300,16 @@ def test_phrase_detail_page(client):
 
 def test_phrase_detail_page_not_found(client):
     with (
-        patch("services.phrase_repo.load", return_value=None),
-        patch("services.long_phrase_repo.load", return_value=None),
+        patch(
+            "infrastructure.datastore.phrase.phrase_repository.load",
+            new_callable=AsyncMock,
+            return_value=None,
+        ),
+        patch(
+            "infrastructure.datastore.phrase.long_phrase_repository.load",
+            new_callable=AsyncMock,
+            return_value=None,
+        ),
     ):
         rv = client.get("/phrase/999")
         assert rv.status_code == 404
@@ -212,8 +320,16 @@ def test_phrase_sticker_route(client):
     sticker_content = b"fake_png_content"
 
     with (
-        patch("services.phrase_repo.load", return_value=p1),
-        patch("services.long_phrase_repo.load", return_value=None),
+        patch(
+            "infrastructure.datastore.phrase.phrase_repository.load",
+            new_callable=AsyncMock,
+            return_value=p1,
+        ),
+        patch(
+            "infrastructure.datastore.phrase.long_phrase_repository.load",
+            new_callable=AsyncMock,
+            return_value=None,
+        ),
         patch(
             "services.phrase_service.PhraseService.create_sticker_image",
             return_value=sticker_content,
@@ -231,7 +347,11 @@ def test_ranking_page(client):
     u2 = User(id=2, name="Cuñao Junior", points=50)
 
     with (
-        patch("services.user_repo.load_all", return_value=[u1, u2]),
+        patch(
+            "infrastructure.datastore.user.user_repository.load_all",
+            new_callable=AsyncMock,
+            return_value=[u1, u2],
+        ),
     ):
         rv = client.get("/ranking")
         assert rv.status_code == HTTP_200_OK

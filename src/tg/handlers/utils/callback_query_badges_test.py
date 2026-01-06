@@ -17,27 +17,21 @@ async def test_approve_proposal_awards_badge():
         patch(
             "tg.handlers.utils.callback_query._ensure_admins", new_callable=AsyncMock
         ),
-        patch("services.proposal_repo.save", new_callable=AsyncMock),
-        patch("tg.handlers.utils.callback_query.phrase_service") as mock_ph_svc,
+        patch("tg.handlers.utils.callback_query.services") as mock_services,
         patch(
             "tg.handlers.utils.callback_query.get_vote_summary", return_value="summary"
         ),
-        patch(
-            "tg.handlers.utils.callback_query.usage_service.log_usage",
-            new_callable=AsyncMock,
-        ) as mock_log_usage,
     ):
-        mock_ph_svc.get_random = AsyncMock()
-        mock_ph_svc.get_random.return_value.text = "cuñao"
-        mock_ph_svc.create_from_proposal = AsyncMock()
-
-        # Mock that log_usage returns a new badge
-        mock_log_usage.return_value = [badge]
+        mock_services.proposal_repo.save = AsyncMock()
+        mock_services.phrase_service.get_random = AsyncMock()
+        mock_services.phrase_service.get_random.return_value.text = "cuñao"
+        mock_services.phrase_service.create_from_proposal = AsyncMock()
+        mock_services.usage_service.log_usage = AsyncMock(return_value=[badge])
 
         await approve_proposal(p, bot)
 
         # Check that usage was logged
-        mock_log_usage.assert_called_once()
+        mock_services.usage_service.log_usage.assert_called_once()
 
         # Check that notification message includes badge info
         assert bot.send_message.call_count == 2
@@ -62,26 +56,20 @@ async def test_dismiss_proposal_awards_badge():
         patch(
             "tg.handlers.utils.callback_query._ensure_admins", new_callable=AsyncMock
         ),
-        patch("services.proposal_repo.save", new_callable=AsyncMock),
-        patch("tg.handlers.utils.callback_query.phrase_service") as mock_ph_svc,
+        patch("tg.handlers.utils.callback_query.services") as mock_services,
         patch(
             "tg.handlers.utils.callback_query.get_vote_summary", return_value="summary"
         ),
-        patch(
-            "tg.handlers.utils.callback_query.usage_service.log_usage",
-            new_callable=AsyncMock,
-        ) as mock_log_usage,
     ):
-        mock_ph_svc.get_random = AsyncMock()
-        mock_ph_svc.get_random.return_value.text = "cuñao"
-
-        # Mock that log_usage returns a new badge
-        mock_log_usage.return_value = [badge]
+        mock_services.proposal_repo.save = AsyncMock()
+        mock_services.phrase_service.get_random = AsyncMock()
+        mock_services.phrase_service.get_random.return_value.text = "cuñao"
+        mock_services.usage_service.log_usage = AsyncMock(return_value=[badge])
 
         await dismiss_proposal(p, bot)
 
         # Check that usage was logged
-        mock_log_usage.assert_called_once()
+        mock_services.usage_service.log_usage.assert_called_once()
 
         # Check that notification message includes badge info
         assert bot.send_message.call_count == 2

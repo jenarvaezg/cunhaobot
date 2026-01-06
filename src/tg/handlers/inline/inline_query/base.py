@@ -7,7 +7,7 @@ from telegram import (
 )
 from telegram.ext import CallbackContext
 
-from services import phrase_service, user_service
+from core.container import services
 from tg.decorators import log_update
 from tg.handlers.inline.inline_query.sticker_mode import get_sticker_mode_results
 from tg.text_router import (
@@ -43,7 +43,7 @@ async def handle_inline_query(update: Update, context: CallbackContext) -> None:
 
     results_func = MODE_HANDLERS.get(mode)
     if not results_func:
-        p = (await phrase_service.get_random()).text
+        p = (await services.phrase_service.get_random()).text
         await update.inline_query.answer(
             [
                 InlineQueryResultArticle(
@@ -74,4 +74,4 @@ async def handle_inline_query(update: Update, context: CallbackContext) -> None:
         ),
     )
 
-    await user_service.update_or_create_inline_user(update)
+    await services.user_service.update_or_create_inline_user(update)

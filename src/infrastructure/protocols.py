@@ -5,6 +5,8 @@ from models.user import User
 from models.chat import Chat
 from models.usage import UsageRecord
 from models.gift import Gift
+from models.link_request import LinkRequest
+from models.poster_request import PosterRequest
 
 T = TypeVar("T")
 
@@ -28,6 +30,7 @@ class PhraseRepository(Repository[Phrase], Protocol):
         self, search: str = "", limit: int = 0, **filters: object
     ) -> list[Phrase]: ...
     async def add_usage(self, phrase_text: str, usage_type: str) -> None: ...
+    async def get_user_phrase_count(self, user_id: str) -> int: ...
 
 
 @runtime_checkable
@@ -35,6 +38,7 @@ class LongPhraseRepository(Repository[LongPhrase], Protocol):
     async def get_phrases(
         self, search: str = "", limit: int = 0, **filters: object
     ) -> list[LongPhrase]: ...
+    async def get_user_phrase_count(self, user_id: str) -> int: ...
 
 
 @runtime_checkable
@@ -55,11 +59,24 @@ class LongProposalRepository(Repository[LongProposal], Protocol):
 class UserRepository(Repository[User], Protocol):
     async def load_all(self, ignore_gdpr: bool = False) -> list[User]: ...
     async def load_raw(self, entity_id: str | int) -> User | None: ...
+    async def get_by_username(self, username: str) -> User | None: ...
 
 
 @runtime_checkable
 class ChatRepository(Repository[Chat], Protocol):
     async def load_all(self) -> list[Chat]: ...
+
+
+@runtime_checkable
+class LinkRequestRepository(Repository[LinkRequest], Protocol): ...
+
+
+@runtime_checkable
+class PosterRequestRepository(Repository[PosterRequest], Protocol):
+    async def count_completed_by_user(self, user_id: str | int) -> int: ...
+    async def get_completed_by_user(
+        self, user_id: str | int
+    ) -> list[PosterRequest]: ...
 
 
 @runtime_checkable

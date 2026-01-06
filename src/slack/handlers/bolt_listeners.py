@@ -7,14 +7,7 @@ from slack_bolt.async_app import AsyncApp
 from slack_sdk.web.async_client import AsyncWebClient
 
 from core.config import config
-from services import (
-    phrase_service,
-    cunhao_agent,
-    user_service,
-    usage_service,
-    badge_service,
-    ai_service,
-)
+from core.container import services
 from models.usage import ActionType
 from slack.attachments import (
     build_phrase_attachments,
@@ -58,7 +51,6 @@ async def _register_slack_user(body: dict[str, Any], client: AsyncWebClient) -> 
             user_id = cast(str | None, body["event"].get("user"))
 
         if user_id and (user_name == "Unknown" or not username):
-            # Fetch more info if we only have the ID
             user_info = await client.users_info(user=user_id)
             if user_info.get("ok"):
                 slack_user = cast(dict[str, Any], user_info.get("user", {}))
@@ -69,7 +61,7 @@ async def _register_slack_user(body: dict[str, Any], client: AsyncWebClient) -> 
                 username = cast(str | None, slack_user.get("name"))
 
         if user_id:
-            await user_service.update_or_create_slack_user(
+            await services.user_service.update_or_create_slack_user(
                 slack_user_id=user_id,
                 name=user_name,
                 username=username,
@@ -92,31 +84,22 @@ def register_listeners(app: AsyncApp) -> None:
         text = body.get("text", "").strip()
 
         if not text:
-            # Generate Token
-            token = await user_service.generate_link_token(user_id, "slack")
+            token = await services.user_service.generate_link_token(user_id, "slack")
             await respond(
-                f"🔗 *Vincular Cuenta*\n\n"
-                f"Tu código de vinculación es: `{token}`\n\n"
-                f"Copia este código y úsalo en tu otra cuenta (Telegram o Slack) con el comando:\n"
-                f"`/link {token}`\n\n"
-                f"⚠️ *Atención*: La cuenta donde introduzcas el código será la *PRINCIPAL*. "
-                f"La cuenta actual (donde generaste este código) se fusionará con ella y desaparecerá.",
+                f"""🔗 *Vincular Cuenta*\n\nTu código de vinculación es: `{token}`\n\nCopia este código y úsalo en tu otra cuenta (Telegram o Slack) con el comando:\n`/link {token}`\n\n⚠️ *Atención*: La cuenta donde introduzcas el código será la *PRINCIPAL*. La cuenta actual (donde generaste este código) se fusionará con ella y desaparecerá.""",
                 response_type="ephemeral",
             )
         else:
-            # Consume Token
             token = text.upper()
-            success = await user_service.complete_link(token, user_id, "slack")
+            success = await services.user_service.complete_link(token, user_id, "slack")
             if success:
                 await respond(
-                    "✅ *Cuentas Vinculadas con Éxito*\n\n"
-                    "Has absorbido los poderes de tu otra cuenta. Tus puntos, medallas y frases ahora están unificados aquí.",
+                    """✅ *Cuentas Vinculadas con Éxito*\n\nHas absorbido los poderes de tu otra cuenta. Tus puntos, medallas y frases ahora están unificados aquí.""",
                     response_type="ephemeral",
                 )
             else:
                 await respond(
-                    "❌ *Error al Vincular*\n\n"
-                    "El código es inválido, ha expirado o intentas vincularte contigo mismo.",
+                    """❌ *Error al Vincular*\n\nEl código es inválido, ha expirado o intentas vincularte contigo mismo.""",
                     response_type="ephemeral",
                 )
 
@@ -131,12 +114,11 @@ def register_listeners(app: AsyncApp) -> None:
 
         if text == "help":
             await respond(
-                "Usando /saludo <texto> te doy un saludo de cuñao basado en el texto. "
-                "Si no pones nada, te daré uno al azar."
+                "Usando /saludo <texto> te doy un saludo de cuñao basado en el texto. Si no pones nada, te daré uno al azar."
             )
             return
 
-        phrases = await phrase_service.get_phrases(search=text, long=False)
+        phrases = await services.phrase_service.get_phrases(search=text, long=False)
         if not phrases:
             await respond(
                 f'No tengo ningún saludo que encaje con la búsqueda "{text}".'
@@ -144,7 +126,7 @@ def register_listeners(app: AsyncApp) -> None:
             return
 
         phrase = random.choice(phrases)
-        new_badges = await usage_service.log_usage(
+        new_badges = await services.usage_service.log_usage(
             user_id=body["user_id"],
             platform="slack",
             action=ActionType.SALUDO,
@@ -164,15 +146,16 @@ def register_listeners(app: AsyncApp) -> None:
 
         if text == "help":
             await respond(
-                "Usando /sticker <texto> te doy un sticker de cuñao basado en el texto. "
-                "Si no pones nada, te daré uno al azar."
+                "Usando /sticker <texto> te doy un sticker de cuñao basado en el texto. Si no pones nada, te daré uno al azar."
             )
             return
 
         if text:
-            phrases = await phrase_service.get_phrases(search=text, long=True)
+            phrases = await services.phrase_service.get_phrases(search=text, long=True)
             if not phrases:
-                phrase, score = await phrase_service.find_most_similar(text, long=True)
+                phrase, score = await services.phrase_service.find_most_similar(
+                    text, long=True
+                )
                 if score < 60:
                     await respond(
                         f'No tengo ninguna frase que encaje con "{text}". ¿Querías decir algo como "{phrase.text}"?'
@@ -183,13 +166,13 @@ def register_listeners(app: AsyncApp) -> None:
             else:
                 selected_phrase = random.choice(phrases)
         else:
-            selected_phrase = await phrase_service.get_random(long=True)
+            selected_phrase = await services.phrase_service.get_random(long=True)
 
         if not selected_phrase:
             await respond("No hay frases disponibles en este momento.")
             return
 
-        new_badges = await usage_service.log_usage(
+        new_badges = await services.usage_service.log_usage(
             user_id=body["user_id"],
             platform="slack",
             action=ActionType.STICKER,
@@ -216,23 +199,22 @@ def register_listeners(app: AsyncApp) -> None:
         text: str = body.get("text", "").strip()
 
         if text == "help":
-            random_phrase = (await phrase_service.get_random()).text
+            random_phrase = (await services.phrase_service.get_random()).text
             await respond(
-                f"Usando /cuñao <texto> te doy frases de cuñao que incluyan texto en su contenido. "
-                f"Si no me das texto para buscar, tendrás una frase al azar, {random_phrase}"
+                f"Usando /cuñao <texto> te doy frases de cuñao que incluyan texto en su contenido. Si no me das texto para buscar, tendrás una frase al azar, {random_phrase}"
             )
             return
 
-        phrases = await phrase_service.get_phrases(search=text, long=True)
+        phrases = await services.phrase_service.get_phrases(search=text, long=True)
         if not phrases:
-            random_phrase = (await phrase_service.get_random()).text
+            random_phrase = (await services.phrase_service.get_random()).text
             await respond(
                 f'No tengo ninguna frase que encaje con la busqueda "{text}", {random_phrase}.'
             )
             return
 
         phrase = random.choice(phrases)
-        new_badges = await usage_service.log_usage(
+        new_badges = await services.usage_service.log_usage(
             user_id=body["user_id"],
             platform="slack",
             action=ActionType.PHRASE,
@@ -259,21 +241,16 @@ def register_listeners(app: AsyncApp) -> None:
 
         if value.startswith("send-sticker-"):
             text: str = value[len("send-sticker-") :]
-            # We need to find the phrase to get the key and build the URL again
-            # or we could have passed the URL in the value, but it might be too long.
-            # Let's search for the exact text.
-            phrases = await phrase_service.get_phrases(search=text, long=True)
-            # Find exact match
+            phrases = await services.phrase_service.get_phrases(search=text, long=True)
             selected_phrase = next((p for p in phrases if p.text == text), None)
 
             if not selected_phrase:
-                # If not found (unlikely), generate ad-hoc
                 encoded_text = urllib.parse.quote(text)
                 sticker_url = f"{config.base_url}/sticker/text.png?text={encoded_text}"
             else:
                 encoded_id = urllib.parse.quote(str(selected_phrase.id))
                 sticker_url = f"{config.base_url}/phrase/{encoded_id}/sticker.png"
-                await phrase_service.register_sticker_usage(selected_phrase)
+                await services.phrase_service.register_sticker_usage(selected_phrase)
 
             await respond(
                 delete_original=True,
@@ -297,8 +274,7 @@ def register_listeners(app: AsyncApp) -> None:
                     },
                 ],
             )
-            # Log usage and check badges for actions
-            new_badges = await usage_service.log_usage(
+            new_badges = await services.usage_service.log_usage(
                 user_id=user_id, platform="slack", action=ActionType.STICKER
             )
             await notify_new_badges_slack(say, new_badges)
@@ -325,8 +301,7 @@ def register_listeners(app: AsyncApp) -> None:
                     },
                 ],
             )
-            # Log usage and check badges for actions
-            new_badges = await usage_service.log_usage(
+            new_badges = await services.usage_service.log_usage(
                 user_id=user_id, platform="slack", action=ActionType.SALUDO
             )
             await notify_new_badges_slack(say, new_badges)
@@ -346,10 +321,11 @@ def register_listeners(app: AsyncApp) -> None:
             )
         elif value.startswith("shuffle-sticker-"):
             search: str = value[len("shuffle-sticker-") :]
-            phrases = await phrase_service.get_phrases(search=search, long=True)
+            phrases = await services.phrase_service.get_phrases(
+                search=search, long=True
+            )
             if not phrases:
-                # Fallback to random if search yields nothing now
-                selected_phrase = await phrase_service.get_random(long=True)
+                selected_phrase = await services.phrase_service.get_random(long=True)
             else:
                 selected_phrase = random.choice(phrases)
 
@@ -370,7 +346,9 @@ def register_listeners(app: AsyncApp) -> None:
             )
         elif value.startswith("shuffle-saludo-"):
             search: str = value[len("shuffle-saludo-") :]
-            phrases = await phrase_service.get_phrases(search=search, long=False)
+            phrases = await services.phrase_service.get_phrases(
+                search=search, long=False
+            )
             if not phrases:
                 await respond(delete_original=True)
                 return
@@ -384,7 +362,9 @@ def register_listeners(app: AsyncApp) -> None:
             )
         elif value.startswith("shuffle-"):
             search: str = value[len("shuffle-") :]
-            phrases = await phrase_service.get_phrases(search=search, long=True)
+            phrases = await services.phrase_service.get_phrases(
+                search=search, long=True
+            )
             if not phrases:
                 await respond(delete_original=True)
                 return
@@ -405,7 +385,7 @@ def register_listeners(app: AsyncApp) -> None:
         await _register_slack_user(body, client)
         user_id = body["event"]["user"]
 
-        await usage_service.log_usage(
+        await services.usage_service.log_usage(
             user_id=user_id,
             platform="slack",
             action=ActionType.COMMAND,
@@ -413,7 +393,6 @@ def register_listeners(app: AsyncApp) -> None:
         )
 
         try:
-            # Simple App Home view
             await client.views_publish(
                 user_id=user_id,
                 view={
@@ -430,17 +409,15 @@ def register_listeners(app: AsyncApp) -> None:
                             "type": "section",
                             "text": {
                                 "type": "mrkdwn",
-                                "text": (
-                                    "Soy el bot que tu espacio de trabajo no sabía que necesitaba. "
-                                    "Estoy aquí para aportar esa dosis de sabiduría cuñadil necesaria para sobrevivir al día a día.\n\n"
-                                    "*Comandos disponibles:*\n"
-                                    "• `/cuñao [búsqueda]` - Suelto una perla de sabiduría.\n"
-                                    "• `/sticker [búsqueda]` - Envío un sticker con frase mítica.\n"
-                                    "• `/saludo [nombre]` - Saludo como es debido.\n"
-                                    "• `/perfil` - Mira tus estadísticas.\n"
-                                    "• `/link` - Vincula cuentas de otras plataformas.\n"
-                                    "• `/help` - Muestro esta ayuda."
-                                ),
+                                "text": """Soy el bot que tu espacio de trabajo no sabía que necesitaba. Estoy aquí para aportar esa dosis de sabiduría cuñadil necesaria para sobrevivir al día a día.
+
+*Comandos disponibles:*
+• `/cuñao [búsqueda]` - Suelto una perla de sabiduría.
+• `/sticker [búsqueda]` - Envío un sticker con frase mítica.
+• `/saludo [nombre]` - Saludo como es debido.
+• `/perfil` - Mira tus estadísticas.
+• `/link` - Vincula cuentas de otras plataformas.
+• `/help` - Muestro esta ayuda.""",
                             },
                         },
                         {"type": "divider"},
@@ -460,25 +437,23 @@ def register_listeners(app: AsyncApp) -> None:
     @app.command("/help")
     async def handle_help_command(ack: Any, body: dict[str, Any], respond: Any):
         await ack()
-        await usage_service.log_usage(
+        await services.usage_service.log_usage(
             user_id=body["user_id"],
             platform="slack",
             action=ActionType.COMMAND,
             metadata={"command": "help"},
         )
-        p1 = (await phrase_service.get_random(long=False)).text
-        p2 = (await phrase_service.get_random(long=False)).text
-        p3 = (await phrase_service.get_random(long=False)).text
+        p1 = (await services.phrase_service.get_random(long=False)).text
+        p2 = (await services.phrase_service.get_random(long=False)).text
+        p3 = (await services.phrase_service.get_random(long=False)).text
         await respond(
-            "*Guía Rápida de Supervivencia Cuñadil:*\n\n"
-            "• `/cuñao [texto]` - Busca una frase mítica que contenga ese texto.\n"
-            "• `/sticker [texto]` - Genera un sticker con una frase para cerrar debates.\n"
-            "• `/poster [frase]` - (Próximamente en Slack) Inmortaliza tu sabiduría con IA.\n"
-            f"• `/saludo [nombre]` - Envía un saludo personalizado (ej: `/saludo {p1}`).\n"
-            f"• `/perfil` - Mira tus puntos y medallas de {p2}.\n"
-            "• `/link` - Vincula tus cuentas de Telegram y Slack para unificar puntos.\n"
-            "• *Mención* - Si me mencionas (@CuñaoBot) te responderé con mi sabiduría IA.\n\n"
-            f'_"Eso con un par de martillazos se arregla, te lo digo yo, {p3}."_'
+            f"""*Guía Rápida de Supervivencia Cuñadil:*\n\n• `/cuñao [texto]` - Busca una frase mítica que contenga ese texto.
+• `/sticker [texto]` - Genera un sticker con una frase para cerrar debates.
+• `/poster [frase]` - (Próximamente en Slack) Inmortaliza tu sabiduría con IA.
+• `/saludo [nombre]` - Envía un saludo personalizado (ej: `/saludo {p1}`).
+• `/perfil` - Mira tus puntos y medallas de {p2}.
+• `/link` - Vincula tus cuentas de Telegram y Slack para unificar puntos.
+• *Mención* - Si me mencionas (@CuñaoBot) te responderé con mi sabiduría IA.\n\n_"Eso con un par de martillazos se arregla, te lo digo yo, {p3}. "_"""
         )
 
     @app.command("/perfil")
@@ -491,21 +466,21 @@ def register_listeners(app: AsyncApp) -> None:
         user_id = body["user_id"]
         platform = "slack"
 
-        await usage_service.log_usage(
+        await services.usage_service.log_usage(
             user_id=user_id,
             platform=platform,
             action=ActionType.COMMAND,
             metadata={"command": "profile"},
         )
 
-        user = await user_service.get_user(user_id, platform)
+        user = await services.user_service.get_user(user_id, platform)
         if not user:
-            p = (await phrase_service.get_random(long=False)).text
+            p = (await services.phrase_service.get_random(long=False)).text
             await respond(f"Todavía no tengo tu ficha, {p}. ¡Empieza a usar el bot!")
             return
 
-        stats = await usage_service.get_user_stats(user_id, platform)
-        all_badges_progress = await badge_service.get_all_badges_progress(
+        stats = await services.usage_service.get_user_stats(user_id, platform)
+        all_badges_progress = await services.badge_service.get_all_badges_progress(
             user_id, platform
         )
 
@@ -532,7 +507,7 @@ def register_listeners(app: AsyncApp) -> None:
             else "_Todavía no tienes medallas_"
         )
         pending_text = (
-            "\n\n*🚀 Próximos logros:*\n" + "\n".join(pending_elements)
+            "\n\n*🚀 Próximos logros:*" + "\n".join(pending_elements)
             if pending_elements
             else ""
         )
@@ -543,12 +518,7 @@ def register_listeners(app: AsyncApp) -> None:
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f"👤 *Perfil de {user.name}*\n"
-                        f"━━━━━━━━━━━━━━━\n"
-                        f"🏆 *Puntos:* {user.points}\n"
-                        f"📊 *Usos totales:* {stats['total_usages']}\n\n"
-                        f"🎖️ *Logros conseguidos:*\n{earned_text}"
-                        f"{pending_text}",
+                        "text": f"👤 *Perfil de {user.name}*\n━━━━━━━━━━━━━━━\n🏆 *Puntos:* {user.points}\n📊 *Usos totales:* {stats['total_usages']}\n\n🎖️ *Logros conseguidos:*\n{earned_text}{pending_text}",
                     },
                 }
             ]
@@ -563,17 +533,18 @@ def register_listeners(app: AsyncApp) -> None:
         event = body["event"]
         text = event.get("text", "")
 
-        response = await cunhao_agent.answer(text)
-        await usage_service.log_usage(
+        response = await services.cunhao_agent.answer(text)
+        await services.usage_service.log_usage(
             user_id=event.get("user"),
             platform="slack",
             action=ActionType.AI_ASK,
         )
         await say(response, thread_ts=event.get("ts"))
 
-        # Smart Reaction
         try:
-            reaction_unicode = await ai_service.analyze_sentiment_and_react(text)
+            reaction_unicode = await services.ai_service.analyze_sentiment_and_react(
+                text
+            )
             if reaction_unicode and reaction_unicode in EMOJI_MAP:
                 await client.reactions_add(
                     name=EMOJI_MAP[reaction_unicode],
@@ -581,8 +552,7 @@ def register_listeners(app: AsyncApp) -> None:
                     timestamp=event.get("ts"),
                 )
 
-                # Log usage and check badges
-                reaction_badges = await usage_service.log_usage(
+                reaction_badges = await services.usage_service.log_usage(
                     user_id=event.get("user"),
                     platform="slack",
                     action=ActionType.REACTION_RECEIVED,
@@ -591,69 +561,49 @@ def register_listeners(app: AsyncApp) -> None:
         except Exception as e:
             logger.warning(f"Failed to react on Slack: {e}")
 
-        @app.event("message")
-        async def handle_message_event(
-            ack: Any, body: dict[str, Any], say: Any, client: Any, context: Any
-        ):
-            await ack()
+    @app.event("message")
+    async def handle_message_event(
+        ack: Any, body: dict[str, Any], say: Any, client: Any, context: Any
+    ):
+        await ack()
+        await _register_slack_user(body, client)
+        event = body["event"]
 
-            await _register_slack_user(body, client)
+        if event.get("bot_id") or event.get("subtype") == "bot_message":
+            return
 
-            event = body["event"]
+        text = event.get("text", "")
+        channel_type = event.get("channel_type")
+        bot_user_id = context.get("bot_user_id")
+        is_mentioned = bot_user_id and f"<@{bot_user_id}>" in text
 
-            # Skip bot messages
+        if channel_type == "im" and "subtype" not in event:
+            response = await services.cunhao_agent.answer(text)
+            await services.usage_service.log_usage(
+                user_id=event.get("user"),
+                platform="slack",
+                action=ActionType.AI_ASK,
+            )
+            await say(response)
 
-            if event.get("bot_id") or event.get("subtype") == "bot_message":
-                return
-
-            text = event.get("text", "")
-
-            channel_type = event.get("channel_type")
-
-            bot_user_id = context.get("bot_user_id")
-
-            is_mentioned = bot_user_id and f"<@{bot_user_id}>" in text
-
-            # Answering logic: Only for DMs (IMs)
-
-            if channel_type == "im" and "subtype" not in event:
-                response = await cunhao_agent.answer(text)
-
-                await usage_service.log_usage(
-                    user_id=event.get("user"),
-                    platform="slack",
-                    action=ActionType.AI_ASK,
+        if not is_mentioned:
+            try:
+                reaction_unicode = (
+                    await services.ai_service.analyze_sentiment_and_react(text)
                 )
-
-                await say(response)
-
-            # Smart Reaction: For any message (unless already mentioned, which is handled by app_mention)
-
-            if not is_mentioned:
-                try:
-                    reaction_unicode = await ai_service.analyze_sentiment_and_react(
-                        text
+                if reaction_unicode and reaction_unicode in EMOJI_MAP:
+                    await client.reactions_add(
+                        name=EMOJI_MAP[reaction_unicode],
+                        channel=event.get("channel"),
+                        timestamp=event.get("ts"),
                     )
 
-                    if reaction_unicode and reaction_unicode in EMOJI_MAP:
-                        await client.reactions_add(
-                            name=EMOJI_MAP[reaction_unicode],
-                            channel=event.get("channel"),
-                            timestamp=event.get("ts"),
-                        )
-
-                        # Log usage and check badges
-
-                        reaction_badges = await usage_service.log_usage(
-                            user_id=event.get("user"),
-                            platform="slack",
-                            action=ActionType.REACTION_RECEIVED,
-                        )
-
-                        await notify_new_badges_slack(say, reaction_badges)
-
-                except Exception as e:
-                    # Silently fail if reaction already exists or other Slack errors
-
-                    if "already_reacted" not in str(e):
-                        logger.warning(f"Failed to react on Slack: {e}")
+                    reaction_badges = await services.usage_service.log_usage(
+                        user_id=event.get("user"),
+                        platform="slack",
+                        action=ActionType.REACTION_RECEIVED,
+                    )
+                    await notify_new_badges_slack(say, reaction_badges)
+            except Exception as e:
+                if "already_reacted" not in str(e):
+                    logger.warning(f"Failed to react on Slack: {e}")

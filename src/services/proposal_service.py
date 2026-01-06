@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 from telegram import Update
 from telegram.error import BadRequest, TelegramError
 
@@ -10,8 +11,10 @@ from infrastructure.protocols import (
     LongProposalRepository,
     UserRepository,
 )
-from services.user_service import user_service
 from core.config import config
+
+if TYPE_CHECKING:
+    from services.user_service import UserService
 
 logger = logging.getLogger(__name__)
 
@@ -19,19 +22,15 @@ logger = logging.getLogger(__name__)
 class ProposalService:
     def __init__(
         self,
-        repo: ProposalRepository | None = None,
-        long_repo: LongProposalRepository | None = None,
-        user_repo: UserRepository | None = None,
+        repo: ProposalRepository,
+        long_repo: LongProposalRepository,
+        user_repo: UserRepository,
+        user_service: UserService,
     ):
-        from infrastructure.datastore.proposal import (
-            proposal_repository,
-            long_proposal_repository,
-        )
-        from infrastructure.datastore.user import user_repository
-
-        self.repo = repo or proposal_repository
-        self.long_repo = long_repo or long_proposal_repository
-        self.user_repo = user_repo or user_repository
+        self.repo = repo
+        self.long_repo = long_repo
+        self.user_repo = user_repo
+        self.user_service = user_service
         self._curators_cache: dict[str, str] = {}
         self._last_update: datetime | None = None
 
@@ -84,7 +83,7 @@ class ProposalService:
             await self.repo.save(proposal)
 
         # Award points: 1 to proposer
-        await user_service.add_points(proposal.user_id, 1)
+        await self.user_service.add_points(proposal.user_id, 1)
 
     async def get_curators(self) -> dict[str, str]:
         now = datetime.now()
@@ -97,7 +96,8 @@ class ProposalService:
 
         try:
             application = get_tg_application()
-            await application.initialize()
+            if not application.running:
+                await application.initialize()
             bot = application.bot
             new_cache: dict[str, str] = {}
             admins = await bot.get_chat_administrators(chat_id=config.mod_chat_id)
@@ -155,7 +155,8 @@ class ProposalService:
         from tg import get_tg_application
 
         app = get_tg_application()
-        await app.initialize()
+        if not app.running:
+            await app.initialize()
         await approve_proposal(proposal, app.bot)
         return True
 
@@ -168,7 +169,8 @@ class ProposalService:
         from tg import get_tg_application
 
         app = get_tg_application()
-        await app.initialize()
+        if not app.running:
+            await app.initialize()
         await dismiss_proposal(proposal, app.bot)
         return True
 

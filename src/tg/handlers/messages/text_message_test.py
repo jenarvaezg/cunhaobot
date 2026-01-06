@@ -26,40 +26,26 @@ async def test_handle_message_mention_trigger():
     context.bot.username = "TestBot"
     context.bot.id = 12345
 
-    with (
-        patch(
-            "tg.handlers.messages.text_message.chat_repository.load",
-            new_callable=AsyncMock,
-        ) as mock_chat_load,
-        patch(
-            "tg.handlers.messages.text_message.cunhao_agent.answer",
-            new_callable=AsyncMock,
-        ) as mock_answer,
-        patch(
-            "tg.handlers.messages.text_message.usage_service.log_usage",
-            new_callable=AsyncMock,
-            return_value=[],
-        ),
-        patch(
-            "tg.handlers.messages.text_message.ai_service.analyze_sentiment_and_react",
-            new_callable=AsyncMock,
-        ) as mock_react,
-        patch("tg.decorators.user_service.update_or_create_user"),
-    ):
+    with patch("tg.handlers.messages.text_message.services") as mock_services:
         mock_chat = MagicMock()
         mock_chat.is_premium = True
-        mock_chat_load.return_value = mock_chat
-
-        mock_answer.return_value = "AI Response"
-        mock_react.return_value = "🍺"
+        mock_services.chat_repo.load = AsyncMock(return_value=mock_chat)
+        mock_services.cunhao_agent.answer = AsyncMock(return_value="AI Response")
+        mock_services.usage_service.log_usage = AsyncMock(return_value=[])
+        mock_services.ai_service.analyze_sentiment_and_react = AsyncMock(
+            return_value="🍺"
+        )
+        mock_services.user_service.update_or_create_user = AsyncMock()
 
         await handle_message(update, context)
 
-        mock_answer.assert_called_once()
+        mock_services.cunhao_agent.answer.assert_called_once()
         update.effective_message.reply_text.assert_called_once_with(
             "AI Response", do_quote=True
         )
-        mock_react.assert_called_once_with("Hola @TestBot")
+        mock_services.ai_service.analyze_sentiment_and_react.assert_called_once_with(
+            "Hola @TestBot"
+        )
         update.effective_message.set_reaction.assert_called_once_with(
             reaction=ReactionTypeEmoji("🍺")
         )
@@ -80,40 +66,25 @@ async def test_handle_message_no_trigger_only_reaction():
     context.bot.username = "TestBot"
     context.bot.id = 12345
 
-    with (
-        patch(
-            "tg.handlers.messages.text_message.chat_repository.load",
-            new_callable=AsyncMock,
-        ) as mock_chat_load,
-        patch(
-            "tg.handlers.messages.text_message.cunhao_agent.answer",
-            new_callable=AsyncMock,
-        ) as mock_answer,
-        patch(
-            "tg.handlers.messages.text_message.usage_service.log_usage",
-            new_callable=AsyncMock,
-            return_value=[],
-        ),
-        patch(
-            "tg.handlers.messages.text_message.ai_service.analyze_sentiment_and_react",
-            new_callable=AsyncMock,
-        ) as mock_react,
-        patch("tg.decorators.user_service.update_or_create_user"),
-    ):
+    with patch("tg.handlers.messages.text_message.services") as mock_services:
         mock_chat = MagicMock()
         mock_chat.is_premium = True
-        mock_chat_load.return_value = mock_chat
-
-        mock_react.return_value = "🇪🇸"
+        mock_services.chat_repo.load = AsyncMock(return_value=mock_chat)
+        mock_services.ai_service.analyze_sentiment_and_react = AsyncMock(
+            return_value="🇪🇸"
+        )
+        mock_services.user_service.update_or_create_user = AsyncMock()
 
         await handle_message(update, context)
 
         # Should NOT answer
-        mock_answer.assert_not_called()
+        mock_services.cunhao_agent.answer.assert_not_called()
         update.effective_message.reply_text.assert_not_called()
 
         # Should react
-        mock_react.assert_called_once_with("Solo un mensaje en el grupo")
+        mock_services.ai_service.analyze_sentiment_and_react.assert_called_once_with(
+            "Solo un mensaje en el grupo"
+        )
         update.effective_message.set_reaction.assert_called_once_with(
             reaction=ReactionTypeEmoji("🇪🇸")
         )

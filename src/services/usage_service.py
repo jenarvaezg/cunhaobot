@@ -3,17 +3,25 @@ from datetime import datetime, timezone
 from typing import Any, TYPE_CHECKING
 
 from models.usage import UsageRecord, ActionType
-from infrastructure.datastore.usage import usage_repository
+from infrastructure.protocols import UsageRepository
 
 if TYPE_CHECKING:
-    from services.badge_service import Badge
+    from services.badge_service import Badge, BadgeService
+    from services.user_service import UserService
 
 logger = logging.getLogger(__name__)
 
 
 class UsageService:
-    def __init__(self, repo=usage_repository):
+    def __init__(
+        self,
+        repo: UsageRepository,
+        user_service: UserService,
+        badge_service: BadgeService,
+    ):
         self.repo = repo
+        self.user_service = user_service
+        self.badge_service = badge_service
 
     async def log_usage(
         self,
@@ -22,12 +30,10 @@ class UsageService:
         action: ActionType,
         phrase_id: str | int | None = None,
         metadata: dict[str, Any] | None = None,
-    ) -> list["Badge"]:
+    ) -> list[Badge]:
         try:
-            from services.user_service import user_service
-
             # Ensure we use the master user ID for logging if linked
-            master_user = await user_service.get_user(user_id, platform)
+            master_user = await self.user_service.get_user(user_id, platform)
             effective_user_id = str(master_user.id) if master_user else str(user_id)
             # We keep the original platform for the record to know where it came from
 
@@ -44,9 +50,7 @@ class UsageService:
                 f"Logged usage: {action} for user {effective_user_id} (orig: {user_id}) on {platform}"
             )
 
-            from services.badge_service import badge_service
-
-            return await badge_service.check_badges(effective_user_id, platform)
+            return await self.badge_service.check_badges(effective_user_id, platform)
         except Exception as e:
             logger.error(f"Error logging usage: {e}")
             return []
@@ -60,6 +64,3 @@ class UsageService:
         return {
             "total_usages": count,
         }
-
-
-usage_service = UsageService()

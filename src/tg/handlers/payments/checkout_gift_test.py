@@ -42,16 +42,7 @@ async def test_handle_successful_payment_gift_success():
     receiver_user.name = "Receiver"
 
     with (
-        patch(
-            "infrastructure.datastore.gift.gift_repository.save", new_callable=AsyncMock
-        ) as mock_save_gift,
-        patch(
-            "infrastructure.datastore.user.user_repository.load", new_callable=AsyncMock
-        ) as mock_load_user,
-        patch(
-            "tg.handlers.payments.checkout.usage_service.log_usage",
-            new_callable=AsyncMock,
-        ) as mock_log_usage,
+        patch("tg.handlers.payments.checkout.services") as mock_services,
         patch(
             "tg.handlers.payments.checkout.notify_new_badges", new_callable=AsyncMock
         ),
@@ -59,14 +50,15 @@ async def test_handle_successful_payment_gift_success():
             "builtins.open", new_callable=mock_open, read_data=b"image_data"
         ) as mock_file,
     ):
-        mock_load_user.return_value = receiver_user
-        mock_log_usage.return_value = []  # no badges
+        mock_services.gift_repo.save = AsyncMock()
+        mock_services.user_repo.load = AsyncMock(return_value=receiver_user)
+        mock_services.usage_service.log_usage = AsyncMock(return_value=[])
 
         await handle_successful_payment(update, context)
 
         # Verify gift saved
-        mock_save_gift.assert_called_once()
-        gift = mock_save_gift.call_args[0][0]
+        mock_services.gift_repo.save.assert_called_once()
+        gift = mock_services.gift_repo.save.call_args[0][0]
         assert gift.gift_type == GiftType.CARAJILLO
         assert gift.sender_id == 123
         assert gift.receiver_id == 200
@@ -78,7 +70,9 @@ async def test_handle_successful_payment_gift_success():
         assert context.bot.send_photo.call_args[1]["photo"].read() == b"image_data"
 
         # Verify usage logged
-        assert mock_log_usage.call_count == 2  # Sender and Receiver
+        assert (
+            mock_services.usage_service.log_usage.call_count == 2
+        )  # Sender and Receiver
 
 
 @pytest.mark.asyncio
@@ -115,23 +109,15 @@ async def test_handle_successful_payment_gift_image_error_fallback():
     receiver_user.username = "receiver"
 
     with (
-        patch(
-            "infrastructure.datastore.gift.gift_repository.save", new_callable=AsyncMock
-        ),
-        patch(
-            "infrastructure.datastore.user.user_repository.load", new_callable=AsyncMock
-        ) as mock_load_user,
-        patch(
-            "tg.handlers.payments.checkout.usage_service.log_usage",
-            new_callable=AsyncMock,
-        ) as mock_log_usage,
+        patch("tg.handlers.payments.checkout.services") as mock_services,
         patch(
             "tg.handlers.payments.checkout.notify_new_badges", new_callable=AsyncMock
         ),
         patch("builtins.open", side_effect=FileNotFoundError("No file")),
     ):
-        mock_load_user.return_value = receiver_user
-        mock_log_usage.return_value = []
+        mock_services.gift_repo.save = AsyncMock()
+        mock_services.user_repo.load = AsyncMock(return_value=receiver_user)
+        mock_services.usage_service.log_usage = AsyncMock(return_value=[])
 
         await handle_successful_payment(update, context)
 

@@ -24,12 +24,13 @@ class TestFallbackHandlers:
         mock_phrase.text = "cuñao"
 
         with (
-            patch(
-                "tg.handlers.messages.fallback.phrase_service.get_random",
-                return_value=mock_phrase,
-            ),
-            patch("tg.decorators.user_service.update_or_create_user"),
+            patch("tg.handlers.messages.fallback.services") as mock_services,
+            patch("tg.decorators.services") as mock_decorator_services,
         ):
+            mock_services.phrase_service.get_random = AsyncMock(
+                return_value=mock_phrase
+            )
+            mock_decorator_services.user_service.update_or_create_user = AsyncMock()
             await handle_fallback_message(update, context)
             bot.send_message.assert_called_once()
             args, _ = bot.send_message.call_args
@@ -53,16 +54,13 @@ class TestFallbackHandlers:
         mock_phrase.text = "cuñao"
 
         with (
-            patch(
-                "tg.handlers.messages.fallback.phrase_service.get_random",
-                new_callable=AsyncMock,
-                return_value=mock_phrase,
-            ),
-            patch(
-                "tg.decorators.user_service.update_or_create_user",
-                new_callable=AsyncMock,
-            ),
+            patch("tg.handlers.messages.fallback.services") as mock_services,
+            patch("tg.decorators.services") as mock_decorator_services,
         ):
+            mock_services.phrase_service.get_random = AsyncMock(
+                return_value=mock_phrase
+            )
+            mock_decorator_services.user_service.update_or_create_user = AsyncMock()
             await handle_fallback_message(update, context)
             bot.send_message.assert_called_once()
             assert (
@@ -87,11 +85,9 @@ class TestFallbackHandlers:
             patch(
                 "tg.handlers.messages.fallback._on_kick", new_callable=AsyncMock
             ) as mock_kick,
-            patch(
-                "tg.decorators.user_service.update_or_create_user",
-                new_callable=AsyncMock,
-            ),
+            patch("tg.decorators.services") as mock_decorator_services,
         ):
+            mock_decorator_services.user_service.update_or_create_user = AsyncMock()
             await handle_fallback_message(update, context)
             mock_kick.assert_called_once_with(update.effective_message.chat_id)
 
@@ -114,12 +110,13 @@ class TestFallbackHandlers:
         mock_phrase.text = "maestro"
 
         with (
-            patch(
-                "tg.handlers.messages.fallback.phrase_service.get_random",
-                return_value=mock_phrase,
-            ),
-            patch("tg.decorators.user_service.update_or_create_user"),
+            patch("tg.handlers.messages.fallback.services") as mock_services,
+            patch("tg.decorators.services") as mock_decorator_services,
         ):
+            mock_services.phrase_service.get_random = AsyncMock(
+                return_value=mock_phrase
+            )
+            mock_decorator_services.user_service.update_or_create_user = AsyncMock()
             await handle_fallback_message(update, context)
             bot.send_message.assert_called_once()
             assert "Paco" in bot.send_message.call_args[0][1]
@@ -139,8 +136,9 @@ class TestFallbackHandlers:
 
         with (
             patch("tg.handlers.messages.fallback._on_migrate") as mock_mig,
-            patch("tg.decorators.user_service.update_or_create_user"),
+            patch("tg.decorators.services") as mock_decorator_services,
         ):
+            mock_decorator_services.user_service.update_or_create_user = AsyncMock()
             await handle_fallback_message(update, context)
             mock_mig.assert_called_once_with(update.effective_message.chat_id, 456)
 
@@ -159,40 +157,31 @@ class TestFallbackHandlers:
 
         with (
             patch("tg.handlers.messages.fallback._on_migrate") as mock_mig,
-            patch("tg.decorators.user_service.update_or_create_user"),
+            patch("tg.decorators.services") as mock_decorator_services,
         ):
+            mock_decorator_services.user_service.update_or_create_user = AsyncMock()
             await handle_fallback_message(update, context)
             mock_mig.assert_called_once_with(123, update.effective_message.chat_id)
 
     @pytest.mark.asyncio
     async def test_on_kick(self):
         with (
-            patch(
-                "tg.handlers.messages.fallback.user_repo.load",
-                new_callable=AsyncMock,
-                return_value=User(id=123),
-            ),
-            patch(
-                "tg.handlers.messages.fallback.user_repo.save", new_callable=AsyncMock
-            ) as mock_save,
+            patch("tg.handlers.messages.fallback.services") as mock_services,
         ):
+            mock_services.user_repo.load = AsyncMock(return_value=User(id=123))
+            mock_services.user_repo.save = AsyncMock()
             await _on_kick(123)
-            mock_save.assert_called_once()
+            mock_services.user_repo.save.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_on_kick_no_user(self):
         with (
-            patch(
-                "tg.handlers.messages.fallback.user_repo.load",
-                new_callable=AsyncMock,
-                return_value=None,
-            ),
-            patch(
-                "tg.handlers.messages.fallback.user_repo.save", new_callable=AsyncMock
-            ) as mock_save,
+            patch("tg.handlers.messages.fallback.services") as mock_services,
         ):
+            mock_services.user_repo.load = AsyncMock(return_value=None)
+            mock_services.user_repo.save = AsyncMock()
             await _on_kick(123)
-            mock_save.assert_not_called()
+            mock_services.user_repo.save.assert_not_called()
 
     def test_on_migrate(self):
         _on_migrate(123, 456)

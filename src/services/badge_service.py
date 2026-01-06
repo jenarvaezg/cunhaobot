@@ -1,14 +1,20 @@
 import logging
 import asyncio
 from datetime import datetime, timedelta, timezone
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from pydantic import BaseModel
 
-from services.user_service import user_service
-from infrastructure.datastore.usage import usage_repository
+from infrastructure.protocols import (
+    UsageRepository,
+    UserRepository,
+    PhraseRepository,
+    LongPhraseRepository,
+    GiftRepository,
+)
 
 if TYPE_CHECKING:
     from models.user import User
+    from services.user_service import UserService
 
 
 logger = logging.getLogger(__name__)
@@ -172,9 +178,54 @@ BADGES = [
 
 
 class BadgeService:
-    def __init__(self, u_service=user_service, u_repo=usage_repository):
-        self.user_service = u_service
-        self.usage_repo = u_repo
+    def __init__(
+        self,
+        user_repo: UserRepository,
+        usage_repo: UsageRepository,
+        phrase_repo: PhraseRepository,
+        long_phrase_repo: LongPhraseRepository,
+        gift_repo: GiftRepository,
+    ):
+        self.user_repo = user_repo
+        self.usage_repo = usage_repo
+        self.phrase_repo = phrase_repo
+        self.long_phrase_repo = long_phrase_repo
+        self.gift_repo = gift_repo
+        self._user_service: UserService | None = None
+
+    @property
+    def user_service(self) -> UserService:
+        if self._user_service is None:
+            # Lazy import to avoid circular dependency
+            from services.user_service import UserService
+            from infrastructure.datastore.proposal import (
+                proposal_repository,
+                long_proposal_repository,
+            )
+            from infrastructure.datastore.chat import chat_repository
+            from infrastructure.datastore.link_request import link_request_repository
+            from infrastructure.protocols import (
+                UserRepository,
+                ChatRepository,
+                PhraseRepository,
+                LongPhraseRepository,
+                ProposalRepository,
+                LongProposalRepository,
+                LinkRequestRepository,
+            )
+
+            self._user_service = UserService(
+                user_repo=cast(UserRepository, self.user_repo),
+                chat_repo=cast(ChatRepository, chat_repository),
+                phrase_repo=cast(PhraseRepository, self.phrase_repo),
+                long_phrase_repo=cast(LongPhraseRepository, self.long_phrase_repo),
+                proposal_repo=cast(ProposalRepository, proposal_repository),
+                long_proposal_repo=cast(
+                    LongProposalRepository, long_proposal_repository
+                ),
+                link_request_repo=cast(LinkRequestRepository, link_request_repository),
+            )
+        return self._user_service
 
     async def check_badges(
         self, user_id: str | int, platform: str, save: bool = True
@@ -194,30 +245,29 @@ class BadgeService:
         if not hasattr(user, "last_usages") or user.last_usages is None:
             user.last_usages = []
         user.last_usages.append(now)
-        # Keep only the last 20 usages to avoid entity size bloat
         user.last_usages = user.last_usages[-20:]
 
-        # 0. Novato (First use)
+        # Novato
         if "novato" not in current_badges:
             new_badge_ids.append("novato")
 
-        # 1. Madrugador (05:00 - 07:30)
+        # Madrugador
         if "madrugador" not in current_badges:
             if 5 <= now.hour < 7 or (now.hour == 7 and now.minute <= 30):
                 new_badge_ids.append("madrugador")
 
-        # 2. Trasnochador (02:00 - 05:00)
+        # Trasnochador
         if "trasnochador" not in current_badges:
             if 2 <= now.hour < 5:
                 new_badge_ids.append("trasnochador")
 
-        # 3. Fiera Total (50 saludos)
+        # Fiera Total
         if "fiera_total" not in current_badges:
             stats = await self.usage_repo.get_user_usage_count(str(user_id))
             if stats >= 50:
                 new_badge_ids.append("fiera_total")
 
-        # 4. Visionario (5 vision usages)
+        # Visionario
         if "visionario" not in current_badges:
             vision_count = await self.usage_repo.get_user_action_count(
                 str(user_id), action=ActionType.VISION.value
@@ -225,24 +275,23 @@ class BadgeService:
             if vision_count >= 5:
                 new_badge_ids.append("visionario")
 
-        # 5. Poeta (5 phrases accepted/proposed in repo)
+        # Poeta
         if "poeta" not in current_badges:
-            from infrastructure.datastore.phrase import phrase_repository
-
-            user_phrases_count = await phrase_repository.get_user_phrase_count(
+            # phrase_repo is now injected
+            user_phrases_count = await self.phrase_repo.get_user_phrase_count(
                 str(user_id)
             )
             if user_phrases_count >= 5:
                 new_badge_ids.append("poeta")
 
-        # 6. Pesao (10 usages in 1 hour)
+        # Pesao
         if "pesao" not in current_badges:
             since = now - timedelta(hours=1)
             recent_count = len([u for u in user.last_usages if u >= since])
             if recent_count >= 10:
                 new_badge_ids.append("pesao")
 
-        # 7. Autor (1 phrase approved)
+        # Autor
         if "autor" not in current_badges:
             approve_count = await self.usage_repo.get_user_action_count(
                 str(user_id), action=ActionType.APPROVE.value
@@ -250,7 +299,7 @@ class BadgeService:
             if approve_count >= 1:
                 new_badge_ids.append("autor")
 
-        # 8. Incomprendido (1 phrase rejected)
+        # Incomprendido
         if "incomprendido" not in current_badges:
             reject_count = await self.usage_repo.get_user_action_count(
                 str(user_id), action=ActionType.REJECT.value
@@ -258,7 +307,7 @@ class BadgeService:
             if reject_count >= 1:
                 new_badge_ids.append("incomprendido")
 
-        # 9. Charlatán (5 AI usages)
+        # Charlatán
         if "charlatan" not in current_badges:
             ai_count = await self.usage_repo.get_user_action_count(
                 str(user_id), action=ActionType.AI_ASK.value
@@ -266,7 +315,7 @@ class BadgeService:
             if ai_count >= 5:
                 new_badge_ids.append("charlatan")
 
-        # 10. Melómano (5 Audio usages)
+        # Melómano
         if "melomano" not in current_badges:
             audio_count = await self.usage_repo.get_user_action_count(
                 str(user_id), action=ActionType.AUDIO.value
@@ -274,7 +323,7 @@ class BadgeService:
             if audio_count >= 5:
                 new_badge_ids.append("melomano")
 
-        # 11. Insistente (10 proposals)
+        # Insistente
         if "insistente" not in current_badges:
             propose_count = await self.usage_repo.get_user_action_count(
                 str(user_id), action=ActionType.PROPOSE.value
@@ -282,19 +331,17 @@ class BadgeService:
             if propose_count >= 10:
                 new_badge_ids.append("insistente")
 
-        # 12. Multiplataforma (Has linked accounts)
+        # Multiplataforma
         if "multiplataforma" not in current_badges:
-            # Check if user is linked or has others linked to them
-            raw_user = await self.user_service.user_repo.load_raw(user.id)
+            raw_user = await self.user_repo.load_raw(user.id)
             if raw_user and raw_user.linked_to:
                 new_badge_ids.append("multiplataforma")
             else:
-                # This check is slightly more expensive, but only runs if they don't have the badge
-                all_users = await self.user_service.user_repo.load_all(ignore_gdpr=True)
+                all_users = await self.user_repo.load_all(ignore_gdpr=True)
                 if any(u.linked_to == user.id for u in all_users):
                     new_badge_ids.append("multiplataforma")
 
-        # 13. Centro de Atención (1 reaction received)
+        # Centro de Atención
         if "centro_atencion" not in current_badges:
             reaction_count = await self.usage_repo.get_user_action_count(
                 str(user_id), action=ActionType.REACTION_RECEIVED.value
@@ -302,7 +349,7 @@ class BadgeService:
             if reaction_count >= 1:
                 new_badge_ids.append("centro_atencion")
 
-        # 17. VIP (Subscription)
+        # VIP
         if "vip" not in current_badges:
             sub_count = await self.usage_repo.get_user_action_count(
                 str(user_id), action=ActionType.SUBSCRIPTION.value
@@ -310,7 +357,7 @@ class BadgeService:
             if sub_count >= 1:
                 new_badge_ids.append("vip")
 
-        # 18. El Rey Mago (Sent a gift)
+        # El Rey Mago
         if "rey_mago" not in current_badges:
             gift_sent_count = await self.usage_repo.get_user_action_count(
                 str(user_id), action=ActionType.GIFT_SENT.value
@@ -318,7 +365,7 @@ class BadgeService:
             if gift_sent_count >= 1:
                 new_badge_ids.append("rey_mago")
 
-        # 19. El Consentido (Received a gift)
+        # El Consentido
         if "consentido" not in current_badges:
             gift_received_count = await self.usage_repo.get_user_action_count(
                 str(user_id), action=ActionType.GIFT_RECEIVED.value
@@ -326,13 +373,17 @@ class BadgeService:
             if gift_received_count >= 1:
                 new_badge_ids.append("consentido")
 
-        # 14, 15, 16. Poster badges (Mecenas, Coleccionista, Galerista)
+        # Poster badges
         if any(
             b not in current_badges for b in ["mecenas", "coleccionista", "galerista"]
         ):
-            from services import poster_request_repo
+            from infrastructure.datastore.poster_request import (
+                poster_request_repository,
+            )
 
-            poster_count = await poster_request_repo.count_completed_by_user(user.id)
+            poster_count = await poster_request_repository.count_completed_by_user(
+                user.id
+            )
             if "mecenas" not in current_badges and poster_count >= 1:
                 new_badge_ids.append("mecenas")
             if "coleccionista" not in current_badges and poster_count >= 5:
@@ -350,7 +401,6 @@ class BadgeService:
         if "pinchito_oro" not in current_badges and user.game_high_score >= 500:
             new_badge_ids.append("pinchito_oro")
 
-        # Always save user because last_usages has been updated
         if new_badge_ids:
             user.badges.extend(new_badge_ids)
             logger.info(f"User {user_id} awarded badges: {new_badge_ids}")
@@ -387,8 +437,7 @@ class BadgeService:
         current_badges = set(user.badges)
         results: list[BadgeProgress] = []
 
-        from infrastructure.datastore.phrase import phrase_repository
-        from services import poster_request_repo
+        from infrastructure.datastore.poster_request import poster_request_repository
 
         # Get stats in parallel
         (
@@ -437,8 +486,8 @@ class BadgeService:
             self.usage_repo.get_user_action_count(
                 str(user_id), action=ActionType.GIFT_RECEIVED.value
             ),
-            phrase_repository.get_user_phrase_count(str(user_id)),
-            poster_request_repo.count_completed_by_user(user_id),
+            self.phrase_repo.get_user_phrase_count(str(user_id)),
+            poster_request_repository.count_completed_by_user(user_id),
         )
 
         for badge in BADGES:
@@ -527,6 +576,3 @@ class BadgeService:
             )
 
         return results
-
-
-badge_service = BadgeService()

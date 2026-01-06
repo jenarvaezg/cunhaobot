@@ -3,7 +3,7 @@ import logging
 from telegram import Update, constants
 from telegram.ext import CallbackContext
 from tg.decorators import log_update
-from services import user_service, usage_service, badge_service, phrase_service
+from core.container import services
 from models.usage import ActionType
 from tg.utils.badges import notify_new_badges
 from core.config import config
@@ -20,13 +20,13 @@ async def handle_profile(update: Update, context: CallbackContext) -> None:
     platform = "telegram"
 
     # Ensure ID is handled as string for consistent lookup
-    user = await user_service.get_user(str(user_id), platform)
+    user = await services.user_service.get_user(str(user_id), platform)
     if not user:
         # Try numeric lookup as fallback just in case
-        user = await user_service.get_user(user_id, platform)
+        user = await services.user_service.get_user(user_id, platform)
 
     if not user:
-        p = (await phrase_service.get_random(long=False)).text
+        p = (await services.phrase_service.get_random(long=False)).text
         await message.reply_text(
             f"Todavía no tengo tu ficha, {p}. ¡Empieza a usar el bot!"
         )
@@ -34,7 +34,7 @@ async def handle_profile(update: Update, context: CallbackContext) -> None:
 
     try:
         # Log usage
-        new_badges = await usage_service.log_usage(
+        new_badges = await services.usage_service.log_usage(
             user_id=user_id,
             platform="telegram",
             action=ActionType.COMMAND,
@@ -42,13 +42,13 @@ async def handle_profile(update: Update, context: CallbackContext) -> None:
         )
         await notify_new_badges(update, context, new_badges)
 
-        stats = await usage_service.get_user_stats(user_id, platform)
-        all_badges_progress = await badge_service.get_all_badges_progress(
+        stats = await services.usage_service.get_user_stats(user_id, platform)
+        all_badges_progress = await services.badge_service.get_all_badges_progress(
             user_id, platform
         )
 
-        earned_list = []
-        pending_list = []
+        earned_list: list[str] = []
+        pending_list: list[str] = []
 
         for p in all_badges_progress:
             badge = p.badge

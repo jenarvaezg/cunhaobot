@@ -6,7 +6,7 @@ from litestar.params import Dependency
 from slack_bolt.async_app import AsyncBoltRequest
 from slack_bolt.response import BoltResponse
 
-from services.phrase_service import PhraseService
+from services import PhraseService
 from slack.app import app
 
 logger = logging.getLogger(__name__)
@@ -45,7 +45,6 @@ def to_litestar_response(bolt_resp: BoltResponse) -> Response:
                 if not isinstance(cookie_str, str):
                     continue
                 # Basic parsing of Set-Cookie string to use resp.set_cookie
-                # A full parser would be better, but for Slack Bolt state cookie it's usually simple.
                 parts = cookie_str.split(";")
                 if not parts:
                     continue
@@ -58,7 +57,7 @@ def to_litestar_response(bolt_resp: BoltResponse) -> Response:
                 extras: dict[str, Any] = {
                     "httponly": True,
                     "secure": True,
-                    "samesite": "none",  # Changed to none for cross-site compatibility if needed
+                    "samesite": "none",
                 }
                 for part in parts[1:]:
                     part = part.strip().lower()
@@ -71,7 +70,6 @@ def to_litestar_response(bolt_resp: BoltResponse) -> Response:
                     elif part.startswith("domain="):
                         extras["domain"] = part[7:]
                     elif part.startswith("samesite="):
-                        # If bolt provides it, we can keep it, but we forced 'none' above
                         extras["samesite"] = part[9:]
 
                 logger.debug(f"Setting cookie: {name}={value} with {extras}")

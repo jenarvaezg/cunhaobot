@@ -1,6 +1,6 @@
 from telegram import Update
 from telegram.ext import CallbackContext
-from services import user_service, usage_service
+from core.container import services
 from models.usage import ActionType
 from tg.decorators import log_update
 from tg.utils.badges import notify_new_badges
@@ -12,7 +12,7 @@ async def handle_link(update: Update, context: CallbackContext) -> None:
         return
 
     # Log usage
-    new_badges = await usage_service.log_usage(
+    new_badges = await services.usage_service.log_usage(
         user_id=user.id,
         platform="telegram",
         action=ActionType.COMMAND,
@@ -23,7 +23,7 @@ async def handle_link(update: Update, context: CallbackContext) -> None:
     args = context.args
     if not args:
         # Generate Token
-        token = user_service.generate_link_token(user.id, "telegram")
+        token = await services.user_service.generate_link_token(user.id, "telegram")
         await message.reply_text(
             f"🔗 *Vincular Cuenta*\n\n"
             f"Tu código de vinculación es: `{token}`\n\n"
@@ -36,7 +36,7 @@ async def handle_link(update: Update, context: CallbackContext) -> None:
     else:
         # Consume Token
         token = args[0].strip().upper()
-        success = user_service.complete_link(token, user.id, "telegram")
+        success = await services.user_service.complete_link(token, user.id, "telegram")
         if success:
             await message.reply_text(
                 "✅ *Cuentas Vinculadas con Éxito*\n\n"

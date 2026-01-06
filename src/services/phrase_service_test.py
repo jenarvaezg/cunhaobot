@@ -10,7 +10,11 @@ class TestPhraseService:
     def service(self):
         self.phrase_repo = AsyncMock()
         self.long_repo = AsyncMock()
-        return PhraseService(self.phrase_repo, self.long_repo)
+        self.user_service = AsyncMock()
+        self.badge_service = AsyncMock()
+        return PhraseService(
+            self.phrase_repo, self.long_repo, self.user_service, self.badge_service
+        )
 
     @pytest.mark.asyncio
     async def test_create_sticker_image(self, service):
@@ -41,21 +45,21 @@ class TestPhraseService:
     @pytest.mark.asyncio
     async def test_get_random(self, service):
         p1 = Phrase(text="foo")
-        service.phrase_repo.load_all.return_value = [p1]
+        self.phrase_repo.load_all.return_value = [p1]
 
         result = await service.get_random(long=False)
         assert result == p1
 
     @pytest.mark.asyncio
     async def test_get_random_empty(self, service):
-        service.phrase_repo.load_all.return_value = []
+        self.phrase_repo.load_all.return_value = []
         result = await service.get_random(long=False)
         assert result.text == "¡Cuñado!"
         assert isinstance(result, Phrase)
 
     @pytest.mark.asyncio
     async def test_get_random_long_empty(self, service):
-        service.long_repo.load_all.return_value = []
+        self.long_repo.load_all.return_value = []
         result = await service.get_random(long=True)
         assert result.text == "¡Cuñado!"
         assert isinstance(result, LongPhrase)
@@ -64,7 +68,7 @@ class TestPhraseService:
     async def test_get_phrases(self, service):
         p1 = Phrase(text="hola")
         p2 = Phrase(text="adios")
-        service.phrase_repo.load_all.return_value = [p1, p2]
+        self.phrase_repo.load_all.return_value = [p1, p2]
 
         results = await service.get_phrases("hola")
         assert len(results) == 1
@@ -74,7 +78,7 @@ class TestPhraseService:
     async def test_find_most_similar(self, service):
         p1 = Phrase(text="hola")
         p2 = Phrase(text="adios")
-        service.phrase_repo.load_all.return_value = [p1, p2]
+        self.phrase_repo.load_all.return_value = [p1, p2]
 
         result, score = await service.find_most_similar("holaa")
         assert result == p1
@@ -82,7 +86,7 @@ class TestPhraseService:
 
     @pytest.mark.asyncio
     async def test_find_most_similar_empty(self, service):
-        service.phrase_repo.load_all.return_value = []
+        self.phrase_repo.load_all.return_value = []
         result, score = await service.find_most_similar("holaa")
         assert result.text == ""
         assert score == 0
@@ -90,7 +94,7 @@ class TestPhraseService:
 
     @pytest.mark.asyncio
     async def test_find_most_similar_long_empty(self, service):
-        service.long_repo.load_all.return_value = []
+        self.long_repo.load_all.return_value = []
         result, score = await service.find_most_similar("holaa", long=True)
         assert result.text == ""
         assert score == 0
@@ -103,7 +107,7 @@ class TestPhraseService:
         assert p.usages == 1
         assert p.sticker_usages == 1
         assert p.score == 11
-        service.phrase_repo.save.assert_called_once_with(p)
+        self.phrase_repo.save.assert_called_once_with(p)
 
     @pytest.mark.asyncio
     async def test_create_from_proposal(self, service):
@@ -121,24 +125,22 @@ class TestPhraseService:
         with (
             patch.object(service, "create_sticker_image", return_value=b"img"),
             patch("tg.stickers.upload_sticker", new_callable=AsyncMock) as mock_upload,
-            patch("services.user_service.user_service") as mock_user_service,
-            patch("services.badge_service.badge_service") as mock_badge_service,
         ):
             mock_upload.return_value = "sticker_123"
-            mock_badge_service.check_badges = AsyncMock(return_value=[])
-            mock_user_service.add_points = AsyncMock()
+            self.badge_service.check_badges.return_value = []
+            self.user_service.add_points.return_value = None
             await service.create_from_proposal(proposal, mock_bot)
 
-            service.phrase_repo.save.assert_called_once()
-            saved_phrase = service.phrase_repo.save.call_args[0][0]
+            self.phrase_repo.save.assert_called_once()
+            saved_phrase = self.phrase_repo.save.call_args[0][0]
             assert isinstance(saved_phrase, Phrase)
             assert saved_phrase.text == "prop"
             assert saved_phrase.sticker_file_id == "sticker_123"
             # (3 likes - 1 dislike) * 5 = 10
             assert saved_phrase.score == 10
             # Award 10 points
-            mock_user_service.add_points.assert_called_once_with(1, 10)
-            mock_badge_service.check_badges.assert_called_once()
+            self.user_service.add_points.assert_called_once_with(1, 10)
+            self.badge_service.check_badges.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_create_from_proposal_long(self, service):
@@ -148,21 +150,19 @@ class TestPhraseService:
         with (
             patch.object(service, "create_sticker_image", return_value=b"img"),
             patch("tg.stickers.upload_sticker", new_callable=AsyncMock) as mock_upload,
-            patch("services.user_service.user_service") as mock_user_service,
-            patch("services.badge_service.badge_service") as mock_badge_service,
         ):
             mock_upload.return_value = "sticker_123"
-            mock_badge_service.check_badges = AsyncMock(return_value=[])
-            mock_user_service.add_points = AsyncMock()
+            self.badge_service.check_badges.return_value = []
+            self.user_service.add_points.return_value = None
             await service.create_from_proposal(proposal, mock_bot)
 
-            service.long_repo.save.assert_called_once()
-            saved_phrase = service.long_repo.save.call_args[0][0]
+            self.long_repo.save.assert_called_once()
+            saved_phrase = self.long_repo.save.call_args[0][0]
             assert isinstance(saved_phrase, LongPhrase)
             assert saved_phrase.text == "prop"
             assert saved_phrase.sticker_file_id == "sticker_123"
             # Award 10 points
-            mock_user_service.add_points.assert_called_once_with(1, 10)
+            self.user_service.add_points.assert_called_once_with(1, 10)
 
     @pytest.mark.asyncio
     async def test_add_usage_by_id_short_text(self, service):

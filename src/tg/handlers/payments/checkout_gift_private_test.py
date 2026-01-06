@@ -42,23 +42,15 @@ async def test_handle_successful_payment_gift_private_notification():
     context.bot.get_chat_member.side_effect = TelegramError("User not found")
 
     with (
-        patch(
-            "infrastructure.datastore.gift.gift_repository.save", new_callable=AsyncMock
-        ),
-        patch(
-            "infrastructure.datastore.user.user_repository.load", new_callable=AsyncMock
-        ) as mock_load_user,
-        patch(
-            "tg.handlers.payments.checkout.usage_service.log_usage",
-            new_callable=AsyncMock,
-        ) as mock_log_usage,
+        patch("tg.handlers.payments.checkout.services") as mock_services,
         patch(
             "tg.handlers.payments.checkout.notify_new_badges", new_callable=AsyncMock
         ),
         patch("builtins.open", new_callable=mock_open, read_data=b"image_data"),
     ):
-        mock_load_user.return_value = receiver_user
-        mock_log_usage.return_value = []
+        mock_services.gift_repo.save = AsyncMock()
+        mock_services.user_repo.load = AsyncMock(return_value=receiver_user)
+        mock_services.usage_service.log_usage = AsyncMock(return_value=[])
 
         await handle_successful_payment(update, context)
 
@@ -112,23 +104,15 @@ async def test_handle_successful_payment_gift_no_private_notification_if_present
     context.bot.get_chat_member.return_value = member
 
     with (
-        patch(
-            "infrastructure.datastore.gift.gift_repository.save", new_callable=AsyncMock
-        ),
-        patch(
-            "infrastructure.datastore.user.user_repository.load", new_callable=AsyncMock
-        ) as mock_load_user,
-        patch(
-            "tg.handlers.payments.checkout.usage_service.log_usage",
-            new_callable=AsyncMock,
-        ) as mock_log_usage,
+        patch("tg.handlers.payments.checkout.services") as mock_services,
         patch(
             "tg.handlers.payments.checkout.notify_new_badges", new_callable=AsyncMock
         ),
         patch("builtins.open", new_callable=mock_open, read_data=b"image_data"),
     ):
-        mock_load_user.return_value = receiver_user
-        mock_log_usage.return_value = []
+        mock_services.gift_repo.save = AsyncMock()
+        mock_services.user_repo.load = AsyncMock(return_value=receiver_user)
+        mock_services.usage_service.log_usage = AsyncMock(return_value=[])
 
         await handle_successful_payment(update, context)
 

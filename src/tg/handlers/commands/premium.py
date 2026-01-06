@@ -2,7 +2,7 @@ from telegram import LabeledPrice, Update
 from telegram.ext import CallbackContext
 
 from tg.decorators import log_update
-from infrastructure.datastore.chat import chat_repository
+from core.container import services
 
 
 @log_update
@@ -12,7 +12,7 @@ async def handle_premium(update: Update, context: CallbackContext) -> None:
         return
 
     chat_id = message.chat_id
-    chat = await chat_repository.load(chat_id)
+    chat = await services.chat_repo.load(chat_id)
 
     if chat and chat.is_premium and chat.premium_until:
         # Show status

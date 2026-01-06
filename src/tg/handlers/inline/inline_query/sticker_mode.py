@@ -1,15 +1,16 @@
 import random
 
+from typing import cast
+
 from telegram import InlineQueryResultCachedSticker
 
 from models.phrase import LongPhrase, Phrase
+from core.container import services
 from tg.text_router import LONG_MODE, SHORT_MODE, get_query_mode
-
-phrase_t = Phrase | LongPhrase
 
 
 def _phrase_to_inline_sticker(
-    phrase: phrase_t, result_type: str
+    phrase: Phrase | LongPhrase, result_type: str
 ) -> InlineQueryResultCachedSticker | None:
     if phrase.id is None:
         return None
@@ -21,21 +22,25 @@ def _phrase_to_inline_sticker(
 
 
 async def get_sticker_mode_results(input: str) -> list[InlineQueryResultCachedSticker]:
-    from services import phrase_repo, long_phrase_repo
-
     mode, rest = get_query_mode(input)
 
-    phrases = []
+    phrases: list[Phrase | LongPhrase] = []
     result_type = ""
     if mode == SHORT_MODE:
         result_type = "short"
-        phrases = await phrase_repo.get_phrases(search=rest)
+        phrases = cast(
+            list[Phrase | LongPhrase],
+            await services.phrase_repo.get_phrases(search=rest),
+        )
     elif mode == LONG_MODE:
         result_type = "long"
-        phrases = await long_phrase_repo.get_phrases(search=rest)
+        phrases = cast(
+            list[Phrase | LongPhrase],
+            await services.long_phrase_repo.get_phrases(search=rest),
+        )
 
     random.shuffle(phrases)
-    results = []
+    results: list[InlineQueryResultCachedSticker] = []
     for p in phrases[:10]:
         if res := _phrase_to_inline_sticker(p, result_type):
             results.append(res)

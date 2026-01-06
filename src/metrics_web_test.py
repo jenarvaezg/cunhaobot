@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, AsyncMock
 from litestar.status_codes import HTTP_200_OK
 from litestar.testing import TestClient
 
@@ -9,31 +9,46 @@ from models.user import User
 
 @pytest.fixture
 def mock_get_phrases():
-    with patch("services.phrase_repo.get_phrases") as mock:
+    with patch(
+        "infrastructure.datastore.phrase.phrase_repository.get_phrases",
+        new_callable=AsyncMock,
+    ) as mock:
         yield mock
 
 
 @pytest.fixture
 def mock_get_long_phrases():
-    with patch("services.long_phrase_repo.get_phrases") as mock:
+    with patch(
+        "infrastructure.datastore.phrase.long_phrase_repository.get_phrases",
+        new_callable=AsyncMock,
+    ) as mock:
         yield mock
 
 
 @pytest.fixture
 def mock_proposal_load_all():
-    with patch("services.proposal_repo.load_all") as mock:
+    with patch(
+        "infrastructure.datastore.proposal.proposal_repository.load_all",
+        new_callable=AsyncMock,
+    ) as mock:
         yield mock
 
 
 @pytest.fixture
 def mock_long_proposal_load_all():
-    with patch("services.long_proposal_repo.load_all") as mock:
+    with patch(
+        "infrastructure.datastore.proposal.long_proposal_repository.load_all",
+        new_callable=AsyncMock,
+    ) as mock:
         yield mock
 
 
 @pytest.fixture
 def mock_user_load_all():
-    with patch("services.user_repo.load_all") as mock:
+    with patch(
+        "infrastructure.datastore.user.user_repository.load_all",
+        new_callable=AsyncMock,
+    ) as mock:
         yield mock
 
 

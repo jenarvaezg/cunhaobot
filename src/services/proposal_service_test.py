@@ -12,7 +12,10 @@ class TestProposalService:
         self.repo = AsyncMock()
         self.long_repo = AsyncMock()
         self.user_repo = AsyncMock()
-        return ProposalService(self.repo, self.long_repo, self.user_repo)
+        self.user_service = AsyncMock()
+        return ProposalService(
+            self.repo, self.long_repo, self.user_repo, self.user_service
+        )
 
     def test_create_from_update_validation(self, service):
         update = MagicMock()
@@ -59,37 +62,30 @@ class TestProposalService:
         p = Proposal(
             id="123", from_chat_id=456, from_message_id=789, text="test", user_id=10
         )
-        with patch(
-            "services.proposal_service.user_service", new_callable=AsyncMock
-        ) as mock_user_service:
-            await service.vote(p, voter_id=1, positive=True)
-            assert p.liked_by == ["1"]
-            self.repo.save.assert_called_once_with(p)
-            # Proposer (id=10) gets 1 point
-            mock_user_service.add_points.assert_called_once_with(10, 1)
+        await service.vote(p, voter_id=1, positive=True)
+        assert p.liked_by == ["1"]
+        self.repo.save.assert_called_once_with(p)
+        # Proposer (id=10) gets 1 point
+        self.user_service.add_points.assert_called_once_with(10, 1)
 
     @pytest.mark.asyncio
     async def test_vote_long(self, service):
         p = LongProposal(
             id="123", from_chat_id=456, from_message_id=789, text="test", user_id=10
         )
-        with patch(
-            "services.proposal_service.user_service", new_callable=AsyncMock
-        ) as mock_user_service:
-            await service.vote(p, voter_id=1, positive=True)
-            assert p.liked_by == ["1"]
-            self.long_repo.save.assert_called_once_with(p)
-            mock_user_service.add_points.assert_called_once_with(10, 1)
+        await service.vote(p, voter_id=1, positive=True)
+        assert p.liked_by == ["1"]
+        self.long_repo.save.assert_called_once_with(p)
+        self.user_service.add_points.assert_called_once_with(10, 1)
 
     @pytest.mark.asyncio
     async def test_vote_switch(self, service):
         p = Proposal(
             id="123", from_chat_id=456, from_message_id=789, text="test", liked_by=["1"]
         )
-        with patch("services.proposal_service.user_service", new_callable=AsyncMock):
-            await service.vote(p, voter_id=1, positive=False)
-            assert p.liked_by == []
-            assert p.disliked_by == ["1"]
+        await service.vote(p, voter_id=1, positive=False)
+        assert p.liked_by == []
+        assert p.disliked_by == ["1"]
 
     @pytest.mark.asyncio
     async def test_get_curators_cached(self, service):

@@ -3,7 +3,6 @@ from unittest.mock import MagicMock, patch, AsyncMock
 from tg.handlers.commands.stop import handle_stop
 from models.user import User
 from telegram import Chat
-from services.user_service import UserService
 
 
 @pytest.mark.asyncio
@@ -19,30 +18,18 @@ async def test_handle_stop():
     update.effective_message.reply_text = AsyncMock()
     context = MagicMock()
 
-    mock_user = User(chat_id=456, name="testuser")
+    mock_user = User(id=456, name="testuser")
     mock_phrase = MagicMock()
     mock_phrase.text = "cuñao"
 
-    with (
-        patch(
-            "tg.handlers.commands.stop.user_repo.load",
-            new_callable=AsyncMock,
-            return_value=mock_user,
-        ),
-        patch(
-            "tg.handlers.commands.stop.user_service.delete_user", new_callable=AsyncMock
-        ) as mock_delete,
-        patch(
-            "tg.handlers.commands.stop.phrase_service.get_random",
-            new_callable=AsyncMock,
-            return_value=mock_phrase,
-        ),
-        patch.object(
-            UserService, "update_or_create_user", new_callable=AsyncMock
-        ),  # Patch the method on the class
-    ):
+    with patch("tg.handlers.commands.stop.services") as mock_services:
+        mock_services.user_repo.load = AsyncMock(return_value=mock_user)
+        mock_services.user_service.delete_user = AsyncMock()
+        mock_services.phrase_service.get_random = AsyncMock(return_value=mock_phrase)
+        mock_services.user_service.update_or_create_user = AsyncMock()
+
         await handle_stop(update, context)
-        mock_delete.assert_called_once_with(mock_user)
+        mock_services.user_service.delete_user.assert_called_once_with(mock_user)
         update.effective_message.reply_text.assert_called_once()
 
 
@@ -50,9 +37,7 @@ async def test_handle_stop():
 async def test_handle_stop_no_user():
     update = MagicMock()
     update.effective_user = None
-    update.effective_chat.type = (
-        Chat.PRIVATE
-    )  # Ensure chat type is set for _get_name_from_message
-    update.effective_message = None  # No message, so update_or_create_user returns None
+    update.effective_chat.type = Chat.PRIVATE
+    update.effective_message = None
     context = MagicMock()
     await handle_stop(update, context)

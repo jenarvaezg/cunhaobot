@@ -13,12 +13,11 @@ async def test_handle_cancel():
     mock_phrase.text = "cuñao"
 
     with (
-        patch(
-            "tg.handlers.commands.cancel.phrase_service.get_random",
-            return_value=mock_phrase,
-        ),
-        patch("tg.decorators.user_service.update_or_create_user"),
+        patch("tg.handlers.commands.cancel.services") as mock_services,
+        patch("tg.decorators.services") as mock_decorator_services,
     ):
+        mock_services.phrase_service.get_random = AsyncMock(return_value=mock_phrase)
+        mock_decorator_services.user_service.update_or_create_user = AsyncMock()
         await handle_cancel(update, context)
         update.effective_message.reply_text.assert_called_once()
         args, _ = update.effective_message.reply_text.call_args

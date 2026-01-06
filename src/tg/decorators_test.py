@@ -32,7 +32,10 @@ class TestDecorators:
 
         mock_phrase = MagicMock()
         mock_phrase.text = "cuñao"
-        with patch("tg.decorators.phrase_service.get_random", return_value=mock_phrase):
+        with patch("tg.decorators.services") as mock_services:
+            mock_services.phrase_service.get_random = AsyncMock(
+                return_value=mock_phrase
+            )
             await decorated(update, MagicMock())
             update.effective_message.reply_text.assert_called_once()
 
@@ -55,7 +58,10 @@ class TestDecorators:
 
         mock_phrase = MagicMock()
         mock_phrase.text = "cuñao"
-        with patch("tg.decorators.phrase_service.get_random", return_value=mock_phrase):
+        with patch("tg.decorators.services") as mock_services:
+            mock_services.phrase_service.get_random = AsyncMock(
+                return_value=mock_phrase
+            )
             assert await decorated(update, MagicMock()) is None
             update.effective_message.reply_text.assert_called_once()
 
@@ -76,7 +82,8 @@ class TestDecorators:
         update = MagicMock()
         update.effective_chat = None
         # update_or_create_user is called, we should mock it
-        with patch("tg.decorators.user_service.update_or_create_user"):
+        with patch("tg.decorators.services") as mock_services:
+            mock_services.user_service.update_or_create_user = AsyncMock()
             assert await decorated(update, MagicMock()) == "ok"
 
     @pytest.mark.asyncio
@@ -84,9 +91,12 @@ class TestDecorators:
         decorated = log_update(dummy_func)
         update = MagicMock()
         update.to_dict.return_value = {}
-        with patch("tg.decorators.user_service.update_or_create_user") as mock_update:
+        with patch("tg.decorators.services") as mock_services:
+            mock_services.user_service.update_or_create_user = AsyncMock()
             assert await decorated(update, MagicMock()) == "ok"
-            mock_update.assert_called_once_with(update)
+            mock_services.user_service.update_or_create_user.assert_called_once_with(
+                update
+            )
 
     @pytest.mark.asyncio
     async def test_log_update_success(self):
@@ -94,7 +104,10 @@ class TestDecorators:
         update = MagicMock()
         update.to_dict.return_value = {"a": 1}
 
-        with patch("tg.decorators.user_service.update_or_create_user") as mock_update:
+        with patch("tg.decorators.services") as mock_services:
+            mock_services.user_service.update_or_create_user = AsyncMock()
             res = await decorated(update, MagicMock())
             assert res == "ok"
-            mock_update.assert_called_once_with(update)
+            mock_services.user_service.update_or_create_user.assert_called_once_with(
+                update
+            )

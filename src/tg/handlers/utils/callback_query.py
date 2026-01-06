@@ -13,13 +13,7 @@ from telegram.ext import CallbackContext
 
 from models.proposal import Proposal, LongProposal
 from models.usage import ActionType
-from services import (
-    proposal_service,
-    phrase_service,
-    proposal_repo,
-    long_proposal_repo,
-    usage_service,
-)
+from core.container import services
 from tg.constants import LIKE
 from tg.decorators import log_update
 from tg.markup.keyboards import build_vote_keyboard
@@ -46,7 +40,9 @@ def get_vote_summary(proposal: Proposal) -> str:
 async def _add_vote(
     proposal: Proposal | LongProposal, vote: str, callback_query: CallbackQuery
 ) -> None:
-    await proposal_service.vote(proposal, callback_query.from_user.id, vote == LIKE)
+    await services.proposal_service.vote(
+        proposal, callback_query.from_user.id, vote == LIKE
+    )
     await callback_query.answer(f"Tu voto: {vote} ha sido añadido.")
 
 
@@ -70,11 +66,11 @@ async def approve_proposal(
     proposal.voting_ended_at = datetime.now()
 
     if isinstance(proposal, LongProposal):
-        await long_proposal_repo.save(proposal)
+        await services.long_proposal_repo.save(proposal)
     else:
-        await proposal_repo.save(proposal)
+        await services.proposal_repo.save(proposal)
 
-    p_random = (await phrase_service.get_random()).text
+    p_random = (await services.phrase_service.get_random()).text
     msg_text = (
         f"La propuesta '{proposal.text}' queda formalmente aprobada y añadida a la lista.\n\n"
         f"{get_vote_summary(proposal)}"
@@ -91,7 +87,7 @@ async def approve_proposal(
             logger.error(f"Error sending web approval notification: {e}")
 
     # Log action for badges
-    new_badges = await usage_service.log_usage(
+    new_badges = await services.usage_service.log_usage(
         user_id=proposal.user_id,
         platform="telegram",
         action=ActionType.APPROVE,
@@ -115,7 +111,7 @@ async def approve_proposal(
             logger.error(f"Error enviando notificación de aprobación: {e}")
 
     # Delegar creación de la frase al servicio
-    await phrase_service.create_from_proposal(proposal, bot)
+    await services.phrase_service.create_from_proposal(proposal, bot)
 
 
 async def dismiss_proposal(
@@ -129,11 +125,11 @@ async def dismiss_proposal(
     proposal.voting_ended_at = datetime.now()
 
     if isinstance(proposal, LongProposal):
-        await long_proposal_repo.save(proposal)
+        await services.long_proposal_repo.save(proposal)
     else:
-        await proposal_repo.save(proposal)
+        await services.proposal_repo.save(proposal)
 
-    p_random = (await phrase_service.get_random()).text
+    p_random = (await services.phrase_service.get_random()).text
     msg_text = (
         f"La propuesta '{proposal.text}' queda formalmente rechazada.\n\n"
         f"{get_vote_summary(proposal)}"
@@ -150,7 +146,7 @@ async def dismiss_proposal(
             logger.error(f"Error sending web dismissal notification: {e}")
 
     # Log action for badges
-    new_badges = await usage_service.log_usage(
+    new_badges = await services.usage_service.log_usage(
         user_id=proposal.user_id,
         platform="telegram",
         action=ActionType.REJECT,
@@ -216,21 +212,29 @@ async def handle_callback_query(update: Update, context: CallbackContext) -> Non
         return
 
     bot: Bot = context.bot
-    admins = admins or list(await bot.get_chat_administrators(config.mod_chat_id))
+    if not admins:
+        admins = list(await bot.get_chat_administrators(config.mod_chat_id))
 
     if callback_query.from_user.id not in [a.user.id for a in admins]:
-        p = (await phrase_service.get_random()).text
+        p = (await services.phrase_service.get_random()).text
         await callback_query.answer(
             f"Tener una silla en el consejo no te hace maestro cuñao, {p}"
         )
         return
 
+    if ":" not in data:
+        return
+
     vote, proposal_id, kind = data.split(":")
-    repo = long_proposal_repo if kind == LongProposal.kind else proposal_repo
+    repo = (
+        services.long_proposal_repo
+        if kind == LongProposal.kind
+        else services.proposal_repo
+    )
     proposal = await repo.load(proposal_id)
 
     if proposal is None:
-        p = (await phrase_service.get_random()).text
+        p = (await services.phrase_service.get_random()).text
         await callback_query.answer(f"Esa propuesta ha muerto, {p}")
         return
 

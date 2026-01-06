@@ -4,7 +4,7 @@ from telegram.ext import CallbackContext
 
 from tg.decorators import log_update
 from core.config import config
-from services import poster_request_repo
+from core.container import services
 from models.poster_request import PosterRequest
 
 
@@ -57,7 +57,7 @@ async def handle_poster(update: Update, context: CallbackContext) -> None:
     )
 
     # Save request to Datastore
-    await poster_request_repo.save(
+    await services.poster_request_repo.save(
         PosterRequest(
             id=payload,
             phrase=phrase,

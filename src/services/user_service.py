@@ -1,8 +1,7 @@
-from __future__ import annotations
 import logging
 import secrets
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, cast
 from telegram import Update
 from models.user import User
 from models.chat import Chat
@@ -18,6 +17,7 @@ if TYPE_CHECKING:
         LongPhraseRepository,
         ProposalRepository,
         LongProposalRepository,
+        LinkRequestRepository,
     )
 
 logger = logging.getLogger(__name__)
@@ -26,33 +26,21 @@ logger = logging.getLogger(__name__)
 class UserService:
     def __init__(
         self,
-        user_repo: UserRepository | None = None,
-        chat_repo: ChatRepository | None = None,
-        phrase_repo: PhraseRepository | None = None,
-        long_phrase_repo: LongPhraseRepository | None = None,
-        proposal_repo: ProposalRepository | None = None,
-        long_proposal_repo: LongProposalRepository | None = None,
-        link_request_repo: Any = None,
+        user_repo: UserRepository,
+        chat_repo: ChatRepository,
+        phrase_repo: PhraseRepository,
+        long_phrase_repo: LongPhraseRepository,
+        proposal_repo: ProposalRepository,
+        long_proposal_repo: LongProposalRepository,
+        link_request_repo: LinkRequestRepository,
     ):
-        from infrastructure.datastore.user import user_repository
-        from infrastructure.datastore.chat import chat_repository
-        from infrastructure.datastore.phrase import (
-            phrase_repository,
-            long_phrase_repository,
-        )
-        from infrastructure.datastore.proposal import (
-            proposal_repository,
-            long_proposal_repository,
-        )
-        from infrastructure.datastore.link_request import link_request_repository
-
-        self.user_repo = user_repo or user_repository
-        self.chat_repo = chat_repo or chat_repository
-        self.phrase_repo = phrase_repo or phrase_repository
-        self.long_phrase_repo = long_phrase_repo or long_phrase_repository
-        self.proposal_repo = proposal_repo or proposal_repository
-        self.long_proposal_repo = long_proposal_repo or long_proposal_repository
-        self.link_request_repo = link_request_repo or link_request_repository
+        self.user_repo = user_repo
+        self.chat_repo = chat_repo
+        self.phrase_repo = phrase_repo
+        self.long_phrase_repo = long_phrase_repo
+        self.proposal_repo = proposal_repo
+        self.long_proposal_repo = long_proposal_repo
+        self.link_request_repo = link_request_repo
 
     async def get_user(
         self, user_id: str | int, platform: str | None = None
@@ -389,7 +377,3 @@ class UserService:
         await self.link_request_repo.delete(token)
 
         return True
-
-
-# Singleton
-user_service = UserService()

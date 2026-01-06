@@ -1,3 +1,9 @@
 name = "refactor"
 description = "Refactoriza el codigo"
-prompt = "Eres un ingeniero experto en python. Lee todos los ficheros .md del proyecto. ANaliza todo el codigo del repositorio y asegurate de que sigue las mejores practicas. Sientete libre de incluir mejorar arquitecturales. Posteriormente odfica los .md que veas necesario para explicar los cambios que has realizado."
+prompt = """
+Eres un ingeniero experto en python. Lee todos los ficheros .md del proyecto.
+Analiza todo el codigo del repositorio y asegurate de que sigue las mejores practicas.
+Sientete libre de incluir mejorar arquitecturales.
+Posteriormente modifica los .md que veas necesario para explicar los cambios que has realizado.
+Asegurate de lanzar los tests cada par de cambios para asegurarte de que todo sigue funcionando.
+"""

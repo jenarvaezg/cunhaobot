@@ -2,6 +2,7 @@ from telegram import Update
 from telegram.ext import CallbackContext
 
 from tg.decorators import log_update
+from core.container import services
 from core.config import config
 
 
@@ -47,10 +48,8 @@ async def handle_top_jugones(update: Update, context: CallbackContext) -> None:
     if not message:
         return
 
-    from infrastructure.datastore.user import user_repository
-
     # Load all users and sort by game_high_score
-    users = await user_repository.load_all()
+    users = await services.user_repo.load_all()
     top_players = sorted(
         [u for u in users if u.game_high_score > 0],
         key=lambda x: x.game_high_score,

@@ -7,10 +7,11 @@ from models.phrase import Phrase
 class TestTTSService:
     @pytest.fixture
     def service(self):
+        self.mock_bucket = MagicMock()
         with patch(
             "services.tts_service.texttospeech.TextToSpeechClient"
         ) as mock_client:
-            service = TTSService()
+            service = TTSService(bucket=self.mock_bucket)
             # Manually set the client to the mock to avoid triggering property
             service._client = mock_client.return_value
             return service
@@ -30,32 +31,28 @@ class TestTTSService:
 
     def test_get_audio_url_exists(self, service):
         p = Phrase(text="test", id=123)
-        mock_bucket = MagicMock()
         mock_blob = MagicMock()
         mock_blob.exists.return_value = True
         mock_blob.public_url = "http://fake/test.ogg"
-        mock_bucket.blob.return_value = mock_blob
+        self.mock_bucket.blob.return_value = mock_blob
 
-        with patch("services.tts_service.get_bucket", return_value=mock_bucket):
-            url = service.get_audio_url(p, "short")
-            assert url == "http://fake/test.ogg"
-            mock_bucket.blob.assert_called_with("audios/short-123.ogg")
+        url = service.get_audio_url(p, "short")
+        assert url == "http://fake/test.ogg"
+        self.mock_bucket.blob.assert_called_with("audios/short-123.ogg")
 
     def test_get_audio_url_generate(self, service):
         p = Phrase(text="test", id=123)
-        mock_bucket = MagicMock()
         mock_blob = MagicMock()
         mock_blob.exists.return_value = False
         mock_blob.public_url = "http://fake/test.ogg"
-        mock_bucket.blob.return_value = mock_blob
+        self.mock_bucket.blob.return_value = mock_blob
 
         with (
-            patch("services.tts_service.get_bucket", return_value=mock_bucket),
             patch.object(service, "generate_audio", return_value=b"audio data"),
         ):
             url = service.get_audio_url(p, "short")
             assert url == "http://fake/test.ogg"
-            mock_bucket.blob.assert_called_with("audios/short-123.ogg")
+            self.mock_bucket.blob.assert_called_with("audios/short-123.ogg")
             mock_blob.upload_from_string.assert_called_once_with(
                 b"audio data", content_type="audio/ogg"
             )

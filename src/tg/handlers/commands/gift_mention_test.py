@@ -71,17 +71,15 @@ async def test_handle_gift_command_mention_success():
     message.reply_text = AsyncMock()
     context = MagicMock()
 
-    with patch(
-        "tg.handlers.commands.gift.user_repository.get_by_username",
-        new_callable=AsyncMock,
-    ) as mock_get:
-        mock_get.return_value = db_user
-
+    with patch("tg.handlers.commands.gift.services") as mock_services:
+        mock_services.user_repo.get_by_username = AsyncMock(return_value=db_user)
         await handle_gift_command(update, context)
 
-        mock_get.assert_called_once_with("receiver")
+        mock_services.user_repo.get_by_username.assert_called_once_with("receiver")
         message.reply_text.assert_called_once()
-        assert "DB Receiver" in message.reply_text.call_args[0][0]
+        args, kwargs = message.reply_text.call_args
+        assert "¿Qué detalle quieres tener con DB Receiver?" in args[0]
+        assert "reply_markup" in kwargs
 
 
 @pytest.mark.asyncio
@@ -106,14 +104,11 @@ async def test_handle_gift_command_mention_not_found():
     message.reply_text = AsyncMock()
     context = MagicMock()
 
-    with patch(
-        "tg.handlers.commands.gift.user_repository.get_by_username",
-        new_callable=AsyncMock,
-    ) as mock_get:
-        mock_get.return_value = None
-
+    with patch("tg.handlers.commands.gift.services") as mock_services:
+        mock_services.user_repo.get_by_username = AsyncMock(return_value=None)
         await handle_gift_command(update, context)
 
-        mock_get.assert_called_once_with("unknown")
-        message.reply_text.assert_called_once()
-        assert "No conozco a @unknown" in message.reply_text.call_args[0][0]
+        mock_services.user_repo.get_by_username.assert_called_once_with("unknown")
+        message.reply_text.assert_called_once_with(
+            "⚠️ No conozco a @unknown. Dile que hable conmigo primero."
+        )

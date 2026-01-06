@@ -11,7 +11,7 @@ from telegram.ext import CallbackContext
 
 from tg.decorators import log_update
 from models.gift import GiftType, GIFT_PRICES, GIFT_EMOJIS, GIFT_NAMES
-from infrastructure.datastore.user import user_repository
+from core.container import services
 
 
 @log_update
@@ -37,7 +37,7 @@ async def handle_gift_command(update: Update, context: CallbackContext) -> None:
             elif entity.type == MessageEntity.MENTION:
                 username = text.lstrip("@")
                 # Look up user in DB
-                receiver = await user_repository.get_by_username(username)
+                receiver = await services.user_repo.get_by_username(username)
                 if not receiver:
                     await message.reply_text(
                         f"⚠️ No conozco a @{username}. Dile que hable conmigo primero."

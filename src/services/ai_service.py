@@ -1,10 +1,14 @@
 import logging
 import os
 import random
+from typing import TYPE_CHECKING
 from google import genai
 from pydantic import BaseModel
 from pydantic_ai import Agent
-from core.config import config
+from pydantic_ai.models.test import TestModel
+
+if TYPE_CHECKING:
+    from services.phrase_service import PhraseService
 
 logger = logging.getLogger(__name__)
 
@@ -15,30 +19,43 @@ class GeneratedPhrases(BaseModel):
     phrases: list[str]
 
 
-# Ensure API key is set for pydantic-ai (it looks for GOOGLE_API_KEY)
-# Using a dummy key for tests if not provided
-os.environ.setdefault("GOOGLE_API_KEY", config.gemini_api_key or "dummy_key_for_tests")
+def get_phrase_generator_agent() -> Agent[None, GeneratedPhrases]:
+    model = os.environ.get("GOOGLE_API_KEY")
+    if not model or model == "dummy":
+        return Agent(TestModel(), output_type=GeneratedPhrases)
 
-phrase_generator_agent: Agent[None, GeneratedPhrases] = Agent(
-    "google-gla:gemini-2.5-flash",
-    output_type=GeneratedPhrases,
-    system_prompt=(
-        "Actúa como un 'cuñao' español de manual en una barra de bar. "
-        "Genera frases lapidarias, cortas y directas. "
-        "REGLAS CRÍTICAS: "
-        "1. CADA FRASE DEBE TENER UNA SOLA IDEA O CONCEPTO (No mezcles temas). "
-        "2. BREVEDAD: Máximo 15-20 palabras por frase. Que sean 'perlas' rápidas. "
-        "3. TONO: Sentando cátedra, rancio, nostálgico, escéptico y políticamente incorrecto. "
-        "4. TEMAS: Odio a lo moderno, el diésel, la mili, negacionismo climático de bar, chuletón, "
-        "los jóvenes no quieren trabajar, nacionalismo rancio, machismo rancio."
-    ),
-)
+    return Agent(
+        "google-gla:gemini-2.5-flash",
+        output_type=GeneratedPhrases,
+        system_prompt=(
+            "Actúa como un 'cuñao' español de manual en una barra de bar. "
+            "Genera frases lapidarias, cortas y directas. "
+            "REGLAS CRÍTICAS: "
+            "1. CADA FRASE DEBE TENER UNA SOLA IDEA O CONCEPTO (No mezcles temas). "
+            "2. BREVEDAD: Máximo 15-20 palabras por frase. Que sean 'perlas' rápidas. "
+            "3. TONO: Sentando cátedra, rancio, nostálgico, escéptico y políticamente incorrecto. "
+            "4. TEMAS: Odio a lo moderno, el diésel, la mili, negacionismo climático de bar, chuletón, "
+            "los jóvenes no quieren trabajar, nacionalismo rancio, machismo rancio."
+        ),
+    )
 
 
 class AIService:
-    def __init__(self, api_key: str | None = config.gemini_api_key):
+    def __init__(self, api_key: str, phrase_service: PhraseService | None = None):
         self._api_key = api_key
+        self._phrase_service = phrase_service
         self._client: genai.Client | None = None
+        self._phrase_generator_agent: Agent[None, GeneratedPhrases] | None = None
+
+        # Ensure environment is set for pydantic-ai if not already
+        if "GOOGLE_API_KEY" not in os.environ:
+            os.environ["GOOGLE_API_KEY"] = api_key
+
+    @property
+    def phrase_generator_agent(self) -> Agent[None, GeneratedPhrases]:
+        if self._phrase_generator_agent is None:
+            self._phrase_generator_agent = get_phrase_generator_agent()
+        return self._phrase_generator_agent
 
     async def analyze_image(
         self, image_bytes: bytes, mime_type: str = "image/jpeg"
@@ -91,13 +108,11 @@ class AIService:
 
         existing_phrases = context_phrases if context_phrases is not None else []
 
-        if not existing_phrases:
-            from services import phrase_service
-
+        if not existing_phrases and self._phrase_service:
             try:
                 # Get a sample of existing phrases to avoid repetition and set style
-                all_short = await phrase_service.get_phrases("", long=False)
-                all_long = await phrase_service.get_phrases("", long=True)
+                all_short = await self._phrase_service.get_phrases("", long=False)
+                all_long = await self._phrase_service.get_phrases("", long=True)
 
                 sample_short = random.sample(all_short, min(len(all_short), 10))
                 sample_long = random.sample(all_long, min(len(all_long), 10))
@@ -120,8 +135,11 @@ class AIService:
         prompt = f"Genera {count} frases nuevas e inspiradas.{context_msg}"
 
         try:
-            result = await phrase_generator_agent.run(prompt)
-            return result.output.phrases[:count]
+            result = await self.phrase_generator_agent.run(prompt)
+            # If using TestModel, we might need to handle output
+            if hasattr(result.output, "phrases"):
+                return result.output.phrases[:count]
+            return [str(result.output)][:count]
 
         except Exception as e:
             logger.exception("Error generating cuñao phrases with pydantic-ai:")
@@ -216,7 +234,3 @@ Set the scene in a typical Spanish bar with a wooden counter and beer tapas.
         except Exception as e:
             logger.error(f"Error in analyze_sentiment_and_react: {e}")
             return None
-
-
-# Singleton instance
-ai_service = AIService()

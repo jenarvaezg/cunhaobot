@@ -45,12 +45,12 @@ def apelativo() -> str:
 
 async def async_apelativo() -> str:
     """Asynchronous version using real phrases from DB."""
-    from services import phrase_service
+    from core.container import services
 
-    return (await phrase_service.get_random(long=False)).text
+    return (await services.phrase_service.get_random(long=False)).text
 
 
-async def format_badge_notification(badge: "Badge") -> str:
+async def format_badge_notification(badge: Badge) -> str:
     """Formats an achievement notification message."""
     a = await async_apelativo()
     return (

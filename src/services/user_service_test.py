@@ -10,7 +10,20 @@ class TestUserService:
     def service(self):
         self.user_repo = AsyncMock()
         self.chat_repo = AsyncMock()
-        return UserService(self.user_repo, self.chat_repo)
+        self.phrase_repo = AsyncMock()
+        self.long_phrase_repo = AsyncMock()
+        self.proposal_repo = AsyncMock()
+        self.long_proposal_repo = AsyncMock()
+        self.link_request_repo = AsyncMock()
+        return UserService(
+            self.user_repo,
+            self.chat_repo,
+            self.phrase_repo,
+            self.long_phrase_repo,
+            self.proposal_repo,
+            self.long_proposal_repo,
+            self.link_request_repo,
+        )
 
     @pytest.mark.asyncio
     async def test_update_or_create_user_new(self, service):

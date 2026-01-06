@@ -24,7 +24,9 @@ async def test_handle_poster_no_args():
     context = MagicMock()
     context.args = []
 
-    await handle_poster(update, context)
+    with patch("tg.handlers.commands.poster.services") as mock_services:
+        mock_services.user_service.update_or_create_user = AsyncMock()
+        await handle_poster(update, context)
 
     message.reply_text.assert_called_once()
     assert "Tienes que decirme qué frase quieres" in message.reply_text.call_args[0][0]
@@ -50,7 +52,9 @@ async def test_handle_poster_too_long():
     context = MagicMock()
     context.args = ["a"] * 201
 
-    await handle_poster(update, context)
+    with patch("tg.handlers.commands.poster.services") as mock_services:
+        mock_services.user_service.update_or_create_user = AsyncMock()
+        await handle_poster(update, context)
 
     message.reply_text.assert_called_once()
     assert "más larga que un día sin pan" in message.reply_text.call_args[0][0]
@@ -78,16 +82,17 @@ async def test_handle_poster_success_non_owner():
 
     with (
         patch("tg.handlers.commands.poster.config") as mock_config,
-        patch("tg.handlers.commands.poster.poster_request_repo") as mock_poster_repo,
+        patch("tg.handlers.commands.poster.services") as mock_services,
     ):
         mock_config.owner_id = "123"
-        mock_poster_repo.save = AsyncMock()
+        mock_services.user_service.update_or_create_user = AsyncMock()
+        mock_services.poster_request_repo.save = AsyncMock()
         await handle_poster(update, context)
 
     message.reply_invoice.assert_called_once()
     call_kwargs = message.reply_invoice.call_args[1]
     assert call_kwargs["prices"][0].amount == 50
-    mock_poster_repo.save.assert_called_once()
+    mock_services.poster_request_repo.save.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -112,13 +117,14 @@ async def test_handle_poster_success_owner():
 
     with (
         patch("tg.handlers.commands.poster.config") as mock_config,
-        patch("tg.handlers.commands.poster.poster_request_repo") as mock_poster_repo,
+        patch("tg.handlers.commands.poster.services") as mock_services,
     ):
         mock_config.owner_id = "123"
-        mock_poster_repo.save = AsyncMock()
+        mock_services.user_service.update_or_create_user = AsyncMock()
+        mock_services.poster_request_repo.save = AsyncMock()
         await handle_poster(update, context)
 
     message.reply_invoice.assert_called_once()
     call_kwargs = message.reply_invoice.call_args[1]
     assert call_kwargs["prices"][0].amount == 1
-    mock_poster_repo.save.assert_called_once()
+    mock_services.poster_request_repo.save.assert_called_once()

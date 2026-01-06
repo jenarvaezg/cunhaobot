@@ -23,8 +23,8 @@ async def test_handle_pre_checkout_success():
 
     context = MagicMock()
 
-    with patch("tg.handlers.payments.checkout.poster_request_repo") as mock_repo:
-        mock_repo.load = AsyncMock(return_value=None)
+    with patch("tg.handlers.payments.checkout.services") as mock_services:
+        mock_services.poster_request_repo.load = AsyncMock(return_value=None)
         await handle_pre_checkout(update, context)
 
     query.answer.assert_called_once_with(ok=True)
@@ -97,29 +97,25 @@ async def test_handle_successful_payment_success():
     mock_request.message_id = 888
 
     with (
-        patch(
-            "services.ai_service.ai_service.generate_image", new_callable=AsyncMock
-        ) as mock_gen,
-        patch("tg.handlers.payments.checkout.poster_request_repo") as mock_repo,
-        patch("tg.handlers.payments.checkout.storage_service") as mock_storage,
-        patch("tg.handlers.payments.checkout.badge_service") as mock_badge_service,
-        patch("tg.handlers.payments.checkout.usage_service") as mock_usage_service,
+        patch("tg.handlers.payments.checkout.services") as mock_services,
         patch(
             "tg.handlers.payments.checkout.notify_new_badges", new_callable=AsyncMock
         ) as mock_notify,
     ):
-        mock_gen.return_value = b"image_bytes"
-        mock_repo.load = AsyncMock(return_value=mock_request)
-        mock_storage.upload_bytes = AsyncMock(return_value="http://gcs/image.png")
-        mock_badge_service.check_badges = AsyncMock(return_value=[])
-        mock_usage_service.log_usage = AsyncMock()
-        mock_repo.save = AsyncMock()
+        mock_services.ai_service.generate_image = AsyncMock(return_value=b"image_bytes")
+        mock_services.poster_request_repo.load = AsyncMock(return_value=mock_request)
+        mock_services.poster_request_repo.save = AsyncMock()
+        mock_services.storage_service.upload_bytes = AsyncMock(
+            return_value="http://gcs/image.png"
+        )
+        mock_services.badge_service.check_badges = AsyncMock(return_value=[])
+        mock_services.usage_service.log_usage = AsyncMock()
 
         await handle_successful_payment(update, context)
 
-        mock_gen.assert_called_once_with("phrase")
-        mock_storage.upload_bytes.assert_called_once()
-        mock_repo.save.assert_called_once()
+        mock_services.ai_service.generate_image.assert_called_once_with("phrase")
+        mock_services.storage_service.upload_bytes.assert_called_once()
+        mock_services.poster_request_repo.save.assert_called_once()
         assert mock_request.status == "completed"
         assert mock_request.image_url == "http://gcs/image.png"
 
@@ -130,8 +126,8 @@ async def test_handle_successful_payment_success():
         processing_msg.delete.assert_called_once()
         context.bot.delete_message.assert_called_once_with(chat_id=999, message_id=888)
 
-        mock_badge_service.check_badges.assert_called_once()
-        mock_usage_service.log_usage.assert_called_once()
+        mock_services.badge_service.check_badges.assert_called_once()
+        mock_services.usage_service.log_usage.assert_called_once()
         mock_notify.assert_called_once()
 
 
@@ -175,18 +171,17 @@ async def test_handle_successful_payment_failure_refund():
     mock_request.message_id = 888
 
     with (
-        patch(
-            "services.ai_service.ai_service.generate_image", new_callable=AsyncMock
-        ) as mock_gen,
-        patch("tg.handlers.payments.checkout.poster_request_repo") as mock_repo,
+        patch("tg.handlers.payments.checkout.services") as mock_services,
     ):
-        mock_gen.side_effect = Exception("AI Error")
-        mock_repo.load = AsyncMock(return_value=mock_request)
-        mock_repo.save = AsyncMock()
+        mock_services.ai_service.generate_image = AsyncMock(
+            side_effect=Exception("AI Error")
+        )
+        mock_services.poster_request_repo.load = AsyncMock(return_value=mock_request)
+        mock_services.poster_request_repo.save = AsyncMock()
 
         await handle_successful_payment(update, context)
 
-        mock_repo.save.assert_called_once()
+        mock_services.poster_request_repo.save.assert_called_once()
         assert mock_request.status == "failed"
 
         context.bot.refund_star_payment.assert_called_once_with(

@@ -9,16 +9,13 @@ from tg.text_router import SHORT_MODE, LONG_MODE
 async def test_get_sticker_mode_results_short():
     p1 = Phrase(text="foo", sticker_file_id="123", id=1)
     with (
-        patch(
-            "services.phrase_repo.get_phrases",
-            new_callable=AsyncMock,
-            return_value=[p1],
-        ),
+        patch("tg.handlers.inline.inline_query.sticker_mode.services") as mock_services,
         patch(
             "tg.handlers.inline.inline_query.sticker_mode.get_query_mode",
             return_value=(SHORT_MODE, "rest"),
         ),
     ):
+        mock_services.phrase_repo.get_phrases = AsyncMock(return_value=[p1])
         results = await get_sticker_mode_results("input")
         assert len(results) == 1
         assert results[0].sticker_file_id == "123"
@@ -28,16 +25,13 @@ async def test_get_sticker_mode_results_short():
 async def test_get_sticker_mode_results_long():
     p1 = LongPhrase(text="bar", sticker_file_id="456", id=2)
     with (
-        patch(
-            "services.long_phrase_repo.get_phrases",
-            new_callable=AsyncMock,
-            return_value=[p1],
-        ),
+        patch("tg.handlers.inline.inline_query.sticker_mode.services") as mock_services,
         patch(
             "tg.handlers.inline.inline_query.sticker_mode.get_query_mode",
             return_value=(LONG_MODE, "rest"),
         ),
     ):
+        mock_services.long_phrase_repo.get_phrases = AsyncMock(return_value=[p1])
         results = await get_sticker_mode_results("input")
         assert len(results) == 1
         assert results[0].sticker_file_id == "456"
