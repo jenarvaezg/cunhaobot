@@ -44,10 +44,12 @@ class PosterRequestRepository(DatastoreRepository[PosterRequest]):
                 if isinstance(uid, int):
                     query2 = self.client.query(kind=self.kind)
                     query2.add_filter(
-                        datastore.query.PropertyFilter("user_id", "=", str(uid))
+                        filter=datastore.query.PropertyFilter("user_id", "=", str(uid))
                     )
                     query2.add_filter(
-                        datastore.query.PropertyFilter("status", "=", "completed")
+                        filter=datastore.query.PropertyFilter(
+                            "status", "=", "completed"
+                        )
                     )
                     count_query2 = self.client.aggregation_query(query=query2)
                     count_query2.count(alias="all")
@@ -64,30 +66,40 @@ class PosterRequestRepository(DatastoreRepository[PosterRequest]):
 
     async def get_completed_by_user(self, user_id: str | int) -> list[PosterRequest]:
         def _fetch() -> list[PosterRequest]:
-            # Try numeric first
-            uid = user_id
-            if isinstance(user_id, str) and user_id.isdigit():
-                uid = int(user_id)
+            try:
+                # Try numeric first
+                uid = user_id
+                if isinstance(user_id, str) and user_id.isdigit():
+                    uid = int(user_id)
 
-            query = self.client.query(kind=self.kind)
-            query.add_filter(datastore.query.PropertyFilter("user_id", "=", uid))
-            query.add_filter(datastore.query.PropertyFilter("status", "=", "completed"))
-
-            results = [PosterRequest(**e) for e in query.fetch()]
-
-            # Fallback to string if empty
-            if not results and isinstance(uid, int):
-                query2 = self.client.query(kind=self.kind)
-                query2.add_filter(
-                    datastore.query.PropertyFilter("user_id", "=", str(uid))
+                query = self.client.query(kind=self.kind)
+                query.add_filter(
+                    filter=datastore.query.PropertyFilter("user_id", "=", uid)
                 )
-                query2.add_filter(
-                    datastore.query.PropertyFilter("status", "=", "completed")
+                query.add_filter(
+                    filter=datastore.query.PropertyFilter("status", "=", "completed")
                 )
-                results = [PosterRequest(**e) for e in query2.fetch()]
 
-            results.sort(key=lambda x: x.message_id or 0, reverse=True)
-            return results
+                results = [PosterRequest(**e) for e in query.fetch()]
+
+                # Fallback to string if empty
+                if not results and isinstance(uid, int):
+                    query2 = self.client.query(kind=self.kind)
+                    query2.add_filter(
+                        filter=datastore.query.PropertyFilter("user_id", "=", str(uid))
+                    )
+                    query2.add_filter(
+                        filter=datastore.query.PropertyFilter(
+                            "status", "=", "completed"
+                        )
+                    )
+                    results = [PosterRequest(**e) for e in query2.fetch()]
+
+                results.sort(key=lambda x: x.message_id or 0, reverse=True)
+                return results
+            except Exception as e:
+                logger.error(f"Error fetching posters for {user_id}: {e}")
+                return []
 
         return await asyncio.to_thread(_fetch)
 
