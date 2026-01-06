@@ -25,7 +25,7 @@ Este plan detalla los pasos para convertir el prototipo actual en un juego digno
     *   Saludo personalizado ("¿Qué pasa, fiera?") al iniciar. ✅
     *   Frase de cuñado aleatoria al perder (Game Over). ✅
 *   **Música de Fondo:**
-    *   Bucle de Pasodoble estilo 8-bit/Chiptune (MP3/OGG). **(Falta Asset)**
+    *   Bucle de Pasodoble estilo 8-bit/Chiptune (MP3/OGG). ✅
 *   **Efectos de Sonido (SFX):** **(Faltan Assets)**
     *   `crunch.mp3`: Al capturar croqueta/jamón.
     *   `damage.mp3`: Al chocar con aguacate/sushi.
@@ -40,14 +40,14 @@ Este plan detalla los pasos para convertir el prototipo actual en un juego digno
     *   **Tapa de Jamón 5J:** Aparece cada 500 puntos, da 100 puntos pero cae a velocidad terminal. (Implementado como Jamón ✅)
 *   **Jefe Final:** Cada 1000 puntos, la pantalla se oscurece y aparece un "Inspector de Sanidad" que lanza prohibiciones que debes esquivar durante 15 segundos.
 
-## Fase 5: Integración Social (Leaderboards) 🚧
+## Fase 5: Integración Social (Leaderboards) ✅
 *   **Telegram API:** Usar `setGameScore` para actualizar el ranking nativo. (Funcional ✅)
 *   **Visualización Nativa:** El mensaje original mostrará automáticamente el Top 3. (Funcional ✅)
 *   **Página de Ranking (Web/Mini App):**
-    *   Crear una vista dedicada `/game/ranking` con el Top 50 global.
-    *   Mostrar fotos de perfil y medallas ganadas junto a la puntuación.
-*   **Botón "High Scores":** Configurar el bot para que el botón de "Puntuaciones" del mensaje del juego abra la Mini App en la sección de ranking.
-*   **Ranking Post-Partida:** Añadir un botón en la pantalla de Game Over que lleve directamente a la tabla de clasificación.
+    *   Crear una vista dedicada `/game/ranking` con el Top 50 global. ✅
+    *   Mostrar fotos de perfil y medallas ganadas junto a la puntuación. ✅
+*   **Botón "High Scores":** Configurar el bot para que el botón de "Puntuaciones" del mensaje del juego abra la Mini App en la sección de ranking. (Se usa el nativo en chat y custom en web ✅)
+*   **Ranking Post-Partida:** Añadir un botón en la pantalla de Game Over que lleve directamente a la tabla de clasificación. ✅
 
 ## Fase 6: Lanzamiento y Marketing 🚀
 *   **Trailer:** Pequeño video del gameplay.
@@ -59,7 +59,6 @@ Para completar la experiencia auditiva, necesitamos los siguientes archivos de a
 
 | Archivo | Descripción | Duración |
 | :--- | :--- | :--- |
-| **bgm_pasodoble.mp3** | Música de fondo en bucle. Estilo chiptune/8-bit pasodoble. | ~30s (loop) |
 | **sfx_crunch.mp3** | Sonido crujiente al comer croqueta. | < 0.5s |
 | **sfx_bad.mp3** | Sonido de error/golpe al perder vida. | < 0.5s |
 | **sfx_powerup.mp3** | Sonido mágico/celestial al coger carajillo. | < 1s |

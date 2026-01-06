@@ -71,6 +71,7 @@
         let player, items, background, bar, score = 0, lives = 3, scoreText, livesText, timerText, gameActive = false, isInvincible = false, timeLeft = 45;
         let spawnEvent, timerEvent;
         let emitterCrumbs, emitterSparks, emitterSplat;
+        let bgm;
 
         function preload() {
             // Load assets
@@ -84,6 +85,9 @@
             this.load.image('baldosa', '/static/game/baldosa.png?v=2');
             this.load.image('barra', '/static/game/barra.png?v=2');
             this.load.image('servilleta', '/static/game/servilleta.png?v=2');
+
+            // Audio
+            this.load.audio('bgm', '/static/game/bgm.mp3');
 
             // Create simple particle textures
             const graphics = this.make.graphics({x: 0, y: 0, add: false});
@@ -190,6 +194,10 @@
                 document.getElementById('start-screen').style.display = 'none';
                 gameActive = true;
                 startTimers.call(this);
+
+                // Play Music
+                bgm = this.sound.add('bgm', { loop: true, volume: 0.5 });
+                bgm.play();
 
                 if (GREETING_AUDIO_URL) {
                     const audio = new Audio(GREETING_AUDIO_URL);
@@ -354,6 +362,8 @@
 
             if (spawnEvent) spawnEvent.remove();
             if (timerEvent) timerEvent.remove();
+
+            if (bgm) bgm.stop();
 
             if (GAME_OVER_AUDIO_URL) {
                 const audio = new Audio(GAME_OVER_AUDIO_URL);
