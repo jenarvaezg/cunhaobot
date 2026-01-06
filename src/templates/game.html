@@ -170,7 +170,7 @@
 
             const hash = await getHash(`${USER_ID}${finalScore}${SECRET}`);
             try {
-                const response = await fetch('/api/game/score', {
+                const response = await fetch('/game/score', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ user_id: USER_ID, score: finalScore, inline_message_id: INLINE_MESSAGE_ID, hash: hash })

@@ -64,6 +64,11 @@ async def ping() -> str:
     return "I am alive"
 
 
+@get("/favicon.ico")
+async def favicon_redirect() -> Redirect:
+    return Redirect(path="/static/favicon.png")
+
+
 def auto_login_local(request: Request) -> None:
     if config.is_gae or request.session.get("user"):
         return
