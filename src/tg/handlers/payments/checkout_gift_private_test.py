@@ -4,6 +4,7 @@ from telegram import Update, Message, User, SuccessfulPayment
 from telegram.error import TelegramError
 from tg.handlers.payments.checkout import handle_successful_payment
 
+
 @pytest.mark.asyncio
 async def test_handle_successful_payment_gift_private_notification():
     update = MagicMock(spec=Update)
@@ -15,7 +16,7 @@ async def test_handle_successful_payment_gift_private_notification():
     update.effective_user.name = "Pepe"
     update.effective_user.username = "pepe"
     message.chat.type = "group"
-    message.chat_id = 100 # Group ID
+    message.chat_id = 100  # Group ID
 
     payment = MagicMock(spec=SuccessfulPayment)
     # Payload: gift:chat_id:receiver_id:gift_type
@@ -41,10 +42,19 @@ async def test_handle_successful_payment_gift_private_notification():
     context.bot.get_chat_member.side_effect = TelegramError("User not found")
 
     with (
-        patch("infrastructure.datastore.gift.gift_repository.save", new_callable=AsyncMock),
-        patch("infrastructure.datastore.user.user_repository.load", new_callable=AsyncMock) as mock_load_user,
-        patch("tg.handlers.payments.checkout.usage_service.log_usage", new_callable=AsyncMock) as mock_log_usage,
-        patch("tg.handlers.payments.checkout.notify_new_badges", new_callable=AsyncMock),
+        patch(
+            "infrastructure.datastore.gift.gift_repository.save", new_callable=AsyncMock
+        ),
+        patch(
+            "infrastructure.datastore.user.user_repository.load", new_callable=AsyncMock
+        ) as mock_load_user,
+        patch(
+            "tg.handlers.payments.checkout.usage_service.log_usage",
+            new_callable=AsyncMock,
+        ) as mock_log_usage,
+        patch(
+            "tg.handlers.payments.checkout.notify_new_badges", new_callable=AsyncMock
+        ),
         patch("builtins.open", new_callable=mock_open, read_data=b"image_data"),
     ):
         mock_load_user.return_value = receiver_user
@@ -54,10 +64,14 @@ async def test_handle_successful_payment_gift_private_notification():
 
         # Verify public message sent to Group (100)
         assert context.bot.send_photo.call_args_list[0].kwargs["chat_id"] == 100
-        
+
         # Verify private message sent to Receiver (200)
         assert context.bot.send_photo.call_args_list[1].kwargs["chat_id"] == 200
-        assert "Como no te he visto por la barra" in context.bot.send_photo.call_args_list[1].kwargs["caption"]
+        assert (
+            "Como no te he visto por la barra"
+            in context.bot.send_photo.call_args_list[1].kwargs["caption"]
+        )
+
 
 @pytest.mark.asyncio
 async def test_handle_successful_payment_gift_no_private_notification_if_present():
@@ -70,7 +84,7 @@ async def test_handle_successful_payment_gift_no_private_notification_if_present
     update.effective_user.name = "Pepe"
     update.effective_user.username = "pepe"
     message.chat.type = "group"
-    message.chat_id = 100 # Group ID
+    message.chat_id = 100  # Group ID
 
     payment = MagicMock(spec=SuccessfulPayment)
     # Payload: gift:chat_id:receiver_id:gift_type
@@ -98,10 +112,19 @@ async def test_handle_successful_payment_gift_no_private_notification_if_present
     context.bot.get_chat_member.return_value = member
 
     with (
-        patch("infrastructure.datastore.gift.gift_repository.save", new_callable=AsyncMock),
-        patch("infrastructure.datastore.user.user_repository.load", new_callable=AsyncMock) as mock_load_user,
-        patch("tg.handlers.payments.checkout.usage_service.log_usage", new_callable=AsyncMock) as mock_log_usage,
-        patch("tg.handlers.payments.checkout.notify_new_badges", new_callable=AsyncMock),
+        patch(
+            "infrastructure.datastore.gift.gift_repository.save", new_callable=AsyncMock
+        ),
+        patch(
+            "infrastructure.datastore.user.user_repository.load", new_callable=AsyncMock
+        ) as mock_load_user,
+        patch(
+            "tg.handlers.payments.checkout.usage_service.log_usage",
+            new_callable=AsyncMock,
+        ) as mock_log_usage,
+        patch(
+            "tg.handlers.payments.checkout.notify_new_badges", new_callable=AsyncMock
+        ),
         patch("builtins.open", new_callable=mock_open, read_data=b"image_data"),
     ):
         mock_load_user.return_value = receiver_user

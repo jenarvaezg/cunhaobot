@@ -42,14 +42,25 @@ async def test_handle_successful_payment_gift_success():
     receiver_user.name = "Receiver"
 
     with (
-        patch("infrastructure.datastore.gift.gift_repository.save", new_callable=AsyncMock) as mock_save_gift,
-        patch("infrastructure.datastore.user.user_repository.load", new_callable=AsyncMock) as mock_load_user,
-        patch("tg.handlers.payments.checkout.usage_service.log_usage", new_callable=AsyncMock) as mock_log_usage,
-        patch("tg.handlers.payments.checkout.notify_new_badges", new_callable=AsyncMock),
-        patch("builtins.open", new_callable=mock_open, read_data=b"image_data") as mock_file,
+        patch(
+            "infrastructure.datastore.gift.gift_repository.save", new_callable=AsyncMock
+        ) as mock_save_gift,
+        patch(
+            "infrastructure.datastore.user.user_repository.load", new_callable=AsyncMock
+        ) as mock_load_user,
+        patch(
+            "tg.handlers.payments.checkout.usage_service.log_usage",
+            new_callable=AsyncMock,
+        ) as mock_log_usage,
+        patch(
+            "tg.handlers.payments.checkout.notify_new_badges", new_callable=AsyncMock
+        ),
+        patch(
+            "builtins.open", new_callable=mock_open, read_data=b"image_data"
+        ) as mock_file,
     ):
         mock_load_user.return_value = receiver_user
-        mock_log_usage.return_value = [] # no badges
+        mock_log_usage.return_value = []  # no badges
 
         await handle_successful_payment(update, context)
 
@@ -65,9 +76,10 @@ async def test_handle_successful_payment_gift_success():
         context.bot.send_photo.assert_called_once()
         assert context.bot.send_photo.call_args[1]["chat_id"] == 100
         assert context.bot.send_photo.call_args[1]["photo"].read() == b"image_data"
-        
+
         # Verify usage logged
-        assert mock_log_usage.call_count == 2 # Sender and Receiver
+        assert mock_log_usage.call_count == 2  # Sender and Receiver
+
 
 @pytest.mark.asyncio
 async def test_handle_successful_payment_gift_image_error_fallback():
@@ -103,10 +115,19 @@ async def test_handle_successful_payment_gift_image_error_fallback():
     receiver_user.username = "receiver"
 
     with (
-        patch("infrastructure.datastore.gift.gift_repository.save", new_callable=AsyncMock),
-        patch("infrastructure.datastore.user.user_repository.load", new_callable=AsyncMock) as mock_load_user,
-        patch("tg.handlers.payments.checkout.usage_service.log_usage", new_callable=AsyncMock) as mock_log_usage,
-        patch("tg.handlers.payments.checkout.notify_new_badges", new_callable=AsyncMock),
+        patch(
+            "infrastructure.datastore.gift.gift_repository.save", new_callable=AsyncMock
+        ),
+        patch(
+            "infrastructure.datastore.user.user_repository.load", new_callable=AsyncMock
+        ) as mock_load_user,
+        patch(
+            "tg.handlers.payments.checkout.usage_service.log_usage",
+            new_callable=AsyncMock,
+        ) as mock_log_usage,
+        patch(
+            "tg.handlers.payments.checkout.notify_new_badges", new_callable=AsyncMock
+        ),
         patch("builtins.open", side_effect=FileNotFoundError("No file")),
     ):
         mock_load_user.return_value = receiver_user
@@ -117,7 +138,7 @@ async def test_handle_successful_payment_gift_image_error_fallback():
         # Verify fallback to text
         context.bot.send_photo.assert_not_called()
         context.bot.send_message.assert_called()
-        
+
         # Check that send_message was called with the caption
         call_args = context.bot.send_message.call_args[1]
-        assert "Toma ya" in call_args["text"] # New text has "Toma ya"
+        assert "Toma ya" in call_args["text"]  # New text has "Toma ya"
