@@ -34,10 +34,9 @@ class PosterRequestRepository(DatastoreRepository[PosterRequest]):
                 count_query.count(alias="all")
                 results = list(count_query.fetch())
 
-                # In Datastore aggregation query, results is list of AggregationResult objects
-                if results and len(results) > 0:
-                    # Access by alias is safer
-                    count = int(results[0].get("all", 0))
+                # In Datastore aggregation query, results is list of lists
+                if results and len(results) > 0 and len(results[0]) > 0:
+                    count = int(results[0][0].value)
                     if count > 0:
                         return count
 
@@ -53,8 +52,8 @@ class PosterRequestRepository(DatastoreRepository[PosterRequest]):
                     count_query2 = self.client.aggregation_query(query=query2)
                     count_query2.count(alias="all")
                     results2 = list(count_query2.fetch())
-                    if results2 and len(results2) > 0:
-                        return int(results2[0].get("all", 0))
+                    if results2 and len(results2) > 0 and len(results2[0]) > 0:
+                        return int(results2[0][0].value)
 
                 return 0
             except Exception as e:
