@@ -14,9 +14,12 @@ class PosterRequestRepository(DatastoreRepository[PosterRequest]):
     async def count_completed_by_user(self, user_id: str | int) -> int:
         def _count() -> int:
             query = self.client.query(kind=self.kind)
-            query.add_filter(
-                filter=datastore.query.PropertyFilter("user_id", "=", str(user_id))
-            )
+            # Handle numeric IDs (Telegram) vs string IDs (others)
+            uid = user_id
+            if isinstance(user_id, str) and user_id.isdigit():
+                uid = int(user_id)
+
+            query.add_filter(filter=datastore.query.PropertyFilter("user_id", "=", uid))
             query.add_filter(
                 filter=datastore.query.PropertyFilter("status", "=", "completed")
             )
@@ -25,23 +28,51 @@ class PosterRequestRepository(DatastoreRepository[PosterRequest]):
             count_query.count(alias="all")
             results = list(count_query.fetch())
             if results and len(results) > 0 and len(results[0]) > 0:
-                return int(results[0][0].value)
+                # Also try string fallback if 0 results
+                count = int(results[0][0].value)
+                if count == 0 and isinstance(uid, int):
+                    # Try as string
+                    query2 = self.client.query(kind=self.kind)
+                    query2.add_filter(
+                        datastore.query.PropertyFilter("user_id", "=", str(uid))
+                    )
+                    query2.add_filter(
+                        datastore.query.PropertyFilter("status", "=", "completed")
+                    )
+                    count_query2 = self.client.aggregation_query(query=query2)
+                    count_query2.count(alias="all")
+                    results2 = list(count_query2.fetch())
+                    if results2:
+                        return int(results2[0][0].value)
+                return count
             return 0
 
         return await asyncio.to_thread(_count)
 
     async def get_completed_by_user(self, user_id: str | int) -> list[PosterRequest]:
         def _fetch() -> list[PosterRequest]:
+            # Try numeric first
+            uid = user_id
+            if isinstance(user_id, str) and user_id.isdigit():
+                uid = int(user_id)
+
             query = self.client.query(kind=self.kind)
-            query.add_filter(
-                filter=datastore.query.PropertyFilter("user_id", "=", str(user_id))
-            )
-            query.add_filter(
-                filter=datastore.query.PropertyFilter("status", "=", "completed")
-            )
-            # Removed order by message_id to avoid composite index requirement
+            query.add_filter(datastore.query.PropertyFilter("user_id", "=", uid))
+            query.add_filter(datastore.query.PropertyFilter("status", "=", "completed"))
+
             results = [PosterRequest(**e) for e in query.fetch()]
-            # Sort in memory instead
+
+            # Fallback to string if empty
+            if not results and isinstance(uid, int):
+                query2 = self.client.query(kind=self.kind)
+                query2.add_filter(
+                    datastore.query.PropertyFilter("user_id", "=", str(uid))
+                )
+                query2.add_filter(
+                    datastore.query.PropertyFilter("status", "=", "completed")
+                )
+                results = [PosterRequest(**e) for e in query2.fetch()]
+
             results.sort(key=lambda x: x.message_id or 0, reverse=True)
             return results
 

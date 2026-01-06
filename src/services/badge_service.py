@@ -492,78 +492,82 @@ class BadgeService:
 
         for badge in BADGES:
             is_earned = badge.id in current_badges
-            progress = 100 if is_earned else 0
             current_val = 0
             target_val = 0
 
-            if not is_earned:
-                if badge.id == "fiera_total":
-                    current_val = total_usages
-                    target_val = 50
-                elif badge.id == "visionario":
-                    current_val = vision_count
-                    target_val = 5
-                elif badge.id == "poeta":
-                    current_val = user_phrases_count
-                    target_val = 5
-                elif badge.id == "charlatan":
-                    current_val = ai_count
-                    target_val = 5
-                elif badge.id == "melomano":
-                    current_val = audio_count
-                    target_val = 5
-                elif badge.id == "insistente":
-                    current_val = propose_count
-                    target_val = 10
-                elif badge.id == "autor":
-                    current_val = approve_count
-                    target_val = 1
-                elif badge.id == "incomprendido":
-                    current_val = reject_count
-                    target_val = 1
-                elif badge.id == "pesao":
-                    since = datetime.now(timezone.utc) - timedelta(hours=1)
-                    if hasattr(user, "last_usages") and user.last_usages:
-                        current_val = len([u for u in user.last_usages if u >= since])
-                    else:
-                        current_val = 0
-                    target_val = 10
-                elif badge.id == "novato":
-                    current_val = 1 if total_usages > 0 else 0
-                    target_val = 1
-                elif badge.id == "centro_atencion":
-                    current_val = reaction_count
-                    target_val = 1
-                elif badge.id == "vip":
-                    current_val = sub_count
-                    target_val = 1
-                elif badge.id == "rey_mago":
-                    current_val = gift_sent_count
-                    target_val = 1
-                elif badge.id == "consentido":
-                    current_val = gift_received_count
-                    target_val = 1
-                elif badge.id == "mecenas":
-                    current_val = poster_count
-                    target_val = 1
-                elif badge.id == "coleccionista":
-                    current_val = poster_count
-                    target_val = 5
-                elif badge.id == "galerista":
-                    current_val = poster_count
-                    target_val = 10
-                elif badge.id == "viciado":
-                    current_val = user.game_stats
-                    target_val = 10
-                elif badge.id == "parroquia":
-                    current_val = user.game_streak
-                    target_val = 3
-                elif badge.id == "pinchito_oro":
-                    current_val = user.game_high_score
-                    target_val = 500
+            if badge.id == "fiera_total":
+                current_val = total_usages
+                target_val = 50
+            elif badge.id == "visionario":
+                current_val = vision_count
+                target_val = 5
+            elif badge.id == "poeta":
+                current_val = user_phrases_count
+                target_val = 5
+            elif badge.id == "charlatan":
+                current_val = ai_count
+                target_val = 5
+            elif badge.id == "melomano":
+                current_val = audio_count
+                target_val = 5
+            elif badge.id == "insistente":
+                current_val = propose_count
+                target_val = 10
+            elif badge.id == "autor":
+                current_val = approve_count
+                target_val = 1
+            elif badge.id == "incomprendido":
+                current_val = reject_count
+                target_val = 1
+            elif badge.id == "pesao":
+                since = datetime.now(timezone.utc) - timedelta(hours=1)
+                if hasattr(user, "last_usages") and user.last_usages:
+                    current_val = len([u for u in user.last_usages if u >= since])
+                else:
+                    current_val = 0
+                target_val = 10
+            elif badge.id == "novato":
+                current_val = 1 if total_usages > 0 else 0
+                target_val = 1
+            elif badge.id == "centro_atencion":
+                current_val = reaction_count
+                target_val = 1
+            elif badge.id == "vip":
+                current_val = sub_count
+                target_val = 1
+            elif badge.id == "rey_mago":
+                current_val = gift_sent_count
+                target_val = 1
+            elif badge.id == "consentido":
+                current_val = gift_received_count
+                target_val = 1
+            elif badge.id == "mecenas":
+                current_val = poster_count
+                target_val = 1
+            elif badge.id == "coleccionista":
+                current_val = poster_count
+                target_val = 5
+            elif badge.id == "galerista":
+                current_val = poster_count
+                target_val = 10
+            elif badge.id == "viciado":
+                current_val = user.game_stats
+                target_val = 10
+            elif badge.id == "parroquia":
+                current_val = user.game_streak
+                target_val = 3
+            elif badge.id == "pinchito_oro":
+                current_val = user.game_high_score
+                target_val = 500
 
-                if target_val > 0:
-                    progress = min(100, int((current_val / target_val) * 100))
+            progress = 100 if is_earned else 0
+            if not is_earned and target_val > 0:
+                progress = min(100, int((current_val / target_val) * 100))
+            elif is_earned:
+                progress = 100
+                if target_val == 0:  # For binary badges
+                    current_val = 1
+                    target_val = 1
 
             results.append(
                 BadgeProgress(
