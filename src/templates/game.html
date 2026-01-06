@@ -51,9 +51,9 @@
 
     <script type="module">
         const USER_ID = "{{ user_id }}";
-        const INLINE_MESSAGE_ID = "{{ inline_message_id }}";
-        const CHAT_ID = "{{ chat_id }}";
-        const MESSAGE_ID = "{{ message_id }}";
+        const INLINE_MESSAGE_ID = "{{ inline_message_id or '' }}";
+        const CHAT_ID = "{{ chat_id or '' }}";
+        const MESSAGE_ID = "{{ message_id or '' }}";
         const SECRET = "{{ secret }}";
         const GREETING_AUDIO_URL = "{{ greeting_audio_url }}";
         const GAME_OVER_AUDIO_URL = "{{ game_over_audio_url }}";

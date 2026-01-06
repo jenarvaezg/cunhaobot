@@ -106,9 +106,9 @@ class GameController(Controller):
         data = await request.json()
         user_id = data.get("user_id")
         score = data.get("score", 0)
-        inline_message_id = data.get("inline_message_id")
-        chat_id = data.get("chat_id")
-        message_id = data.get("message_id")
+        inline_message_id = data.get("inline_message_id") or None
+        chat_id = data.get("chat_id") or None
+        message_id = data.get("message_id") or None
         hash_received = data.get("hash")
 
         # Verify hash to prevent cheating
