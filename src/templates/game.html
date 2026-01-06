@@ -44,10 +44,22 @@
         <h2 id="final-score-text">Puntuación: 0</h2>
         <p id="status-text">Guardando puntos en la barra...</p>
         <button class="btn" onclick="window.location.reload()">JUGAR OTRA VEZ</button>
+        <button class="btn" style="background: #0088cc; color: #FFF; margin-top: 10px;" onclick="shareScore()">COMPARTIR PUNTUACIÓN</button>
         <a href="/game/ranking" class="btn" style="background: #444; color: #FFF; text-decoration: none; margin-top: 15px; display: inline-block;">VER RANKING GLOBAL</a>
     </div>
 
     <div id="game-container"></div>
+
+    <script>
+        // Definir shareScore en el ámbito global
+        function shareScore() {
+            if (window.Telegram && window.Telegram.GameProxy) {
+                window.Telegram.GameProxy.shareScore();
+            } else {
+                alert("Para compartir tu puntuación, debes jugar desde la app de Telegram.");
+            }
+        }
+    </script>
 
     <script type="module">
         const USER_ID = "{{ user_id }}";
