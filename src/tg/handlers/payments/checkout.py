@@ -2,12 +2,13 @@ import logging
 from datetime import datetime, timedelta, timezone
 from telegram import Update
 from telegram.ext import CallbackContext
+from telegram.error import TelegramError
 
 from services.ai_service import ai_service
 from services import poster_request_repo, badge_service, usage_service
 from models.usage import ActionType
 from models.chat import Chat
-from models.gift import Gift, GiftType, GIFT_PRICES, GIFT_EMOJIS, GIFT_NAMES
+from models.gift import Gift, GiftType, GIFT_PRICES, GIFT_NAMES
 from infrastructure.datastore.chat import chat_repository
 from infrastructure.datastore.gift import gift_repository
 from tg.decorators import log_update
@@ -94,18 +95,62 @@ async def handle_successful_payment(update: Update, context: CallbackContext) ->
                     receiver_display_name = receiver_user.name
 
             # Notify sender/group
-            text = (
-                f"¡{GIFT_EMOJIS[gift_type]} <b>Regalo entregado!</b>\n\n"
-                f"{user.first_name} le ha invitado a un <b>{GIFT_NAMES[gift_type]}</b> a {receiver_display_name}.\n"
-                f"¡Qué clase tiene este grupo!\n\n"
-                f"<i>Podéis ver vuestros tesoros en el /perfil</i>"
+            caption = (
+                f"¡Toma ya! 🎁\n\n"
+                f"<b>{user.first_name}</b> le ha invitado a un <b>{GIFT_NAMES[gift_type]}</b> a {receiver_display_name}.\n"
+                f"¡Eso sí que es tener clase!\n\n"
+                f"<i>Consérvalo en tu /perfil como oro en paño.</i>"
             )
 
-            await context.bot.send_message(
-                chat_id=target_chat_id,
-                text=text,
-                parse_mode="HTML",
-            )
+            image_path = f"src/static/gifts/{gift_type.value}.png"
+            try:
+                with open(image_path, "rb") as photo:
+                    await context.bot.send_photo(
+                        chat_id=target_chat_id,
+                        photo=photo,
+                        caption=caption,
+                        parse_mode="HTML",
+                    )
+            except Exception as e:
+                logger.error(f"Error sending gift image {image_path}: {e}")
+                await context.bot.send_message(
+                    chat_id=target_chat_id,
+                    text=caption,
+                    parse_mode="HTML",
+                )
+
+            # Check if we need to notify privately (if user is not in the group)
+            if target_chat_id != receiver_id:
+                should_notify_private = False
+                try:
+                    member = await context.bot.get_chat_member(
+                        target_chat_id, receiver_id
+                    )
+                    if member.status in ["left", "kicked"]:
+                        should_notify_private = True
+                except TelegramError:
+                    # Likely user not in chat or chat is private/unknown to bot
+                    should_notify_private = True
+
+                if should_notify_private:
+                    try:
+                        private_caption = (
+                            f"¡Sorpresa! 🎁\n\n"
+                            f"<b>{user.first_name}</b> te ha enviado un <b>{GIFT_NAMES[gift_type]}</b> desde el grupo.\n"
+                            f"Como no te he visto por la barra, te lo traigo aquí.\n\n"
+                            f"<i>Lo tienes guardado en tu /perfil.</i>"
+                        )
+                        with open(image_path, "rb") as photo:
+                            await context.bot.send_photo(
+                                chat_id=receiver_id,
+                                photo=photo,
+                                caption=private_caption,
+                                parse_mode="HTML",
+                            )
+                    except Exception as e:
+                        logger.warning(
+                            f"Could not send private gift notification to {receiver_id}: {e}"
+                        )
 
             # Log usage (GIFT_SENT) for sender
             new_badges_sender = await usage_service.log_usage(

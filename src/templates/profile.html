@@ -93,30 +93,6 @@
                     <span>{{ phrases_count }} frases</span>
                 </div>
             </div>
-
-            {% if fun_stats %}
-            <div class="card bg-transparent border-secondary mb-3 text-start">
-                <div class="card-body p-3">
-                    <h6 class="card-title text-uppercase text-muted small fw-bold mb-3">Estadísticas Curiosas</h6>
-
-                    {% if fun_stats.most_used_command %}
-                    <div class="mb-2">
-                        <small class="d-block text-muted">Comando favorito</small>
-                        <span class="badge bg-dark border border-secondary">
-                            /{{ fun_stats.most_used_command }}
-                        </span>
-                    </div>
-                    {% endif %}
-
-                    {% if fun_stats.favorite_phrase %}
-                    <div class="mb-0">
-                        <small class="d-block text-muted">Frase más invocada</small>
-                        <i class="small text-info">"{{ fun_stats.favorite_phrase }}"</i>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
         </div>
     </div>
 
@@ -129,47 +105,30 @@
             </h4>
 
             <div class="row g-3">
-                {% for badge_info in badges_progress %}
+                {% for badge_info in badges_progress if badge_info.is_earned %}
                 <div class="col-md-6 col-xl-4">
-                    <div class="p-3 rounded border position-relative overflow-hidden h-100 {{ 'bg-dark border-warning' if badge_info.is_earned else 'bg-transparent border-secondary opacity-75' }}">
+                    <div class="p-3 rounded border border-warning bg-dark position-relative overflow-hidden h-100">
                         <div class="d-flex align-items-center gap-3 mb-2">
                             <span class="fs-1">{{ badge_info.badge.icon }}</span>
                             <div>
-                                <h6 class="mb-0 fw-bold {{ 'text-warning' if badge_info.is_earned else 'text-muted' }}">
+                                <h6 class="mb-0 fw-bold text-warning">
                                     {{ badge_info.badge.name }}
                                 </h6>
-                                {% if badge_info.is_earned %}
                                 <span class="badge bg-warning text-dark ultra-tiny">CONSEGUIDO</span>
-                                {% endif %}
                             </div>
                         </div>
 
-                        <p class="small text-muted mb-2 lh-sm">
+                        <p class="small text-muted mb-0 lh-sm">
                             {{ badge_info.badge.description }}
                         </p>
-
-                        {% if not badge_info.is_earned %}
-                        <div class="progress" style="height: 6px;">
-                            <div class="progress-bar bg-warning" role="progressbar"
-                                 style="width: {{ badge_info.progress }}%"
-                                 aria-valuenow="{{ badge_info.progress }}"
-                                 aria-valuemin="0"
-                                 aria-valuemax="100"></div>
-                        </div>
-                        <small class="text-end d-block text-muted mt-1" style="font-size: 0.7rem;">
-                            {{ badge_info.current }} / {{ badge_info.target }}
-                        </small>
-                        {% endif %}
                     </div>
                 </div>
-                {% endfor %}
-
-                {% if not badges_progress %}
+                {% else %}
                 <div class="col-12 text-center py-4 text-muted">
-                    <i class="bi bi-info-circle mb-2 fs-4 d-block"></i>
-                    Todavía no hay medallas disponibles o no se han cargado.
+                    <i class="bi bi-award mb-2 fs-4 d-block"></i>
+                    Aún no has ganado medallas. ¡Sigue participando!
                 </div>
-                {% endif %}
+                {% endfor %}
             </div>
         </div>
 
@@ -179,15 +138,18 @@
             <h4 class="oswald mb-3 border-bottom border-secondary pb-2">
                 <i class="bi bi-gift-fill text-danger me-2"></i>Regalos de la Parroquia
             </h4>
-            <div class="row g-2">
+            <div class="row g-3">
                 {% for gift in user_gifts %}
-                <div class="col-auto">
-                    <div class="d-flex align-items-center gap-2 border border-secondary rounded p-2 bg-dark bg-opacity-50" title="De: {{ gift.sender_name }} ({{ gift.created_at.strftime('%d/%m/%Y') }})">
-                        <span class="fs-4">{{ gift_emojis[gift.gift_type] }}</span>
-                        <div>
-                            <div class="small fw-bold">{{ gift_names[gift.gift_type] }}</div>
-                            <div class="ultra-tiny text-muted">de {{ gift.sender_name }}</div>
+                <div class="col-6 col-sm-4 col-md-3">
+                    <div class="gift-card text-center p-2 border border-secondary rounded bg-dark bg-opacity-50 position-relative"
+                         title="De: {{ gift.sender_name }} ({{ gift.created_at.strftime('%d/%m/%Y') }})">
+                        <div class="gift-image-container mb-2">
+                            <img src="/static/gifts/{{ gift.gift_type }}.png"
+                                 alt="{{ gift_names[gift.gift_type] }}"
+                                 class="img-fluid rounded shadow-sm gift-img">
                         </div>
+                        <div class="small fw-bold text-light">{{ gift_names[gift.gift_type] }}</div>
+                        <div class="ultra-tiny text-muted text-truncate">de {{ gift.sender_name }}</div>
                     </div>
                 </div>
                 {% endfor %}
@@ -254,5 +216,8 @@
     .poster-card:hover img { transform: scale(1.1); }
     .poster-overlay { opacity: 0; transition: opacity 0.3s ease; }
     .poster-card:hover .poster-overlay { opacity: 1; }
+
+    .gift-card { transition: transform 0.2s ease, background-color 0.2s ease; }
+    .gift-card:hover { transform: translateY(-3px); background-color: rgba(255, 255, 255, 0.1) !important; }
 </style>
 {% endblock %}

@@ -48,6 +48,19 @@ class UserDatastoreRepository(DatastoreRepository[User]):
             return results
         return [u for u in results if not u.gdpr]
 
+    async def get_by_username(self, username: str) -> User | None:
+        def _query():
+            query = self.client.query(kind=self.kind)
+            # Normalize username just in case, though DB should store without @
+            clean_username = username.lstrip("@")
+            query.add_filter("username", "=", clean_username)
+            results = list(query.fetch(limit=1))
+            if not results:
+                return None
+            return self._entity_to_domain(results[0])
+
+        return await asyncio.to_thread(_query)
+
 
 user_repository = UserDatastoreRepository()
 # For backward compatibility with imports in some legacy files

@@ -5,11 +5,13 @@ from telegram import (
     InlineKeyboardMarkup,
     LabeledPrice,
     Message,
+    MessageEntity,
 )
 from telegram.ext import CallbackContext
 
 from tg.decorators import log_update
 from models.gift import GiftType, GIFT_PRICES, GIFT_EMOJIS, GIFT_NAMES
+from infrastructure.datastore.user import user_repository
 
 
 @log_update
@@ -23,16 +25,35 @@ async def handle_gift_command(update: Update, context: CallbackContext) -> None:
     receiver = None
     if message.reply_to_message:
         receiver = message.reply_to_message.from_user
+    else:
+        # Check for mentions
+        entities = message.parse_entities(
+            [MessageEntity.TEXT_MENTION, MessageEntity.MENTION]
+        )
+        for entity, text in entities.items():
+            if entity.type == MessageEntity.TEXT_MENTION:
+                receiver = entity.user
+                break
+            elif entity.type == MessageEntity.MENTION:
+                username = text.lstrip("@")
+                # Look up user in DB
+                receiver = await user_repository.get_by_username(username)
+                if not receiver:
+                    await message.reply_text(
+                        f"⚠️ No conozco a @{username}. Dile que hable conmigo primero."
+                    )
+                    return
+                break
 
     # Basic validation
     if (
         not receiver
         or not message.from_user
-        or receiver.id == message.from_user.id
-        or receiver.is_bot
+        or str(receiver.id) == str(message.from_user.id)
+        or (hasattr(receiver, "is_bot") and receiver.is_bot)
     ):
         await message.reply_text(
-            "⚠️ Para regalar algo, responde a un mensaje del afortunado (que no seas tú ni un bot)."
+            "⚠️ Para regalar algo, responde a un mensaje o menciona al afortunado (ej: /regalar @usuario)."
         )
         return
 
