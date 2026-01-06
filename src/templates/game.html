@@ -7,32 +7,11 @@
     <script src="https://telegram.org/js/games.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #1a1a1a;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        #game-container {
-            width: 100%;
-            height: 100%;
-        }
-        #loading-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
+        body { margin: 0; padding: 0; background-color: #1a1a1a; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        #game-container { width: 100%; height: 100%; }
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
+        #game-over-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 200; text-align: center; }
+        .btn { background: #FFD700; color: #000; padding: 15px 30px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 1.2rem; }
     </style>
 </head>
 <body>
@@ -40,12 +19,19 @@
         <h2>CARGANDO EL BAR...</h2>
         <p>Prepara el palillo, fiera.</p>
     </div>
+
+    <div id="game-over-screen">
+        <h1 style="color: #ff0000; font-size: 3rem;">¡SE ACABÓ!</h1>
+        <h2 id="final-score-text">Puntuación: 0</h2>
+        <p id="status-text">Guardando puntos en la barra...</p>
+        <button class="btn" onclick="window.location.reload()">JUGAR OTRA VEZ</button>
+    </div>
+
     <div id="game-container"></div>
 
     <script type="module">
         import { initStrudel } from 'https://cdn.skypack.dev/@strudel/web';
 
-        // Data from server
         const USER_ID = "{{ user_id }}";
         const INLINE_MESSAGE_ID = "{{ inline_message_id }}";
         const SECRET = "{{ secret }}";
@@ -55,70 +41,35 @@
         try {
             const { evaluate, stop } = initStrudel();
             strudel = { evaluate, stop };
-        } catch (e) {
-            console.error("Strudel init failed", e);
-        }
+            console.log("Strudel cargado correctamente");
+        } catch (e) { console.error("Error al cargar Strudel:", e); }
 
         const config = {
             type: Phaser.AUTO,
             width: window.innerWidth,
             height: window.innerHeight,
             parent: 'game-container',
-            physics: {
-                default: 'arcade',
-                arcade: { gravity: { y: 0 }, debug: false }
-            },
-            scene: {
-                preload: preload,
-                create: create,
-                update: update
-            }
+            physics: { default: 'arcade', arcade: { gravity: { y: 0 }, debug: false } },
+            scene: { preload: preload, create: create, update: update }
         };
 
         const game = new Phaser.Game(config);
-        let player;
-        let items;
-        let score = 0;
-        let lives = 3;
-        let scoreText;
-        let livesText;
-        let timerText;
-        let gameActive = true;
-        let isInvincible = false;
-        let timeLeft = 30;
-        let musicStarted = false;
+        let player, items, score = 0, lives = 3, scoreText, livesText, timerText, gameActive = true, isInvincible = false, timeLeft = 30, musicStarted = false;
 
         function preload() {
             const graphics = this.make.graphics();
-            graphics.fillStyle(0xDEB887, 1);
-            graphics.fillRect(0, 0, 8, 80);
-            graphics.generateTexture('palillo', 8, 80);
-            graphics.clear();
-            graphics.fillStyle(0xCD853F, 1);
-            graphics.fillEllipse(15, 15, 30, 20);
-            graphics.generateTexture('croqueta', 30, 30);
-            graphics.clear();
-            graphics.fillStyle(0x228B22, 1);
-            graphics.fillEllipse(15, 15, 25, 35);
-            graphics.generateTexture('aguacate', 30, 40);
-            graphics.clear();
-            graphics.fillStyle(0x4B3621, 1);
-            graphics.fillRect(5, 5, 20, 25);
-            graphics.generateTexture('carajillo', 30, 30);
-            graphics.clear();
+            graphics.fillStyle(0xDEB887, 1); graphics.fillRect(0, 0, 8, 80); graphics.generateTexture('palillo', 8, 80); graphics.clear();
+            graphics.fillStyle(0xCD853F, 1); graphics.fillEllipse(15, 15, 30, 20); graphics.generateTexture('croqueta', 30, 30); graphics.clear();
+            graphics.fillStyle(0x228B22, 1); graphics.fillEllipse(15, 15, 25, 35); graphics.generateTexture('aguacate', 30, 40); graphics.clear();
+            graphics.fillStyle(0x4B3621, 1); graphics.fillRect(5, 5, 20, 25); graphics.generateTexture('carajillo', 30, 30); graphics.clear();
         }
 
         function create() {
             document.getElementById('loading-overlay').style.display = 'none';
             this.add.rectangle(0, config.height - 40, config.width, 40, 0x333333).setOrigin(0, 0);
-
-            player = this.physics.add.sprite(config.width / 2, config.height - 80, 'palillo');
-            player.setCollideWorldBounds(true);
+            player = this.physics.add.sprite(config.width / 2, config.height - 80, 'palillo').setCollideWorldBounds(true);
             items = this.physics.add.group();
-
-            scoreText = this.add.text(20, 20, 'CUÑADISMO: 0', {
-                fontSize: '24px', fontWeight: 'bold', fill: '#FFD700', stroke: '#000', strokeThickness: 4
-            });
+            scoreText = this.add.text(20, 20, 'CUÑADISMO: 0', { fontSize: '24px', fontWeight: 'bold', fill: '#FFD700', stroke: '#000', strokeThickness: 4 });
             livesText = this.add.text(20, 55, 'SERVILLETAS: 🧻🧻🧻', { fontSize: '18px', fill: '#FFF' });
             timerText = this.add.text(config.width - 160, 20, 'TIEMPO: 30', { fontSize: '24px', fill: '#FFF' });
 
@@ -126,6 +77,7 @@
                 if (gameActive) {
                     player.x = pointer.x;
                     if (!musicStarted && strudel) {
+                        console.log("Iniciando música...");
                         strudel.evaluate(MUSIC_PATTERN);
                         musicStarted = true;
                     }
@@ -143,7 +95,6 @@
                 },
                 callbackScope: this, loop: true
             });
-
             this.physics.add.overlap(player, items, handleCollision, null, this);
         }
 
@@ -161,21 +112,15 @@
             const type = item.getData('type');
             item.destroy();
             if (type === 'croqueta') {
-                score += 10;
-                scoreText.setText('CUÑADISMO: ' + score);
+                score += 10; scoreText.setText('CUÑADISMO: ' + score);
             } else if (type === 'aguacate') {
                 if (!isInvincible) {
-                    lives--;
-                    updateLivesDisplay();
-                    this.cameras.main.shake(250, 0.03);
+                    lives--; updateLivesDisplay(); this.cameras.main.shake(250, 0.03);
                     if (lives <= 0) gameOver.call(this, score);
                 } else { score += 50; scoreText.setText('CUÑADISMO: ' + score); }
             } else if (type === 'carajillo') {
-                isInvincible = true;
-                player.setTint(0xFFD700); player.setScale(2, 1.2);
-                this.time.delayedCall(6000, () => {
-                    isInvincible = false; player.clearTint(); player.setScale(1, 1);
-                });
+                isInvincible = true; player.setTint(0xFFD700); player.setScale(2, 1.2);
+                this.time.delayedCall(6000, () => { isInvincible = false; player.clearTint(); player.setScale(1, 1); });
             }
         }
 
@@ -185,15 +130,18 @@
         }
 
         function update() {
-            items.children.iterate(child => {
-                if (child && child.y > config.height + 50) child.destroy();
-            });
+            items.children.iterate(child => { if (child && child.y > config.height + 50) child.destroy(); });
         }
 
-        async function sha256(message) {
-            const msgBuffer = new TextEncoder().encode(message);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+        async function getHash(message) {
+            if (window.crypto && crypto.subtle) {
+                const msgBuffer = new TextEncoder().encode(message);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+            } else {
+                // Fallback si no hay HTTPS (no es seguro pero permite que el juego funcione en tests/dev)
+                return "unsafe-" + btoa(message);
+            }
         }
 
         async function gameOver(finalScore) {
@@ -203,17 +151,26 @@
             this.physics.pause();
             player.setTint(0xff0000);
 
-            const hash = await sha256(`${USER_ID}${finalScore}${SECRET}`);
+            // Mostrar pantalla de Game Over
+            const screen = document.getElementById('game-over-screen');
+            const scoreDisplay = document.getElementById('final-score-text');
+            const statusDisplay = document.getElementById('status-text');
+            scoreDisplay.innerText = "Puntuación: " + finalScore;
+            screen.style.display = 'flex';
+
+            const hash = await getHash(`${USER_ID}${finalScore}${SECRET}`);
             try {
                 const response = await fetch('/api/game/score', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ user_id: USER_ID, score: finalScore, inline_message_id: INLINE_MESSAGE_ID, hash: hash })
                 });
-                if (response.ok) alert("¡PARTIDA TERMINADA!\nScore: " + finalScore + "\nPuntos guardados.");
-                else alert("Puntos no guardados. Paco sospecha.");
-            } catch (e) { console.error(e); }
-            window.location.reload();
+                if (response.ok) statusDisplay.innerText = "¡Puntos guardados en el ranking!";
+                else statusDisplay.innerText = "Puntos no guardados (Error de servidor)";
+            } catch (e) {
+                console.error("Score submission error", e);
+                statusDisplay.innerText = "Error de conexión al guardar puntos.";
+            }
         }
     </script>
 </body>
