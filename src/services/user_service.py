@@ -270,12 +270,10 @@ class UserService:
         if target_id is None:
             return None
 
-        from tg import get_tg_application
+        from tg import get_initialized_tg_application
 
         try:
-            application = get_tg_application()
-            if not application.running:
-                await application.initialize()
+            application = await get_initialized_tg_application()
 
             bot = application.bot
             photos = await bot.get_user_profile_photos(target_id, limit=1)

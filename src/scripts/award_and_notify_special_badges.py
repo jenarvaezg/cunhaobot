@@ -124,9 +124,8 @@ async def run_award_and_notify(dry_run: bool, concurrency: int) -> None:
     
     if not dry_run:
         try:
-            from tg import get_tg_application
-            tg_app = get_tg_application()
-            await tg_app.initialize()
+            from tg import get_initialized_tg_application
+            tg_app = await get_initialized_tg_application()
         except Exception as e:
             console.print(f"[yellow]Warning: Could not initialize Telegram app: {e}[/yellow]")
 

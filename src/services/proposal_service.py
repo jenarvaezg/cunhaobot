@@ -92,12 +92,10 @@ class ProposalService:
         return self._curators_cache
 
     async def _update_curators_cache(self):
-        from tg import get_tg_application
+        from tg import get_initialized_tg_application
 
         try:
-            application = get_tg_application()
-            if not application.running:
-                await application.initialize()
+            application = await get_initialized_tg_application()
             bot = application.bot
             new_cache: dict[str, str] = {}
             admins = await bot.get_chat_administrators(chat_id=config.mod_chat_id)
@@ -152,11 +150,9 @@ class ProposalService:
         if not proposal:
             return False
         from tg.handlers.utils.callback_query import approve_proposal
-        from tg import get_tg_application
+        from tg import get_initialized_tg_application
 
-        app = get_tg_application()
-        if not app.running:
-            await app.initialize()
+        app = await get_initialized_tg_application()
         await approve_proposal(proposal, app.bot)
         return True
 
@@ -166,11 +162,9 @@ class ProposalService:
         if not proposal:
             return False
         from tg.handlers.utils.callback_query import dismiss_proposal
-        from tg import get_tg_application
+        from tg import get_initialized_tg_application
 
-        app = get_tg_application()
-        if not app.running:
-            await app.initialize()
+        app = await get_initialized_tg_application()
         await dismiss_proposal(proposal, app.bot)
         return True
 

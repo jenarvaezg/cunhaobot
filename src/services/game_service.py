@@ -3,7 +3,7 @@ import hashlib
 from datetime import datetime, timezone, timedelta
 from infrastructure.protocols import UserRepository
 from services.badge_service import BadgeService
-from tg import get_tg_application
+from tg import get_initialized_tg_application
 from core.config import config
 
 logger = logging.getLogger(__name__)
@@ -76,9 +76,7 @@ class GameService:
         # 6. Update Telegram Leaderboard
         if inline_message_id:
             try:
-                application = get_tg_application()
-                if not application.running:
-                    await application.initialize()
+                application = await get_initialized_tg_application()
 
                 await application.bot.set_game_score(
                     user_id=int(user_id),

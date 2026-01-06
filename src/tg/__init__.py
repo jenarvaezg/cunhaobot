@@ -27,3 +27,11 @@ def get_tg_application() -> Application:
         _application.add_error_handler(error_handler)  # type: ignore[invalid-argument-type]
 
     return _application
+
+
+async def get_initialized_tg_application() -> Application:
+    """Gets the Telegram Application and ensures it is initialized."""
+    app = get_tg_application()
+    if not app.running:
+        await app.initialize()
+    return app

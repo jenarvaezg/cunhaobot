@@ -58,7 +58,11 @@ async def test_broadcast_send_text_success(client, mock_users, mock_chats):
             "infrastructure.datastore.chat.ChatDatastoreRepository.load_all",
             return_value=mock_chats,
         ),
-        patch("api.admin.get_tg_application", return_value=mock_app),
+        patch(
+            "api.admin.get_initialized_tg_application",
+            new_callable=AsyncMock,
+            return_value=mock_app,
+        ),
     ):
         response = client.post("/admin/broadcast", data={"message": "Hola caracola"})
         assert response.status_code == 200
@@ -83,7 +87,11 @@ async def test_broadcast_send_image_success(client, mock_chats):
             # Just one private chat for this test
             return_value=[mock_chats[0]],
         ),
-        patch("api.admin.get_tg_application", return_value=mock_app),
+        patch(
+            "api.admin.get_initialized_tg_application",
+            new_callable=AsyncMock,
+            return_value=mock_app,
+        ),
     ):
         # Prepare a dummy file upload
         files = {"data": ("test.png", b"fake-image-bytes", "image/png")}
@@ -112,7 +120,11 @@ async def test_broadcast_send_video_success(client, mock_chats):
             "infrastructure.datastore.chat.ChatDatastoreRepository.load_all",
             return_value=[mock_chats[0]],
         ),
-        patch("api.admin.get_tg_application", return_value=mock_app),
+        patch(
+            "api.admin.get_initialized_tg_application",
+            new_callable=AsyncMock,
+            return_value=mock_app,
+        ),
     ):
         # Prepare a dummy video upload
         files = {"data": ("test.mp4", b"fake-video-bytes", "video/mp4")}
@@ -141,7 +153,11 @@ async def test_broadcast_send_skips_inactive(client, mock_chats):
             "infrastructure.datastore.chat.ChatDatastoreRepository.load_all",
             return_value=mock_chats,
         ),
-        patch("api.admin.get_tg_application", return_value=mock_app),
+        patch(
+            "api.admin.get_initialized_tg_application",
+            new_callable=AsyncMock,
+            return_value=mock_app,
+        ),
     ):
         response = client.post("/admin/broadcast", data={"message": "Skip inactive"})
 
@@ -168,7 +184,11 @@ async def test_broadcast_send_failure_updates_active(client, mock_chats):
         patch(
             "infrastructure.datastore.chat.ChatDatastoreRepository.save"
         ) as mock_save,
-        patch("api.admin.get_tg_application", return_value=mock_app),
+        patch(
+            "api.admin.get_initialized_tg_application",
+            new_callable=AsyncMock,
+            return_value=mock_app,
+        ),
     ):
         response = client.post("/admin/broadcast", data={"message": "fail"})
 
@@ -194,7 +214,11 @@ async def test_broadcast_status_sse_success(client, mock_chats):
             "infrastructure.datastore.chat.ChatDatastoreRepository.load_all",
             return_value=mock_chats,
         ),
-        patch("api.admin.get_tg_application", return_value=mock_app),
+        patch(
+            "api.admin.get_initialized_tg_application",
+            new_callable=AsyncMock,
+            return_value=mock_app,
+        ),
     ):
         # We use a GET request for SSE
         response = client.get("/admin/broadcast/status", params={"message": "SSE test"})

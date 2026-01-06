@@ -10,7 +10,7 @@ from litestar.datastructures import UploadFile
 
 from services.proposal_service import ProposalService
 from core.config import config
-from tg import get_tg_application
+from tg import get_initialized_tg_application
 from infrastructure.protocols import ChatRepository
 
 logger = logging.getLogger(__name__)
@@ -67,9 +67,7 @@ class AdminController(Controller):
                 )
                 return
 
-            application = get_tg_application()
-            if not application.running:
-                await application.initialize()
+            application = await get_initialized_tg_application()
             bot = application.bot
 
             success_count = 0
@@ -152,9 +150,7 @@ class AdminController(Controller):
         if not include_groups:
             targets = [c for c in targets if c.type == "private"]
 
-        application = get_tg_application()
-        if not application.running:
-            await application.initialize()
+        application = await get_initialized_tg_application()
         bot = application.bot
 
         success_count = 0

@@ -78,13 +78,11 @@ class WebController(Controller):
 
             # If not in DB, try to fetch from Telegram
             if not contributor:
-                from tg import get_tg_application
+                from tg import get_initialized_tg_application
                 from models.user import User
 
                 try:
-                    application = get_tg_application()
-                    if not application.running:
-                        await application.initialize()
+                    application = await get_initialized_tg_application()
                     chat = await application.bot.get_chat(phrase.user_id)
                     contributor = User(
                         id=chat.id,
