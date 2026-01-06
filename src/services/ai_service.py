@@ -1,7 +1,6 @@
 import logging
 import os
 import random
-from typing import cast
 from google import genai
 from pydantic import BaseModel
 from pydantic_ai import Agent
@@ -81,7 +80,7 @@ class AIService:
             except Exception:
                 logger.exception("Error initializing Gemini client:")
                 raise
-        return cast(genai.Client, self._client)
+        return self._client
 
     async def generate_cunhao_phrases(
         self,

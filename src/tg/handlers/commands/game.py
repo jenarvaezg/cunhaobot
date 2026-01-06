@@ -2,6 +2,7 @@ from telegram import Update
 from telegram.ext import CallbackContext
 
 from tg.decorators import log_update
+from core.config import config
 
 
 @log_update
@@ -23,13 +24,16 @@ async def handle_game_callback(update: Update, context: CallbackContext) -> None
     if not query or query.game_short_name != "palillo_cunhao":
         return
 
-    # Prepare the URL for the game.
-    # For now, it's a placeholder. Later we will point to our Litestar server.
-    # We pass user_id to identify the player.
+    # Prepare the URL for the game using the base_url from config.
     user_id = query.from_user.id
-    game_url = (
-        f"https://{context.bot.username}.uc.r.appspot.com/game/launch?user_id={user_id}"
-    )
+    inline_message_id = query.inline_message_id
+
+    # Ensure base_url doesn't end with slash or handle it
+    base = config.base_url.rstrip("/")
+    game_url = f"{base}/game/launch?user_id={user_id}"
+
+    if inline_message_id:
+        game_url += f"&inline_message_id={inline_message_id}"
 
     # Answer the callback query with the URL.
     # This is what opens the Telegram WebView/Browser.

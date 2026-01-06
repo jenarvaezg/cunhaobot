@@ -72,8 +72,14 @@ async def handle_gift_command(update: Update, context: CallbackContext) -> None:
         keyboard.append(row)
 
     reply_markup = InlineKeyboardMarkup(keyboard)
+
+    # receiver can be a telegram.User or our domain User
+    receiver_name = getattr(receiver, "first_name", None) or getattr(
+        receiver, "name", "el chaval"
+    )
+
     await message.reply_text(
-        f"¿Qué detalle quieres tener con {receiver.first_name}?",
+        f"¿Qué detalle quieres tener con {receiver_name}?",
         reply_markup=reply_markup,
     )
 
