@@ -73,7 +73,13 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
                 if value == "__EMPTY__":
                     # Fallback to full load if __EMPTY__ is used
                     return None
-                query.add_filter(field, "=", value)
+
+                # Normalize numeric strings to int for better DB matching
+                val = value
+                if isinstance(value, str) and value.isdigit():
+                    val = int(value)
+
+                query.add_filter(filter=datastore.query.PropertyFilter(field, "=", val))
 
             # Datastore fetch
             return [
@@ -85,6 +91,24 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
 
         results_or_none = await asyncio.to_thread(_fetch)
         if results_or_none is not None:
+            # Fallback: if we filtered by user_id and got 0 results, try string ID
+            user_id_filter = filters.get("user_id")
+            if not results_or_none and user_id_filter and str(user_id_filter).isdigit():
+
+                def _fetch_string_fallback():
+                    q = self.client.query(kind=self.kind)
+                    q.add_filter(
+                        filter=datastore.query.PropertyFilter(
+                            "user_id", "=", str(user_id_filter)
+                        )
+                    )
+                    return [
+                        self._entity_to_domain(e)
+                        for e in q.fetch(limit=limit if limit > 0 else None)
+                    ]
+
+                results_or_none = await asyncio.to_thread(_fetch_string_fallback)
+
             return results_or_none
 
         # Fallback to load_all for complex filters or search
@@ -120,19 +144,40 @@ class PhraseDatastoreRepository(DatastoreRepository[Phrase]):
             phrase.usages += 1
             await self.save(phrase)
 
-    async def get_user_phrase_count(self, user_id: str) -> int:
+    async def get_user_phrase_count(self, user_id: str | int) -> int:
         """Counts phrases authored by a specific user."""
 
         def _count():
             try:
+                # Try numeric ID first
+                uid = user_id
+                if isinstance(user_id, str) and user_id.isdigit():
+                    uid = int(user_id)
+
                 query = self.client.query(kind=self.kind)
-                query.add_filter("user_id", "=", str(user_id))
+                query.add_filter(
+                    filter=datastore.query.PropertyFilter("user_id", "=", uid)
+                )
 
                 count_query = self.client.aggregation_query(query=query)
                 count_query.count(alias="all")
                 results = list(count_query.fetch())
                 if results and len(results) > 0 and len(results[0]) > 0:
-                    return int(results[0][0].value)
+                    count = int(results[0][0].value)
+                    if count > 0:
+                        return count
+
+                # Try string fallback
+                query2 = self.client.query(kind=self.kind)
+                query2.add_filter(
+                    filter=datastore.query.PropertyFilter("user_id", "=", str(uid))
+                )
+                count_query2 = self.client.aggregation_query(query=query2)
+                count_query2.count(alias="all")
+                results2 = list(count_query2.fetch())
+                if results2 and len(results2) > 0 and len(results2[0]) > 0:
+                    return int(results2[0][0].value)
+
                 return 0
             except Exception as e:
                 logger.error(f"Error counting phrases for user {user_id}: {e}")
