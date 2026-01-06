@@ -10,14 +10,33 @@
         body { margin: 0; padding: 0; background-color: #1a1a1a; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         #game-container { width: 100%; height: 100%; }
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
+        #start-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 300; text-align: center; color: white; }
         #game-over-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 200; text-align: center; }
         .btn { background: #FFD700; color: #000; padding: 15px 30px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 1.2rem; }
+        ul li { margin: 5px 0; font-size: 1.1rem; }
     </style>
 </head>
 <body>
     <div id="loading-overlay">
         <h2>ABRIENDO EL BAR...</h2>
         <p>Sacando los palillos...</p>
+    </div>
+
+    <div id="start-screen">
+        <h1 style="color: #FFD700; font-size: 2.5rem; margin-bottom: 10px;">PACO'S TAPAS RUNNER</h1>
+        <div style="font-size: 1rem; max-width: 90%; line-height: 1.4; margin-bottom: 20px; text-align: left;">
+            <p style="text-align: center;">🇪🇸 ¡Bienvenido a la barra, fiera!</p>
+            <ul style="list-style-type: none; padding: 0;">
+                <li>✅ <b>Croqueta (+10):</b> Clásico básico.</li>
+                <li>🍖 <b>Jamón (+50):</b> Delicatessen pura.</li>
+                <li>☕ <b>Carajillo:</b> Te hace invencible.</li>
+                <li>🥑 <b>Aguacate (-1 Vida):</b> ¡Comida de modernos!</li>
+                <li>🍣 <b>Sushi (-1 Vida):</b> ¡Aquí se usa tenedor!</li>
+                <li>💸 <b>Factura (-50):</b> La dolorosa...</li>
+            </ul>
+            <p style="text-align: center; margin-top: 15px;">Mueve el palillo para pinchar lo bueno.</p>
+        </div>
+        <button id="start-btn" class="btn">¡OÍDO COCINA!</button>
     </div>
 
     <div id="game-over-screen">
@@ -33,6 +52,7 @@
         const USER_ID = "{{ user_id }}";
         const INLINE_MESSAGE_ID = "{{ inline_message_id }}";
         const SECRET = "{{ secret }}";
+        const GREETING_AUDIO_URL = "{{ greeting_audio_url }}";
 
         const config = {
             type: Phaser.AUTO,
@@ -44,7 +64,8 @@
         };
 
         const game = new Phaser.Game(config);
-        let player, items, background, bar, score = 0, lives = 3, scoreText, livesText, timerText, gameActive = true, isInvincible = false, timeLeft = 45;
+        let player, items, background, bar, score = 0, lives = 3, scoreText, livesText, timerText, gameActive = false, isInvincible = false, timeLeft = 45;
+        let spawnEvent, timerEvent;
 
         function preload() {
             // Load assets
@@ -62,28 +83,23 @@
 
         function create() {
             document.getElementById('loading-overlay').style.display = 'none';
+            // Show start screen instead
+            document.getElementById('start-screen').style.display = 'flex';
 
             // Background (Tiled)
-            // Scale background to a reasonable size (e.g. 0.5)
             background = this.add.tileSprite(config.width / 2, config.height / 2, config.width, config.height, 'baldosa');
             background.setTileScale(0.5, 0.5);
 
             // Bar at the bottom
             bar = this.add.tileSprite(config.width / 2, config.height - 20, config.width, 40, 'barra');
-            bar.setTileScale(0.5, 0.5); // Scale bar texture
+            bar.setTileScale(0.5, 0.5);
             this.physics.add.existing(bar, true);
 
             // Player
             player = this.physics.add.sprite(config.width / 2, config.height - 100, 'palillo');
             player.setCollideWorldBounds(true);
-
-            // Scale player down (assets are 1024x1024)
             player.setScale(0.12);
-
-            // Fix orientation (user reported it was upside down)
             player.angle = 180;
-
-            // Adjust body size after scaling (Phaser handles scale, but explicit body sizing helps collision)
             player.body.setSize(player.width * 0.6, player.height * 0.8);
             player.body.setOffset(player.width * 0.2, player.height * 0.1);
 
@@ -103,11 +119,28 @@
                 }
             });
 
+            this.physics.add.overlap(player, items, handleCollision, null, this);
+
+            // Start Button Logic
+            document.getElementById('start-btn').addEventListener('click', () => {
+                document.getElementById('start-screen').style.display = 'none';
+                gameActive = true;
+                startTimers.call(this);
+
+                // Play Audio
+                if (GREETING_AUDIO_URL) {
+                    const audio = new Audio(GREETING_AUDIO_URL);
+                    audio.play().catch(e => console.log("Audio play failed", e));
+                }
+            });
+        }
+
+        function startTimers() {
             // Spawner
-            this.time.addEvent({ delay: 600, callback: spawnRandomItem, callbackScope: this, loop: true });
+            spawnEvent = this.time.addEvent({ delay: 600, callback: spawnRandomItem, callbackScope: this, loop: true });
 
             // Timer
-            this.time.addEvent({
+            timerEvent = this.time.addEvent({
                 delay: 1000,
                 callback: () => {
                     if (!gameActive) return;
@@ -117,8 +150,6 @@
                 },
                 callbackScope: this, loop: true
             });
-
-            this.physics.add.overlap(player, items, handleCollision, null, this);
         }
 
         function spawnRandomItem() {
@@ -127,7 +158,6 @@
             const rand = Math.random();
             let type;
 
-            // Spawn logic probabilities
             if (rand < 0.50) type = 'croqueta';
             else if (rand < 0.75) type = 'aguacate';
             else if (rand < 0.85) type = 'sushi';
@@ -137,17 +167,10 @@
 
             const item = items.create(x, -50, type);
             item.setData('type', type);
-
-            // Scale items down
             item.setScale(0.08);
-
-            // Circular body for better collision
             item.setCircle(item.width / 2.2);
-
-            // Random rotation for visual flair
             item.setAngularVelocity(Phaser.Math.Between(-100, 100));
 
-            // Speed increases with score
             const speed = 250 + (score / 3);
             if (type === 'jamon') item.setVelocityY(speed * 1.5);
             else if (type === 'factura') item.setVelocityY(speed * 0.8);
@@ -158,7 +181,6 @@
             const type = item.getData('type');
             item.destroy();
 
-            // FX
             this.cameras.main.shake(50, 0.005);
 
             if (type === 'croqueta') {
@@ -175,7 +197,7 @@
                     showFloatingText.call(this, player.x, player.y, '¡VETE A UN STARBUCKS!', '#00FF00');
                     if (lives <= 0) gameOver.call(this, score);
                 } else {
-                    score += 25; // Smash bad items when invincible
+                    score += 25;
                     showFloatingText.call(this, player.x, player.y, '¡CRUNCH!', '#FFFF00');
                 }
             } else if (type === 'factura') {
@@ -186,13 +208,12 @@
             } else if (type === 'carajillo') {
                 isInvincible = true;
                 player.setTint(0xFFD700);
-                // When invincible, scale up slightly (taking into account base scale)
                 player.setScale(0.15);
                 showFloatingText.call(this, player.x, player.y, '¡OÍDO COCINA!', '#FFFFFF');
                 this.time.delayedCall(6000, () => {
                     isInvincible = false;
                     player.clearTint();
-                    player.setScale(0.12); // Reset to normal scale
+                    player.setScale(0.12);
                 });
             }
             scoreText.setText('CUÑADISMO: ' + score);
@@ -238,6 +259,9 @@
         async function gameOver(finalScore) {
             if (!gameActive) return;
             gameActive = false;
+
+            if (spawnEvent) spawnEvent.remove();
+            if (timerEvent) timerEvent.remove();
 
             this.physics.pause();
             player.setTint(0xff0000);

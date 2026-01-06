@@ -1,5 +1,6 @@
 import logging
 import hashlib
+import zlib
 from typing import Annotated
 from litestar import Controller, Request, get, post
 from litestar.response import Template
@@ -8,7 +9,10 @@ from litestar.exceptions import HTTPException
 
 from services.game_service import GameService
 from services.user_service import UserService
+from services.tts_service import TTSService
 from core.config import config
+from utils.ui import apelativo
+from models.phrase import Phrase
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +24,7 @@ class GameController(Controller):
     async def launch_game(
         self,
         request: Request,
+        tts_service: Annotated[TTSService, Dependency()],
     ) -> Template:
         """Endpoint called by Telegram to launch the game."""
         # Validate telegram web app init data if possible, or use simplified launch
@@ -31,6 +36,15 @@ class GameController(Controller):
             # Fallback for testing or direct access
             user_id = "guest"
 
+        # Generate greeting audio
+        ap = apelativo()
+        text = f"¿Qué pasa, {ap}?"
+        # Use a stable integer ID for caching based on the apelativo
+        phrase_id = zlib.adler32(text.encode())
+        dummy_phrase = Phrase(text=text, id=phrase_id)
+
+        greeting_audio_url = tts_service.get_audio_url(dummy_phrase, "game")
+
         return Template(
             template_name="game.html",
             context={
@@ -39,6 +53,7 @@ class GameController(Controller):
                 "game_short_name": "palillo_cunhao",
                 "secret": config.session_secret,
                 "is_web": False,
+                "greeting_audio_url": greeting_audio_url,
             },
         )
 
