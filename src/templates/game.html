@@ -224,9 +224,9 @@
             let text = this.add.text(x, y - 20, message, { fontSize: '20px', fontStyle: 'bold', fill: color, stroke: '#000', strokeThickness: 3 });
             this.tweens.add({
                 targets: text,
-                y: y - 80,
+                y: y - 120,
                 alpha: 0,
-                duration: 1000,
+                duration: 2500,
                 ease: 'Power2',
                 onComplete: () => text.destroy()
             });
