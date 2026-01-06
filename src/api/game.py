@@ -25,6 +25,14 @@ class GameController(Controller):
         # We can also pass inline_message_id if we want to update the leaderboard
         inline_message_id = request.query_params.get("inline_message_id")
 
+        # Read the music pattern from the doc file
+        music_pattern = ""
+        try:
+            with open("docs/music_pattern.strudel", "r") as f:
+                music_pattern = f.read()
+        except Exception as e:
+            logger.error(f"Could not read music pattern: {e}")
+
         return Template(
             template_name="game.html",
             context={
@@ -32,6 +40,7 @@ class GameController(Controller):
                 "inline_message_id": inline_message_id,
                 "game_short_name": "palillo_cunhao",
                 "secret": config.session_secret,
+                "music_pattern": music_pattern,
             },
         )
 
