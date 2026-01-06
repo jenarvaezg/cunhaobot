@@ -64,16 +64,28 @@
             document.getElementById('loading-overlay').style.display = 'none';
 
             // Background (Tiled)
+            // Scale background to a reasonable size (e.g. 0.5)
             background = this.add.tileSprite(config.width / 2, config.height / 2, config.width, config.height, 'baldosa');
+            background.setTileScale(0.5, 0.5);
 
             // Bar at the bottom
             bar = this.add.tileSprite(config.width / 2, config.height - 20, config.width, 40, 'barra');
-            this.physics.add.existing(bar, true); // Static body for the bar if needed, or just visual
+            bar.setTileScale(0.5, 0.5); // Scale bar texture
+            this.physics.add.existing(bar, true);
 
             // Player
-            player = this.physics.add.sprite(config.width / 2, config.height - 80, 'palillo');
+            player = this.physics.add.sprite(config.width / 2, config.height - 100, 'palillo');
             player.setCollideWorldBounds(true);
-            player.setBodySize(10, 80); // Adjust hitbox for the toothpick
+
+            // Scale player down (assets are 1024x1024)
+            player.setScale(0.12);
+
+            // Fix orientation (user reported it was upside down)
+            player.angle = 180;
+
+            // Adjust body size after scaling (Phaser handles scale, but explicit body sizing helps collision)
+            player.body.setSize(player.width * 0.6, player.height * 0.8);
+            player.body.setOffset(player.width * 0.2, player.height * 0.1);
 
             items = this.physics.add.group();
 
@@ -116,23 +128,29 @@
             let type;
 
             // Spawn logic probabilities
-            if (rand < 0.50) type = 'croqueta'; // 50% Common Good
-            else if (rand < 0.75) type = 'aguacate'; // 25% Common Bad
-            else if (rand < 0.85) type = 'sushi'; // 10% Rare Bad
-            else if (rand < 0.92) type = 'factura'; // 7% Points Bad
-            else if (rand < 0.98) type = 'jamon'; // 6% Rare Good
-            else type = 'carajillo'; // 2% Power-up
+            if (rand < 0.50) type = 'croqueta';
+            else if (rand < 0.75) type = 'aguacate';
+            else if (rand < 0.85) type = 'sushi';
+            else if (rand < 0.92) type = 'factura';
+            else if (rand < 0.98) type = 'jamon';
+            else type = 'carajillo';
 
             const item = items.create(x, -50, type);
             item.setData('type', type);
+
+            // Scale items down
+            item.setScale(0.08);
+
+            // Circular body for better collision
+            item.setCircle(item.width / 2.2);
 
             // Random rotation for visual flair
             item.setAngularVelocity(Phaser.Math.Between(-100, 100));
 
             // Speed increases with score
             const speed = 250 + (score / 3);
-            if (type === 'jamon') item.setVelocityY(speed * 1.5); // Jamon falls faster
-            else if (type === 'factura') item.setVelocityY(speed * 0.8); // Factura falls slower (floating)
+            if (type === 'jamon') item.setVelocityY(speed * 1.5);
+            else if (type === 'factura') item.setVelocityY(speed * 0.8);
             else item.setVelocityY(speed);
         }
 
@@ -168,12 +186,13 @@
             } else if (type === 'carajillo') {
                 isInvincible = true;
                 player.setTint(0xFFD700);
-                player.setScale(1.5);
+                // When invincible, scale up slightly (taking into account base scale)
+                player.setScale(0.15);
                 showFloatingText.call(this, player.x, player.y, '¡OÍDO COCINA!', '#FFFFFF');
                 this.time.delayedCall(6000, () => {
                     isInvincible = false;
                     player.clearTint();
-                    player.setScale(1);
+                    player.setScale(0.12); // Reset to normal scale
                 });
             }
             scoreText.setText('CUÑADISMO: ' + score);
@@ -193,9 +212,6 @@
 
         function updateLivesDisplay() {
             let text = "SERVILLETAS: ";
-            // Could use images here, but text emoji is fine for now, or use the servilleta sprite if wanted.
-            // Let's stick to emoji for clarity in text field, or maybe add sprites?
-            // Reverting to simple text to match style
             for(let i=0; i<lives; i++) text += "🧻";
             livesText.setText(text);
         }
