@@ -129,6 +129,25 @@ class GameController(Controller):
             message_id=message_id,
         )
 
+        # If it failed, maybe user is missing from DB (e.g. web play without prior bot interaction)
+        if not success and user_id != "guest":
+            user_session = request.session.get("user")
+            if user_session and str(user_session.get("id")) == str(user_id):
+                # Create skeleton user from session
+                await user_service.update_user_data(
+                    user_id=user_id,
+                    name=user_session.get("first_name", "Usuario Web"),
+                    username=user_session.get("username"),
+                )
+                # Retry
+                success = await game_service.set_score(
+                    user_id=user_id,
+                    score=score,
+                    inline_message_id=inline_message_id,
+                    chat_id=chat_id,
+                    message_id=message_id,
+                )
+
         # Award points to user based on performance (1 point per 100 points in game)
         if success and user_id != "guest":
             points = int(score / 100)

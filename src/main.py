@@ -15,6 +15,7 @@ from api import WebController, AdminController, GameController
 from api.slack import SlackController
 from api.bot import BotController
 from api.utils import get_proposals_context
+from services import UserService
 from utils import verify_telegram_auth
 from utils.ui import apelativo
 from infrastructure.protocols import ProposalRepository, LongProposalRepository
@@ -25,16 +26,33 @@ logger = logging.getLogger(__name__)
 
 
 @get("/auth/telegram")
-async def auth_telegram(request: Request) -> Redirect:
+async def auth_telegram(
+    request: Request,
+    user_service: Annotated[UserService, Dependency()],
+) -> Redirect:
     if not verify_telegram_auth(dict(request.query_params), config.tg_token):
         return Redirect(path="/")
+
+    user_data = dict(request.query_params)
+    user_id = user_data.get("id")
+    first_name = user_data.get("first_name", "Usuario Web")
+    username = user_data.get("username")
+
+    if user_id:
+        await user_service.update_user_data(
+            user_id=user_id,
+            name=first_name,
+            username=username,
+            platform="telegram",
+        )
+
     request.set_session(
         {
             "user": {
-                "id": request.query_params.get("id"),
-                "first_name": request.query_params.get("first_name"),
-                "username": request.query_params.get("username"),
-                "photo_url": request.query_params.get("photo_url"),
+                "id": user_id,
+                "first_name": first_name,
+                "username": username,
+                "photo_url": user_data.get("photo_url"),
             }
         }
     )

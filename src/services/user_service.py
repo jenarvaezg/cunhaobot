@@ -78,7 +78,7 @@ class UserService:
     async def save_chat(self, chat: Chat) -> None:
         await self.chat_repo.save(chat)
 
-    async def _update_or_create_user(
+    async def update_user_data(
         self,
         user_id: str | int,
         name: str,
@@ -119,7 +119,7 @@ class UserService:
         await self.user_repo.save(user)
         return user
 
-    async def _update_or_create_chat(
+    async def update_chat_data(
         self,
         chat_id: str | int,
         title: str,
@@ -165,7 +165,7 @@ class UserService:
         if not (update_user := update.effective_user):
             return None
 
-        return await self._update_or_create_user(
+        return await self.update_user_data(
             user_id=update_user.id,
             name=update_user.name,
             username=update_user.username,
@@ -184,7 +184,7 @@ class UserService:
         user_name = user.name
         user_username = user.username
 
-        db_user = await self._update_or_create_user(
+        db_user = await self.update_user_data(
             user_id=user_id,
             name=user_name,
             username=user_username,
@@ -201,7 +201,7 @@ class UserService:
         chat_type = message.chat.type
         chat_username = message.chat.username
 
-        await self._update_or_create_chat(
+        await self.update_chat_data(
             chat_id=chat_id,
             title=chat_title or "Unknown",
             chat_type=chat_type,
@@ -217,7 +217,7 @@ class UserService:
         name: str,
         username: str | None = None,
     ) -> User:
-        return await self._update_or_create_user(
+        return await self.update_user_data(
             user_id=slack_user_id,
             name=name,
             username=username,

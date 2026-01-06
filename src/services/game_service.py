@@ -38,7 +38,17 @@ class GameService:
         if user_id == "guest":
             return True
 
-        user = await self.user_repo.load(user_id)
+        # Ensure user_id is int if it looks like one (Telegram IDs are ints)
+        uid_to_load = user_id
+        if isinstance(user_id, str) and user_id.lstrip("-").isdigit():
+            uid_to_load = int(user_id)
+
+        user = await self.user_repo.load(uid_to_load)
+        if not user:
+            # Fallback: try as string if int failed (legacy support?)
+            if isinstance(uid_to_load, int):
+                user = await self.user_repo.load(str(uid_to_load))
+
         if not user:
             logger.warning(f"User {user_id} not found when processing score")
             return False
