@@ -15,6 +15,7 @@ async def test_handle_gift_command_text_mention():
     sender = MagicMock(spec=User)
     sender.id = 1
     sender.first_name = "Sender"
+    sender.username = "sender"
     message.from_user = sender
     update.effective_user = sender
 
@@ -22,7 +23,15 @@ async def test_handle_gift_command_text_mention():
     receiver = MagicMock(spec=User)
     receiver.id = 2
     receiver.first_name = "Receiver"
+    receiver.username = "receiver"
     receiver.is_bot = False
+
+    # Chat
+    chat = MagicMock()
+    chat.type = "private"
+    chat.title = "Chat"
+    message.chat = chat
+    update.effective_chat = chat
 
     # Entities
     entity = MagicMock(spec=MessageEntity)
@@ -53,8 +62,16 @@ async def test_handle_gift_command_mention_success():
     # Sender
     sender = MagicMock(spec=User)
     sender.id = 1
+    sender.username = "sender"
     message.from_user = sender
     update.effective_user = sender
+
+    # Chat
+    chat = MagicMock()
+    chat.type = "private"
+    chat.title = "Chat"
+    message.chat = chat
+    update.effective_chat = chat
 
     # Entities
     entity = MagicMock(spec=MessageEntity)
@@ -92,8 +109,16 @@ async def test_handle_gift_command_mention_not_found():
     # Sender
     sender = MagicMock(spec=User)
     sender.id = 1
+    sender.username = "sender"
     message.from_user = sender
     update.effective_user = sender
+
+    # Chat
+    chat = MagicMock()
+    chat.type = "private"
+    chat.title = "Chat"
+    message.chat = chat
+    update.effective_chat = chat
 
     # Entities
     entity = MagicMock(spec=MessageEntity)

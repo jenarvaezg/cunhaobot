@@ -11,8 +11,10 @@ async def test_handle_stop():
     update.to_dict.return_value = {"update_id": 1}
     update.effective_user.id = 123
     update.effective_user.name = "testuser"
+    update.effective_user.username = "testuser"
     update.effective_chat.id = 456
     update.effective_chat.type = Chat.PRIVATE
+    update.effective_chat.title = "Chat"
     update.effective_chat.PRIVATE = Chat.PRIVATE
     update.effective_message.chat_id = 456
     update.effective_message.reply_text = AsyncMock()

@@ -16,6 +16,7 @@ async def test_handle_successful_payment_gift_private_notification():
     update.effective_user.name = "Pepe"
     update.effective_user.username = "pepe"
     message.chat.type = "group"
+    message.chat.title = "Group Chat"
     message.chat_id = 100  # Group ID
 
     payment = MagicMock(spec=SuccessfulPayment)
@@ -27,6 +28,7 @@ async def test_handle_successful_payment_gift_private_notification():
     user = MagicMock(spec=User)
     user.id = 123
     user.first_name = "Sender"
+    user.username = "sender"
     message.from_user = user
 
     context = MagicMock()
@@ -38,7 +40,6 @@ async def test_handle_successful_payment_gift_private_notification():
     receiver_user.username = "receiver"
     receiver_user.name = "Receiver"
 
-    # Simulate user NOT in chat (TelegramError)
     context.bot.get_chat_member.side_effect = TelegramError("User not found")
 
     with (
@@ -76,6 +77,7 @@ async def test_handle_successful_payment_gift_no_private_notification_if_present
     update.effective_user.name = "Pepe"
     update.effective_user.username = "pepe"
     message.chat.type = "group"
+    message.chat.title = "Group Chat"
     message.chat_id = 100  # Group ID
 
     payment = MagicMock(spec=SuccessfulPayment)
@@ -87,6 +89,7 @@ async def test_handle_successful_payment_gift_no_private_notification_if_present
     user = MagicMock(spec=User)
     user.id = 123
     user.first_name = "Sender"
+    user.username = "sender"
     message.from_user = user
 
     context = MagicMock()

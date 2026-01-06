@@ -30,8 +30,12 @@ class TestCallbackQuery:
     @pytest.mark.asyncio
     async def test_handle_callback_query_not_admin(self):
         update = MagicMock()
+        update.effective_user.username = "testuser"
+        update.effective_chat.type = "private"
+        update.effective_chat.title = "Chat"
         update.callback_query.data = "LIKE:123:Proposal"
         update.callback_query.from_user.id = 999
+        update.callback_query.from_user.username = "testuser"
         update.callback_query.answer = AsyncMock()
 
         context = MagicMock()
@@ -52,8 +56,12 @@ class TestCallbackQuery:
     @pytest.mark.asyncio
     async def test_handle_callback_query_proposal_not_found(self):
         update = MagicMock()
+        update.effective_user.username = "testuser"
+        update.effective_chat.type = "private"
+        update.effective_chat.title = "Chat"
         update.callback_query.data = "LIKE:123:Proposal"
         update.callback_query.from_user.id = 1
+        update.callback_query.from_user.username = "testuser"
         update.callback_query.answer = AsyncMock()
 
         context = MagicMock()
@@ -75,8 +83,12 @@ class TestCallbackQuery:
     @pytest.mark.asyncio
     async def test_handle_callback_query_vote_and_approve(self):
         update = MagicMock()
+        update.effective_user.username = "testuser"
+        update.effective_chat.type = "private"
+        update.effective_chat.title = "Chat"
         update.callback_query.data = "LIKE:123:Proposal"
         update.callback_query.from_user.id = 1
+        update.callback_query.from_user.username = "testuser"
         update.callback_query.answer = AsyncMock()
 
         context = MagicMock()
@@ -118,8 +130,12 @@ class TestCallbackQuery:
     @pytest.mark.asyncio
     async def test_handle_callback_query_vote_and_dismiss(self):
         update = MagicMock()
+        update.effective_user.username = "testuser"
+        update.effective_chat.type = "private"
+        update.effective_chat.title = "Chat"
         update.callback_query.data = "DISLIKE:123:LongProposal"
         update.callback_query.from_user.id = 1
+        update.callback_query.from_user.username = "testuser"
         update.callback_query.answer = AsyncMock()
 
         context = MagicMock()

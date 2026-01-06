@@ -6,6 +6,9 @@ from tg.handlers.commands.help import handle_help
 @pytest.mark.asyncio
 async def test_handle_help():
     update = MagicMock()
+    update.effective_user.username = "testuser"
+    update.effective_chat.type = "private"
+    update.effective_chat.title = "Chat"
     update.effective_message.reply_text = AsyncMock()
     context = MagicMock()
 

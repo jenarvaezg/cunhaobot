@@ -14,6 +14,8 @@ async def test_handle_message_empty():
 @pytest.mark.asyncio
 async def test_handle_message_mention_trigger():
     update = MagicMock()
+    update.effective_user.username = "testuser"
+    update.effective_chat.title = "Chat"
     update.effective_message.text = "Hola @TestBot"
     update.effective_message.reply_text = AsyncMock()
     update.effective_message.set_reaction = AsyncMock()
@@ -21,6 +23,7 @@ async def test_handle_message_mention_trigger():
     update.effective_message.chat.type = "group"
     update.effective_message.reply_to_message = None
     update.effective_message.from_user.id = 123
+    update.effective_message.from_user.username = "testuser"
 
     context = MagicMock()
     context.bot.username = "TestBot"
@@ -54,6 +57,8 @@ async def test_handle_message_mention_trigger():
 @pytest.mark.asyncio
 async def test_handle_message_no_trigger_only_reaction():
     update = MagicMock()
+    update.effective_user.username = "testuser"
+    update.effective_chat.title = "Chat"
     update.effective_message.text = "Solo un mensaje en el grupo"
     update.effective_message.reply_text = AsyncMock()
     update.effective_message.set_reaction = AsyncMock()

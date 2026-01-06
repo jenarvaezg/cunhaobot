@@ -13,6 +13,7 @@ async def test_handle_about():
     update.effective_message.chat.type = "group"
     update.effective_user.id = 12345
     update.effective_user.name = "Test User"
+    update.effective_user.username = "test_user"
     update.effective_message.chat_id = 1
     context = MagicMock()
 
