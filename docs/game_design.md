@@ -22,4 +22,7 @@ Catching game 2D de ritmo rápido para Telegram Gaming Platform. El jugador cont
 ## 4. Estética
 *   **Arte:** Pixel Art 8-bit.
 *   **Escenario:** Barra de bar metálica con azulejos de fondo.
-*   **Audio:** Música de pasodoble chiptune y efectos de sonido de "¡Oído cocina!".
+*   **Audio:**
+    *   **Música:** Pasodoble estilo chiptune (pendiente).
+    *   **Voces:** Saludos y frases de "cuñao" generadas por IA (TTS) al inicio y al final de la partida.
+    *   **SFX:** Sonidos de "crunch", caja registradora y golpes.
