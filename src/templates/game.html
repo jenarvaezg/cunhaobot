@@ -10,14 +10,14 @@
         body {
             margin: 0;
             padding: 0;
-            background-color: #000;
+            background-color: #1a1a1a;
             overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             color: white;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         #game-container {
             width: 100%;
@@ -56,54 +56,174 @@
         let player;
         let items;
         let score = 0;
+        let lives = 3;
         let scoreText;
+        let livesText;
+        let timerText;
         let gameActive = true;
+        let isInvincible = false;
+        let timeLeft = 30;
 
         function preload() {
-            this.load.image('palillo', 'https://labs.phaser.io/assets/sprites/phaser-dude.png');
+            // Create placeholders programmatically
+            const graphics = this.make.graphics();
+
+            // Palillo (Player) - Slender wooden stick
+            graphics.fillStyle(0xDEB887, 1);
+            graphics.fillRect(0, 0, 8, 80);
+            graphics.generateTexture('palillo', 8, 80);
+            graphics.clear();
+
+            // Croqueta (Good) - Golden brown ellipse
+            graphics.fillStyle(0xCD853F, 1);
+            graphics.fillEllipse(15, 15, 30, 20);
+            graphics.generateTexture('croqueta', 30, 30);
+            graphics.clear();
+
+            // Aguacate (Bad) - Green ellipse (The enemy of the cuñao)
+            graphics.fillStyle(0x228B22, 1);
+            graphics.fillEllipse(15, 15, 25, 35);
+            graphics.generateTexture('aguacate', 30, 40);
+            graphics.clear();
+
+            // Carajillo (Power-up) - Small dark glass
+            graphics.fillStyle(0x4B3621, 1);
+            graphics.fillRect(5, 5, 20, 25);
+            graphics.generateTexture('carajillo', 30, 30);
+            graphics.clear();
         }
 
         function create() {
-            player = this.physics.add.sprite(config.width / 2, config.height - 50, 'palillo');
-            player.setCollideWorldBounds(true);
-            items = this.physics.add.group();
-            scoreText = this.add.text(16, 16, 'Cuñadismo: 0', { fontSize: '32px', fill: '#FFF' });
+            // Barra de bar (Background element)
+            this.add.rectangle(0, config.height - 40, config.width, 40, 0x333333).setOrigin(0, 0);
 
+            player = this.physics.add.sprite(config.width / 2, config.height - 80, 'palillo');
+            player.setCollideWorldBounds(true);
+
+            items = this.physics.add.group();
+
+            // UI
+            scoreText = this.add.text(20, 20, 'CUÑADISMO: 0', {
+                fontSize: '24px',
+                fontWeight: 'bold',
+                fill: '#FFD700',
+                stroke: '#000',
+                strokeThickness: 4
+            });
+
+            livesText = this.add.text(20, 55, 'SERVILLETAS: 🧻🧻🧻', {
+                fontSize: '18px',
+                fill: '#FFF'
+            });
+
+            timerText = this.add.text(config.width - 160, 20, 'TIEMPO: 30', {
+                fontSize: '24px',
+                fill: '#FFF',
+                stroke: '#000',
+                strokeThickness: 2
+            });
+
+            // Input - Support both touch and mouse
             this.input.on('pointermove', function (pointer) {
                 if (gameActive) {
                     player.x = pointer.x;
                 }
             });
 
+            // Spawning logic
             this.time.addEvent({
-                delay: 1000,
-                callback: spawnItem,
+                delay: 700,
+                callback: spawnRandomItem,
                 callbackScope: this,
                 loop: true
             });
 
-            this.physics.add.overlap(player, items, collectItem, null, this);
+            // Countdown timer
+            this.time.addEvent({
+                delay: 1000,
+                callback: () => {
+                    if (!gameActive) return;
+                    timeLeft--;
+                    timerText.setText('TIEMPO: ' + timeLeft);
+                    if (timeLeft <= 0) gameOver.call(this, score);
+                },
+                callbackScope: this,
+                loop: true
+            });
 
-            // End game after 30 seconds for MVP
-            this.time.delayedCall(30000, () => gameOver(score), [], this);
+            this.physics.add.overlap(player, items, handleCollision, null, this);
         }
 
-        function spawnItem() {
+        function spawnRandomItem() {
             if (!gameActive) return;
-            const x = Phaser.Math.Between(0, config.width);
-            const item = items.create(x, 0, 'palillo');
-            item.setVelocityY(200 + (score / 10));
+            const x = Phaser.Math.Between(30, config.width - 30);
+            const rand = Math.random();
+
+            let type;
+            if (rand < 0.65) type = 'croqueta';
+            else if (rand < 0.92) type = 'aguacate';
+            else type = 'carajillo';
+
+            const item = items.create(x, -50, type);
+            item.setData('type', type);
+            // Speed increases with score
+            item.setVelocityY(250 + (score / 4));
         }
 
-        function collectItem(player, item) {
+        function handleCollision(player, item) {
+            const type = item.getData('type');
             item.destroy();
-            score += 10;
-            scoreText.setText('Cuñadismo: ' + score);
+
+            if (type === 'croqueta') {
+                score += 10;
+                scoreText.setText('CUÑADISMO: ' + score);
+                // Simple visual pop
+                this.tweens.add({
+                    targets: scoreText,
+                    scale: 1.2,
+                    duration: 100,
+                    yoyo: true
+                });
+            } else if (type === 'aguacate') {
+                if (!isInvincible) {
+                    lives--;
+                    updateLivesDisplay();
+                    this.cameras.main.shake(250, 0.03);
+                    player.setTint(0xff0000);
+                    this.time.delayedCall(200, () => player.clearTint());
+
+                    if (lives <= 0) gameOver.call(this, score);
+                } else {
+                    // Invincible destroys obstacles for extra points
+                    score += 50;
+                    scoreText.setText('CUÑADISMO: ' + score);
+                }
+            } else if (type === 'carajillo') {
+                activatePowerUp.call(this);
+            }
+        }
+
+        function activatePowerUp() {
+            isInvincible = true;
+            player.setTint(0xFFD700);
+            player.setScale(2, 1.2);
+
+            this.time.delayedCall(6000, () => {
+                isInvincible = false;
+                player.clearTint();
+                player.setScale(1, 1);
+            });
+        }
+
+        function updateLivesDisplay() {
+            let emoji = "";
+            for(let i=0; i<lives; i++) emoji += "🧻";
+            livesText.setText('SERVILLETAS: ' + emoji);
         }
 
         function update() {
             items.children.iterate(function (child) {
-                if (child && child.y > config.height) {
+                if (child && child.y > config.height + 50) {
                     child.destroy();
                 }
             });
@@ -120,24 +240,35 @@
             if (!gameActive) return;
             gameActive = false;
 
+            this.physics.pause();
+            player.setTint(0xff0000);
+
+            // Send score to backend
             const hash = await sha256(`${USER_ID}${finalScore}${SECRET}`);
 
-            const response = await fetch('/api/game/score', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    user_id: USER_ID,
-                    score: finalScore,
-                    inline_message_id: INLINE_MESSAGE_ID,
-                    hash: hash
-                })
-            });
+            try {
+                const response = await fetch('/api/game/score', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: USER_ID,
+                        score: finalScore,
+                        inline_message_id: INLINE_MESSAGE_ID,
+                        hash: hash
+                    })
+                });
 
-            if (response.ok) {
-                alert("¡Partida terminada! Puntos: " + finalScore);
-            } else {
-                console.error("Failed to submit score");
+                if (response.ok) {
+                    alert("¡FIN DE LA PARTIDA!\n\nHas conseguido " + finalScore + " puntos de Cuñadismo.\nTu récord se ha guardado en la barra.");
+                } else {
+                    alert("Paco dice que tu puntuación es sospechosa. No se ha guardado.");
+                }
+            } catch (e) {
+                console.error("Score submission error", e);
             }
+
+            // Reload to play again
+            window.location.reload();
         }
     </script>
 </body>
