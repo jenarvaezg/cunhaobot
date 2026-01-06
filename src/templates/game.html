@@ -115,14 +115,25 @@
             bar.setTileScale(0.5, 0.5);
             this.physics.add.existing(bar, true);
 
-            player = this.physics.add.sprite(config.width / 2, config.height - 100, 'palillo');
-            player.setCollideWorldBounds(true);
-            player.setScale(0.12);
-            player.angle = 180;
-            player.body.setSize(player.width * 0.6, player.height * 0.8);
-            player.body.setOffset(player.width * 0.2, player.height * 0.1);
+                        // Player
 
-            items = this.physics.add.group();
+                        player = this.physics.add.sprite(config.width / 2, config.height - 100, 'palillo');
+
+                        player.setCollideWorldBounds(true);
+
+                        player.setScale(0.12);
+
+                        player.angle = 180;
+
+                        // Narrow hitbox for the toothpick
+
+                        player.body.setSize(player.width * 0.15, player.height * 0.85);
+
+                        player.body.setOffset(player.width * 0.425, player.height * 0.05);
+
+
+
+                        items = this.physics.add.group();
 
             // Particle Managers
             emitterCrumbs = this.add.particles(0, 0, 'crumb', {
