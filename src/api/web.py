@@ -639,3 +639,29 @@ class WebController(Controller):
                 "request": request,
             },
         )
+
+    @get("/game")
+    async def web_game(self, request: Request) -> Template:
+        """Launches the game from the web interface."""
+        user = request.session.get("user")
+        user_id = str(user.get("id")) if user else "guest"
+
+        # Read the music pattern
+        music_pattern = ""
+        try:
+            with open("docs/music_pattern.strudel", "r") as f:
+                music_pattern = f.read()
+        except Exception as e:
+            logger.error(f"Could not read music pattern: {e}")
+
+        return Template(
+            template_name="game.html",
+            context={
+                "user_id": user_id,
+                "inline_message_id": None,
+                "game_short_name": "palillo_cunhao",
+                "secret": config.session_secret,
+                "music_pattern": music_pattern,
+                "is_web": True,
+            },
+        )
