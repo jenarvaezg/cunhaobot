@@ -43,7 +43,9 @@
         <h2 id="final-score-text">Puntuación: 0</h2>
         <p id="status-text">Guardando puntos en la barra...</p>
         <button class="btn" onclick="window.location.reload()">JUGAR OTRA VEZ</button>
+        {% if not is_web %}
         <button class="btn" style="background: #0088cc; color: #FFF; margin-top: 10px;" onclick="shareScore()">COMPARTIR PUNTUACIÓN</button>
+        {% endif %}
         <a href="/game/ranking" class="btn" style="background: #444; color: #FFF; text-decoration: none; margin-top: 15px; display: inline-block;">VER RANKING GLOBAL</a>
     </div>
 
