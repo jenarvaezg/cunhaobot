@@ -115,6 +115,15 @@
             document.getElementById('loading-overlay').style.display = 'none';
             document.getElementById('start-screen').style.display = 'flex';
 
+            if (USER_ID === 'guest') {
+                 const warning = document.createElement('div');
+                 warning.style.color = '#FFA500';
+                 warning.style.marginTop = '10px';
+                 warning.style.fontSize = '0.9rem';
+                 warning.innerText = '⚠️ Modo invitado: La puntuación no se guardará en el ranking global.';
+                 document.querySelector('#start-screen > div').appendChild(warning);
+            }
+
             background = this.add.tileSprite(config.width / 2, config.height / 2, config.width, config.height, 'baldosa');
             background.setTileScale(0.5, 0.5);
 
