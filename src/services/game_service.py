@@ -86,7 +86,22 @@ class GameService:
         )
 
         # 5. Award Badges
-        await self.badge_service.check_badges(user_id, user.platform)
+        new_badges = await self.badge_service.check_badges(user_id, user.platform)
+        if new_badges:
+            try:
+                from utils.ui import format_badge_notification
+                import telegram
+
+                application = await get_initialized_tg_application()
+                for badge in new_badges:
+                    text = await format_badge_notification(badge)
+                    await application.bot.send_message(
+                        chat_id=int(user_id),
+                        text=text,
+                        parse_mode=telegram.constants.ParseMode.HTML,
+                    )
+            except Exception as e:
+                logger.error(f"Error notifying game badges for {user_id}: {e}")
 
         # 6. Update Telegram Leaderboard
         try:
