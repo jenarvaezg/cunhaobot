@@ -50,17 +50,6 @@
 
     <div id="game-container"></div>
 
-    <script>
-        // Definir shareScore en el ámbito global
-        function shareScore() {
-            if (window.Telegram && window.Telegram.GameProxy) {
-                window.Telegram.GameProxy.shareScore();
-            } else {
-                alert("Para compartir tu puntuación, debes jugar desde la app de Telegram.");
-            }
-        }
-    </script>
-
     <script type="module">
         const USER_ID = "{{ user_id }}";
         const INLINE_MESSAGE_ID = "{{ inline_message_id or '' }}";
@@ -69,6 +58,18 @@
         const SECRET = "{{ secret }}";
         const GREETING_AUDIO_URL = "{{ greeting_audio_url }}";
         const GAME_OVER_AUDIO_URL = "{{ game_over_audio_url }}";
+
+        // Exponer shareScore al ámbito global para el botón HTML
+        window.shareScore = function() {
+            console.log("Share score triggered");
+            if (window.Telegram && window.Telegram.GameProxy) {
+                console.log("GameProxy found, sharing...");
+                window.Telegram.GameProxy.shareScore();
+            } else {
+                console.warn("Telegram GameProxy not available");
+                alert("Para compartir tu puntuación, debes jugar desde la app de Telegram.");
+            }
+        };
 
         const config = {
             type: Phaser.AUTO,
@@ -143,25 +144,16 @@
             bar.setTileScale(0.5, 0.5);
             this.physics.add.existing(bar, true);
 
-                        // Player
+            // Player
+            player = this.physics.add.sprite(config.width / 2, config.height - 100, 'palillo');
+            player.setCollideWorldBounds(true);
+            player.setScale(0.12);
+            player.angle = 180;
+            // Narrow hitbox for the toothpick
+            player.body.setSize(player.width * 0.15, player.height * 0.85);
+            player.body.setOffset(player.width * 0.425, player.height * 0.05);
 
-                        player = this.physics.add.sprite(config.width / 2, config.height - 100, 'palillo');
-
-                        player.setCollideWorldBounds(true);
-
-                        player.setScale(0.12);
-
-                        player.angle = 180;
-
-                        // Narrow hitbox for the toothpick
-
-                        player.body.setSize(player.width * 0.15, player.height * 0.85);
-
-                        player.body.setOffset(player.width * 0.425, player.height * 0.05);
-
-
-
-                        items = this.physics.add.group();
+            items = this.physics.add.group();
 
             // Particle Managers
             emitterCrumbs = this.add.particles(0, 0, 'crumb', {
