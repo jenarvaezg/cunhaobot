@@ -439,56 +439,77 @@ class BadgeService:
 
         from infrastructure.datastore.poster_request import poster_request_repository
 
-        # Get stats in parallel
-        (
-            total_usages,
-            vision_count,
-            ai_count,
-            audio_count,
-            propose_count,
-            approve_count,
-            reject_count,
-            reaction_count,
-            sub_count,
-            gift_sent_count,
-            gift_received_count,
-            user_phrases_count,
-            poster_count,
-        ) = await asyncio.gather(
-            self.usage_repo.get_user_usage_count(str(user_id)),
-            self.usage_repo.get_user_action_count(
-                str(user_id), action=ActionType.VISION.value
-            ),
-            self.usage_repo.get_user_action_count(
-                str(user_id), action=ActionType.AI_ASK.value
-            ),
-            self.usage_repo.get_user_action_count(
-                str(user_id), action=ActionType.AUDIO.value
-            ),
-            self.usage_repo.get_user_action_count(
-                str(user_id), action=ActionType.PROPOSE.value
-            ),
-            self.usage_repo.get_user_action_count(
-                str(user_id), action=ActionType.APPROVE.value
-            ),
-            self.usage_repo.get_user_action_count(
-                str(user_id), action=ActionType.REJECT.value
-            ),
-            self.usage_repo.get_user_action_count(
-                str(user_id), action=ActionType.REACTION_RECEIVED.value
-            ),
-            self.usage_repo.get_user_action_count(
-                str(user_id), action=ActionType.SUBSCRIPTION.value
-            ),
-            self.usage_repo.get_user_action_count(
-                str(user_id), action=ActionType.GIFT_SENT.value
-            ),
-            self.usage_repo.get_user_action_count(
-                str(user_id), action=ActionType.GIFT_RECEIVED.value
-            ),
-            self.phrase_repo.get_user_phrase_count(str(user_id)),
-            poster_request_repository.count_completed_by_user(user_id),
-        )
+        # Get stats in parallel. Ensure user_id is string for repositories that expect strings.
+        uid_str = str(user_id)
+
+        try:
+            (
+                total_usages,
+                vision_count,
+                ai_count,
+                audio_count,
+                propose_count,
+                approve_count,
+                reject_count,
+                reaction_count,
+                sub_count,
+                gift_sent_count,
+                gift_received_count,
+                user_phrases_count,
+                poster_count,
+            ) = await asyncio.gather(
+                self.usage_repo.get_user_usage_count(uid_str),
+                self.usage_repo.get_user_action_count(
+                    uid_str, action=ActionType.VISION.value
+                ),
+                self.usage_repo.get_user_action_count(
+                    uid_str, action=ActionType.AI_ASK.value
+                ),
+                self.usage_repo.get_user_action_count(
+                    uid_str, action=ActionType.AUDIO.value
+                ),
+                self.usage_repo.get_user_action_count(
+                    uid_str, action=ActionType.PROPOSE.value
+                ),
+                self.usage_repo.get_user_action_count(
+                    uid_str, action=ActionType.APPROVE.value
+                ),
+                self.usage_repo.get_user_action_count(
+                    uid_str, action=ActionType.REJECT.value
+                ),
+                self.usage_repo.get_user_action_count(
+                    uid_str, action=ActionType.REACTION_RECEIVED.value
+                ),
+                self.usage_repo.get_user_action_count(
+                    uid_str, action=ActionType.SUBSCRIPTION.value
+                ),
+                self.usage_repo.get_user_action_count(
+                    uid_str, action=ActionType.GIFT_SENT.value
+                ),
+                self.usage_repo.get_user_action_count(
+                    uid_str, action=ActionType.GIFT_RECEIVED.value
+                ),
+                self.phrase_repo.get_user_phrase_count(uid_str),
+                poster_request_repository.count_completed_by_user(user_id),
+            )
+        except Exception as e:
+            logger.error(f"Error gathering stats for badges: {e}")
+            # Fallback to zero values if gather fails to prevent 500 error
+            (
+                total_usages,
+                vision_count,
+                ai_count,
+                audio_count,
+                propose_count,
+                approve_count,
+                reject_count,
+                reaction_count,
+                sub_count,
+                gift_sent_count,
+                gift_received_count,
+                user_phrases_count,
+                poster_count,
+            ) = (0,) * 13
 
         for badge in BADGES:
             is_earned = badge.id in current_badges
