@@ -17,6 +17,7 @@ from .utils.error import error_handler as error_handler
 from .messages.fallback import handle_fallback_message as handle_fallback_message
 from .commands.help import handle_help as handle_help
 from .commands.link import handle_link
+from .commands.game import handle_game_command, handle_game_callback
 from .commands.poster import handle_poster
 from .commands.gift import handle_gift_command, handle_gift_selection
 from .commands.profile import handle_profile
@@ -47,6 +48,7 @@ handlers = [
     CommandHandler("about", handle_about),
     CommandHandler("stop", handle_stop),
     CommandHandler("cancelar", handle_cancel),
+    CommandHandler("jugar", handle_game_command),
     CommandHandler("poster", handle_poster),
     PreCheckoutQueryHandler(handle_pre_checkout),
     MessageHandler(filters.SUCCESSFUL_PAYMENT, handle_successful_payment),
@@ -54,6 +56,7 @@ handlers = [
     MessageHandler(filters.PHOTO, photo_roast),
     MessageHandler(filters.TEXT, handle_message),
     InlineQueryHandler(handle_inline_query),
+    CallbackQueryHandler(handle_game_callback),
     CallbackQueryHandler(handle_gift_selection, pattern="^gift_sel:"),
     CallbackQueryHandler(handle_callback_query),
     ChosenInlineResultHandler(handle_chosen_inline_result),

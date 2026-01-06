@@ -1,35 +1,27 @@
 # Roadmap de Ideas: cunhaobot 2026
 
-## 1. Monetización: "La Economía de Paco" (Features de Pago)
-Estrategias para hacer el bot sostenible utilizando Telegram Stars (XTR) y otros métodos.
-* **Telegram Stars (Bienes Digitales):**
-    * **Gifts (Carajillos Digitales):** Sistema de regalos únicos. Los usuarios pueden enviarse carajillos, copas de coñac o palillos de plata que lucen en el perfil de la Mini App.
-* **Merchandising Directo:**
-    * Integración para comprar camisetas o tazas con "tus frases estrella" directamente desde el bot.
-* **User Story:** "Como usuario fiel, quiero gastar mis Stars en regalarle un puro digital a mi cuñado del grupo para celebrar que su equipo ha perdido".
 
-## 3. Gamificación: "La Liga de los Cuñados"
-* **Concepto:** Sistema de puntos por actividad y calidad de propuestas.
-* **Rangos:** De "Aprendiz de Barra" a "Gran Maestro del Palillo".
-* **Insignias (Badges):** "Experto en Diésel", "Mili hecha en el Sáhara", "Alicatador de Primera".
+
+## 1. Telegram Games & IA
+* **Juego "Palillo Ninja" 🍢:** Mini-juego HTML5 integrado vía Telegram Gaming Platform con Leaderboards nativos.
+* **Noticiero Paco:** Resumen diario de noticias comentado por el bot (Audio TTS + Texto).
 
 ---
 
-# Plan de MVP (V1.0: "El Paco Moderno")
+# Plan de MVP v2.0: "La Comunidad de la Barra"
 
+**Objetivo:** Pasar de un bot de comandos a una plataforma social de cuñadismo.
 
-**Objetivo:** Relanzar el bot con una funcionalidad estrella y mejorar la UX base.
+### Fase 1: Social & Viral (Completado ✅)
+* Sistema de Regalos Premium con imágenes generadas.
+* Soporte para menciones (@usuario) en comandos.
+* Mini App de perfil rediseñada y visual.
 
-### Fase 1: Core Multimodal (Completado ✅)
-* Implementar `vision_service` utilizando Gemini 2.5 Flash para procesar imágenes.
-* Integrar `vision` con `tts_service` para respuestas vocales.
-* Comando `/vision` o simplemente detectar fotos en chats privados.
+### Fase 2: Engagement & Gaming (PRÓXIMAMENTE)
+* **Telegram Gaming:** Implementar el primer juego HTML5 con ranking compartido en grupos.
+* **Logros Ocultos:** Implementación de badges basados en comportamiento (horarios, frecuencia, tipos de interacción).
 
-### Fase 2: Modernización UI (Completado ✅)
-* Crear la primera versión de la **Mini App de Ranking** usando HTMX (integrado en Litestar).
-* Implementar el sistema de "Cuñao Points" básico en Datastore.
-
-### Fase 3: Monetización "La Caña" (En Progreso 🚧)
-* Integrar pagos con Telegram Stars para la generación de imágenes IA (/poster) (Completado ✅).
-* Implementar Suscripción Premium Mensual (100 Stars) para desbloquear features de IA (/premium) (Completado ✅).
-* Setup de "Support the bot" temático.
+### Fase 3: Monetización & Escala
+* Implementación de la tienda de efectos temporales (vía Stars).
+* Integración de Print-on-Demand para posters.
+* Noticiero Paco (IA Content).

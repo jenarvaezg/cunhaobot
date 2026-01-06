@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Paco's Tapas Runner</title>
+    <script src="https://telegram.org/js/games.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        #game-container {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+
+    <script>
+        const USER_ID = "{{ user_id }}";
+        const INLINE_MESSAGE_ID = "{{ inline_message_id }}";
+        const SECRET = "{{ secret }}";
+
+        const config = {
+            type: Phaser.AUTO,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            parent: 'game-container',
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 0 },
+                    debug: false
+                }
+            },
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            }
+        };
+
+        const game = new Phaser.Game(config);
+        let player;
+        let items;
+        let score = 0;
+        let scoreText;
+        let gameActive = true;
+
+        function preload() {
+            this.load.image('palillo', 'https://labs.phaser.io/assets/sprites/phaser-dude.png');
+        }
+
+        function create() {
+            player = this.physics.add.sprite(config.width / 2, config.height - 50, 'palillo');
+            player.setCollideWorldBounds(true);
+            items = this.physics.add.group();
+            scoreText = this.add.text(16, 16, 'Cuñadismo: 0', { fontSize: '32px', fill: '#FFF' });
+
+            this.input.on('pointermove', function (pointer) {
+                if (gameActive) {
+                    player.x = pointer.x;
+                }
+            });
+
+            this.time.addEvent({
+                delay: 1000,
+                callback: spawnItem,
+                callbackScope: this,
+                loop: true
+            });
+
+            this.physics.add.overlap(player, items, collectItem, null, this);
+
+            // End game after 30 seconds for MVP
+            this.time.delayedCall(30000, () => gameOver(score), [], this);
+        }
+
+        function spawnItem() {
+            if (!gameActive) return;
+            const x = Phaser.Math.Between(0, config.width);
+            const item = items.create(x, 0, 'palillo');
+            item.setVelocityY(200 + (score / 10));
+        }
+
+        function collectItem(player, item) {
+            item.destroy();
+            score += 10;
+            scoreText.setText('Cuñadismo: ' + score);
+        }
+
+        function update() {
+            items.children.iterate(function (child) {
+                if (child && child.y > config.height) {
+                    child.destroy();
+                }
+            });
+        }
+
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function gameOver(finalScore) {
+            if (!gameActive) return;
+            gameActive = false;
+
+            const hash = await sha256(`${USER_ID}${finalScore}${SECRET}`);
+
+            const response = await fetch('/api/game/score', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: USER_ID,
+                    score: finalScore,
+                    inline_message_id: INLINE_MESSAGE_ID,
+                    hash: hash
+                })
+            });
+
+            if (response.ok) {
+                alert("¡Partida terminada! Puntos: " + finalScore);
+            } else {
+                console.error("Failed to submit score");
+            }
+        }
+    </script>
+</body>
+</html>

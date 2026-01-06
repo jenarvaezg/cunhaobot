@@ -11,7 +11,7 @@ from litestar.params import Dependency
 
 from core.config import config
 from core.di import dependencies
-from api import WebController, AdminController
+from api import WebController, AdminController, GameController
 from api.slack import SlackController
 from api.bot import BotController
 from api.utils import get_proposals_context
@@ -82,6 +82,7 @@ app = Litestar(
     route_handlers=[
         WebController,
         AdminController,
+        GameController,
         SlackController,
         BotController,
         auth_telegram,
