@@ -58,7 +58,7 @@ handlers = [
     MessageHandler(filters.TEXT, handle_message),
     InlineQueryHandler(handle_inline_query),
     CallbackQueryHandler(handle_gift_selection, pattern="^gift_sel:"),
-    CallbackQueryHandler(handle_callback_query, pattern="^(LIKE|DISLIKE):"),
+    CallbackQueryHandler(handle_callback_query, pattern="^(👍|👎):"),
     CallbackQueryHandler(handle_game_callback),
     ChosenInlineResultHandler(handle_chosen_inline_result),
     MessageHandler(filters.ALL, handle_fallback_message),
