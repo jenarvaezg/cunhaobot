@@ -9,3 +9,4 @@ __pycache__
 
 gha-creds-*.json
 .coverage
+.playwright-mcp
