@@ -10,6 +10,7 @@ from litestar.exceptions import HTTPException
 from services.game_service import GameService
 from services.user_service import UserService
 from services.tts_service import TTSService
+from services.phrase_service import PhraseService
 from core.config import config
 from utils.ui import apelativo
 from models.phrase import Phrase
@@ -25,6 +26,7 @@ class GameController(Controller):
         self,
         request: Request,
         tts_service: Annotated[TTSService, Dependency()],
+        phrase_service: Annotated[PhraseService, Dependency()],
     ) -> Template:
         """Endpoint called by Telegram to launch the game."""
         # Validate telegram web app init data if possible, or use simplified launch
@@ -45,6 +47,10 @@ class GameController(Controller):
 
         greeting_audio_url = tts_service.get_audio_url(dummy_phrase, "game")
 
+        # Generate Game Over audio (random long phrase)
+        random_phrase = await phrase_service.get_random(long=True)
+        game_over_audio_url = tts_service.get_audio_url(random_phrase, "long")
+
         return Template(
             template_name="game.html",
             context={
@@ -54,6 +60,7 @@ class GameController(Controller):
                 "secret": config.session_secret,
                 "is_web": False,
                 "greeting_audio_url": greeting_audio_url,
+                "game_over_audio_url": game_over_audio_url,
             },
         )
 

@@ -53,6 +53,7 @@
         const INLINE_MESSAGE_ID = "{{ inline_message_id }}";
         const SECRET = "{{ secret }}";
         const GREETING_AUDIO_URL = "{{ greeting_audio_url }}";
+        const GAME_OVER_AUDIO_URL = "{{ game_over_audio_url }}";
 
         const config = {
             type: Phaser.AUTO,
@@ -262,6 +263,12 @@
 
             if (spawnEvent) spawnEvent.remove();
             if (timerEvent) timerEvent.remove();
+
+            // Play Game Over Audio
+            if (GAME_OVER_AUDIO_URL) {
+                const audio = new Audio(GAME_OVER_AUDIO_URL);
+                audio.play().catch(e => console.log("Game over audio play failed", e));
+            }
 
             this.physics.pause();
             player.setTint(0xff0000);
