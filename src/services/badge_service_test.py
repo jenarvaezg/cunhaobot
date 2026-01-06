@@ -1,6 +1,6 @@
 import pytest
 from datetime import datetime, timezone
-from unittest.mock import patch, AsyncMock, MagicMock
+from unittest.mock import patch, AsyncMock
 from services.badge_service import BadgeService
 from models.user import User
 from models.usage import ActionType
@@ -46,16 +46,22 @@ def badge_service(
         long_phrase_repo=mock_long_phrase_repo,
         gift_repo=mock_gift_repo,
     )
-    # Mock the lazy user_service property
-    with patch.object(BadgeService, "user_service", new_callable=MagicMock):
-        svc._user_service = AsyncMock()
-        return svc
+    # Set the private attribute, the property will return it
+    svc._user_service = AsyncMock()
+    svc._user_service.save_user = AsyncMock()
+    svc._user_service.get_user = AsyncMock()
+
+    with patch(
+        "infrastructure.datastore.poster_request.poster_request_repository"
+    ) as mock_poster_repo:
+        mock_poster_repo.count_completed_by_user = AsyncMock(return_value=0)
+        yield svc
 
 
 @pytest.mark.asyncio
 async def test_check_badges_awards_novato(badge_service, mock_usage_repo):
     user = User(id="123", badges=[])
-    badge_service.user_service.get_user.return_value = user
+    badge_service.user_service.get_user = AsyncMock(return_value=user)
 
     mock_usage_repo.get_user_usage_count.return_value = 1
     mock_usage_repo.get_user_action_count.return_value = 0
@@ -71,7 +77,7 @@ async def test_check_badges_awards_novato(badge_service, mock_usage_repo):
 async def test_check_badges_awards_visionario(badge_service, mock_usage_repo):
     # User already has novato
     user = User(id="123", badges=["novato"])
-    badge_service.user_service.get_user.return_value = user
+    badge_service.user_service.get_user = AsyncMock(return_value=user)
 
     # Mock usage counts
     # Fiera total < 50
@@ -97,7 +103,7 @@ async def test_check_badges_awards_visionario(badge_service, mock_usage_repo):
 async def test_check_badges_awards_poeta(badge_service, mock_usage_repo):
     # User already has novato
     user = User(id="123", badges=["novato"])
-    badge_service.user_service.get_user.return_value = user
+    badge_service.user_service.get_user = AsyncMock(return_value=user)
 
     mock_usage_repo.get_user_usage_count.return_value = 10
     mock_usage_repo.get_user_action_count.return_value = 0
@@ -116,7 +122,7 @@ async def test_check_badges_awards_pesao(badge_service, mock_usage_repo):
     # User already has novato
     now = datetime.now(timezone.utc)
     user = User(id="123", badges=["novato"], last_usages=[now] * 9)
-    badge_service.user_service.get_user.return_value = user
+    badge_service.user_service.get_user = AsyncMock(return_value=user)
 
     mock_usage_repo.get_user_usage_count.return_value = 5  # Not fiera total
     mock_usage_repo.get_user_action_count.return_value = 0  # Not visionario
