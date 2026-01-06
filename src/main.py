@@ -39,6 +39,10 @@ async def auth_telegram(
     username = user_data.get("username")
 
     if user_id:
+        # Convert to int for Telegram consistency
+        if isinstance(user_id, str) and user_id.isdigit():
+            user_id = int(user_id)
+
         await user_service.update_user_data(
             user_id=user_id,
             name=first_name,

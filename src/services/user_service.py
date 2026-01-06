@@ -85,10 +85,20 @@ class UserService:
         username: str | None = None,
         platform: str = "telegram",
     ) -> User:
-        user = await self.user_repo.load(user_id)
+        # Normalize numeric IDs to int
+        uid_to_load = user_id
+        if isinstance(user_id, str) and user_id.lstrip("-").isdigit():
+            uid_to_load = int(user_id)
+
+        user = await self.user_repo.load(uid_to_load)
+
+        # Fallback for string-keyed legacy users if numeric load failed
+        if not user and isinstance(uid_to_load, int):
+            user = await self.user_repo.load(str(uid_to_load))
 
         if user:
             changed = False
+            # ... rest of the method ...
             is_master = str(user.id) == str(user_id)
 
             if user.name != name:
@@ -127,7 +137,17 @@ class UserService:
         username: str | None = None,
         platform: str = "telegram",
     ) -> Chat:
-        chat = await self.chat_repo.load(chat_id)
+        # Normalize numeric IDs to int
+        cid_to_load = chat_id
+        if isinstance(chat_id, str) and chat_id.lstrip("-").isdigit():
+            cid_to_load = int(chat_id)
+
+        chat = await self.chat_repo.load(cid_to_load)
+
+        # Fallback for string-keyed legacy chats
+        if not chat and isinstance(cid_to_load, int):
+            chat = await self.chat_repo.load(str(cid_to_load))
+
         now = datetime.now(timezone.utc)
 
         if chat:
