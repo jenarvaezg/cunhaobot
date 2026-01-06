@@ -30,25 +30,9 @@
     <div id="game-container"></div>
 
     <script type="module">
-        import { initStrudel } from 'https://cdn.skypack.dev/@strudel/web';
-
         const USER_ID = "{{ user_id }}";
         const INLINE_MESSAGE_ID = "{{ inline_message_id }}";
         const SECRET = "{{ secret }}";
-        const MUSIC_PATTERN = {{ music_pattern | tojson }};
-
-        let strudelInstance = null;
-
-        // Async initialization of Strudel
-        async function startEngine() {
-            try {
-                strudelInstance = await initStrudel();
-                console.log("Strudel engine ready");
-            } catch (e) {
-                console.error("Strudel init failed", e);
-            }
-        }
-        startEngine();
 
         const config = {
             type: Phaser.AUTO,
@@ -60,7 +44,7 @@
         };
 
         const game = new Phaser.Game(config);
-        let player, items, background, bar, score = 0, lives = 3, scoreText, livesText, timerText, gameActive = true, isInvincible = false, timeLeft = 45, musicStarted = false;
+        let player, items, background, bar, score = 0, lives = 3, scoreText, livesText, timerText, gameActive = true, isInvincible = false, timeLeft = 45;
 
         function preload() {
             // Load assets
@@ -104,13 +88,6 @@
             this.input.on('pointermove', (pointer) => {
                 if (gameActive) {
                     player.x = pointer.x;
-                    if (!musicStarted && strudelInstance && typeof strudelInstance.evaluate === 'function') {
-                        console.log("Iniciando orquesta...");
-                        try {
-                            strudelInstance.evaluate(MUSIC_PATTERN);
-                            musicStarted = true;
-                        } catch (e) { console.error("Error playing music", e); }
-                    }
                 }
             });
 
@@ -245,10 +222,6 @@
         async function gameOver(finalScore) {
             if (!gameActive) return;
             gameActive = false;
-
-            if (strudelInstance && typeof strudelInstance.stop === 'function') {
-                strudelInstance.stop();
-            }
 
             this.physics.pause();
             player.setTint(0xff0000);

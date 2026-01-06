@@ -31,14 +31,6 @@ class GameController(Controller):
             # Fallback for testing or direct access
             user_id = "guest"
 
-        # Read the music pattern from docs/music_pattern.strudel
-        music_pattern = ""
-        try:
-            with open("docs/music_pattern.strudel", "r") as f:
-                music_pattern = f.read()
-        except Exception as e:
-            logger.error(f"Could not read music pattern: {e}")
-
         return Template(
             template_name="game.html",
             context={
@@ -46,7 +38,6 @@ class GameController(Controller):
                 "inline_message_id": inline_message_id,
                 "game_short_name": "palillo_cunhao",
                 "secret": config.session_secret,
-                "music_pattern": music_pattern,
                 "is_web": False,
             },
         )
