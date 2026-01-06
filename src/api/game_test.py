@@ -57,7 +57,11 @@ async def test_submit_score_success(client):
         assert response.json() == {"status": "ok", "success": True}
 
         mock_set_score.assert_called_once_with(
-            user_id="123", score=500, inline_message_id="abc"
+            user_id="123",
+            score=500,
+            inline_message_id="abc",
+            chat_id=None,
+            message_id=None,
         )
         # points = int(500 / 100) = 5
         mock_add_points.assert_called_once_with("123", 5)

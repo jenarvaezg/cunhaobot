@@ -44,6 +44,7 @@
         <h2 id="final-score-text">Puntuación: 0</h2>
         <p id="status-text">Guardando puntos en la barra...</p>
         <button class="btn" onclick="window.location.reload()">JUGAR OTRA VEZ</button>
+        <a href="/game/ranking" class="btn" style="background: #444; color: #FFF; text-decoration: none; margin-top: 15px; display: inline-block;">VER RANKING GLOBAL</a>
     </div>
 
     <div id="game-container"></div>
@@ -51,6 +52,8 @@
     <script type="module">
         const USER_ID = "{{ user_id }}";
         const INLINE_MESSAGE_ID = "{{ inline_message_id }}";
+        const CHAT_ID = "{{ chat_id }}";
+        const MESSAGE_ID = "{{ message_id }}";
         const SECRET = "{{ secret }}";
         const GREETING_AUDIO_URL = "{{ greeting_audio_url }}";
         const GAME_OVER_AUDIO_URL = "{{ game_over_audio_url }}";
@@ -371,7 +374,14 @@
                 const response = await fetch('/game/score', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: USER_ID, score: finalScore, inline_message_id: INLINE_MESSAGE_ID, hash: hash })
+                    body: JSON.stringify({
+                        user_id: USER_ID,
+                        score: finalScore,
+                        inline_message_id: INLINE_MESSAGE_ID,
+                        chat_id: CHAT_ID,
+                        message_id: MESSAGE_ID,
+                        hash: hash
+                    })
                 });
                 if (response.ok) statusDisplay.innerText = "¡Puntos guardados en el ranking!";
                 else statusDisplay.innerText = "Puntos no guardados (Error de servidor)";

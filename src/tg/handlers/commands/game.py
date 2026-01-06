@@ -35,6 +35,10 @@ async def handle_game_callback(update: Update, context: CallbackContext) -> None
 
     if inline_message_id:
         game_url += f"&inline_message_id={inline_message_id}"
+    elif query.message:
+        game_url += (
+            f"&chat_id={query.message.chat_id}&message_id={query.message.message_id}"
+        )
 
     # Answer the callback query with the URL.
     # This is what opens the Telegram WebView/Browser.

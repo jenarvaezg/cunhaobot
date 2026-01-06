@@ -33,6 +33,8 @@ class GameController(Controller):
         tg_data = dict(request.query_params)
         user_id = tg_data.get("user_id")
         inline_message_id = tg_data.get("inline_message_id")
+        chat_id = tg_data.get("chat_id")
+        message_id = tg_data.get("message_id")
 
         if not user_id:
             # Fallback for testing or direct access
@@ -60,11 +62,36 @@ class GameController(Controller):
             context={
                 "user_id": user_id,
                 "inline_message_id": inline_message_id,
+                "chat_id": chat_id,
+                "message_id": message_id,
                 "game_short_name": "palillo_cunhao",
                 "secret": config.session_secret,
                 "is_web": False,
                 "greeting_audio_url": greeting_audio_url,
                 "game_over_audio_url": game_over_audio_url,
+            },
+        )
+
+    @get("/ranking")
+    async def game_ranking(
+        self,
+        request: Request,
+        user_service: Annotated[UserService, Dependency()],
+    ) -> Template:
+        """Renders the global game ranking."""
+        # Load all users and sort by game_high_score
+        users = await user_service.user_repo.load_all()
+        ranking = sorted(
+            [u for u in users if u.game_high_score > 0],
+            key=lambda x: x.game_high_score,
+            reverse=True,
+        )[:50]
+
+        return Template(
+            template_name="game_ranking.html",
+            context={
+                "ranking": ranking,
+                "game_short_name": "palillo_cunhao",
             },
         )
 
@@ -80,6 +107,8 @@ class GameController(Controller):
         user_id = data.get("user_id")
         score = data.get("score", 0)
         inline_message_id = data.get("inline_message_id")
+        chat_id = data.get("chat_id")
+        message_id = data.get("message_id")
         hash_received = data.get("hash")
 
         # Verify hash to prevent cheating
@@ -96,6 +125,8 @@ class GameController(Controller):
             user_id=user_id,
             score=score,
             inline_message_id=inline_message_id,
+            chat_id=chat_id,
+            message_id=message_id,
         )
 
         # Award points to user based on performance (1 point per 100 points in game)

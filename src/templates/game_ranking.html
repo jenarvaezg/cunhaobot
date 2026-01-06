@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ranking - Paco's Tapas Runner</title>
+    <style>
+        body { margin: 0; padding: 20px; background-color: #1a1a1a; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; }
+        h1 { color: #FFD700; text-transform: uppercase; margin-bottom: 20px; }
+        .ranking-list { list-style: none; padding: 0; max-width: 500px; margin: 0 auto; }
+        .ranking-item { background: #333; margin: 10px 0; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #444; }
+        .ranking-item:nth-child(1) { border-color: #FFD700; background: #2a2a00; }
+        .ranking-item:nth-child(2) { border-color: #C0C0C0; }
+        .ranking-item:nth-child(3) { border-color: #CD7F32; }
+        .rank-pos { font-weight: bold; font-size: 1.2rem; width: 30px; }
+        .rank-name { flex-grow: 1; text-align: left; padding-left: 10px; font-weight: bold; }
+        .rank-score { color: #FFD700; font-size: 1.2rem; font-family: monospace; }
+        .back-btn { display: inline-block; margin-top: 30px; padding: 10px 20px; background: #555; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>🏆 TOP JUGONES 🏆</h1>
+
+    <ul class="ranking-list">
+        {% for user in ranking %}
+        <li class="ranking-item">
+            <span class="rank-pos">#{{ loop.index }}</span>
+            <span class="rank-name">
+                {% if user.username %}@{{ user.username }}{% else %}{{ user.name }}{% endif %}
+            </span>
+            <span class="rank-score">{{ user.game_high_score }} pts</span>
+        </li>
+        {% else %}
+        <p>Aún no hay puntuaciones. ¡Sé el primero!</p>
+        {% endfor %}
+    </ul>
+
+    <a href="javascript:history.back()" class="back-btn">⬅️ VOLVER AL JUEGO</a>
+</body>
+</html>

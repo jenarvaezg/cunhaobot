@@ -27,7 +27,12 @@ class GameService:
         return hash_val == expected_hash
 
     async def set_score(
-        self, user_id: str, score: int, inline_message_id: str | None = None
+        self,
+        user_id: str,
+        score: int,
+        inline_message_id: str | None = None,
+        chat_id: str | int | None = None,
+        message_id: str | int | None = None,
     ) -> bool:
         """Processes the game score, updates user stats and Telegram leaderboard."""
         if user_id == "guest":
@@ -74,16 +79,23 @@ class GameService:
         await self.badge_service.check_badges(user_id, user.platform)
 
         # 6. Update Telegram Leaderboard
-        if inline_message_id:
-            try:
-                application = await get_initialized_tg_application()
+        try:
+            application = await get_initialized_tg_application()
 
+            if inline_message_id:
                 await application.bot.set_game_score(
                     user_id=int(user_id),
                     score=int(score),
                     inline_message_id=inline_message_id,
                 )
-            except Exception as e:
-                logger.error(f"Error updating Telegram game score for {user_id}: {e}")
+            elif chat_id and message_id:
+                await application.bot.set_game_score(
+                    user_id=int(user_id),
+                    score=int(score),
+                    chat_id=int(chat_id),
+                    message_id=int(message_id),
+                )
+        except Exception as e:
+            logger.error(f"Error updating Telegram game score for {user_id}: {e}")
 
         return True
