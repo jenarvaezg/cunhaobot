@@ -60,13 +60,46 @@ class GameController(Controller):
             # or be strict if you prefer.
             # raise HTTPException(status_code=403, detail="Invalid hash")
 
-        # Update points in Datastore
+        # Update points and stats in Datastore
         user = await user_repo.load(user_id)
         if user:
+            from datetime import datetime, timezone, timedelta
+
+            now = datetime.now(timezone.utc)
+
+            # Points logic
             points_to_add = int(score) // 100
             user.points += points_to_add
+
+            # Streak and stats logic
+            user.game_stats += 1
+            if int(score) > user.game_high_score:
+                user.game_high_score = int(score)
+
+            if user.last_game_at:
+                last_game = user.last_game_at.date()
+                today = now.date()
+                yesterday = today - timedelta(days=1)
+
+                if last_game == yesterday:
+                    user.game_streak += 1
+                elif last_game < yesterday:
+                    user.game_streak = 1
+                # if last_game == today, streak stays the same
+            else:
+                user.game_streak = 1
+
+            user.last_game_at = now
+
             await user_repo.save(user)
-            logger.info(f"User {user_id} earned {points_to_add} points from game")
+            logger.info(
+                f"User {user_id} earned {points_to_add} points and has streak {user.game_streak}"
+            )
+
+            # Award badges
+            from services.badge_service import badge_service
+
+            await badge_service.check_badges(user_id, user.platform)
 
         # Update Telegram Leaderboard
         try:

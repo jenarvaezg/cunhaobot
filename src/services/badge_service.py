@@ -150,6 +150,24 @@ BADGES = [
         description="Recibir un regalo digital",
         icon="🎁",
     ),
+    Badge(
+        id="viciado",
+        name="Máquina Recreativa",
+        description="Jugar 10 partidas al juego del palillo",
+        icon="🕹️",
+    ),
+    Badge(
+        id="parroquia",
+        name="La Parroquia",
+        description="Mantener una racha de 3 días jugando",
+        icon="🍻",
+    ),
+    Badge(
+        id="pinchito_oro",
+        name="Pinchito de Oro",
+        description="Conseguir más de 500 puntos en una partida",
+        icon="🥇",
+    ),
 ]
 
 
@@ -322,6 +340,16 @@ class BadgeService:
             if "galerista" not in current_badges and poster_count >= 10:
                 new_badge_ids.append("galerista")
 
+        # Game badges
+        if "viciado" not in current_badges and user.game_stats >= 10:
+            new_badge_ids.append("viciado")
+
+        if "parroquia" not in current_badges and user.game_streak >= 3:
+            new_badge_ids.append("parroquia")
+
+        if "pinchito_oro" not in current_badges and user.game_high_score >= 500:
+            new_badge_ids.append("pinchito_oro")
+
         # Always save user because last_usages has been updated
         if new_badge_ids:
             user.badges.extend(new_badge_ids)
@@ -475,6 +503,15 @@ class BadgeService:
                 elif badge.id == "galerista":
                     current_val = poster_count
                     target_val = 10
+                elif badge.id == "viciado":
+                    current_val = user.game_stats
+                    target_val = 10
+                elif badge.id == "parroquia":
+                    current_val = user.game_streak
+                    target_val = 3
+                elif badge.id == "pinchito_oro":
+                    current_val = user.game_high_score
+                    target_val = 500
 
                 if target_val > 0:
                     progress = min(100, int((current_val / target_val) * 100))

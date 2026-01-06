@@ -17,8 +17,8 @@
 * Soporte para menciones (@usuario) en comandos.
 * Mini App de perfil rediseñada y visual.
 
-### Fase 2: Engagement & Gaming (PRÓXIMAMENTE)
-* **Telegram Gaming:** Implementar el primer juego HTML5 con ranking compartido en grupos.
+### Fase 2: Engagement & Gaming (EN PROGRESO 🚧)
+* **Telegram Gaming:** (Infraestructura Completada ✅) Implementado el primer juego HTML5 ("Palillo Ninja") con ranking compartido y validación de puntuaciones.
 * **Logros Ocultos:** Implementación de badges basados en comportamiento (horarios, frecuencia, tipos de interacción).
 
 ### Fase 3: Monetización & Escala

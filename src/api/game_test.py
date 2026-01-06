@@ -40,6 +40,11 @@ async def test_submit_score_success(client):
 
     mock_user = MagicMock()
     mock_user.points = 1000
+    mock_user.game_stats = 0
+    mock_user.game_streak = 0
+    mock_user.game_high_score = 0
+    mock_user.last_game_at = None
+    mock_user.platform = "telegram"
 
     with (
         patch("api.game.UserRepository"),
@@ -50,6 +55,9 @@ async def test_submit_score_success(client):
         patch(
             "infrastructure.datastore.user.user_repository.save", new_callable=AsyncMock
         ) as mock_save,
+        patch(
+            "services.badge_service.badge_service.check_badges", new_callable=AsyncMock
+        ) as mock_badges,
     ):
         mock_load.return_value = mock_user
         mock_bot = AsyncMock()
@@ -61,7 +69,11 @@ async def test_submit_score_success(client):
         assert response.status_code == HTTP_201_CREATED
         assert response.json() == {"status": "ok"}
         assert mock_user.points == 1005
+        assert mock_user.game_stats == 1
+        assert mock_user.game_streak == 1
+        assert mock_user.game_high_score == 500
         mock_save.assert_called_once_with(mock_user)
         mock_bot.set_game_score.assert_called_once_with(
             user_id=123, score=500, inline_message_id="abc"
         )
+        mock_badges.assert_called_once_with("123", "telegram")

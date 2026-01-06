@@ -34,3 +34,34 @@ async def handle_game_callback(update: Update, context: CallbackContext) -> None
     # Answer the callback query with the URL.
     # This is what opens the Telegram WebView/Browser.
     await query.answer(url=game_url)
+
+
+@log_update
+async def handle_top_jugones(update: Update, context: CallbackContext) -> None:
+    """Shows the top players based on high scores."""
+    message = update.effective_message
+    if not message:
+        return
+
+    from infrastructure.datastore.user import user_repository
+
+    # Load all users and sort by game_high_score
+    users = await user_repository.load_all()
+    top_players = sorted(
+        [u for u in users if u.game_high_score > 0],
+        key=lambda x: x.game_high_score,
+        reverse=True,
+    )[:10]
+
+    if not top_players:
+        await message.reply_text("Todavía no hay nadie jugando. ¡Sé el primero! /jugar")
+        return
+
+    text = "🏆 **TOP JUGONES DEL BAR** 🏆\n\n"
+    for i, user in enumerate(top_players, 1):
+        name = user.username if user.username else user.name
+        text += f"{i}. {name}: {user.game_high_score} pts\n"
+
+    text += "\n¡Dale al /jugar y demuéstrales quién manda!"
+
+    await message.reply_text(text, parse_mode="Markdown")
