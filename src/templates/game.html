@@ -67,6 +67,7 @@
         const game = new Phaser.Game(config);
         let player, items, background, bar, score = 0, lives = 3, scoreText, livesText, timerText, gameActive = false, isInvincible = false, timeLeft = 45;
         let spawnEvent, timerEvent;
+        let emitterCrumbs, emitterSparks, emitterSplat;
 
         function preload() {
             // Load assets
@@ -80,23 +81,40 @@
             this.load.image('baldosa', '/static/game/baldosa.png');
             this.load.image('barra', '/static/game/barra.png');
             this.load.image('servilleta', '/static/game/servilleta.png');
+
+            // Create simple particle textures
+            const graphics = this.make.graphics({x: 0, y: 0, add: false});
+
+            // Gold crumb
+            graphics.fillStyle(0xFFD700, 1);
+            graphics.fillRect(0, 0, 4, 4);
+            graphics.generateTexture('crumb', 4, 4);
+            graphics.clear();
+
+            // Purple/Magic spark
+            graphics.fillStyle(0xFF00FF, 1);
+            graphics.fillCircle(4, 4, 4);
+            graphics.generateTexture('spark', 8, 8);
+            graphics.clear();
+
+            // Green splat
+            graphics.fillStyle(0x00FF00, 1);
+            graphics.fillCircle(5, 5, 5);
+            graphics.generateTexture('splat', 10, 10);
+            graphics.clear();
         }
 
         function create() {
             document.getElementById('loading-overlay').style.display = 'none';
-            // Show start screen instead
             document.getElementById('start-screen').style.display = 'flex';
 
-            // Background (Tiled)
             background = this.add.tileSprite(config.width / 2, config.height / 2, config.width, config.height, 'baldosa');
             background.setTileScale(0.5, 0.5);
 
-            // Bar at the bottom
             bar = this.add.tileSprite(config.width / 2, config.height - 20, config.width, 40, 'barra');
             bar.setTileScale(0.5, 0.5);
             this.physics.add.existing(bar, true);
 
-            // Player
             player = this.physics.add.sprite(config.width / 2, config.height - 100, 'palillo');
             player.setCollideWorldBounds(true);
             player.setScale(0.12);
@@ -106,29 +124,59 @@
 
             items = this.physics.add.group();
 
-            // UI
+            // Particle Managers
+            emitterCrumbs = this.add.particles(0, 0, 'crumb', {
+                speed: { min: 100, max: 200 },
+                angle: { min: 0, max: 360 },
+                scale: { start: 1, end: 0 },
+                lifespan: 500,
+                quantity: 10,
+                emitting: false
+            });
+
+            emitterSparks = this.add.particles(0, 0, 'spark', {
+                speed: { min: 50, max: 150 },
+                scale: { start: 1, end: 0 },
+                lifespan: 800,
+                blendMode: 'ADD',
+                quantity: 15,
+                emitting: false
+            });
+
+            emitterSplat = this.add.particles(0, 0, 'splat', {
+                speed: 100,
+                lifespan: 600,
+                gravityY: 300,
+                quantity: 20,
+                emitting: false,
+                tint: [0x00ff00, 0x008800]
+            });
+
             scoreText = this.add.text(20, 20, 'CUÑADISMO: 0', { fontSize: '24px', fontWeight: 'bold', fill: '#FFD700', stroke: '#000', strokeThickness: 4, fontFamily: 'Segoe UI' });
             livesText = this.add.text(20, 60, 'SERVILLETAS: 3', { fontSize: '20px', fill: '#FFF', stroke: '#000', strokeThickness: 3 });
             timerText = this.add.text(config.width - 180, 20, 'TIEMPO: ' + timeLeft, { fontSize: '24px', fill: '#FFF', stroke: '#000', strokeThickness: 3 });
 
-            // Initial lives icons
             updateLivesDisplay.call(this);
 
+            // Squash & Stretch Logic
             this.input.on('pointermove', (pointer) => {
                 if (gameActive) {
+                    const diffX = pointer.x - player.x;
                     player.x = pointer.x;
+
+                    // Simple tilt based on movement speed
+                    const targetAngle = 180 - Phaser.Math.Clamp(diffX * 0.5, -20, 20);
+                    player.setAngle(targetAngle);
                 }
             });
 
             this.physics.add.overlap(player, items, handleCollision, null, this);
 
-            // Start Button Logic
             document.getElementById('start-btn').addEventListener('click', () => {
                 document.getElementById('start-screen').style.display = 'none';
                 gameActive = true;
                 startTimers.call(this);
 
-                // Play Audio
                 if (GREETING_AUDIO_URL) {
                     const audio = new Audio(GREETING_AUDIO_URL);
                     audio.play().catch(e => console.log("Audio play failed", e));
@@ -137,10 +185,7 @@
         }
 
         function startTimers() {
-            // Spawner
             spawnEvent = this.time.addEvent({ delay: 600, callback: spawnRandomItem, callbackScope: this, loop: true });
-
-            // Timer
             timerEvent = this.time.addEvent({
                 delay: 1000,
                 callback: () => {
@@ -170,46 +215,80 @@
             item.setData('type', type);
             item.setScale(0.08);
             item.setCircle(item.width / 2.2);
+
+            // Random initial rotation and angular velocity for swaying
+            item.setAngle(Phaser.Math.Between(0, 360));
             item.setAngularVelocity(Phaser.Math.Between(-100, 100));
 
             const speed = 250 + (score / 3);
             if (type === 'jamon') item.setVelocityY(speed * 1.5);
             else if (type === 'factura') item.setVelocityY(speed * 0.8);
             else item.setVelocityY(speed);
+
+            // Add a sway tween
+            this.tweens.add({
+                targets: item,
+                x: item.x + Phaser.Math.Between(-30, 30),
+                duration: 1000 + Phaser.Math.Between(-200, 200),
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
         }
 
         function handleCollision(player, item) {
             const type = item.getData('type');
+            const itemX = item.x;
+            const itemY = item.y;
             item.destroy();
 
+            // FX: Screen Shake
             this.cameras.main.shake(50, 0.005);
+
+            // UI Feedback: Score Pop
+            this.tweens.add({
+                targets: scoreText,
+                scale: { from: 1.5, to: 1 },
+                duration: 200,
+                ease: 'Back.out'
+            });
 
             if (type === 'croqueta') {
                 score += 10;
                 showFloatingText.call(this, player.x, player.y, '+10', '#FFD700');
+                emitterCrumbs.emitParticleAt(itemX, itemY);
             } else if (type === 'jamon') {
                 score += 50;
                 showFloatingText.call(this, player.x, player.y, '¡IBÉRICO! +50', '#FF0000');
+                emitterCrumbs.emitParticleAt(itemX, itemY, 20); // More particles
             } else if (type === 'aguacate' || type === 'sushi') {
                 if (!isInvincible) {
                     lives--;
                     updateLivesDisplay.call(this);
-                    this.cameras.main.shake(250, 0.02);
+
+                    // Bad collision FX
+                    this.cameras.main.flash(200, 255, 0, 0); // Red flash
+                    if (navigator.vibrate) navigator.vibrate(200); // Vibrate
+                    emitterSplat.emitParticleAt(itemX, itemY);
+
                     showFloatingText.call(this, player.x, player.y, '¡VETE A UN STARBUCKS!', '#00FF00');
                     if (lives <= 0) gameOver.call(this, score);
                 } else {
                     score += 25;
                     showFloatingText.call(this, player.x, player.y, '¡CRUNCH!', '#FFFF00');
+                    emitterCrumbs.emitParticleAt(itemX, itemY);
                 }
             } else if (type === 'factura') {
                  if (!isInvincible) {
                     score = Math.max(0, score - 50);
                     showFloatingText.call(this, player.x, player.y, '¡DOLOROSA! -50', '#888888');
+                    this.cameras.main.flash(100, 200, 200, 200);
                  }
             } else if (type === 'carajillo') {
                 isInvincible = true;
                 player.setTint(0xFFD700);
                 player.setScale(0.15);
+                emitterSparks.emitParticleAt(itemX, itemY, 30);
                 showFloatingText.call(this, player.x, player.y, '¡OÍDO COCINA!', '#FFFFFF');
                 this.time.delayedCall(6000, () => {
                     isInvincible = false;
@@ -239,9 +318,7 @@
         }
 
         function update() {
-            // Parallax background
             background.tilePositionY -= 1;
-
             items.children.iterate(child => {
                 if (child && child.y > config.height + 50) child.destroy();
             });
@@ -264,7 +341,6 @@
             if (spawnEvent) spawnEvent.remove();
             if (timerEvent) timerEvent.remove();
 
-            // Play Game Over Audio
             if (GAME_OVER_AUDIO_URL) {
                 const audio = new Audio(GAME_OVER_AUDIO_URL);
                 audio.play().catch(e => console.log("Game over audio play failed", e));
