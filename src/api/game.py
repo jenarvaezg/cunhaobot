@@ -45,10 +45,14 @@ class GameController(Controller):
         phrase_id = zlib.adler32(text.encode())
         dummy_phrase = Phrase(text=text, id=phrase_id)
 
-        greeting_audio_url = tts_service.get_audio_url(dummy_phrase, "game")
+        # Use "short" to match telegram audio mode prefixing
+        greeting_audio_url = tts_service.get_audio_url(dummy_phrase, "short")
 
         # Generate Game Over audio (random long phrase)
         random_phrase = await phrase_service.get_random(long=True)
+        if random_phrase.id is None:
+            random_phrase.id = zlib.adler32(random_phrase.text.encode())
+
         game_over_audio_url = tts_service.get_audio_url(random_phrase, "long")
 
         return Template(

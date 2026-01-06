@@ -1,5 +1,6 @@
 import logging
 import asyncio
+import zlib
 from typing import Any, Annotated
 from litestar import Controller, Request, get, post
 from litestar.exceptions import HTTPException
@@ -25,6 +26,8 @@ from services import (
     BadgeService,
 )
 from core.config import config
+from utils.ui import apelativo
+from models.phrase import Phrase
 
 logger = logging.getLogger(__name__)
 
@@ -603,10 +606,31 @@ class WebController(Controller):
         )
 
     @get("/game")
-    async def web_game(self, request: Request) -> Template:
+    async def web_game(
+        self,
+        request: Request,
+        tts_service: Annotated[TTSService, Dependency()],
+        phrase_service: Annotated[PhraseService, Dependency()],
+    ) -> Template:
         """Launches the game from the web interface."""
         user = request.session.get("user")
         user_id = str(user.get("id")) if user else "guest"
+
+        # Generate greeting audio
+        ap = apelativo()
+        text = f"¿Qué pasa, {ap}?"
+        # Use a stable integer ID for caching based on the apelativo
+        phrase_id = zlib.adler32(text.encode())
+        dummy_phrase = Phrase(text=text, id=phrase_id)
+
+        greeting_audio_url = tts_service.get_audio_url(dummy_phrase, "short")
+
+        # Generate Game Over audio (random long phrase)
+        random_phrase = await phrase_service.get_random(long=True)
+        if random_phrase.id is None:
+            random_phrase.id = zlib.adler32(random_phrase.text.encode())
+
+        game_over_audio_url = tts_service.get_audio_url(random_phrase, "long")
 
         return Template(
             template_name="game.html",
@@ -616,6 +640,8 @@ class WebController(Controller):
                 "game_short_name": "palillo_cunhao",
                 "secret": config.session_secret,
                 "is_web": True,
+                "greeting_audio_url": greeting_audio_url,
+                "game_over_audio_url": game_over_audio_url,
             },
         )
 
