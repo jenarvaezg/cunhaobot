@@ -6,12 +6,6 @@
     <title>Paco's Tapas Runner</title>
     <script src="https://telegram.org/js/games.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
-    <script type="module">
-        import { initStrudel } from 'https://cdn.skypack.dev/@strudel/web';
-
-        const { evaluate, stop } = initStrudel();
-        window.strudel = { evaluate, stop };
-    </script>
     <style>
         body {
             margin: 0;
@@ -29,16 +23,41 @@
             width: 100%;
             height: 100%;
         }
+        #loading-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
+    <div id="loading-overlay">
+        <h2>CARGANDO EL BAR...</h2>
+        <p>Prepara el palillo, fiera.</p>
+    </div>
     <div id="game-container"></div>
 
-    <script>
+    <script type="module">
+        import { initStrudel } from 'https://cdn.skypack.dev/@strudel/web';
+
+        // Data from server
         const USER_ID = "{{ user_id }}";
         const INLINE_MESSAGE_ID = "{{ inline_message_id }}";
         const SECRET = "{{ secret }}";
-        const MUSIC_PATTERN = `{{ music_pattern | safe }}`;
+        const MUSIC_PATTERN = {{ music_pattern | tojson }};
+
+        let strudel;
+        try {
+            const { evaluate, stop } = initStrudel();
+            strudel = { evaluate, stop };
+        } catch (e) {
+            console.error("Strudel init failed", e);
+        }
 
         const config = {
             type: Phaser.AUTO,
@@ -47,10 +66,7 @@
             parent: 'game-container',
             physics: {
                 default: 'arcade',
-                arcade: {
-                    gravity: { y: 0 },
-                    debug: false
-                }
+                arcade: { gravity: { y: 0 }, debug: false }
             },
             scene: {
                 preload: preload,
@@ -72,39 +88,20 @@
         let timeLeft = 30;
         let musicStarted = false;
 
-        function startMusic() {
-            if (musicStarted || !window.strudel) return;
-            try {
-                window.strudel.evaluate(MUSIC_PATTERN);
-                musicStarted = true;
-            } catch (e) {
-                console.error("Error starting music:", e);
-            }
-        }
-
         function preload() {
-            // Create placeholders programmatically
             const graphics = this.make.graphics();
-
-            // Palillo (Player) - Slender wooden stick
             graphics.fillStyle(0xDEB887, 1);
             graphics.fillRect(0, 0, 8, 80);
             graphics.generateTexture('palillo', 8, 80);
             graphics.clear();
-
-            // Croqueta (Good) - Golden brown ellipse
             graphics.fillStyle(0xCD853F, 1);
             graphics.fillEllipse(15, 15, 30, 20);
             graphics.generateTexture('croqueta', 30, 30);
             graphics.clear();
-
-            // Aguacate (Bad) - Green ellipse (The enemy of the cuñao)
             graphics.fillStyle(0x228B22, 1);
             graphics.fillEllipse(15, 15, 25, 35);
             graphics.generateTexture('aguacate', 30, 40);
             graphics.clear();
-
-            // Carajillo (Power-up) - Small dark glass
             graphics.fillStyle(0x4B3621, 1);
             graphics.fillRect(5, 5, 20, 25);
             graphics.generateTexture('carajillo', 30, 30);
@@ -112,52 +109,30 @@
         }
 
         function create() {
-            // Barra de bar (Background element)
+            document.getElementById('loading-overlay').style.display = 'none';
             this.add.rectangle(0, config.height - 40, config.width, 40, 0x333333).setOrigin(0, 0);
 
             player = this.physics.add.sprite(config.width / 2, config.height - 80, 'palillo');
             player.setCollideWorldBounds(true);
-
             items = this.physics.add.group();
 
-            // UI
             scoreText = this.add.text(20, 20, 'CUÑADISMO: 0', {
-                fontSize: '24px',
-                fontWeight: 'bold',
-                fill: '#FFD700',
-                stroke: '#000',
-                strokeThickness: 4
+                fontSize: '24px', fontWeight: 'bold', fill: '#FFD700', stroke: '#000', strokeThickness: 4
             });
+            livesText = this.add.text(20, 55, 'SERVILLETAS: 🧻🧻🧻', { fontSize: '18px', fill: '#FFF' });
+            timerText = this.add.text(config.width - 160, 20, 'TIEMPO: 30', { fontSize: '24px', fill: '#FFF' });
 
-            livesText = this.add.text(20, 55, 'SERVILLETAS: 🧻🧻🧻', {
-                fontSize: '18px',
-                fill: '#FFF'
-            });
-
-            timerText = this.add.text(config.width - 160, 20, 'TIEMPO: 30', {
-                fontSize: '24px',
-                fill: '#FFF',
-                stroke: '#000',
-                strokeThickness: 2
-            });
-
-            // Input - Support both touch and mouse
-            this.input.on('pointermove', function (pointer) {
+            this.input.on('pointermove', (pointer) => {
                 if (gameActive) {
                     player.x = pointer.x;
-                    if (!musicStarted) startMusic();
+                    if (!musicStarted && strudel) {
+                        strudel.evaluate(MUSIC_PATTERN);
+                        musicStarted = true;
+                    }
                 }
             });
 
-            // Spawning logic
-            this.time.addEvent({
-                delay: 700,
-                callback: spawnRandomItem,
-                callbackScope: this,
-                loop: true
-            });
-
-            // Countdown timer
+            this.time.addEvent({ delay: 700, callback: spawnRandomItem, callbackScope: this, loop: true });
             this.time.addEvent({
                 delay: 1000,
                 callback: () => {
@@ -166,8 +141,7 @@
                     timerText.setText('TIEMPO: ' + timeLeft);
                     if (timeLeft <= 0) gameOver.call(this, score);
                 },
-                callbackScope: this,
-                loop: true
+                callbackScope: this, loop: true
             });
 
             this.physics.add.overlap(player, items, handleCollision, null, this);
@@ -177,116 +151,68 @@
             if (!gameActive) return;
             const x = Phaser.Math.Between(30, config.width - 30);
             const rand = Math.random();
-
-            let type;
-            if (rand < 0.65) type = 'croqueta';
-            else if (rand < 0.92) type = 'aguacate';
-            else type = 'carajillo';
-
+            let type = rand < 0.65 ? 'croqueta' : (rand < 0.92 ? 'aguacate' : 'carajillo');
             const item = items.create(x, -50, type);
             item.setData('type', type);
-            // Speed increases with score
             item.setVelocityY(250 + (score / 4));
         }
 
         function handleCollision(player, item) {
             const type = item.getData('type');
             item.destroy();
-
             if (type === 'croqueta') {
                 score += 10;
                 scoreText.setText('CUÑADISMO: ' + score);
-                // Simple visual pop
-                this.tweens.add({
-                    targets: scoreText,
-                    scale: 1.2,
-                    duration: 100,
-                    yoyo: true
-                });
             } else if (type === 'aguacate') {
                 if (!isInvincible) {
                     lives--;
                     updateLivesDisplay();
                     this.cameras.main.shake(250, 0.03);
-                    player.setTint(0xff0000);
-                    this.time.delayedCall(200, () => player.clearTint());
-
                     if (lives <= 0) gameOver.call(this, score);
-                } else {
-                    // Invincible destroys obstacles for extra points
-                    score += 50;
-                    scoreText.setText('CUÑADISMO: ' + score);
-                }
+                } else { score += 50; scoreText.setText('CUÑADISMO: ' + score); }
             } else if (type === 'carajillo') {
-                activatePowerUp.call(this);
+                isInvincible = true;
+                player.setTint(0xFFD700); player.setScale(2, 1.2);
+                this.time.delayedCall(6000, () => {
+                    isInvincible = false; player.clearTint(); player.setScale(1, 1);
+                });
             }
         }
 
-        function activatePowerUp() {
-            isInvincible = true;
-            player.setTint(0xFFD700);
-            player.setScale(2, 1.2);
-
-            this.time.delayedCall(6000, () => {
-                isInvincible = false;
-                player.clearTint();
-                player.setScale(1, 1);
-            });
-        }
-
         function updateLivesDisplay() {
-            let emoji = "";
-            for(let i=0; i<lives; i++) emoji += "🧻";
+            let emoji = ""; for(let i=0; i<lives; i++) emoji += "🧻";
             livesText.setText('SERVILLETAS: ' + emoji);
         }
 
         function update() {
-            items.children.iterate(function (child) {
-                if (child && child.y > config.height + 50) {
-                    child.destroy();
-                }
+            items.children.iterate(child => {
+                if (child && child.y > config.height + 50) child.destroy();
             });
         }
 
         async function sha256(message) {
             const msgBuffer = new TextEncoder().encode(message);
             const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-                async function gameOver(finalScore) {
-                    if (!gameActive) return;
-                    gameActive = false;
+        async function gameOver(finalScore) {
+            if (!gameActive) return;
+            gameActive = false;
+            if (strudel) strudel.stop();
+            this.physics.pause();
+            player.setTint(0xff0000);
 
-                    if (window.strudel) window.strudel.stop();
-                    this.physics.pause();            player.setTint(0xff0000);
-
-            // Send score to backend
             const hash = await sha256(`${USER_ID}${finalScore}${SECRET}`);
-
             try {
                 const response = await fetch('/api/game/score', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        user_id: USER_ID,
-                        score: finalScore,
-                        inline_message_id: INLINE_MESSAGE_ID,
-                        hash: hash
-                    })
+                    body: JSON.stringify({ user_id: USER_ID, score: finalScore, inline_message_id: INLINE_MESSAGE_ID, hash: hash })
                 });
-
-                if (response.ok) {
-                    alert("¡FIN DE LA PARTIDA!\n\nHas conseguido " + finalScore + " puntos de Cuñadismo.\nTu récord se ha guardado en la barra.");
-                } else {
-                    alert("Paco dice que tu puntuación es sospechosa. No se ha guardado.");
-                }
-            } catch (e) {
-                console.error("Score submission error", e);
-            }
-
-            // Reload to play again
+                if (response.ok) alert("¡PARTIDA TERMINADA!\nScore: " + finalScore + "\nPuntos guardados.");
+                else alert("Puntos no guardados. Paco sospecha.");
+            } catch (e) { console.error(e); }
             window.location.reload();
         }
     </script>
