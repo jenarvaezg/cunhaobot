@@ -1,0 +1,587 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.2, pytest-9.0.2, pluggy-1.6.0
+rootdir: /Users/jose/cunhaobot
+configfile: pyproject.toml
+plugins: anyio-4.12.0, Faker-40.1.0, asyncio-1.3.0, logfire-4.16.0, cov-7.0.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 315 items
+
+src/admin_web_test.py ....                                               [  1%]
+src/api/audio_endpoint_test.py ..                                        [  1%]
+src/api/game_test.py ..                                                  [  2%]
+src/api/slack_oauth_test.py .                                            [  2%]
+src/approve_web_test.py ....                                             [  4%]
+src/broadcast_test.py ........                                           [  6%]
+src/core/config_test.py ...                                              [  7%]
+src/infrastructure/datastore/base_test.py .                              [  7%]
+src/infrastructure/datastore/gift_test.py ..                             [  8%]
+src/infrastructure/datastore/phrase_test.py .........                    [ 11%]
+src/infrastructure/datastore/proposal_test.py ......                     [ 13%]
+src/infrastructure/datastore/slack_store_test.py ..                      [ 13%]
+src/infrastructure/datastore/user_test.py .....                          [ 15%]
+src/main_test.py ................                                        [ 20%]
+src/metrics_web_test.py ..                                               [ 21%]
+src/models/phrase_test.py ....                                           [ 22%]
+src/models/proposal_test.py .....                                        [ 24%]
+src/models/user_test.py ..                                               [ 24%]
+src/services/ai_service_test.py ................                         [ 29%]
+src/services/badge_service_test.py ....                                  [ 31%]
+src/services/cunhao_agent_test.py ..                                     [ 31%]
+src/services/game_service_test.py ..                                     [ 32%]
+src/services/phrase_service_test.py .................                    [ 37%]
+src/services/proposal_service_test.py ...............                    [ 42%]
+src/services/slack_user_test.py ..                                       [ 43%]
+src/services/tts_service_test.py ...                                     [ 44%]
+src/services/user_service_link_test.py ....                              [ 45%]
+src/services/user_service_test.py ..................                     [ 51%]
+src/tg/decorators_test.py ........                                       [ 53%]
+src/tg/handlers/commands/about_test.py .                                 [ 53%]
+src/tg/handlers/commands/cancel_test.py .                                [ 54%]
+src/tg/handlers/commands/gift_mention_test.py ...                        [ 55%]
+src/tg/handlers/commands/gift_test.py ...                                [ 56%]
+src/tg/handlers/commands/help_test.py .                                  [ 56%]
+src/tg/handlers/commands/poster_test.py ....                             [ 57%]
+src/tg/handlers/commands/start_test.py .                                 [ 58%]
+src/tg/handlers/commands/stop_test.py ..                                 [ 58%]
+src/tg/handlers/commands/submit_test.py .......                          [ 60%]
+src/tg/handlers/inline/chosen_inline_result_test.py ..                   [ 61%]
+src/tg/handlers/inline/inline_query/audio_mode_test.py .....             [ 63%]
+src/tg/handlers/inline/inline_query/long_mode_test.py ..                 [ 63%]
+src/tg/handlers/inline/inline_query/short_mode_test.py .....             [ 65%]
+src/tg/handlers/inline/inline_query/sticker_mode_test.py ...             [ 66%]
+src/tg/handlers/inline/inline_test.py ..                                 [ 66%]
+src/tg/handlers/messages/fallback_test.py .........                      [ 69%]
+src/tg/handlers/messages/no_message_test.py .                            [ 70%]
+src/tg/handlers/messages/photo_test.py ....                              [ 71%]
+src/tg/handlers/messages/reply_test.py ....                              [ 72%]
+src/tg/handlers/messages/text_message_test.py ...                        [ 73%]
+src/tg/handlers/payments/checkout_gift_private_test.py ..                [ 74%]
+src/tg/handlers/payments/checkout_gift_test.py ..                        [ 74%]
+src/tg/handlers/payments/checkout_test.py ....                           [ 76%]
+src/tg/handlers/utils/callback_query_badges_test.py ..                   [ 76%]
+src/tg/handlers/utils/callback_query_test.py ............                [ 80%]
+src/tg/handlers/utils/error_test.py .                                    [ 80%]
+src/tg/init_test.py .                                                    [ 81%]
+src/tg/stickers_test.py .......                                          [ 83%]
+src/tg/text_router_test.py ..........                                    [ 86%]
+src/tg/utils/history_test.py ....                                        [ 87%]
+src/tg_game_test.py ....                                                 [ 89%]
+src/tg_premium_test.py ..                                                [ 89%]
+src/tg_profile_test.py ..                                                [ 90%]
+src/utils/gcp_test.py ..                                                 [ 91%]
+src/utils/utils_test.py .....                                            [ 92%]
+src/web_profile_test.py ...                                              [ 93%]
+src/web_test.py ....................                                     [100%]
+
+=============================== warnings summary ===============================
+.venv/lib/python3.14/site-packages/google/genai/types.py:43
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/google/genai/types.py:43: DeprecationWarning: '_UnionGenericAlias' is deprecated and slated for removal in Python 3.17
+    VersionedUnionType = Union[builtin_types.UnionType, _UnionGenericAlias]
+
+.venv/lib/python3.14/site-packages/litestar/plugins/pydantic/utils.py:28
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/litestar/plugins/pydantic/utils.py:28: UserWarning: Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+    from pydantic import v1 as pydantic_v1
+
+src/tg/handlers/commands/about_test.py::test_handle_about
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4602135952'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/commands/gift_mention_test.py::test_handle_gift_command_text_mention
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='name', input_value=<MagicMock name='mock.eff...r.name' id='4602551936'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/commands/gift_mention_test.py::test_handle_gift_command_text_mention
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4602554288'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/commands/gift_mention_test.py::test_handle_gift_command_mention_success
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='name', input_value=<MagicMock name='mock.eff...r.name' id='4602990608'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/commands/gift_mention_test.py::test_handle_gift_command_mention_success
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4602992960'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/commands/gift_mention_test.py::test_handle_gift_command_mention_not_found
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='name', input_value=<MagicMock name='mock.eff...r.name' id='4603445328'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/commands/gift_mention_test.py::test_handle_gift_command_mention_not_found
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4603447680'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/commands/help_test.py::test_handle_help
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='name', input_value=<MagicMock name='mock.eff...r.name' id='4604605312'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/commands/help_test.py::test_handle_help
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4605035248'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4605035584'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='type', input_value=<MagicMock name='mock.eff...t.type' id='4604607664'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/commands/start_test.py::test_handle_start
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='name', input_value=<MagicMock name='mock.eff...r.name' id='4607053504'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/commands/start_test.py::test_handle_start
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4607057200'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4607057536'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='type', input_value=<MagicMock name='mock.eff...t.type' id='4607055856'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/commands/stop_test.py::test_handle_stop
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4607579472'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4607579808'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='type', input_value=<MagicMock name='mock.eff...t.type' id='4607578128'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/commands/submit_test.py::test_handle_submit_success
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4608513360'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4608513696'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='type', input_value=<MagicMock name='mock.eff...t.type' id='4608512016'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/commands/submit_test.py::test_handle_submit_duplicate_phrase
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='name', input_value=<MagicMock name='mock.eff...r.name' id='4608964464'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/commands/submit_test.py::test_handle_submit_duplicate_phrase
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4609394400'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4609394736'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='type', input_value=<MagicMock name='mock.eff...t.type' id='4609393056'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/commands/submit_test.py::test_handle_submit_duplicate_proposal_voting_active
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='name', input_value=<MagicMock name='mock.eff...r.name' id='4609779968'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/commands/submit_test.py::test_handle_submit_duplicate_proposal_voting_active
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4609783664'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4609784000'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='type', input_value=<MagicMock name='mock.eff...t.type' id='4609782320'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/commands/submit_test.py::test_handle_submit_duplicate_proposal_rejected
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='name', input_value=<MagicMock name='mock.eff...r.name' id='4610562704'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/commands/submit_test.py::test_handle_submit_duplicate_proposal_rejected
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4610566400'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4610566736'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='type', input_value=<MagicMock name='mock.eff...t.type' id='4610565056'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/commands/submit_test.py::test_handle_submit_too_long
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='name', input_value=<MagicMock name='mock.eff...r.name' id='4611427024'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/commands/submit_test.py::test_handle_submit_too_long
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4611430720'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4611431056'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='type', input_value=<MagicMock name='mock.eff...t.type' id='4611429376'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/commands/submit_test.py::test_handle_submit_empty
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='name', input_value=<MagicMock name='mock.eff...r.name' id='4611865440'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/commands/submit_test.py::test_handle_submit_empty
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4612278992'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4612279328'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='type', input_value=<MagicMock name='mock.eff...t.type' id='4612277648'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/inline/chosen_inline_result_test.py::test_handle_chosen_inline_result_success
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='name', input_value=<MagicMock name='mock.eff...r.name' id='4612727072'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/inline/chosen_inline_result_test.py::test_handle_chosen_inline_result_success
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4612730768'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4612731104'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='type', input_value=<MagicMock name='mock.eff...t.type' id='4612729424'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/inline/chosen_inline_result_test.py::test_handle_chosen_inline_result_no_result
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='name', input_value=<MagicMock name='mock.eff...r.name' id='4613554928'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/inline/chosen_inline_result_test.py::test_handle_chosen_inline_result_no_result
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4613558624'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4613558960'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='type', input_value=<MagicMock name='mock.eff...t.type' id='4613557280'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/inline/inline_test.py::TestInlineQuery::test_handle_inline_query_short
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4615179968'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4615180304'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='type', input_value=<MagicMock name='mock.eff...t.type' id='4615178624'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/inline/inline_test.py::TestInlineQuery::test_handle_inline_query_no_func
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4615646112'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4615646448'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='type', input_value=<MagicMock name='mock.eff...t.type' id='4615644768'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/messages/text_message_test.py::test_handle_message_mention_trigger
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='name', input_value=<MagicMock name='mock.eff...r.name' id='4621960592'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/messages/text_message_test.py::test_handle_message_mention_trigger
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4621963280'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4621963616'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/messages/text_message_test.py::test_handle_message_no_trigger_only_reaction
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='name', input_value=<MagicMock name='mock.eff...r.name' id='4622333472'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/messages/text_message_test.py::test_handle_message_no_trigger_only_reaction
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4622778784'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4622779120'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/payments/checkout_gift_private_test.py::test_handle_successful_payment_gift_private_notification
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4623186784'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/payments/checkout_gift_private_test.py::test_handle_successful_payment_gift_no_private_notification_if_present
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4624192512'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/utils/callback_query_test.py::TestCallbackQuery::test_handle_callback_query_not_admin
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='name', input_value=<MagicMock name='mock.eff...r.name' id='4628003008'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/utils/callback_query_test.py::TestCallbackQuery::test_handle_callback_query_not_admin
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4628449328'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4628449664'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='type', input_value=<MagicMock name='mock.eff...t.type' id='4628447984'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/utils/callback_query_test.py::TestCallbackQuery::test_handle_callback_query_proposal_not_found
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='name', input_value=<MagicMock name='mock.eff...r.name' id='4628849264'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/utils/callback_query_test.py::TestCallbackQuery::test_handle_callback_query_proposal_not_found
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4628852960'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4628853296'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='type', input_value=<MagicMock name='mock.eff...t.type' id='4628851616'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/utils/callback_query_test.py::TestCallbackQuery::test_handle_callback_query_vote_and_approve
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='name', input_value=<MagicMock name='mock.eff...r.name' id='4629679808'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/utils/callback_query_test.py::TestCallbackQuery::test_handle_callback_query_vote_and_approve
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4629683504'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4629683840'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='type', input_value=<MagicMock name='mock.eff...t.type' id='4629682160'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/utils/callback_query_test.py::TestCallbackQuery::test_handle_callback_query_vote_and_dismiss
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='name', input_value=<MagicMock name='mock.eff...r.name' id='4630101168'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg/handlers/utils/callback_query_test.py::TestCallbackQuery::test_handle_callback_query_vote_and_dismiss
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4630531104'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4630531440'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='type', input_value=<MagicMock name='mock.eff...t.type' id='4630529760'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg_game_test.py::test_handle_game_command
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='name', input_value=<MagicMock name='mock.eff...r.name' id='4632493232'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4632492896'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg_game_test.py::test_handle_game_command
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4632488864'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4632489200'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='type', input_value=<MagicMock name='mock.eff...t.type' id='4632490880'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg_game_test.py::test_handle_top_jugones
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='name', input_value=<MagicMock name='mock.eff...r.name' id='4631726800'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4631726128'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg_game_test.py::test_handle_top_jugones
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4630985232'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4630983888'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='type', input_value=<MagicMock name='mock.eff...t.type' id='4630985568'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg_premium_test.py::test_handle_premium_active
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='name', input_value=<MagicMock name='mock.eff...r.name' id='4630977168'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4630976496'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg_premium_test.py::test_handle_premium_active
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4630970448'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4630542192'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='type', input_value=<MagicMock name='mock.eff...t.type' id='4630973808'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg_premium_test.py::test_handle_premium_not_active
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='name', input_value=<MagicMock name='mock.eff...r.name' id='4630535136'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4630534128'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg_premium_test.py::test_handle_premium_not_active
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4630097136'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4630096464'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='type', input_value=<MagicMock name='mock.eff...t.type' id='4630098144'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg_profile_test.py::test_handle_profile_not_found
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='name', input_value=<MagicMock name='mock.eff...r.name' id='4629690560'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4629689888'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg_profile_test.py::test_handle_profile_not_found
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4629676784'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4629676112'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='type', input_value=<MagicMock name='mock.eff...t.type' id='4629689216'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg_profile_test.py::test_handle_profile_success
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='name', input_value=<MagicMock name='mock.eff...r.name' id='4628842544'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4628856320'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+src/tg_profile_test.py::test_handle_profile_success
+  /Users/jose/cunhaobot/.venv/lib/python3.14/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='title', input_value=<MagicMock name='mock.eff....title' id='4628844560'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='username', input_value=<MagicMock name='mock.eff...ername' id='4628843888'>, input_type=MagicMock])
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='type', input_value=<MagicMock name='mock.eff...t.type' id='4628846240'>, input_type=MagicMock])
+    return self.__pydantic_serializer__.to_python(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform darwin, python 3.14.2-final-0 _______________
+
+Name                                                       Stmts   Miss  Cover   Missing
+----------------------------------------------------------------------------------------
+src/admin_web_test.py                                         17      0   100%
+src/api/__init__.py                                            3      0   100%
+src/api/admin.py                                             115     11    90%   43, 61-68, 97-102, 124, 142, 216
+src/api/audio_endpoint_test.py                                17      0   100%
+src/api/bot.py                                                32      0   100%
+src/api/game.py                                               67     10    85%   41, 83-90, 120-121, 134-143
+src/api/game_test.py                                          29      0   100%
+src/api/slack.py                                              73      8    89%   20, 46, 50, 53, 71, 73, 97, 106
+src/api/slack_oauth_test.py                                   27      5    81%   18, 29-33
+src/api/utils.py                                              14      0   100%
+src/api/web.py                                               234     59    75%   90-96, 111-112, 132-136, 163-164, 171, 247-258, 295, 316, 331-335, 471-473, 488-524, 616-635
+src/approve_web_test.py                                       28      0   100%
+src/broadcast_test.py                                         93      0   100%
+src/conftest.py                                               30      0   100%
+src/core/config.py                                            16      0   100%
+src/core/config_test.py                                       42      0   100%
+src/core/container.py                                         80     24    70%   77-85, 103-110, 114-121, 125-131, 135-140, 144-146, 150-152, 156-158
+src/core/di.py                                                32      1    97%   136
+src/infrastructure/__init__.py                                 0      0   100%
+src/infrastructure/datastore/__init__.py                       0      0   100%
+src/infrastructure/datastore/base.py                          56      1    98%   37
+src/infrastructure/datastore/base_test.py                     13      0   100%
+src/infrastructure/datastore/chat.py                          12      1    92%   13
+src/infrastructure/datastore/gift.py                          23      0   100%
+src/infrastructure/datastore/gift_test.py                     47      3    94%   14, 24-25
+src/infrastructure/datastore/link_request.py                  18      8    56%   12-16, 27-36
+src/infrastructure/datastore/phrase.py                       110     50    55%   55-124, 137-138, 142-145, 166-168, 179, 182-184
+src/infrastructure/datastore/phrase_test.py                  134      5    96%   14, 24-25, 38-39
+src/infrastructure/datastore/poster_request.py                63     29    54%   15, 23, 39-41, 58, 61-63, 68-104
+src/infrastructure/datastore/proposal.py                      61     14    77%   38-39, 43, 45, 62-68, 81, 99, 103-104
+src/infrastructure/datastore/proposal_test.py                105      3    97%   13, 31-32
+src/infrastructure/datastore/slack_store.py                   80      9    89%   25, 43, 53, 94, 111, 115, 123, 132-133
+src/infrastructure/datastore/slack_store_test.py              40      0   100%
+src/infrastructure/datastore/usage.py                         45     10    78%   15, 32, 38, 40-42, 59, 61-63
+src/infrastructure/datastore/user.py                          51     20    61%   24, 27-36, 52-62
+src/infrastructure/datastore/user_test.py                     82      1    99%   88
+src/infrastructure/protocols.py                               54      0   100%
+src/main.py                                                   59     11    81%   36-63, 91
+src/main_test.py                                             135      0   100%
+src/metrics_web_test.py                                       54      0   100%
+src/models/__init__.py                                         0      0   100%
+src/models/chat.py                                            23      6    74%   26-33
+src/models/gift.py                                            16      0   100%
+src/models/link_request.py                                    10      1    90%   18
+src/models/phrase.py                                          34      0   100%
+src/models/phrase_test.py                                     21      0   100%
+src/models/poster_request.py                                   6      0   100%
+src/models/proposal.py                                        24      0   100%
+src/models/proposal_test.py                                   22      0   100%
+src/models/slack.py                                           40      0   100%
+src/models/usage.py                                           23      0   100%
+src/models/user.py                                            21      0   100%
+src/models/user_test.py                                       13      0   100%
+src/services/__init__.py                                      10      0   100%
+src/services/ai_service.py                                   116     17    85%   23-27, 56-58, 82, 97-99, 142, 181-184, 192, 218
+src/services/ai_service_test.py                              191      0   100%
+src/services/badge_service.py                                228    112    51%   238, 246, 257, 262, 268, 300, 308, 316, 324, 332, 342, 350, 358, 366, 374, 388, 390, 392, 396, 399, 402, 429-603
+src/services/badge_service_test.py                            78      0   100%
+src/services/cunhao_agent.py                                  42     18    57%   15-19, 44, 50-71, 79
+src/services/cunhao_agent_test.py                             24      0   100%
+src/services/game_service.py                                  69     18    74%   18-26, 38, 48-49, 52-53, 74-75, 97-104, 119-126
+src/services/game_service_test.py                             50      0   100%
+src/services/phrase_service.py                               101      7    93%   82-89, 128, 170, 178
+src/services/phrase_service_test.py                          166      1    99%   189
+src/services/proposal_service.py                             118     12    90%   91, 174-193
+src/services/proposal_service_test.py                        156      0   100%
+src/services/slack_user_test.py                               27      0   100%
+src/services/tts_service.py                                   41      8    80%   27, 49-50, 65-66, 70-72
+src/services/tts_service_test.py                              42      0   100%
+src/services/usage_service.py                                 25      5    80%   54-56, 63-64
+src/services/user_service.py                                 215     29    87%   54-55, 58, 63, 70-73, 79, 116-117, 143, 186, 260-266, 288, 321, 347, 350, 371-372, 378-379, 385-386
+src/services/user_service_link_test.py                        75      1    99%   95
+src/services/user_service_test.py                            198      2    99%   234, 252
+src/slack/__init__.py                                          0      0   100%
+src/slack/app.py                                              16      2    88%   51-52
+src/slack/attachments.py                                       7      4    43%   2, 33, 65-66
+src/slack/handlers/bolt_listeners.py                         278    241    13%   34-70, 81-101, 111-137, 143-191, 197-225, 231-380, 384-435, 439-449, 464-515, 531-562, 568-609
+src/slack/response.py                                          0      0   100%
+src/slack/utils.py                                            44     37    16%   30-77, 84-100
+src/tg/__init__.py                                            22      2    91%   14-15
+src/tg/constants.py                                            2      0   100%
+src/tg/decorators.py                                          33      0   100%
+src/tg/decorators_test.py                                     85      0   100%
+src/tg/handlers/__init__.py                                   24      0   100%
+src/tg/handlers/commands/__init__.py                           0      0   100%
+src/tg/handlers/commands/about.py                             14      0   100%
+src/tg/handlers/commands/about_test.py                        23      0   100%
+src/tg/handlers/commands/cancel.py                            10      0   100%
+src/tg/handlers/commands/cancel_test.py                       17      0   100%
+src/tg/handlers/commands/game.py                              45      7    84%   17, 29, 50-51, 59, 70-71
+src/tg/handlers/commands/gift.py                              73      9    88%   22, 72, 92, 97, 103-104, 111, 135-136
+src/tg/handlers/commands/gift_mention_test.py                 95      0   100%
+src/tg/handlers/commands/gift_test.py                         91      0   100%
+src/tg/handlers/commands/help.py                              17      0   100%
+src/tg/handlers/commands/help_test.py                         25      0   100%
+src/tg/handlers/commands/link.py                              21     13    38%   11-47
+src/tg/handlers/commands/ping.py                               9      3    67%   10-12
+src/tg/handlers/commands/poster.py                            29      1    97%   16
+src/tg/handlers/commands/poster_test.py                      104      0   100%
+src/tg/handlers/commands/premium.py                           23      1    96%   12
+src/tg/handlers/commands/profile.py                           47      8    83%   17, 64, 78-85
+src/tg/handlers/commands/start.py                             19      0   100%
+src/tg/handlers/commands/start_test.py                        26      0   100%
+src/tg/handlers/commands/stop.py                              13      0   100%
+src/tg/handlers/commands/stop_test.py                         38      0   100%
+src/tg/handlers/commands/submit.py                            62      3    95%   116-117, 163
+src/tg/handlers/commands/submit_test.py                      129      0   100%
+src/tg/handlers/inline/__init__.py                             0      0   100%
+src/tg/handlers/inline/chosen_inline_result.py                23      4    83%   24, 26, 38-42
+src/tg/handlers/inline/chosen_inline_result_test.py           38      0   100%
+src/tg/handlers/inline/inline_query/__init__.py                1      0   100%
+src/tg/handlers/inline/inline_query/audio_mode.py             29      2    93%   43-44
+src/tg/handlers/inline/inline_query/audio_mode_test.py        48      0   100%
+src/tg/handlers/inline/inline_query/base.py                   27      1    96%   40
+src/tg/handlers/inline/inline_query/long_mode.py              15      0   100%
+src/tg/handlers/inline/inline_query/long_mode_test.py         22      0   100%
+src/tg/handlers/inline/inline_query/short_mode.py             46      4    91%   13, 19-20, 67
+src/tg/handlers/inline/inline_query/short_mode_test.py        44      0   100%
+src/tg/handlers/inline/inline_query/sticker_mode.py           26      1    96%   15
+src/tg/handlers/inline/inline_query/sticker_mode_test.py      26      0   100%
+src/tg/handlers/inline/inline_test.py                         41      0   100%
+src/tg/handlers/messages/__init__.py                           0      0   100%
+src/tg/handlers/messages/fallback.py                          44      1    98%   50
+src/tg/handlers/messages/fallback_test.py                    129      0   100%
+src/tg/handlers/messages/no_message_test.py                   28      0   100%
+src/tg/handlers/messages/photo.py                             38      4    89%   16, 19, 33-39
+src/tg/handlers/messages/photo_test.py                       118      0   100%
+src/tg/handlers/messages/reply.py                             19      0   100%
+src/tg/handlers/messages/reply_test.py                        40      0   100%
+src/tg/handlers/messages/text_message.py                      42      2    95%   39-45
+src/tg/handlers/messages/text_message_test.py                 64      0   100%
+src/tg/handlers/payments/checkout.py                         156     46    71%   22, 30-31, 47, 53, 65-66, 89, 124, 144-145, 170-194, 198-239, 249-251, 339-341
+src/tg/handlers/payments/checkout_gift_private_test.py        78      0   100%
+src/tg/handlers/payments/checkout_gift_test.py                83      0   100%
+src/tg/handlers/payments/checkout_test.py                    132      0   100%
+src/tg/handlers/utils/__init__.py                              0      0   100%
+src/tg/handlers/utils/callback_query.py                      126     10    92%   28, 69, 80, 128, 139, 179, 184, 198, 226, 252
+src/tg/handlers/utils/callback_query_badges_test.py           41      0   100%
+src/tg/handlers/utils/callback_query_test.py                 198      0   100%
+src/tg/handlers/utils/error.py                                 7      0   100%
+src/tg/handlers/utils/error_test.py                            9      0   100%
+src/tg/init_test.py                                           11      0   100%
+src/tg/markup/__init__.py                                      0      0   100%
+src/tg/markup/keyboards.py                                     4      0   100%
+src/tg/stickers.py                                            31      0   100%
+src/tg/stickers_test.py                                       55      0   100%
+src/tg/text_router.py                                         26      2    92%   30-31
+src/tg/text_router_test.py                                    53      0   100%
+src/tg/utils/badges.py                                        22     14    36%   16-40
+src/tg/utils/history.py                                       40      7    82%   16-38
+src/tg/utils/history_test.py                                  67      0   100%
+src/tg_game_test.py                                           81      0   100%
+src/tg_premium_test.py                                        37      0   100%
+src/tg_profile_test.py                                        51      0   100%
+src/utils/__init__.py                                         18      0   100%
+src/utils/gcp.py                                              37     11    70%   33-49
+src/utils/gcp_test.py                                         24      0   100%
+src/utils/image_utils.py                                      66      0   100%
+src/utils/security.py                                         15      0   100%
+src/utils/storage.py                                          26     13    50%   16-18, 25-39
+src/utils/text.py                                             17      0   100%
+src/utils/ui.py                                               14      4    71%   48-50, 55-56
+src/utils/utils_test.py                                       39      4    90%   61, 64-66
+src/web_profile_test.py                                       25      0   100%
+src/web_test.py                                              143      0   100%
+----------------------------------------------------------------------------------------
+TOTAL                                                       8497    981    88%
+======================= 315 passed, 57 warnings in 2.21s =======================
