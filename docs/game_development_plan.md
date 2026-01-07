@@ -27,9 +27,9 @@ El objetivo era sustituir el look de "ejemplo de Phaser" por una estética de ba
     *   Sacudida de pantalla (Shake) más intensa si chocas con un aguacate. ✅
     *   Filtro CRT opcional para darle un toque retro de máquina recreativa de bar. ✅ (Implementado vía post-processing/estilo)
 
-## Fase 6: Social y Retención 🏆
-*   **Logros Locales:** Mostrar "Récord Personal" en la pantalla de inicio.
-*   **Desafío del Día:** Un multiplicador especial que cambia cada día (ej: "Hoy el sushi puntúa doble").
+## Fase 6: Social y Retención 🏆 ✅
+*   **Logros Locales:** Mostrar "Récord Personal" en la pantalla de inicio. ✅ (Usando localStorage y datos del servidor).
+*   **Desafío del Día:** Un multiplicador especial que cambia cada día (ej: "Hoy el sushi puntúa doble"). ✅ (Implementado con rotación diaria de retos).
 
 ## Fase 7: Lanzamiento y Marketing 🚀
 *   **Trailer:** Video corto con música de pasodoble épica.

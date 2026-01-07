@@ -73,7 +73,14 @@
     <div id="start-screen">
         <div class="menu-card">
             <h1 style="color: #FFD700; font-size: 2.2rem; margin-bottom: 5px; font-family: 'Permanent Marker';">PACO'S TAPAS RUNNER</h1>
+
+            <div id="challenge-banner" style="background: #444; border: 2px dashed #FFD700; padding: 10px; margin-bottom: 15px; border-radius: 5px;">
+                <h3 style="margin: 0; color: #FFD700; font-family: 'Permanent Marker'; font-size: 1rem;">🏆 DESAFÍO DEL DÍA</h3>
+                <p id="challenge-text" style="margin: 5px 0 0 0; font-size: 0.9rem;"></p>
+            </div>
+
             <div style="font-size: 0.9rem; line-height: 1.2; margin-bottom: 15px; text-align: left;">
+                <p id="high-score-display" style="text-align: center; color: #FFD700; font-weight: bold; margin-bottom: 10px;"></p>
                 <ul>
                     <li>✅ Croqueta <span class="price">+10 pts</span></li>
                     <li>🍖 Jamón Ibérico <span class="price">+50 pts</span></li>
@@ -111,6 +118,13 @@
         const SECRET = "{{ secret }}";
         const GREETING_AUDIO_URL = "{{ greeting_audio_url }}";
         const GAME_OVER_AUDIO_URL = "{{ game_over_audio_url }}";
+        const DAILY_CHALLENGE = {{ daily_challenge_json | safe }};
+        const SERVER_HIGH_SCORE = {{ high_score or 0 }};
+
+        // Local high score management
+        const localHigh = localStorage.getItem('paco_high_score') || 0;
+        const currentHigh = Math.max(SERVER_HIGH_SCORE, localHigh);
+        if (currentHigh > localHigh) localStorage.setItem('paco_high_score', currentHigh);
 
         // Exponer shareScore al ámbito global cumpliendo con la API de Telegram Games
         window.shareScore = function() {
@@ -196,6 +210,19 @@
         function create() {
             document.getElementById('loading-overlay').style.display = 'none';
             document.getElementById('start-screen').style.display = 'flex';
+
+            // Setup Challenge Text
+            const challengeText = document.getElementById('challenge-text');
+            if (DAILY_CHALLENGE.multiplier > 1) {
+                challengeText.innerText = `¡Hoy las ${DAILY_CHALLENGE.name}s dan PUNTOS DOBLES!`;
+            } else if (DAILY_CHALLENGE.multiplier === 0) {
+                challengeText.innerText = `¡Hoy el ${DAILY_CHALLENGE.name} NO quita vidas y da +25 pts!`;
+            } else {
+                challengeText.innerText = `¡Hoy la ${DAILY_CHALLENGE.name} solo te quita la mitad!`;
+            }
+
+            // Setup High Score Display
+            document.getElementById('high-score-display').innerText = `⭐ Récord Personal: ${currentHigh} pts`;
 
             if (USER_ID === 'guest') {
                  const warning = document.createElement('div');
@@ -495,52 +522,147 @@
             });
         }
 
-        function handleCollision(player, item) {
-            const type = item.getData('type');
-            const itemX = item.x;
-            const itemY = item.y;
-            item.destroy();
+                function handleCollision(player, item) {
 
-            // FX: Screen Shake
-            this.cameras.main.shake(50, 0.005);
+                    const type = item.getData('type');
 
-            // UI Feedback: Score Pop
-            this.tweens.add({
-                targets: scoreText,
-                scale: { from: 1.5, to: 1 },
-                duration: 200,
-                ease: 'Back.out'
-            });
+                    const itemX = item.x;
 
-            if (type === 'croqueta') {
-                comboCount++;
-                let multiplier = 1;
-                let comboMsg = '+10';
+                    const itemY = item.y;
 
-                if (comboCount >= 3) {
-                    multiplier = 2;
-                    comboMsg = '¡FIERA! x2';
-                }
-                if (comboCount >= 6) {
-                    multiplier = 3;
-                    comboMsg = '¡NIVEL DIOS! x3';
-                }
+                    item.destroy();
 
-                score += 10 * multiplier;
-                this.sound.play('crunch');
-                showFloatingText.call(this, player.x, player.y, comboMsg, '#FFD700');
-                emitterCrumbs.emitParticleAt(itemX, itemY);
-            } else if (type === 'jamon') {
-                comboCount++;
-                score += 50;
-                this.sound.play('crunch');
-                showFloatingText.call(this, player.x, player.y, '¡IBÉRICO! +50', '#FF0000');
-                emitterCrumbs.emitParticleAt(itemX, itemY, 20); // More particles
 
-                // Slow motion FX
-                this.time.timeScale = 0.5;
-                this.time.delayedCall(500, () => { this.time.timeScale = 1.0; });
-            } else if (type === 'aguacate' || type === 'sushi') {
+
+                    // FX: Screen Shake
+
+                    this.cameras.main.shake(50, 0.005);
+
+
+
+                    // UI Feedback: Score Pop
+
+                    this.tweens.add({
+
+                        targets: scoreText,
+
+                        scale: { from: 1.5, to: 1 },
+
+                        duration: 200,
+
+                        ease: 'Back.out'
+
+                    });
+
+
+
+                    // Special Challenge Logic
+
+                    let challengeBonus = 1;
+
+                    if (type === DAILY_CHALLENGE.type) {
+
+                        if (DAILY_CHALLENGE.multiplier > 1) {
+
+                            challengeBonus = DAILY_CHALLENGE.multiplier;
+
+                            showFloatingText.call(this, player.x, player.y - 40, '¡DESAFÍO x2!', '#FFD700');
+
+                        } else if (DAILY_CHALLENGE.multiplier === 0) {
+
+                            // Modern food becomes good
+
+                            score += 25;
+
+                            this.sound.play('crunch');
+
+                            showFloatingText.call(this, player.x, player.y, '¡DESAFÍO! +25', '#00FF00');
+
+                            emitterCrumbs.emitParticleAt(itemX, itemY);
+
+                            scoreText.setText('PUNTOS: ' + score);
+
+                            return;
+
+                        } else if (DAILY_CHALLENGE.multiplier === -0.5) {
+
+                            // Factura hurts less
+
+                            score = Math.max(0, score - 25);
+
+                            this.sound.play('cash');
+
+                            showFloatingText.call(this, player.x, player.y, '¡DESAFÍO! -25', '#888888');
+
+                            scoreText.setText('PUNTOS: ' + score);
+
+                            return;
+
+                        }
+
+                    }
+
+
+
+                    if (type === 'croqueta') {
+
+                        comboCount++;
+
+                        let multiplier = 1 * challengeBonus;
+
+                        let comboMsg = `+${10 * multiplier}`;
+
+
+
+                        if (comboCount >= 3) {
+
+                            multiplier *= 2;
+
+                            comboMsg = `¡FIERA! x${multiplier}`;
+
+                        }
+
+                        if (comboCount >= 6) {
+
+                            multiplier *= 3;
+
+                            comboMsg = `¡NIVEL DIOS! x${multiplier}`;
+
+                        }
+
+
+
+                        score += 10 * multiplier;
+
+                        this.sound.play('crunch');
+
+                        showFloatingText.call(this, player.x, player.y, comboMsg, '#FFD700');
+
+                        emitterCrumbs.emitParticleAt(itemX, itemY);
+
+                    } else if (type === 'jamon') {
+
+                        comboCount++;
+
+                        score += 50 * challengeBonus;
+
+                        this.sound.play('crunch');
+
+                        showFloatingText.call(this, player.x, player.y, `¡IBÉRICO! +${50 * challengeBonus}`, '#FF0000');
+
+                        emitterCrumbs.emitParticleAt(itemX, itemY, 20); // More particles
+
+
+
+                        // Slow motion FX
+
+                        this.time.timeScale = 0.5;
+
+                        this.time.delayedCall(500, () => { this.time.timeScale = 1.0; });
+
+                    } else if (type === 'aguacate' || type === 'sushi') {
+
+
                 comboCount = 0;
                 if (!isInvincible) {
                     lives--;
@@ -687,6 +809,11 @@
 
             // Trigger shutter effect
             screen.classList.add('active');
+
+            // Save high score locally
+            if (finalScore > currentHigh) {
+                localStorage.setItem('paco_high_score', finalScore);
+            }
 
             const hash = await getHash(`${USER_ID}${finalScore}${SECRET}`);
             try {

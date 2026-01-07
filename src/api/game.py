@@ -27,6 +27,7 @@ class GameController(Controller):
         request: Request,
         tts_service: Annotated[TTSService, Dependency()],
         phrase_service: Annotated[PhraseService, Dependency()],
+        user_service: Annotated[UserService, Dependency()],
     ) -> Template:
         """Endpoint called by Telegram to launch the game."""
         # Validate telegram web app init data if possible, or use simplified launch
@@ -36,9 +37,35 @@ class GameController(Controller):
         chat_id = tg_data.get("chat_id")
         message_id = tg_data.get("message_id")
 
+        high_score = 0
         if not user_id:
             # Fallback for testing or direct access
             user_id = "guest"
+        else:
+            user = await user_service.get_user(user_id)
+            if user:
+                high_score = user.game_high_score
+
+        # Daily Challenge Logic: Select an item based on the day of the year
+        import datetime
+
+        day_of_year = datetime.datetime.now().timetuple().tm_yday
+        challenges = [
+            {"type": "croqueta", "name": "Croqueta", "multiplier": 2},
+            {"type": "jamon", "name": "Jamón", "multiplier": 2},
+            {
+                "type": "aguacate",
+                "name": "Aguacate",
+                "multiplier": 0,
+            },  # Sushi/Aguacate give points instead of damage
+            {"type": "sushi", "name": "Sushi", "multiplier": 0},
+            {
+                "type": "factura",
+                "name": "La Cuenta",
+                "multiplier": -0.5,
+            },  # Factura only hurts half
+        ]
+        daily_challenge = challenges[day_of_year % len(challenges)]
 
         # Generate greeting audio
         ap = apelativo()
@@ -57,6 +84,8 @@ class GameController(Controller):
 
         game_over_audio_url = tts_service.get_audio_url(random_phrase, "long")
 
+        import json
+
         return Template(
             template_name="game.html",
             context={
@@ -69,6 +98,8 @@ class GameController(Controller):
                 "is_web": False,
                 "greeting_audio_url": greeting_audio_url,
                 "game_over_audio_url": game_over_audio_url,
+                "daily_challenge_json": json.dumps(daily_challenge),
+                "high_score": high_score,
             },
         )
 
