@@ -1,65 +1,39 @@
-# Plan de Desarrollo: Paco's Tapas Runner
+# Plan de Desarrollo: Paco's Tapas Runner (Próximos Pasos)
 
-Este plan detalla los pasos para convertir el prototipo actual en un juego digno de ganar una Game Jam.
-
-## Fase 1: Infraestructura Core ✅
-*   **Registro del juego:** `palillo_cunhao` registrado en BotFather. ✅
-*   **Bot Handler:** Comando `/jugar` y gestión de callbacks. ✅
-*   **Backend:** API de puntuación con validación SHA-256 e integración con Datastore. ✅
-*   **Web Integration:** Acceso desde `/game` para debug y juego libre. ✅
-
-## Fase 2: El "Juice" y Pulido Visual ✅
-*   **Sustitución de Assets:**
-    *   Cambiar formas geométricas por **Pixel Art 8-bit**. ✅
-    *   Corrección de transparencia y sombras en assets. ✅
-*   **Animaciones y Feedback:**
-    *   Animación de "Squash & Stretch" (inclinación) en el palillo. ✅
-    *   Efecto de rotación/balanceo en las tapas al caer. ✅
-    *   **Sistema de Partículas:** Migas, chispas y manchas verdes. ✅
-    *   **UI Feedback:** Tween de escala en el score. ✅
-    *   **Screen Flash/Vibrate:** Feedback visual y háptico al perder vida. ✅
-*   **Pantalla de Inicio:** Instrucciones y botón de comenzar. ✅
-
-## Fase 3: Audio y Narrativa de Bar 🚧
-*   **Voces Dinámicas (TTS):**
-    *   Saludo personalizado ("¿Qué pasa, fiera?") al iniciar. ✅
-    *   Frase de cuñado aleatoria al perder (Game Over). ✅
-*   **Música de Fondo:**
-    *   Bucle de Pasodoble estilo 8-bit/Chiptune (MP3/OGG). ✅
-*   **Efectos de Sonido (SFX):** **(Faltan Assets)**
-    *   `crunch.mp3`: Al capturar croqueta/jamón.
-    *   `damage.mp3`: Al chocar con aguacate/sushi.
-    *   `powerup.mp3`: Al coger carajillo.
-    *   `cash.mp3`: Al coger factura.
+Este documento detalla las mejoras pendientes para profesionalizar el juego y añadir profundidad mecánica.
 
 ## Fase 4: Mecánicas Avanzadas (Dificultad y Variedad) 🎮
-*   **Sistema de Combos:** Multiplicador de puntos si capturas 3 croquetas seguidas sin fallar.
-*   **Patrones de Lluvia:** En lugar de caída aleatoria, crear "oleadas" (ej. una fila de aguacates con un solo hueco).
-*   **Nuevos Elementos:**
-    *   **El Cobrador:** Un ticket que cae muy rápido; si lo coges, pierdes puntos (¡hay que esquivarlo!). (Implementado como Factura ✅)
-    *   **Tapa de Jamón 5J:** Aparece cada 500 puntos, da 100 puntos pero cae a velocidad terminal. (Implementado como Jamón ✅)
-*   **Jefe Final:** Cada 1000 puntos, la pantalla se oscurece y aparece un "Inspector de Sanidad" que lanza prohibiciones que debes esquivar durante 15 segundos.
+*   **Sistema de Combos:** Multiplicador de puntos si capturas 3 croquetas seguidas sin fallar. Se activará un texto dinámico: "¡Toma ya!", "¡Fiera!", "¡Nivel Dios!". ✅
+*   **Patrones de Lluvia:** En lugar de caída aleatoria, crear "oleadas" temáticas: 🚧
+    *   *Ronda de Invitación:* Solo caen croquetas y jamón durante 5 segundos.
+    *   *Ataque Moderno:* Lluvia masiva de aguacates y sushi con un solo hueco para pasar.
+*   **Nuevos Powerups y Obstáculos:**
+    *   🧻 **Servilleta de Bar:** Recupera 1 vida (máximo 3). Solo aparece cuando te queda 1 vida. ✅
+    *   ⏱️ **El Vinito/Cañita:** Item especial que añade +10 segundos al cronómetro. ✅
+    *   🕵️ **Jefe Final: El Inspector:** Cada 1000 puntos, la pantalla se oscurece y aparece un "Inspector de Sanidad" que lanza prohibiciones que debes esquivar durante 15 segundos.
 
-## Fase 5: Integración Social (Leaderboards) ✅
-*   **Telegram API:** Usar `setGameScore` para actualizar el ranking nativo. (Funcional ✅)
-*   **Visualización Nativa:** El mensaje original mostrará automáticamente el Top 3. (Funcional ✅)
-*   **Página de Ranking (Web/Mini App):**
-    *   Crear una vista dedicada `/game/ranking` con el Top 50 global. ✅
-    *   Mostrar fotos de perfil y medallas ganadas junto a la puntuación. ✅
-*   **Botón "High Scores":** Configurar el bot para que el botón de "Puntuaciones" del mensaje del juego abra la Mini App en la sección de ranking. (Se usa el nativo en chat y custom en web ✅)
-*   **Ranking Post-Partida:** Añadir un botón en la pantalla de Game Over que lleve directamente a la tabla de clasificación. ✅
+## Fase 5: Rediseño de Interfaz (De "Cutre" a "Tasca Deluxe") 💅
+El objetivo es sustituir el look de "ejemplo de Phaser" por una estética de bar auténtico.
 
-## Fase 6: Lanzamiento y Marketing 🚀
-*   **Trailer:** Pequeño video del gameplay.
-*   **Tournament:** Organizar el "I Torneo de Pincho de Oro" con premios en Cuñao Points o Regalos Reales.
+*   **Tipografía de Pizarra:** Usar fuentes que parezcan tiza sobre pizarra negra para el HUD (Score, Tiempo).
+*   **HUD Visual:**
+    *   Sustituir el texto de vidas por iconos de servilletas dobladas.
+    *   Barra de tiempo visual: Una jarra de cerveza que se va vaciando conforme pasa el tiempo.
+*   **Pantallas de Menú:**
+    *   **Start Screen:** Usar un fondo que parezca una carta de bar con los precios (puntos) de cada tapa.
+    *   **Game Over:** Efecto de "Cierre de Persiana" metálica al terminar la partida.
+*   **Feedback Visual Pulido:**
+    *   Efecto de "Cámara Lenta" (Time Scale) de 0.5s al capturar un Jamón 5J.
+    *   Sacudida de pantalla (Shake) más intensa si chocas con un aguacate.
+    *   Filtro CRT opcional para darle un toque retro de máquina recreativa de bar.
 
-## Apéndice: Assets Faltantes (Audio)
+## Fase 6: Social y Retención 🏆
+*   **Logros Locales:** Mostrar "Récord Personal" en la pantalla de inicio.
+*   **Desafío del Día:** Un multiplicador especial que cambia cada día (ej: "Hoy el sushi puntúa doble").
 
-Para completar la experiencia auditiva, necesitamos los siguientes archivos de audio en `src/static/game/audio/` (o subidos al bucket):
+## Fase 7: Lanzamiento y Marketing 🚀
+*   **Trailer:** Video corto con música de pasodoble épica.
+*   **Tournament:** Organizar el "I Torneo de Pincho de Oro" con ranking en tiempo real en el canal de Telegram.
 
-| Archivo | Descripción | Duración |
-| :--- | :--- | :--- |
-| **sfx_crunch.mp3** | Sonido crujiente al comer croqueta. | < 0.5s |
-| **sfx_bad.mp3** | Sonido de error/golpe al perder vida. | < 0.5s |
-| **sfx_powerup.mp3** | Sonido mágico/celestial al coger carajillo. | < 1s |
-| **sfx_cash.mp3** | Sonido de caja registradora o monedas al coger factura. | < 0.5s |
+---
+*Estado actual: Infraestructura, Audio base y Assets 8-bit completados.*

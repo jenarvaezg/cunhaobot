@@ -1,6 +1,5 @@
 import random
 
-from typing import cast
 
 from telegram import InlineQueryResultCachedSticker
 
@@ -28,16 +27,10 @@ async def get_sticker_mode_results(input: str) -> list[InlineQueryResultCachedSt
     result_type = ""
     if mode == SHORT_MODE:
         result_type = "short"
-        phrases = cast(
-            list[Phrase | LongPhrase],
-            await services.phrase_repo.get_phrases(search=rest),
-        )
+        phrases.extend(await services.phrase_repo.get_phrases(search=rest))
     elif mode == LONG_MODE:
         result_type = "long"
-        phrases = cast(
-            list[Phrase | LongPhrase],
-            await services.long_phrase_repo.get_phrases(search=rest),
-        )
+        phrases.extend(await services.long_phrase_repo.get_phrases(search=rest))
 
     random.shuffle(phrases)
     results: list[InlineQueryResultCachedSticker] = []

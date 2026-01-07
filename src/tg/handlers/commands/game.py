@@ -1,5 +1,5 @@
 import logging
-from telegram import Update
+from telegram import Update, Message
 from telegram.ext import CallbackContext
 
 from tg.decorators import log_update
@@ -38,7 +38,7 @@ async def handle_game_callback(update: Update, context: CallbackContext) -> None
 
     if inline_message_id:
         game_url += f"&inline_message_id={inline_message_id}"
-    elif query.message:
+    elif isinstance(query.message, Message):
         game_url += (
             f"&chat_id={query.message.chat_id}&message_id={query.message.message_id}"
         )

@@ -84,7 +84,9 @@
 
         const game = new Phaser.Game(config);
         let player, items, background, bar, score = 0, lives = 3, scoreText, livesText, timerText, gameActive = false, isInvincible = false, timeLeft = 45;
-        let spawnEvent, timerEvent;
+        let comboCount = 0;
+        let spawnEvent, timerEvent, waveEvent;
+        let currentWave = 'normal'; // 'normal', 'invitation', 'modern'
         let emitterCrumbs, emitterSparks, emitterSplat;
         let bgm;
 
@@ -100,9 +102,14 @@
             this.load.image('baldosa', '/static/game/baldosa.png?v=2');
             this.load.image('barra', '/static/game/barra.png?v=2');
             this.load.image('servilleta', '/static/game/servilleta.png?v=2');
+            this.load.image('canita', '/static/game/cerveza.png');
 
             // Audio
             this.load.audio('bgm', '/static/game/bgm.mp3');
+            this.load.audio('crunch', '/static/game/crunch.wav');
+            this.load.audio('hurt', '/static/game/hurt.mp3');
+            this.load.audio('powerup', '/static/game/powerup.mp3');
+            this.load.audio('cash', '/static/game/cash.mp3');
 
             // Create simple particle textures
             const graphics = this.make.graphics({x: 0, y: 0, add: false});
@@ -223,6 +230,35 @@
 
         function startTimers() {
             spawnEvent = this.time.addEvent({ delay: 600, callback: spawnRandomItem, callbackScope: this, loop: true });
+
+            // Wave Manager: Switches wave type every 15 seconds
+            waveEvent = this.time.addEvent({
+                delay: 15000,
+                callback: () => {
+                    if (!gameActive) return;
+                    const waves = ['normal', 'invitation', 'modern'];
+                    currentWave = waves[Phaser.Math.Between(0, waves.length - 1)];
+
+                    let msg = "MODO NORMAL";
+                    let color = "#FFFFFF";
+
+                    if (currentWave === 'invitation') {
+                        msg = "¡RONDA DE INVITACIÓN!";
+                        color = "#FFD700";
+                        spawnEvent.delay = 300; // Fast croquetas
+                    } else if (currentWave === 'modern') {
+                        msg = "¡ATAQUE MODERNO!";
+                        color = "#00FF00";
+                        spawnEvent.delay = 1200; // Slower but in groups
+                    } else {
+                        spawnEvent.delay = 600;
+                    }
+
+                    showFloatingText.call(this, config.width / 2, 100, msg, color);
+                },
+                callbackScope: this, loop: true
+            });
+
             timerEvent = this.time.addEvent({
                 delay: 1000,
                 callback: () => {
@@ -237,20 +273,58 @@
 
         function spawnRandomItem() {
             if (!gameActive) return;
+
+            if (currentWave === 'invitation') {
+                // Only good things
+                spawnItem.call(this, Phaser.Math.Between(40, config.width - 40), Math.random() < 0.8 ? 'croqueta' : 'jamon');
+                return;
+            }
+
+            if (currentWave === 'modern') {
+                // Spawn a row with a gap
+                const gap = Phaser.Math.Between(0, 4);
+                const colWidth = config.width / 5;
+                for (let i = 0; i < 5; i++) {
+                    if (i !== gap) {
+                        spawnItem.call(this, (i * colWidth) + (colWidth / 2), Math.random() < 0.5 ? 'aguacate' : 'sushi');
+                    } else {
+                        // Small chance of a powerup in the gap
+                        if (Math.random() < 0.3) spawnItem.call(this, (i * colWidth) + (colWidth / 2), 'croqueta');
+                    }
+                }
+                return;
+            }
+
+            // Normal spawning
             const x = Phaser.Math.Between(40, config.width - 40);
             const rand = Math.random();
             let type;
 
-            if (rand < 0.50) type = 'croqueta';
-            else if (rand < 0.75) type = 'aguacate';
-            else if (rand < 0.85) type = 'sushi';
-            else if (rand < 0.92) type = 'factura';
-            else if (rand < 0.98) type = 'jamon';
-            else type = 'carajillo';
+            if (rand < 0.45) type = 'croqueta';
+            else if (rand < 0.65) type = 'aguacate';
+            else if (rand < 0.75) type = 'sushi';
+            else if (rand < 0.82) type = 'factura';
+            else if (rand < 0.88) type = 'jamon';
+            else if (rand < 0.93) type = 'carajillo';
+            else if (rand < 0.97) type = 'canita'; // Time boost
+            else type = 'servilleta'; // Life boost
 
+            // Special logic for servilleta
+            if (type === 'servilleta') {
+                if (lives === 3) type = 'croqueta';
+                else if (lives === 2 && Math.random() > 0.3) type = 'croqueta';
+            }
+
+            spawnItem.call(this, x, type);
+        }
+
+        function spawnItem(x, type) {
             const item = items.create(x, -50, type);
             item.setData('type', type);
-            item.setScale(0.08);
+
+            if (type === 'canita') item.setScale(0.12);
+            else item.setScale(0.08);
+
             item.setCircle(item.width / 2.2);
 
             // Random initial rotation and angular velocity for swaying
@@ -260,6 +334,7 @@
             const speed = 250 + (score / 3);
             if (type === 'jamon') item.setVelocityY(speed * 1.5);
             else if (type === 'factura') item.setVelocityY(speed * 0.8);
+            else if (type === 'servilleta' || type === 'canita') item.setVelocityY(speed * 0.7);
             else item.setVelocityY(speed);
 
             // Add a sway tween
@@ -291,17 +366,35 @@
             });
 
             if (type === 'croqueta') {
-                score += 10;
-                showFloatingText.call(this, player.x, player.y, '+10', '#FFD700');
+                comboCount++;
+                let multiplier = 1;
+                let comboMsg = '+10';
+
+                if (comboCount >= 3) {
+                    multiplier = 2;
+                    comboMsg = '¡FIERA! x2';
+                }
+                if (comboCount >= 6) {
+                    multiplier = 3;
+                    comboMsg = '¡NIVEL DIOS! x3';
+                }
+
+                score += 10 * multiplier;
+                this.sound.play('crunch');
+                showFloatingText.call(this, player.x, player.y, comboMsg, '#FFD700');
                 emitterCrumbs.emitParticleAt(itemX, itemY);
             } else if (type === 'jamon') {
+                comboCount++;
                 score += 50;
+                this.sound.play('crunch');
                 showFloatingText.call(this, player.x, player.y, '¡IBÉRICO! +50', '#FF0000');
                 emitterCrumbs.emitParticleAt(itemX, itemY, 20); // More particles
             } else if (type === 'aguacate' || type === 'sushi') {
+                comboCount = 0;
                 if (!isInvincible) {
                     lives--;
                     updateLivesDisplay.call(this);
+                    this.sound.play('hurt');
 
                     // Bad collision FX
                     this.cameras.main.flash(200, 255, 0, 0); // Red flash
@@ -312,17 +405,21 @@
                     if (lives <= 0) gameOver.call(this, score);
                 } else {
                     score += 25;
+                    this.sound.play('crunch');
                     showFloatingText.call(this, player.x, player.y, '¡CRUNCH!', '#FFFF00');
                     emitterCrumbs.emitParticleAt(itemX, itemY);
                 }
             } else if (type === 'factura') {
+                 comboCount = 0;
                  if (!isInvincible) {
                     score = Math.max(0, score - 50);
+                    this.sound.play('cash');
                     showFloatingText.call(this, player.x, player.y, '¡DOLOROSA! -50', '#888888');
                     this.cameras.main.flash(100, 200, 200, 200);
                  }
             } else if (type === 'carajillo') {
                 isInvincible = true;
+                this.sound.play('powerup');
                 player.setTint(0xFFD700);
                 player.setScale(0.15);
                 emitterSparks.emitParticleAt(itemX, itemY, 30);
@@ -331,6 +428,31 @@
                     isInvincible = false;
                     player.clearTint();
                     player.setScale(0.12);
+                });
+            } else if (type === 'servilleta') {
+                if (lives < 3) {
+                    lives++;
+                    updateLivesDisplay.call(this);
+                    this.sound.play('powerup');
+                    showFloatingText.call(this, player.x, player.y, '+1 VIDA', '#FFFFFF');
+                    emitterSparks.emitParticleAt(itemX, itemY, 20);
+                } else {
+                    score += 100;
+                    showFloatingText.call(this, player.x, player.y, 'LIMPIEZA +100', '#FFFFFF');
+                }
+            } else if (type === 'canita') {
+                timeLeft += 10;
+                this.sound.play('powerup');
+                timerText.setText('TIEMPO: ' + timeLeft);
+                showFloatingText.call(this, player.x, player.y, '+10 SEGUNDOS', '#DAA520');
+                emitterSparks.emitParticleAt(itemX, itemY, 20);
+
+                // Visual feedback for timer
+                this.tweens.add({
+                    targets: timerText,
+                    scale: { from: 1.5, to: 1 },
+                    duration: 300,
+                    ease: 'Back.out'
                 });
             }
             scoreText.setText('CUÑADISMO: ' + score);

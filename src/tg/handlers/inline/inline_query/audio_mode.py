@@ -1,5 +1,4 @@
 import random
-from typing import cast
 from telegram import InlineQueryResultVoice
 
 from models.phrase import LongPhrase, Phrase
@@ -29,16 +28,10 @@ async def get_audio_mode_results(input: str) -> list[InlineQueryResultVoice]:
     result_type = "short"
     if mode == SHORT_MODE:
         result_type = "short"
-        phrases = cast(
-            list[Phrase | LongPhrase],
-            await services.phrase_repo.get_phrases(search=rest),
-        )
+        phrases.extend(await services.phrase_repo.get_phrases(search=rest))
     elif mode == LONG_MODE:
         result_type = "long"
-        phrases = cast(
-            list[Phrase | LongPhrase],
-            await services.long_phrase_repo.get_phrases(search=rest),
-        )
+        phrases.extend(await services.long_phrase_repo.get_phrases(search=rest))
 
     random.shuffle(phrases)
 
