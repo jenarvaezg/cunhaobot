@@ -36,13 +36,24 @@ class GameController(Controller):
         inline_message_id = tg_data.get("inline_message_id")
         chat_id = tg_data.get("chat_id")
         message_id = tg_data.get("message_id")
+        user_name = tg_data.get("name")
+        username = tg_data.get("username")
 
         high_score = 0
         if not user_id:
             # Fallback for testing or direct access
             user_id = "guest"
         else:
-            user = await user_service.get_user(user_id)
+            # Ensure user exists in DB so ranking works for new web players
+            if user_name:
+                user = await user_service.update_user_data(
+                    user_id=user_id,
+                    name=user_name,
+                    username=username,
+                )
+            else:
+                user = await user_service.get_user(user_id)
+
             if user:
                 high_score = user.game_high_score
 
@@ -111,6 +122,7 @@ class GameController(Controller):
     ) -> Template:
         """Renders the global game ranking."""
         # Load all users and sort by game_high_score
+        user_service.user_repo.clear_cache()
         users = await user_service.user_repo.load_all()
         ranking = sorted(
             [u for u in users if u.game_high_score > 0],

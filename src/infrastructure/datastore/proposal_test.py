@@ -146,8 +146,17 @@ class TestProposalRepository:
         assert {p.id for p in results} == {"1", "3"}
 
         # Test filter by field and value
+        repo.clear_cache()
+        mock_datastore_client.query.reset_mock()
+        mock_query = MagicMock()
+        mock_datastore_client.query.return_value = mock_query
+        mock_query.fetch.return_value = [
+            create_mock_entity(p1.model_dump(), entity_id="1"),
+            create_mock_entity(p3.model_dump(), entity_id="3"),
+        ]
         results = await repo.get_proposals(from_chat_id=1)
         assert len(results) == 2
+        assert {p.id for p in results} == {"1", "3"}
         assert {p.id for p in results} == {"1", "3"}
 
         # Test filter by empty field

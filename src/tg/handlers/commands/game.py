@@ -30,11 +30,19 @@ async def handle_game_callback(update: Update, context: CallbackContext) -> None
 
     # Prepare the URL for the game using the base_url from config.
     user_id = query.from_user.id
+    first_name = query.from_user.first_name
+    username = query.from_user.username
     inline_message_id = query.inline_message_id
 
     # Ensure base_url doesn't end with slash or handle it
     base = config.base_url.rstrip("/")
-    game_url = f"{base}/game/launch?user_id={user_id}"
+    import urllib.parse
+
+    name_enc = urllib.parse.quote(first_name or "Usuario")
+    user_enc = urllib.parse.quote(username or "")
+    game_url = (
+        f"{base}/game/launch?user_id={user_id}&name={name_enc}&username={user_enc}"
+    )
 
     if inline_message_id:
         game_url += f"&inline_message_id={inline_message_id}"

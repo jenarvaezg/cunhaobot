@@ -30,6 +30,8 @@ async def test_handle_game_callback_inline():
         update = MagicMock()
         update.callback_query.game_short_name = "palillo_cunhao"
         update.callback_query.from_user.id = 999
+        update.callback_query.from_user.first_name = "Test User"
+        update.callback_query.from_user.username = "testuser"
         update.callback_query.inline_message_id = "inline_123"
         update.callback_query.message = None
         update.callback_query.answer = AsyncMock()
@@ -55,6 +57,8 @@ async def test_handle_game_callback_chat():
         update = MagicMock()
         update.callback_query.game_short_name = "palillo_cunhao"
         update.callback_query.from_user.id = 999
+        update.callback_query.from_user.first_name = "Test User"
+        update.callback_query.from_user.username = "testuser"
         update.callback_query.inline_message_id = None
 
         # Mock query.message as a Message instance
