@@ -12,6 +12,7 @@ from tg.decorators import log_update
 from tg.handlers.inline.inline_query.sticker_mode import get_sticker_mode_results
 from tg.text_router import (
     AUDIO_MODE,
+    JUEGO_MODE,
     LONG_MODE,
     SHORT_MODE,
     STICKER_MODE,
@@ -20,6 +21,7 @@ from tg.text_router import (
 from utils import get_thumb, normalize_str
 
 from .audio_mode import get_audio_mode_results
+from .game_mode import get_game_mode_results
 from .long_mode import get_long_mode_results
 from .short_mode import get_short_mode_results
 
@@ -30,6 +32,7 @@ MODE_HANDLERS = {
     LONG_MODE: get_long_mode_results,
     AUDIO_MODE: get_audio_mode_results,
     STICKER_MODE: get_sticker_mode_results,
+    JUEGO_MODE: get_game_mode_results,
 }
 
 

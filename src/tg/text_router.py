@@ -5,10 +5,12 @@ STICKER_MODE_WORDS = [
     "stickers",
     "sticker",
 ]
+JUEGO_MODE_WORDS = ["juego", "play", "game", "jugar"]
 SHORT_MODE = "SHORT"
 LONG_MODE = "LONG"
 AUDIO_MODE = "AUDIO"
 STICKER_MODE = "STICKER"
+JUEGO_MODE = "JUEGO"
 
 
 def get_query_mode(query: str) -> tuple[str, str]:
@@ -23,6 +25,8 @@ def get_query_mode(query: str) -> tuple[str, str]:
             return AUDIO_MODE, " ".join(rest)
         case [first, *rest] if first in STICKER_MODE_WORDS:
             return STICKER_MODE, " ".join(rest)
+        case [first, *rest] if first in JUEGO_MODE_WORDS:
+            return JUEGO_MODE, " ".join(rest)
         case [first, *rest] if first in LONG_MODE_WORDS:
             return LONG_MODE, " ".join(rest)
         case [first, *rest]:

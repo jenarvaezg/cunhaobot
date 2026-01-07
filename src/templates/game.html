@@ -154,6 +154,7 @@
 
         const game = new Phaser.Game(config);
         let player, items, background, bar, score = 0, lives = 3, scoreText, livesText, waveText, gameActive = false, isInvincible = false, timeLeft = 45;
+        let invincibilityTime = 0;
         let comboCount = 0;
         let spawnEvent, timerEvent, waveEvent;
         let currentWave = 'normal'; // 'normal', 'invitation', 'modern'
@@ -161,7 +162,7 @@
         let emitterCrumbs, emitterSparks, emitterSplat;
         let bgm;
         let lifeIcons = [];
-        let beerTimer, beerBg;
+        let beerTimer, beerBg, invincibilityBar;
         const INITIAL_TIME = 45;
 
         function preload() {
@@ -344,6 +345,9 @@
                 backgroundColor: 'rgba(0,0,0,0.5)',
                 padding: { x: 10, y: 5 }
             });
+            waveText.setAlpha(0);
+
+            invincibilityBar = this.add.graphics();
 
             updateLivesDisplay.call(this);
 
@@ -425,6 +429,7 @@
 
                     waveText.setText(displayMsg);
                     waveText.setFill(color);
+                    waveText.setAlpha(displayMsg ? 1 : 0);
                     showFloatingText.call(this, config.width / 2, 150, msg, color);
                 },
                 callbackScope: this, loop: true
@@ -694,16 +699,12 @@
                  }
             } else if (type === 'carajillo') {
                 isInvincible = true;
+                invincibilityTime = 6000;
                 this.sound.play('powerup');
                 player.setTint(0xFFD700);
                 player.setScale(0.15);
                 emitterSparks.emitParticleAt(itemX, itemY, 30);
                 showFloatingText.call(this, player.x, player.y, '¡OÍDO COCINA!', '#FFFFFF');
-                this.time.delayedCall(6000, () => {
-                    isInvincible = false;
-                    player.clearTint();
-                    player.setScale(0.12);
-                });
             } else if (type === 'servilleta') {
                 if (lives < 3) {
                     lives++;
