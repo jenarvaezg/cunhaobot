@@ -3,7 +3,6 @@ import hashlib
 from datetime import datetime, timezone, timedelta
 from infrastructure.protocols import UserRepository
 from services.badge_service import BadgeService
-from tg import get_initialized_tg_application
 from core.config import config
 
 logger = logging.getLogger(__name__)
@@ -91,6 +90,7 @@ class GameService:
             try:
                 from utils.ui import format_badge_notification
                 import telegram
+                from tg import get_initialized_tg_application
 
                 application = await get_initialized_tg_application()
                 for badge in new_badges:
@@ -105,6 +105,8 @@ class GameService:
 
         # 6. Update Telegram Leaderboard
         try:
+            from tg import get_initialized_tg_application
+
             application = await get_initialized_tg_application()
 
             if inline_message_id:
