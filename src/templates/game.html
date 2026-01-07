@@ -786,9 +786,40 @@
             beerTimer.setTint(ratio < 0.3 ? 0xff0000 : 0xffffff);
         }
 
-        function update() {
+        function update(time, delta) {
             background.tilePositionY -= 1;
             updateTimerVisual();
+
+            // Handle Invincibility Bar & Logic
+            invincibilityBar.clear();
+            if (isInvincible && invincibilityTime > 0) {
+                invincibilityTime -= delta;
+
+                const ratio = invincibilityTime / 6000;
+                const barWidth = 60;
+                const barHeight = 6;
+                const x = player.x - barWidth / 2;
+                const y = player.y - 60;
+
+                // Border
+                invincibilityBar.fillStyle(0x000000, 0.5);
+                invincibilityBar.fillRect(x - 2, y - 2, barWidth + 4, barHeight + 4);
+
+                // Progress
+                invincibilityBar.fillStyle(0xFFD700, 1);
+                invincibilityBar.fillRect(x, y, barWidth * ratio, barHeight);
+
+                // Pulse effect while invincible
+                player.setAlpha(0.7 + Math.sin(time / 100) * 0.3);
+
+                if (invincibilityTime <= 0) {
+                    isInvincible = false;
+                    player.clearTint();
+                    player.setScale(0.12);
+                    player.setAlpha(1);
+                }
+            }
+
             items.children.iterate(child => {
                 if (child && child.y > config.height + 50) child.destroy();
             });
