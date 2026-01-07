@@ -130,7 +130,7 @@
         };
 
         const game = new Phaser.Game(config);
-        let player, items, background, bar, score = 0, lives = 3, scoreText, livesText, timerText, waveText, gameActive = false, isInvincible = false, timeLeft = 45;
+        let player, items, background, bar, score = 0, lives = 3, scoreText, livesText, waveText, gameActive = false, isInvincible = false, timeLeft = 45;
         let comboCount = 0;
         let spawnEvent, timerEvent, waveEvent;
         let currentWave = 'normal'; // 'normal', 'invitation', 'modern'
@@ -342,7 +342,6 @@
                 callback: () => {
                     if (!gameActive) return;
                     timeLeft--;
-                    timerText.setText('TIEMPO: ' + timeLeft);
                     if (timeLeft <= 0) gameOver.call(this, score);
                 },
                 callbackScope: this, loop: true
@@ -529,6 +528,14 @@
                 this.sound.play('powerup');
                 showFloatingText.call(this, player.x, player.y, '+10 SEGUNDOS', '#DAA520');
                 emitterSparks.emitParticleAt(itemX, itemY, 20);
+
+                // Visual feedback for timer
+                this.tweens.add({
+                    targets: beerTimer,
+                    scale: { from: 0.6, to: 0.4 },
+                    duration: 300,
+                    ease: 'Back.out'
+                });
             }
             scoreText.setText('PUNTOS: ' + score);
         }
