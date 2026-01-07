@@ -14,6 +14,9 @@ async def test_handle_profile_not_found():
         from tg.handlers.commands.profile import handle_profile
 
         update = MagicMock()
+        update.effective_user.id = 123
+        update.effective_user.name = "Test"
+        update.effective_user.username = "test"
         update.effective_message.from_user.id = 123
         update.effective_message.reply_text = AsyncMock()
         update.to_dict.return_value = {}
@@ -42,6 +45,9 @@ async def test_handle_profile_success():
         from tg.handlers.commands.profile import handle_profile
 
         update = MagicMock()
+        update.effective_user.id = 123
+        update.effective_user.name = "Test"
+        update.effective_user.username = "test"
         update.effective_message.from_user.id = 123
         update.effective_message.reply_text = AsyncMock()
         update.to_dict.return_value = {}

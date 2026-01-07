@@ -15,6 +15,7 @@ async def test_handle_gift_command_text_mention():
     sender = MagicMock(spec=User)
     sender.id = 1
     sender.first_name = "Sender"
+    sender.name = "Sender"
     sender.username = "sender"
     message.from_user = sender
     update.effective_user = sender
@@ -62,6 +63,8 @@ async def test_handle_gift_command_mention_success():
     # Sender
     sender = MagicMock(spec=User)
     sender.id = 1
+    sender.first_name = "Sender"
+    sender.name = "Sender"
     sender.username = "sender"
     message.from_user = sender
     update.effective_user = sender
@@ -109,6 +112,8 @@ async def test_handle_gift_command_mention_not_found():
     # Sender
     sender = MagicMock(spec=User)
     sender.id = 1
+    sender.first_name = "Sender"
+    sender.name = "Sender"
     sender.username = "sender"
     message.from_user = sender
     update.effective_user = sender

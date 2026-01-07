@@ -8,14 +8,21 @@ class TestInlineQuery:
     @pytest.mark.asyncio
     async def test_handle_inline_query_short(self):
         update = MagicMock()
-        update.effective_user.username = "testuser"
-        update.effective_chat.type = "private"
-        update.effective_chat.title = "Chat"
+        user = MagicMock()
+        user.id = 123
+        user.name = "Test User"
+        user.username = "testuser"
+
+        chat = MagicMock()
+        chat.id = 123
+        chat.type = "private"
+        chat.title = "Chat"
+
+        update.effective_user = user
+        update.effective_chat = chat
         update.inline_query.query = "short"
         update.inline_query.answer = AsyncMock()
-        update.effective_user.id = 123
-        update.effective_user.name = "Test User"
-        update.inline_query.from_user.username = "testuser"
+        update.inline_query.from_user = user
 
         with patch("tg.handlers.inline.inline_query.base.services") as mock_services:
             mock_services.phrase_repo.load_all = AsyncMock(
@@ -31,13 +38,20 @@ class TestInlineQuery:
     @pytest.mark.asyncio
     async def test_handle_inline_query_no_func(self):
         update = MagicMock()
-        update.effective_user.username = "testuser"
-        update.effective_chat.type = "private"
-        update.effective_chat.title = "Chat"
+        user = MagicMock()
+        user.id = 123
+        user.name = "Test User"
+        user.username = "testuser"
+
+        chat = MagicMock()
+        chat.id = 123
+        chat.type = "private"
+        chat.title = "Chat"
+
+        update.effective_user = user
+        update.effective_chat = chat
         update.inline_query.query = "!!"
         update.inline_query.answer = AsyncMock()
-        update.effective_user.id = 123
-        update.effective_user.name = "Test User"
 
         mock_phrase = Phrase(text="cuñao")
         with (

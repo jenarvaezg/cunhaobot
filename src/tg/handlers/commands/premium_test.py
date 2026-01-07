@@ -9,6 +9,9 @@ async def test_handle_premium_active():
         from tg.handlers.commands.premium import handle_premium
 
         update = MagicMock()
+        update.effective_user.id = 123
+        update.effective_user.name = "Test"
+        update.effective_user.username = "test"
         update.effective_message.chat_id = 456
         update.effective_message.reply_text = AsyncMock()
         update.to_dict.return_value = {}
@@ -33,6 +36,9 @@ async def test_handle_premium_not_active():
         from tg.handlers.commands.premium import handle_premium
 
         update = MagicMock()
+        update.effective_user.id = 123
+        update.effective_user.name = "Test"
+        update.effective_user.username = "test"
         update.effective_message.chat_id = 456
         update.effective_message.reply_invoice = AsyncMock()
         update.to_dict.return_value = {}

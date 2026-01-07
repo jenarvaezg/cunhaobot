@@ -73,6 +73,8 @@ async def test_handle_submit_success(mock_services):
 @pytest.mark.asyncio
 async def test_handle_submit_duplicate_phrase(mock_services):
     update = MagicMock()
+    update.effective_user.id = 123
+    update.effective_user.name = "Test"
     update.effective_user.username = "testuser"
     update.effective_chat.type = "private"
     update.effective_chat.title = "Chat"
@@ -99,6 +101,8 @@ async def test_handle_submit_duplicate_phrase(mock_services):
 @pytest.mark.asyncio
 async def test_handle_submit_duplicate_proposal_voting_active(mock_services):
     update = MagicMock()
+    update.effective_user.id = 123
+    update.effective_user.name = "Test"
     update.effective_user.username = "testuser"
     update.effective_chat.type = "private"
     update.effective_chat.title = "Chat"
@@ -130,6 +134,8 @@ async def test_handle_submit_duplicate_proposal_voting_active(mock_services):
 @pytest.mark.asyncio
 async def test_handle_submit_duplicate_proposal_rejected(mock_services):
     update = MagicMock()
+    update.effective_user.id = 123
+    update.effective_user.name = "Test"
     update.effective_user.username = "testuser"
     update.effective_chat.type = "private"
     update.effective_chat.title = "Chat"
@@ -161,6 +167,8 @@ async def test_handle_submit_duplicate_proposal_rejected(mock_services):
 @pytest.mark.asyncio
 async def test_handle_submit_too_long(mock_services):
     update = MagicMock()
+    update.effective_user.id = 123
+    update.effective_user.name = "Test"
     update.effective_user.username = "testuser"
     update.effective_chat.type = "private"
     update.effective_chat.title = "Chat"
@@ -181,6 +189,8 @@ async def test_handle_submit_too_long(mock_services):
 @pytest.mark.asyncio
 async def test_handle_submit_empty(mock_services):
     update = MagicMock()
+    update.effective_user.id = 123
+    update.effective_user.name = "Test"
     update.effective_user.username = "testuser"
     update.effective_chat.type = "private"
     update.effective_chat.title = "Chat"

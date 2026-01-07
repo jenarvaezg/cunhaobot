@@ -6,6 +6,8 @@ from tg.handlers.inline.chosen_inline_result import handle_chosen_inline_result
 @pytest.mark.asyncio
 async def test_handle_chosen_inline_result_success():
     update = MagicMock()
+    update.effective_user.id = 123
+    update.effective_user.name = "Test"
     update.effective_user.username = "testuser"
     update.effective_chat.type = "private"
     update.effective_chat.title = "Chat"
@@ -15,6 +17,9 @@ async def test_handle_chosen_inline_result_success():
 
     with patch("tg.handlers.inline.chosen_inline_result.services") as mock_services:
         mock_user = MagicMock()
+        mock_user.id = 123
+        mock_user.name = "Test"
+        mock_user.username = "test"
         mock_services.user_service.update_or_create_inline_user = AsyncMock(
             return_value=mock_user
         )
@@ -37,6 +42,8 @@ async def test_handle_chosen_inline_result_success():
 @pytest.mark.asyncio
 async def test_handle_chosen_inline_result_no_result():
     update = MagicMock()
+    update.effective_user.id = 123
+    update.effective_user.name = "Test"
     update.effective_user.username = "testuser"
     update.effective_chat.type = "private"
     update.effective_chat.title = "Chat"

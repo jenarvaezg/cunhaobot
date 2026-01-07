@@ -17,6 +17,7 @@ async def test_handle_stop():
     update.effective_chat.title = "Chat"
     update.effective_chat.PRIVATE = Chat.PRIVATE
     update.effective_message.chat_id = 456
+    update.effective_message.chat = update.effective_chat
     update.effective_message.reply_text = AsyncMock()
     context = MagicMock()
 

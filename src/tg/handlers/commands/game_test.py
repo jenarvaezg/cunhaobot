@@ -11,6 +11,9 @@ async def test_handle_game_command():
         update = MagicMock()
         update.effective_message.chat_id = 12345
         update.effective_message.reply_text = AsyncMock()
+        update.effective_user.id = 123
+        update.effective_user.name = "Test"
+        update.effective_user.username = "test"
         update.to_dict.return_value = {}
         context = MagicMock()
         context.bot.send_game = AsyncMock()
@@ -88,6 +91,9 @@ async def test_handle_top_jugones():
 
         update = MagicMock()
         update.effective_message.reply_text = AsyncMock()
+        update.effective_user.id = 123
+        update.effective_user.name = "Test"
+        update.effective_user.username = "test"
         update.to_dict.return_value = {}
         context = MagicMock()
 
