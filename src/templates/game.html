@@ -5,14 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Paco's Tapas Runner</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Kalam:wght@700&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; padding: 0; background-color: #1a1a1a; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        #game-container { width: 100%; height: 100%; }
-        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
-        #start-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 300; text-align: center; color: white; }
-        #game-over-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 200; text-align: center; }
-        .btn { background: #FFD700; color: #000; padding: 15px 30px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 1.2rem; }
-        ul li { margin: 5px 0; font-size: 1.1rem; }
+        body { margin: 0; padding: 0; background-color: #1a1a1a; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; font-family: 'Kalam', cursive; }
+        #game-container { width: 100%; height: 100%; border: 10px solid #4e342e; box-sizing: border-box; }
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
+
+        #start-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('/static/game/baldosa.png');
+            background-size: cover;
+            display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 300; text-align: center; color: white;
+        }
+
+        .menu-card {
+            background: #222;
+            border: 5px solid #4e342e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            max-width: 90%;
+            position: relative;
+        }
+
+        .menu-card::before {
+            content: "MENÚ DEL DÍA";
+            display: block;
+            font-family: 'Permanent Marker', cursive;
+            font-size: 1.5rem;
+            color: #FFD700;
+            margin-bottom: 10px;
+            text-decoration: underline;
+        }
+
+        #game-over-screen {
+            position: fixed; top: -100%; left: 0; width: 100%; height: 100%;
+            background: #333;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 500; text-align: center;
+            transition: top 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-bottom: 15px solid #222;
+        }
+
+        #game-over-screen.active { top: 0; }
+
+        .btn {
+            background: #FFD700; color: #000; padding: 12px 25px; border: 3px solid #4e342e;
+            border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 15px;
+            font-size: 1.2rem; font-family: 'Permanent Marker', cursive;
+            transition: transform 0.1s;
+        }
+        .btn:active { transform: scale(0.95); }
+
+        ul li { margin: 3px 0; font-size: 1rem; list-style: none; }
+        .price { color: #FFD700; float: right; margin-left: 20px; }
     </style>
 </head>
 <body>
@@ -22,31 +68,32 @@
     </div>
 
     <div id="start-screen">
-        <h1 style="color: #FFD700; font-size: 2.5rem; margin-bottom: 10px;">PACO'S TAPAS RUNNER</h1>
-        <div style="font-size: 1rem; max-width: 90%; line-height: 1.4; margin-bottom: 20px; text-align: left;">
-            <p style="text-align: center;">🇪🇸 ¡Bienvenido a la barra, fiera!</p>
-            <ul style="list-style-type: none; padding: 0;">
-                <li>✅ <b>Croqueta (+10):</b> Clásico básico.</li>
-                <li>🍖 <b>Jamón (+50):</b> Delicatessen pura.</li>
-                <li>☕ <b>Carajillo:</b> Te hace invencible.</li>
-                <li>🥑 <b>Aguacate (-1 Vida):</b> ¡Comida de modernos!</li>
-                <li>🍣 <b>Sushi (-1 Vida):</b> ¡Aquí se usa tenedor!</li>
-                <li>💸 <b>Factura (-50):</b> La dolorosa...</li>
-            </ul>
-            <p style="text-align: center; margin-top: 15px;">Mueve el palillo para pinchar lo bueno.</p>
+        <div class="menu-card">
+            <h1 style="color: #FFD700; font-size: 2.2rem; margin-bottom: 5px; font-family: 'Permanent Marker';">PACO'S TAPAS RUNNER</h1>
+            <div style="font-size: 0.9rem; line-height: 1.2; margin-bottom: 15px; text-align: left;">
+                <ul>
+                    <li>✅ Croqueta <span class="price">+10 pts</span></li>
+                    <li>🍖 Jamón Ibérico <span class="price">+50 pts</span></li>
+                    <li>☕ Carajillo <span class="price">POWERUP</span></li>
+                    <li>🥑 Aguacate <span class="price">-1 VIDA</span></li>
+                    <li>🍣 Sushi Moderno <span class="price">-1 VIDA</span></li>
+                    <li>💸 La Cuenta <span class="price">-50 pts</span></li>
+                </ul>
+                <p style="text-align: center; margin-top: 10px; font-style: italic;">¡Pincha lo bueno con el palillo!</p>
+            </div>
+            <button id="start-btn" class="btn">¡OÍDO COCINA!</button>
         </div>
-        <button id="start-btn" class="btn">¡OÍDO COCINA!</button>
     </div>
 
     <div id="game-over-screen">
-        <h1 style="color: #ff0000; font-size: 3rem;">¡LA CUENTA!</h1>
-        <h2 id="final-score-text">Puntuación: 0</h2>
-        <p id="status-text">Guardando puntos en la barra...</p>
-        <button class="btn" onclick="window.location.reload()">JUGAR OTRA VEZ</button>
+        <h1 style="color: #ff0000; font-size: 3.5rem; font-family: 'Permanent Marker'; text-shadow: 2px 2px #000;">¡LA CUENTA!</h1>
+        <h2 id="final-score-text" style="font-size: 2rem;">Puntuación: 0</h2>
+        <p id="status-text">Cerrando el bar...</p>
+        <button class="btn" onclick="window.location.reload()">¿OTRA RONDA?</button>
         {% if not is_web %}
-        <button class="btn" style="background: #0088cc; color: #FFF; margin-top: 10px;" onclick="shareScore()">COMPARTIR PUNTUACIÓN</button>
+        <button class="btn" style="background: #0088cc; color: #FFF;" onclick="shareScore()">DAR ENVIDIA</button>
         {% endif %}
-        <a href="/game/ranking" class="btn" style="background: #444; color: #FFF; text-decoration: none; margin-top: 15px; display: inline-block;">VER RANKING GLOBAL</a>
+        <a href="/game/ranking" class="btn" style="background: #444; color: #FFF; text-decoration: none; display: inline-block;">RANKING</a>
     </div>
 
     <div id="game-container"></div>
@@ -83,12 +130,15 @@
         };
 
         const game = new Phaser.Game(config);
-        let player, items, background, bar, score = 0, lives = 3, scoreText, livesText, timerText, gameActive = false, isInvincible = false, timeLeft = 45;
+        let player, items, background, bar, score = 0, lives = 3, scoreText, livesText, timerText, waveText, gameActive = false, isInvincible = false, timeLeft = 45;
         let comboCount = 0;
         let spawnEvent, timerEvent, waveEvent;
         let currentWave = 'normal'; // 'normal', 'invitation', 'modern'
         let emitterCrumbs, emitterSparks, emitterSplat;
         let bgm;
+        let lifeIcons = [];
+        let beerTimer;
+        const INITIAL_TIME = 45;
 
         function preload() {
             // Load assets
@@ -192,9 +242,32 @@
                 tint: [0x00ff00, 0x008800]
             });
 
-            scoreText = this.add.text(20, 20, 'CUÑADISMO: 0', { fontSize: '24px', fontWeight: 'bold', fill: '#FFD700', stroke: '#000', strokeThickness: 4, fontFamily: 'Segoe UI' });
-            livesText = this.add.text(20, 60, 'SERVILLETAS: 3', { fontSize: '20px', fill: '#FFF', stroke: '#000', strokeThickness: 3 });
-            timerText = this.add.text(config.width - 180, 20, 'TIEMPO: ' + timeLeft, { fontSize: '24px', fill: '#FFF', stroke: '#000', strokeThickness: 3 });
+            // HUD: Chalkboard Style
+            scoreText = this.add.text(20, 20, 'PUNTOS: 0', {
+                fontSize: '32px',
+                fill: '#FFD700',
+                fontFamily: 'Permanent Marker',
+                stroke: '#000',
+                strokeThickness: 2
+            });
+
+            // Beer Timer Visual
+            this.add.text(config.width - 150, 20, 'TIEMPO', { fontSize: '18px', fill: '#FFF', fontFamily: 'Permanent Marker' });
+            beerTimer = this.add.image(config.width - 80, 80, 'canita').setScale(0.4);
+
+            // Napkin Lives
+            for(let i=0; i<3; i++) {
+                let icon = this.add.image(40 + (i * 45), 80, 'servilleta').setScale(0.08);
+                lifeIcons.push(icon);
+            }
+
+            waveText = this.add.text(20, 115, '', {
+                fontSize: '20px',
+                fill: '#FFF',
+                fontFamily: 'Permanent Marker',
+                backgroundColor: 'rgba(0,0,0,0.5)',
+                padding: { x: 10, y: 5 }
+            });
 
             updateLivesDisplay.call(this);
 
@@ -241,19 +314,24 @@
 
                     let msg = "MODO NORMAL";
                     let color = "#FFFFFF";
+                    let displayMsg = "";
 
                     if (currentWave === 'invitation') {
                         msg = "¡RONDA DE INVITACIÓN!";
+                        displayMsg = "📢 RONDA DE INVITACIÓN";
                         color = "#FFD700";
                         spawnEvent.delay = 300; // Fast croquetas
                     } else if (currentWave === 'modern') {
                         msg = "¡ATAQUE MODERNO!";
+                        displayMsg = "🥑 ATAQUE MODERNO";
                         color = "#00FF00";
                         spawnEvent.delay = 1200; // Slower but in groups
                     } else {
                         spawnEvent.delay = 600;
                     }
 
+                    waveText.setText(displayMsg);
+                    waveText.setFill(color);
                     showFloatingText.call(this, config.width / 2, 100, msg, color);
                 },
                 callbackScope: this, loop: true
@@ -389,6 +467,10 @@
                 this.sound.play('crunch');
                 showFloatingText.call(this, player.x, player.y, '¡IBÉRICO! +50', '#FF0000');
                 emitterCrumbs.emitParticleAt(itemX, itemY, 20); // More particles
+
+                // Slow motion FX
+                this.time.timeScale = 0.5;
+                this.time.delayedCall(500, () => { this.time.timeScale = 1.0; });
             } else if (type === 'aguacate' || type === 'sushi') {
                 comboCount = 0;
                 if (!isInvincible) {
@@ -396,7 +478,8 @@
                     updateLivesDisplay.call(this);
                     this.sound.play('hurt');
 
-                    // Bad collision FX
+                    // Bad collision FX: Intense shake and flash
+                    this.cameras.main.shake(300, 0.02);
                     this.cameras.main.flash(200, 255, 0, 0); // Red flash
                     if (navigator.vibrate) navigator.vibrate(200); // Vibrate
                     emitterSplat.emitParticleAt(itemX, itemY);
@@ -416,6 +499,7 @@
                     this.sound.play('cash');
                     showFloatingText.call(this, player.x, player.y, '¡DOLOROSA! -50', '#888888');
                     this.cameras.main.flash(100, 200, 200, 200);
+                    this.cameras.main.shake(100, 0.01);
                  }
             } else if (type === 'carajillo') {
                 isInvincible = true;
@@ -443,41 +527,44 @@
             } else if (type === 'canita') {
                 timeLeft += 10;
                 this.sound.play('powerup');
-                timerText.setText('TIEMPO: ' + timeLeft);
                 showFloatingText.call(this, player.x, player.y, '+10 SEGUNDOS', '#DAA520');
                 emitterSparks.emitParticleAt(itemX, itemY, 20);
-
-                // Visual feedback for timer
-                this.tweens.add({
-                    targets: timerText,
-                    scale: { from: 1.5, to: 1 },
-                    duration: 300,
-                    ease: 'Back.out'
-                });
             }
-            scoreText.setText('CUÑADISMO: ' + score);
+            scoreText.setText('PUNTOS: ' + score);
         }
 
         function showFloatingText(x, y, message, color) {
-            let text = this.add.text(x, y - 20, message, { fontSize: '20px', fontStyle: 'bold', fill: color, stroke: '#000', strokeThickness: 3 });
+            let text = this.add.text(x, y - 20, message, { fontSize: '24px', fontFamily: 'Permanent Marker', fill: color, stroke: '#000', strokeThickness: 3 });
             this.tweens.add({
                 targets: text,
                 y: y - 120,
                 alpha: 0,
-                duration: 2500,
+                duration: 2000,
                 ease: 'Power2',
                 onComplete: () => text.destroy()
             });
         }
 
         function updateLivesDisplay() {
-            let text = "SERVILLETAS: ";
-            for(let i=0; i<lives; i++) text += "🧻";
-            livesText.setText(text);
+            lifeIcons.forEach((icon, i) => {
+                icon.visible = i < lives;
+                if (i === lives) {
+                    // Just lost this life
+                    this.tweens.add({ targets: icon, scale: 0.2, alpha: 0, duration: 200 });
+                }
+            });
+        }
+
+        function updateTimerVisual() {
+            if (!beerTimer) return;
+            const ratio = timeLeft / INITIAL_TIME;
+            beerTimer.setScale(0.4, 0.4 * ratio);
+            beerTimer.setTint(ratio < 0.3 ? 0xff0000 : 0xffffff);
         }
 
         function update() {
             background.tilePositionY -= 1;
+            updateTimerVisual();
             items.children.iterate(child => {
                 if (child && child.y > config.height + 50) child.destroy();
             });
@@ -514,7 +601,9 @@
             const scoreDisplay = document.getElementById('final-score-text');
             const statusDisplay = document.getElementById('status-text');
             scoreDisplay.innerText = "Puntuación: " + finalScore;
-            screen.style.display = 'flex';
+
+            // Trigger shutter effect
+            screen.classList.add('active');
 
             const hash = await getHash(`${USER_ID}${finalScore}${SECRET}`);
             try {

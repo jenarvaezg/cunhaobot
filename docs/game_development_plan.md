@@ -12,20 +12,20 @@ Este documento detalla las mejoras pendientes para profesionalizar el juego y a�
     *   ⏱️ **El Vinito/Cañita:** Item especial que añade +10 segundos al cronómetro. ✅
     *   🕵️ **Jefe Final: El Inspector:** Cada 1000 puntos, la pantalla se oscurece y aparece un "Inspector de Sanidad" que lanza prohibiciones que debes esquivar durante 15 segundos.
 
-## Fase 5: Rediseño de Interfaz (De "Cutre" a "Tasca Deluxe") 💅
-El objetivo es sustituir el look de "ejemplo de Phaser" por una estética de bar auténtico.
+## Fase 5: Rediseño de Interfaz (De "Cutre" a "Tasca Deluxe") ✅
+El objetivo era sustituir el look de "ejemplo de Phaser" por una estética de bar auténtico.
 
-*   **Tipografía de Pizarra:** Usar fuentes que parezcan tiza sobre pizarra negra para el HUD (Score, Tiempo).
+*   **Tipografía de Pizarra:** Usar fuentes que parezcan tiza sobre pizarra negra para el HUD (Score, Tiempo). ✅
 *   **HUD Visual:**
-    *   Sustituir el texto de vidas por iconos de servilletas dobladas.
-    *   Barra de tiempo visual: Una jarra de cerveza que se va vaciando conforme pasa el tiempo.
+    *   Sustituir el texto de vidas por iconos de servilletas dobladas. ✅
+    *   Barra de tiempo visual: Una jarra de cerveza que se va vaciando conforme pasa el tiempo. ✅
 *   **Pantallas de Menú:**
-    *   **Start Screen:** Usar un fondo que parezca una carta de bar con los precios (puntos) de cada tapa.
-    *   **Game Over:** Efecto de "Cierre de Persiana" metálica al terminar la partida.
+    *   **Start Screen:** Usar un fondo que parezca una carta de bar con los precios (puntos) de cada tapa. ✅
+    *   **Game Over:** Efecto de "Cierre de Persiana" metálica al terminar la partida. ✅
 *   **Feedback Visual Pulido:**
-    *   Efecto de "Cámara Lenta" (Time Scale) de 0.5s al capturar un Jamón 5J.
-    *   Sacudida de pantalla (Shake) más intensa si chocas con un aguacate.
-    *   Filtro CRT opcional para darle un toque retro de máquina recreativa de bar.
+    *   Efecto de "Cámara Lenta" (Time Scale) de 0.5s al capturar un Jamón 5J. ✅
+    *   Sacudida de pantalla (Shake) más intensa si chocas con un aguacate. ✅
+    *   Filtro CRT opcional para darle un toque retro de máquina recreativa de bar. ✅ (Implementado vía post-processing/estilo)
 
 ## Fase 6: Social y Retención 🏆
 *   **Logros Locales:** Mostrar "Récord Personal" en la pantalla de inicio.
