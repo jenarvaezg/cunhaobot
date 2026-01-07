@@ -1,0 +1,8 @@
+{
+  "track_id": "arena_backend_20260108",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-01-08T00:00:00Z",
+  "updated_at": "2026-01-08T00:00:00Z",
+  "description": "Implement the core backend for \"Arena de Tasca\": Create `Fighter` and `Fight` models in Datastore and the `ArenaService` with the turn-based combat engine."
+}
