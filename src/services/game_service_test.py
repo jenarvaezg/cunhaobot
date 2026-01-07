@@ -24,7 +24,7 @@ async def test_process_score_success():
     mock_user_repo.load.return_value = mock_user
 
     with patch(
-        "services.game_service.get_initialized_tg_application", new_callable=AsyncMock
+        "tg.get_initialized_tg_application", new_callable=AsyncMock
     ) as mock_tg_app:
         mock_bot = AsyncMock()
         mock_tg_app.return_value.bot = mock_bot
@@ -65,8 +65,6 @@ async def test_process_score_streak():
 
     mock_user_repo.load.return_value = mock_user
 
-    with patch(
-        "services.game_service.get_initialized_tg_application", new_callable=AsyncMock
-    ):
+    with patch("tg.get_initialized_tg_application", new_callable=AsyncMock):
         await service.set_score(user_id, 100)
         assert mock_user.game_streak == 6
