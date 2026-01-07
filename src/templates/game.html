@@ -74,7 +74,9 @@
                 <ul>
                     <li>✅ Croqueta <span class="price">+10 pts</span></li>
                     <li>🍖 Jamón Ibérico <span class="price">+50 pts</span></li>
-                    <li>☕ Carajillo <span class="price">POWERUP</span></li>
+                    <li>☕ Carajillo <span class="price">INVENCIBLE</span></li>
+                    <li>🍺 Cañita <span class="price">+10 SEG</span></li>
+                    <li>🧻 Servilleta <span class="price">+1 VIDA</span></li>
                     <li>🥑 Aguacate <span class="price">-1 VIDA</span></li>
                     <li>🍣 Sushi Moderno <span class="price">-1 VIDA</span></li>
                     <li>💸 La Cuenta <span class="price">-50 pts</span></li>
@@ -251,19 +253,21 @@
                 strokeThickness: 2
             });
 
-                        // Beer Timer Visual
+                                    // Beer Timer Visual
 
-                        this.add.text(config.width - 150, 20, 'TIEMPO', { fontSize: '18px', fill: '#FFF', fontFamily: 'Permanent Marker' });
+                                    this.add.text(config.width - 150, 20, 'TIEMPO', { fontSize: '18px', fill: '#FFF', fontFamily: 'Permanent Marker' });
 
 
 
-                        // Empty glass background
+                                    // Empty glass background
 
-                        beerBg = this.add.image(config.width - 80, 80, 'canita').setScale(0.4).setAlpha(0.2).setTint(0x000000);
+                                    beerBg = this.add.image(config.width - 80, 110, 'canita').setScale(0.3).setAlpha(0.2).setTint(0x000000);
 
-                        // Full beer that will be cropped
+                                    // Full beer that will be cropped
 
-                        beerTimer = this.add.image(config.width - 80, 80, 'canita').setScale(0.4);
+                                    beerTimer = this.add.image(config.width - 80, 110, 'canita').setScale(0.3);
+
+
 
 
 
@@ -546,7 +550,7 @@
                 // Visual feedback for timer
                 this.tweens.add({
                     targets: [beerTimer, beerBg],
-                    scale: { from: 0.5, to: 0.4 },
+                    scale: { from: 0.4, to: 0.3 },
                     duration: 300,
                     ease: 'Back.out'
                 });
