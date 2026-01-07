@@ -7,28 +7,31 @@
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Kalam:wght@700&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; padding: 0; background-color: #1a1a1a; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; font-family: 'Kalam', cursive; }
-        #game-container { width: 100%; height: 100%; border: 10px solid #4e342e; box-sizing: border-box; }
-        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
+                body { margin: 0; padding: 0; background-color: #1a1a1a; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; font-family: 'Kalam', cursive; }
+                #game-container { width: 100%; height: 100%; border: 5px solid #4e342e; box-sizing: border-box; position: relative; }
+                #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
 
-        #start-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('/static/game/baldosa.png');
-            background-size: cover;
-            display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 300; text-align: center; color: white;
-        }
+                #start-screen {
+                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('/static/game/baldosa.png');
+                    background-size: cover;
+                    display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 300; text-align: center; color: white;
+                    padding: 10px; box-sizing: border-box;
+                }
 
-        .menu-card {
-            background: #222;
-            border: 5px solid #4e342e;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            max-width: 90%;
-            position: relative;
-        }
-
-        .menu-card::before {
+                .menu-card {
+                    background: #222;
+                    border: 5px solid #4e342e;
+                    padding: 15px;
+                    border-radius: 10px;
+                    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+                    max-width: 100%;
+                    width: 350px;
+                    position: relative;
+                    max-height: 90vh;
+                    overflow-y: auto;
+                }
+                .menu-card::before {
             content: "MENÚ DEL DÍA";
             display: block;
             font-family: 'Permanent Marker', cursive;
@@ -127,6 +130,10 @@
             width: window.innerWidth,
             height: window.innerHeight,
             parent: 'game-container',
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH
+            },
             physics: { default: 'arcade', arcade: { gravity: { y: 0 }, debug: false } },
             scene: { preload: preload, create: create, update: update }
         };
@@ -136,6 +143,7 @@
         let comboCount = 0;
         let spawnEvent, timerEvent, waveEvent;
         let currentWave = 'normal'; // 'normal', 'invitation', 'modern'
+        let lastWave = 'normal';
         let emitterCrumbs, emitterSparks, emitterSplat;
         let bgm;
         let lifeIcons = [];
@@ -244,40 +252,63 @@
                 tint: [0x00ff00, 0x008800]
             });
 
-            // HUD: Chalkboard Style
-            scoreText = this.add.text(20, 20, 'PUNTOS: 0', {
-                fontSize: '32px',
-                fill: '#FFD700',
-                fontFamily: 'Permanent Marker',
-                stroke: '#000',
-                strokeThickness: 2
-            });
+                        // HUD: Chalkboard Style
 
-                                    // Beer Timer Visual
+                        const isSmallScreen = config.width < 400;
 
-                                    this.add.text(config.width - 150, 20, 'TIEMPO', { fontSize: '18px', fill: '#FFF', fontFamily: 'Permanent Marker' });
+                        scoreText = this.add.text(20, 20, 'PUNTOS: 0', {
 
+                            fontSize: isSmallScreen ? '24px' : '32px',
 
+                            fill: '#FFD700',
 
-                                    // Empty glass background
+                            fontFamily: 'Permanent Marker',
 
-                                    beerBg = this.add.image(config.width - 80, 110, 'canita').setScale(0.3).setAlpha(0.2).setTint(0x000000);
+                            stroke: '#000',
 
-                                    // Full beer that will be cropped
+                            strokeThickness: 2
 
-                                    beerTimer = this.add.image(config.width - 80, 110, 'canita').setScale(0.3);
+                        });
 
 
+
+                        // Beer Timer Visual (Positioned relative to right edge)
+
+                        const timerX = config.width - (isSmallScreen ? 60 : 80);
+
+                        this.add.text(config.width - (isSmallScreen ? 110 : 150), 20, 'TIEMPO', {
+
+                            fontSize: isSmallScreen ? '14px' : '18px',
+
+                            fill: '#FFF',
+
+                            fontFamily: 'Permanent Marker'
+
+                        });
+
+
+
+                        // Empty glass background
+
+                        beerBg = this.add.image(timerX, 110, 'canita').setScale(0.3).setAlpha(0.2).setTint(0x000000);
+
+                        // Full beer that will be cropped
+
+                        beerTimer = this.add.image(timerX, 110, 'canita').setScale(0.3);
 
 
 
                         // Napkin Lives
 
+                        for(let i=0; i<3; i++) {
 
-            for(let i=0; i<3; i++) {
-                let icon = this.add.image(40 + (i * 45), 80, 'servilleta').setScale(0.08);
-                lifeIcons.push(icon);
-            }
+                            let icon = this.add.image(40 + (i * 45), 80, 'servilleta').setScale(0.08);
+
+                            lifeIcons.push(icon);
+
+                        }
+
+
 
             waveText = this.add.text(20, 115, '', {
                 fontSize: '20px',
@@ -322,13 +353,30 @@
         function startTimers() {
             spawnEvent = this.time.addEvent({ delay: 600, callback: spawnRandomItem, callbackScope: this, loop: true });
 
-            // Wave Manager: Switches wave type every 15 seconds
+            // Wave Manager: Switches wave type every 10 seconds
             waveEvent = this.time.addEvent({
-                delay: 15000,
+                delay: 10000,
                 callback: () => {
                     if (!gameActive) return;
-                    const waves = ['normal', 'invitation', 'modern'];
-                    currentWave = waves[Phaser.Math.Between(0, waves.length - 1)];
+
+                    let nextWave;
+                    const rand = Math.random();
+
+                    if (currentWave !== 'normal') {
+                        // Always go back to normal after a special wave to let the player breathe
+                        nextWave = 'normal';
+                    } else {
+                        // If we are in normal, 50% chance to stay normal, 50% to start a special one
+                        if (rand < 0.5) {
+                            nextWave = 'normal';
+                        } else {
+                            // Pick a special wave different from the last special one we had
+                            nextWave = (lastWave === 'invitation') ? 'modern' : 'invitation';
+                        }
+                    }
+
+                    if (nextWave !== 'normal') lastWave = nextWave;
+                    currentWave = nextWave;
 
                     let msg = "MODO NORMAL";
                     let color = "#FFFFFF";
@@ -338,19 +386,19 @@
                         msg = "¡RONDA DE INVITACIÓN!";
                         displayMsg = "📢 RONDA DE INVITACIÓN";
                         color = "#FFD700";
-                        spawnEvent.delay = 300; // Fast croquetas
+                        spawnEvent.delay = 350; // Slightly slower than before
                     } else if (currentWave === 'modern') {
                         msg = "¡ATAQUE MODERNO!";
                         displayMsg = "🥑 ATAQUE MODERNO";
                         color = "#00FF00";
-                        spawnEvent.delay = 1200; // Slower but in groups
+                        spawnEvent.delay = 1500; // Slower rows to make it fair
                     } else {
                         spawnEvent.delay = 600;
                     }
 
                     waveText.setText(displayMsg);
                     waveText.setFill(color);
-                    showFloatingText.call(this, config.width / 2, 100, msg, color);
+                    showFloatingText.call(this, config.width / 2, 150, msg, color);
                 },
                 callbackScope: this, loop: true
             });
@@ -370,8 +418,11 @@
             if (!gameActive) return;
 
             if (currentWave === 'invitation') {
-                // Only good things
-                spawnItem.call(this, Phaser.Math.Between(40, config.width - 40), Math.random() < 0.8 ? 'croqueta' : 'jamon');
+                // Mostly good things, but allow occasional beer/napkin
+                const r = Math.random();
+                if (r < 0.7) spawnItem.call(this, Phaser.Math.Between(40, config.width - 40), 'croqueta');
+                else if (r < 0.9) spawnItem.call(this, Phaser.Math.Between(40, config.width - 40), 'jamon');
+                else spawnItem.call(this, Phaser.Math.Between(40, config.width - 40), Math.random() < 0.5 ? 'canita' : 'servilleta');
                 return;
             }
 
@@ -383,34 +434,35 @@
                     if (i !== gap) {
                         spawnItem.call(this, (i * colWidth) + (colWidth / 2), Math.random() < 0.5 ? 'aguacate' : 'sushi');
                     } else {
-                        // Small chance of a powerup in the gap
-                        if (Math.random() < 0.3) spawnItem.call(this, (i * colWidth) + (colWidth / 2), 'croqueta');
+                        // The gap can contain anything from the normal mode! (Beer, napkins, etc)
+                        const rand = Math.random();
+                        if (rand < 0.2) {
+                             // Pick a random normal item for the gap
+                             const type = getNormalItemType();
+                             spawnItem.call(this, (i * colWidth) + (colWidth / 2), type);
+                        }
                     }
                 }
                 return;
             }
 
             // Normal spawning
-            const x = Phaser.Math.Between(40, config.width - 40);
+            spawnItem.call(this, Phaser.Math.Between(40, config.width - 40), getNormalItemType());
+        }
+
+        function getNormalItemType() {
             const rand = Math.random();
-            let type;
+            if (rand < 0.45) return 'croqueta';
+            if (rand < 0.65) return 'aguacate';
+            if (rand < 0.75) return 'sushi';
+            if (rand < 0.82) return 'factura';
+            if (rand < 0.88) return 'jamon';
+            if (rand < 0.93) return 'carajillo';
+            if (rand < 0.97) return 'canita'; // Time boost
 
-            if (rand < 0.45) type = 'croqueta';
-            else if (rand < 0.65) type = 'aguacate';
-            else if (rand < 0.75) type = 'sushi';
-            else if (rand < 0.82) type = 'factura';
-            else if (rand < 0.88) type = 'jamon';
-            else if (rand < 0.93) type = 'carajillo';
-            else if (rand < 0.97) type = 'canita'; // Time boost
-            else type = 'servilleta'; // Life boost
-
-            // Special logic for servilleta
-            if (type === 'servilleta') {
-                if (lives === 3) type = 'croqueta';
-                else if (lives === 2 && Math.random() > 0.3) type = 'croqueta';
-            }
-
-            spawnItem.call(this, x, type);
+            // Servilleta logic (only if needed)
+            if (lives < 3) return 'servilleta';
+            return 'croqueta';
         }
 
         function spawnItem(x, type) {
