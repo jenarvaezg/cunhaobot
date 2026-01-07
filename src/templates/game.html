@@ -746,10 +746,28 @@
 
         function updateLivesDisplay() {
             lifeIcons.forEach((icon, i) => {
-                icon.visible = i < lives;
-                if (i === lives) {
+                const shouldBeVisible = i < lives;
+                if (shouldBeVisible && !icon.visible) {
+                    // Just gained this life
+                    icon.visible = true;
+                    icon.alpha = 0;
+                    icon.scale = 0.2;
+                    this.tweens.add({
+                        targets: icon,
+                        alpha: 1,
+                        scale: 0.08,
+                        duration: 400,
+                        ease: 'Back.out'
+                    });
+                } else if (!shouldBeVisible && icon.visible) {
                     // Just lost this life
-                    this.tweens.add({ targets: icon, scale: 0.2, alpha: 0, duration: 200 });
+                    this.tweens.add({
+                        targets: icon,
+                        scale: 0.2,
+                        alpha: 0,
+                        duration: 200,
+                        onComplete: () => { icon.visible = false; }
+                    });
                 }
             });
         }
