@@ -137,7 +137,7 @@
         let emitterCrumbs, emitterSparks, emitterSplat;
         let bgm;
         let lifeIcons = [];
-        let beerTimer;
+        let beerTimer, beerBg;
         const INITIAL_TIME = 45;
 
         function preload() {
@@ -251,11 +251,25 @@
                 strokeThickness: 2
             });
 
-            // Beer Timer Visual
-            this.add.text(config.width - 150, 20, 'TIEMPO', { fontSize: '18px', fill: '#FFF', fontFamily: 'Permanent Marker' });
-            beerTimer = this.add.image(config.width - 80, 80, 'canita').setScale(0.4);
+                        // Beer Timer Visual
 
-            // Napkin Lives
+                        this.add.text(config.width - 150, 20, 'TIEMPO', { fontSize: '18px', fill: '#FFF', fontFamily: 'Permanent Marker' });
+
+
+
+                        // Empty glass background
+
+                        beerBg = this.add.image(config.width - 80, 80, 'canita').setScale(0.4).setAlpha(0.2).setTint(0x000000);
+
+                        // Full beer that will be cropped
+
+                        beerTimer = this.add.image(config.width - 80, 80, 'canita').setScale(0.4);
+
+
+
+                        // Napkin Lives
+
+
             for(let i=0; i<3; i++) {
                 let icon = this.add.image(40 + (i * 45), 80, 'servilleta').setScale(0.08);
                 lifeIcons.push(icon);
@@ -531,8 +545,8 @@
 
                 // Visual feedback for timer
                 this.tweens.add({
-                    targets: beerTimer,
-                    scale: { from: 0.6, to: 0.4 },
+                    targets: [beerTimer, beerBg],
+                    scale: { from: 0.5, to: 0.4 },
                     duration: 300,
                     ease: 'Back.out'
                 });
@@ -564,8 +578,14 @@
 
         function updateTimerVisual() {
             if (!beerTimer) return;
-            const ratio = timeLeft / INITIAL_TIME;
-            beerTimer.setScale(0.4, 0.4 * ratio);
+            const ratio = Math.max(0, timeLeft / INITIAL_TIME);
+
+            // Apply crop: x, y, width, height (in local coordinates of the image)
+            // As ratio goes down, we start cropping from the top
+            const cropHeight = beerTimer.height * ratio;
+            const yOffset = beerTimer.height * (1 - ratio);
+            beerTimer.setCrop(0, yOffset, beerTimer.width, cropHeight);
+
             beerTimer.setTint(ratio < 0.3 ? 0xff0000 : 0xffffff);
         }
 
