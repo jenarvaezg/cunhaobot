@@ -611,10 +611,39 @@ class WebController(Controller):
         request: Request,
         tts_service: Annotated[TTSService, Dependency()],
         phrase_service: Annotated[PhraseService, Dependency()],
+        user_service: Annotated[UserService, Dependency()],
     ) -> Template:
         """Launches the game from the web interface."""
+        import datetime
+        import json
+
         user = request.session.get("user")
         user_id = str(user.get("id")) if user else "guest"
+
+        high_score = 0
+        if user_id != "guest":
+            user_obj = await user_service.get_user(user_id)
+            if user_obj:
+                high_score = user_obj.game_high_score
+
+        # Daily Challenge Logic
+        day_of_year = datetime.datetime.now().timetuple().tm_yday
+        challenges = [
+            {"type": "croqueta", "name": "Croqueta", "multiplier": 2},
+            {"type": "jamon", "name": "Jamón", "multiplier": 2},
+            {
+                "type": "aguacate",
+                "name": "Aguacate",
+                "multiplier": 0,
+            },  # Sushi/Aguacate give points instead of damage
+            {"type": "sushi", "name": "Sushi", "multiplier": 0},
+            {
+                "type": "factura",
+                "name": "La Cuenta",
+                "multiplier": -0.5,
+            },  # Factura only hurts half
+        ]
+        daily_challenge = challenges[day_of_year % len(challenges)]
 
         # Generate greeting audio
         ap = apelativo()
@@ -642,6 +671,8 @@ class WebController(Controller):
                 "is_web": True,
                 "greeting_audio_url": greeting_audio_url,
                 "game_over_audio_url": game_over_audio_url,
+                "daily_challenge_json": json.dumps(daily_challenge),
+                "high_score": high_score,
             },
         )
 

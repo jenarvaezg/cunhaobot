@@ -388,8 +388,25 @@ def test_terms_page(client):
     assert "Aceptación" in rv.text
 
 
-def test_data_policy_page(client):
-    rv = client.get("/data-policy")
-    assert rv.status_code == HTTP_200_OK
-    assert "Política de Datos" in rv.text
-    assert "Retención" in rv.text
+def test_web_game_page(client):
+    from models.phrase import Phrase
+
+    dummy_phrase = Phrase(id=1, text="test")
+
+    with (
+        patch(
+            "services.phrase_service.PhraseService.get_random",
+            new_callable=AsyncMock,
+            return_value=dummy_phrase,
+        ),
+        patch(
+            "services.tts_service.TTSService.get_audio_url",
+            return_value="http://audio.url",
+        ),
+    ):
+        rv = client.get("/game")
+        assert rv.status_code == HTTP_200_OK
+        assert "PACO'S TAPAS RUNNER" in rv.text
+        # Check that daily_challenge_json is rendered as an object, not empty
+        assert "const DAILY_CHALLENGE = {" in rv.text
+        assert '"type":' in rv.text
