@@ -459,6 +459,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "polyfactory" },
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -496,6 +497,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "polyfactory", specifier = ">=3.2.0" },
     { name = "pre-commit", specifier = ">=4.5.1" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
