@@ -10,6 +10,9 @@ async def test_handle_game_command():
 
         update = MagicMock()
         update.effective_message.chat_id = 12345
+        update.effective_message.chat.title = "Test Chat"
+        update.effective_message.chat.type = "private"
+        update.effective_message.chat.username = "testchat"
         update.effective_message.reply_text = AsyncMock()
         update.effective_user.id = 123
         update.effective_user.name = "Test"
@@ -90,6 +93,9 @@ async def test_handle_top_jugones():
         from tg.handlers.commands.game import handle_top_jugones
 
         update = MagicMock()
+        update.effective_message.chat.title = "Test Chat"
+        update.effective_message.chat.type = "private"
+        update.effective_message.chat.username = "testchat"
         update.effective_message.reply_text = AsyncMock()
         update.effective_user.id = 123
         update.effective_user.name = "Test"

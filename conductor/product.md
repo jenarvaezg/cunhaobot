@@ -1,41 +1,34 @@
 # Product Guide: cunhaobot
 
-## Initial Concept
-A multi-platform chatbot (Telegram, Slack, Twitter) designed to simulate a "cuñado" (brother-in-law) persona: opinionated, humorous, and engaging. The bot currently offers conversational AI, sticker management, and a community ranking system. The next major phase is the integration of "Arena de Tasca," an asynchronous auto-battler game.
+## 1. Product Overview
+**cunhaobot** is a multi-platform chatbot (Telegram, Slack, Twitter) that parodies the "cuñado" (brother-in-law) Spanish cultural trope. It acts as a humorous, opinionated, and know-it-all companion that engages users through conversation, memes, and gamified interactions.
 
-## Core Value Proposition
-*   **Humor:** Delivers entertainment through a culturally specific, humorous persona.
-*   **Community:** Foster engagement through rankings, badges, and now, competitive gameplay.
-*   **Multi-platform:** accessible where the conversation happens.
+## 2. Core Modules
 
-## "Arena de Tasca" (Game Module)
-A "MyBrute" style auto-battler where users manage a "Fighter" avatar that battles others automatically based on stats and RNG.
+### 2.1 Conversational Core
+The heart of the bot. It uses AI to reply to mentions and direct messages with the persona's signature overconfidence and slang.
+*   **Features:**
+    *   **AI Chat:** Responds to any topic "sentando cátedra" (laying down the law).
+    *   **Phrase Bank:** Returns random classic quotes via `/cuñao`.
+    *   **TTS:** Generates audio greetings ("¿Qué pasa, máquina?").
 
-### Key Features
-1.  **Character Creation:**
-    *   **Name:** Inherited from user or custom (e.g., "Paco 'El Grifo'").
-    *   **Stats (The 4 Pillars):**
-        *   **Vozarrón (Strength):** Damage output.
-        *   **Cintura (Agility):** Dodge/Block chance.
-        *   **Verborrea (Speed):** Initiative and combo chance.
-        *   **Aguante (HP):** Health points.
-    *   **Inventory:** Weapons (Palillo, Servilleta, etc.) and Skills (active/passive).
+### 2.2 Community & Engagement
+Gamification layer to keep users engaged across platforms.
+*   **Features:**
+    *   **User Profiles:** Tracks usage, stats, and cross-platform identity linking (`/link`).
+    *   **Badges & Ranking:** Awards medals for milestones (e.g., "Pesado de Oro" for frequent chatting).
+    *   **Proposals:** Community-driven content curation (`/proponer`).
 
-2.  **Combat System:**
-    *   **Asynchronous:** Users do not need to be online simultaneously.
-    *   **Automatic:** Server-side simulation based on logic and RNG.
-    *   **Visualization:** Text-based battle logs initially, evolving to a web-based visual replay.
-    *   **Environment:** Different "Bar" locations that provide buffs/debuffs or trigger random events (e.g., "Free Tapas" heals HP).
+### 2.3 Games
+Interactive entertainment modules.
+*   **Tapas Runner (Existing):** A web-based mini-game (Tap/Runner style) linked to the bot's scoring system.
+*   **Arena de Tasca (Upcoming):** An asynchronous auto-battler RPG where users manage a "Fighter" avatar that battles others automatically based on stats and RNG.
 
-3.  **Progression:**
-    *   **Leveling:** XP gained from fights (winner gets more).
-    *   **Choices:** At each level up, the user MUST choose between two random upgrades (e.g., "+3 Vozarrón" OR "New Skill: Golpe de Remo").
-    *   **Leagues:** Unlock new bar locations by winning fights in the current tier.
+## 3. Target Audience
+*   Spanish-speaking users on Telegram and Slack.
+*   Communities (groups/channels) looking for a "mascot" bot that adds humor and facilitates friendly rivalry.
 
-4.  **Integration:**
-    *   Uses existing bot currency/points for utility actions (healing fatigue, cosmetic changes).
-    *   Commands: `/arena crear`, `/duelo @user`, `/perfil`.
-
-## Target Audience
-*   Spanish-speaking users familiar with the "cuñado" trope.
-*   Telegram and Slack communities looking for lightweight, interactive entertainment.
+## 4. Key Value Proposition
+*   **Cultural Relevance:** deeply rooted in Spanish internet culture and slang.
+*   **Ubiquity:** accessible via text (chat), audio (TTS), and visual (stickers/games) across multiple apps.
+*   **Community Loop:** The ranking and badge system turns passive readers into active participants.

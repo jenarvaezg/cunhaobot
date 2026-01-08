@@ -1,23 +1,24 @@
 # Product Guidelines: cunhaobot
 
 ## 1. Tone and Voice
-The bot maintains its established "cuñado" persona: a self-proclaimed expert on everything, humorous, and occasionally (playfully) condescending.
+The bot maintains a consistent **"Cuñado" Persona** across all interactions (text, audio, error messages).
 
-*   **Established Personality:** All game interactions must feel like an extension of the existing bot. It doesn't just report numbers; it "sits at the bar" and comments on the action.
-*   **Game Notifications:** Use template-based humor for speed and punchiness. Battle logs should be filled with "bar-talk" clichés (e.g., "¡Eso te pasa por no escuchar!", "Toma nota, fiera").
-*   **Language:** Informal Spanish, rich in slang and colloquialisms consistent with the "cuñado" trope.
+*   **Personality:** Overconfident, loud, affectionate but condescending ("fiera", "maquina", "campeón"), and opinionated. He knows everything, even when he's wrong.
+*   **Language:**
+    *   **Informal Spanish:** Heavy use of slang from Spain.
+    *   **Clichés:** Use established phrases like "tú hazme caso a mí", "esto con Franco no pasaba" (careful with politics, keep it satirical), "yo de esto piloto".
+    *   **Directness:** Never apologize for errors; blame the system, the government, or the user's "lack of culture."
 
-## 2. Visual Identity (Arena de Tasca)
-*   **Aesthetic:** Retro / Pixel Art. This serves as a nostalgic nod to the original "El Bruto" while keeping the web-based UI lightweight and distinctive.
-*   **Themes:** Imagery should revolve around typical Spanish taverns: wooden bars, sawdust on the floor, napkins, and coffee machines.
-*   **Asset Consistency:** Use existing bot stickers as part of the UI or as character customization options where possible.
+## 2. Visual Identity
+*   **Aesthetic:** "Bar de Tasca" (Old-school Spanish Tavern).
+*   **Elements:** Wooden textures, napkins, toothpicks, beer/wine, football references.
+*   **UI/Web:** Simple, functional, slightly retro. Avoid overly polished "tech startup" looks; it should feel "homemade" but robust.
 
-## 3. Game Philosophy (Balance & Progression)
-*   **The "Absurd" Factor:** Embrace RNG. A bar fight is chaotic; random events (the waiter intervening, a "free tapas" round) are key to the experience.
-*   **Rewarding Persistence:** Implement a "Grind & Glory" system. Every fight grants at least some XP to ensure players always feel progress towards their next "cuñado legend" level.
-*   **Strategic Depth:** Level-up choices should allow for distinct builds (e.g., a "Vozarrón" tank vs. a high-"Verborrea" speedster), rewarding users who plan their character's "argumentative style."
+## 3. Game Design Philosophy
+*   **Casual & accessible:** Games are "second screen" experiences or quick distractions (5-30 seconds).
+*   **RNG as Logic:** Randomness simulates the chaotic nature of "cuñado" logic. Luck is a skill.
+*   **Grind & Glory:** Reward persistence over skill. The user who spends the most time (or "talks the loudest") wins.
 
-## 4. Social Engagement
-*   **Publicity:** High-stakes fights and legendary defeats should be announced in group chats to stimulate conversation and rivalry.
-*   **Trash Talk:** The bot acts as a proxy for the winner, delivering automated, humorous mocking to the loser.
-*   **Community Integration:** Leverage the existing point system to allow for utility actions within the game, linking the "Arena" to the broader bot ecosystem.
+## 4. Multi-platform Strategy
+*   **Feature Parity:** Strive for consistent experience across Telegram and Slack, but adapt UI to platform constraints (e.g., Telegram Web Apps vs. Slack Modals).
+*   **Identity First:** The user is the same person regardless of the platform. The `User` entity and `/link` command are central to this unification.

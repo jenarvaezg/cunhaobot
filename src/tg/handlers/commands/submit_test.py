@@ -42,8 +42,10 @@ async def test_handle_submit_success(mock_services):
     update.effective_user.name = "test_user"
     update.effective_user.username = "test_user"
     update.effective_user.id = 123
-    update.effective_chat.type = "private"
-    update.effective_chat.title = "Chat"
+    update.effective_message.chat.type = "private"
+    update.effective_message.chat.title = "Chat"
+    update.effective_message.chat.username = "testchat"
+    update.effective_message.chat_id = 123
     update.effective_message.text = "/proponer test"
     update.effective_message.reply_text = AsyncMock()
 
@@ -76,8 +78,10 @@ async def test_handle_submit_duplicate_phrase(mock_services):
     update.effective_user.id = 123
     update.effective_user.name = "Test"
     update.effective_user.username = "testuser"
-    update.effective_chat.type = "private"
-    update.effective_chat.title = "Chat"
+    update.effective_message.chat.type = "private"
+    update.effective_message.chat.title = "Chat"
+    update.effective_message.chat.username = "testchat"
+    update.effective_message.chat_id = 123
     update.effective_message.text = "/proponer test"
     update.effective_message.reply_text = AsyncMock()
 
@@ -104,8 +108,10 @@ async def test_handle_submit_duplicate_proposal_voting_active(mock_services):
     update.effective_user.id = 123
     update.effective_user.name = "Test"
     update.effective_user.username = "testuser"
-    update.effective_chat.type = "private"
-    update.effective_chat.title = "Chat"
+    update.effective_message.chat.type = "private"
+    update.effective_message.chat.title = "Chat"
+    update.effective_message.chat.username = "testchat"
+    update.effective_message.chat_id = 123
     update.effective_message.text = "/proponer test"
     update.effective_message.reply_text = AsyncMock()
 
@@ -137,8 +143,10 @@ async def test_handle_submit_duplicate_proposal_rejected(mock_services):
     update.effective_user.id = 123
     update.effective_user.name = "Test"
     update.effective_user.username = "testuser"
-    update.effective_chat.type = "private"
-    update.effective_chat.title = "Chat"
+    update.effective_message.chat.type = "private"
+    update.effective_message.chat.title = "Chat"
+    update.effective_message.chat.username = "testchat"
+    update.effective_message.chat_id = 123
     update.effective_message.text = "/proponer test"
     update.effective_message.reply_text = AsyncMock()
 
@@ -170,8 +178,10 @@ async def test_handle_submit_too_long(mock_services):
     update.effective_user.id = 123
     update.effective_user.name = "Test"
     update.effective_user.username = "testuser"
-    update.effective_chat.type = "private"
-    update.effective_chat.title = "Chat"
+    update.effective_message.chat.type = "private"
+    update.effective_message.chat.title = "Chat"
+    update.effective_message.chat.username = "testchat"
+    update.effective_message.chat_id = 123
     update.effective_message.text = "/proponer one two three four five six"
     update.effective_message.reply_text = AsyncMock()
 
@@ -192,8 +202,10 @@ async def test_handle_submit_empty(mock_services):
     update.effective_user.id = 123
     update.effective_user.name = "Test"
     update.effective_user.username = "testuser"
-    update.effective_chat.type = "private"
-    update.effective_chat.title = "Chat"
+    update.effective_message.chat.type = "private"
+    update.effective_message.chat.title = "Chat"
+    update.effective_message.chat.username = "testchat"
+    update.effective_message.chat_id = 123
     update.effective_message.text = "/proponer"
     update.effective_message.reply_text = AsyncMock()
 
