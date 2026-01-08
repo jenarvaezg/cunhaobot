@@ -27,6 +27,7 @@ class Config:
     twitter_access_token: str
     twitter_access_secret: str
     bucket_name: str
+    allow_local_login: bool
 
     @classmethod
     def from_env(cls) -> "Config":
@@ -61,6 +62,8 @@ class Config:
             twitter_access_token=os.environ.get("TWITTER_ACCESS_TOKEN", ""),
             twitter_access_secret=os.environ.get("TWITTER_ACCESS_TOKEN_SECRET", ""),
             bucket_name=os.environ.get("BUCKET_NAME", "cunhaobot-assets"),
+            allow_local_login=os.environ.get("ALLOW_LOCAL_LOGIN", "false").lower()
+            == "true",
         )
 
 

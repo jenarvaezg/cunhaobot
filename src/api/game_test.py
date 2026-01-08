@@ -26,17 +26,24 @@ def test_game_launch(client):
 
 @pytest.mark.asyncio
 async def test_submit_score_success(client):
+    import hmac
+    import time
+
     user_id = "123"
     score = 500
-    hash_val = hashlib.sha256(
-        f"{user_id}{score}{config.session_secret}".encode()
+
+    timestamp = int(time.time())
+    token_payload = f"{user_id}:{timestamp}"
+    signature = hmac.new(
+        config.session_secret.encode(), token_payload.encode(), hashlib.sha256
     ).hexdigest()
+    token = f"{signature}:{timestamp}"
 
     payload = {
         "user_id": user_id,
         "score": score,
         "inline_message_id": "abc",
-        "hash": hash_val,
+        "token": token,
     }
 
     # We need to override dependencies in Litestar for clean testing

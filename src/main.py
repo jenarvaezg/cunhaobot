@@ -92,7 +92,7 @@ async def favicon_redirect() -> Redirect:
 
 
 def auto_login_local(request: Request) -> None:
-    if config.is_gae or request.session.get("user"):
+    if not config.allow_local_login or config.is_gae or request.session.get("user"):
         return
     request.set_session(
         {

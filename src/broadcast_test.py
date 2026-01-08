@@ -35,7 +35,10 @@ async def test_broadcast_page_unauthorized(client):
 @pytest.mark.asyncio
 async def test_broadcast_page_success(client):
     # Test as owner (auto-login in local dev)
-    with patch("core.config.config.is_gae", False):
+    with (
+        patch("core.config.config.is_gae", False),
+        patch("core.config.config.allow_local_login", True),
+    ):
         response = client.get("/admin/broadcast")
         assert response.status_code == 200
         assert b"BROADCAST MAESTRO" in response.content
@@ -50,6 +53,7 @@ async def test_broadcast_send_text_success(client, mock_users, mock_chats):
 
     with (
         patch("core.config.config.is_gae", False),
+        patch("core.config.config.allow_local_login", True),
         patch(
             "infrastructure.datastore.user.UserDatastoreRepository.load_all",
             return_value=mock_users,
@@ -82,6 +86,7 @@ async def test_broadcast_send_image_success(client, mock_chats):
 
     with (
         patch("core.config.config.is_gae", False),
+        patch("core.config.config.allow_local_login", True),
         patch(
             "infrastructure.datastore.chat.ChatDatastoreRepository.load_all",
             # Just one private chat for this test
@@ -116,6 +121,7 @@ async def test_broadcast_send_video_success(client, mock_chats):
 
     with (
         patch("core.config.config.is_gae", False),
+        patch("core.config.config.allow_local_login", True),
         patch(
             "infrastructure.datastore.chat.ChatDatastoreRepository.load_all",
             return_value=[mock_chats[0]],
@@ -149,6 +155,7 @@ async def test_broadcast_send_skips_inactive(client, mock_chats):
 
     with (
         patch("core.config.config.is_gae", False),
+        patch("core.config.config.allow_local_login", True),
         patch(
             "infrastructure.datastore.chat.ChatDatastoreRepository.load_all",
             return_value=mock_chats,
@@ -177,6 +184,7 @@ async def test_broadcast_send_failure_updates_active(client, mock_chats):
 
     with (
         patch("core.config.config.is_gae", False),
+        patch("core.config.config.allow_local_login", True),
         patch(
             "infrastructure.datastore.chat.ChatDatastoreRepository.load_all",
             return_value=[mock_chats[0]],
@@ -210,6 +218,7 @@ async def test_broadcast_status_sse_success(client, mock_chats):
 
     with (
         patch("core.config.config.is_gae", False),
+        patch("core.config.config.allow_local_login", True),
         patch(
             "infrastructure.datastore.chat.ChatDatastoreRepository.load_all",
             return_value=mock_chats,

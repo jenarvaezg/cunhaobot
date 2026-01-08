@@ -18,6 +18,7 @@ def test_approve_proposal_web_auto_login_success(client):
         patch.dict("os.environ", {"GAE_ENV": "local", "OWNER_ID": "12345"}),
         patch("core.config.config.owner_id", "12345"),
         patch("core.config.config.is_gae", False),
+        patch("core.config.config.allow_local_login", True),
         patch(
             "services.proposal_service.ProposalService.approve", new_callable=AsyncMock
         ) as mock_approve,

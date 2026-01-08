@@ -115,7 +115,7 @@
         const INLINE_MESSAGE_ID = "{{ inline_message_id or '' }}";
         const CHAT_ID = "{{ chat_id or '' }}";
         const MESSAGE_ID = "{{ message_id or '' }}";
-        const SECRET = "{{ secret }}";
+        const GAME_TOKEN = "{{ game_token }}";
         const GREETING_AUDIO_URL = "{{ greeting_audio_url }}";
         const GAME_OVER_AUDIO_URL = "{{ game_over_audio_url }}";
         const DAILY_CHALLENGE = {{ daily_challenge_json | safe }};
@@ -825,16 +825,6 @@
             });
         }
 
-        async function getHash(message) {
-            if (window.crypto && crypto.subtle) {
-                const msgBuffer = new TextEncoder().encode(message);
-                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-                return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-            } else {
-                return "unsafe-" + btoa(message);
-            }
-        }
-
         async function gameOver(finalScore) {
             if (!gameActive) return;
             gameActive = false;
@@ -865,7 +855,6 @@
                 localStorage.setItem('paco_high_score', finalScore);
             }
 
-            const hash = await getHash(`${USER_ID}${finalScore}${SECRET}`);
             try {
                 const response = await fetch('/game/score', {
                     method: 'POST',
@@ -876,7 +865,7 @@
                         inline_message_id: INLINE_MESSAGE_ID,
                         chat_id: CHAT_ID,
                         message_id: MESSAGE_ID,
-                        hash: hash
+                        token: GAME_TOKEN
                     })
                 });
                 if (response.ok) statusDisplay.innerText = "¡Puntos guardados en el ranking!";

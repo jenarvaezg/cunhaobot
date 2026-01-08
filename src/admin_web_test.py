@@ -9,6 +9,7 @@ def test_approve_proposal_success(client):
             return_value=True,
         ),
         patch("core.config.config.is_gae", False),
+        patch("core.config.config.allow_local_login", True),
     ):
         rv = client.post("/admin/proposals/Proposal/123/approve")
         assert rv.status_code == 200
@@ -23,6 +24,7 @@ def test_approve_proposal_not_found(client):
             return_value=False,
         ),
         patch("core.config.config.is_gae", False),
+        patch("core.config.config.allow_local_login", True),
     ):
         rv = client.post("/admin/proposals/Proposal/nonexistent/approve")
         assert rv.status_code == 404
@@ -36,6 +38,7 @@ def test_reject_proposal_success(client):
             return_value=True,
         ),
         patch("core.config.config.is_gae", False),
+        patch("core.config.config.allow_local_login", True),
     ):
         rv = client.post("/admin/proposals/Proposal/123/reject")
         assert rv.status_code == 200
@@ -49,6 +52,7 @@ def test_reject_proposal_not_found(client):
             return_value=False,
         ),
         patch("core.config.config.is_gae", False),
+        patch("core.config.config.allow_local_login", True),
     ):
         rv = client.post("/admin/proposals/Proposal/123/reject")
         assert rv.status_code == 404

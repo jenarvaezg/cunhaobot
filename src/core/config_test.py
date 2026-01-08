@@ -47,6 +47,20 @@ def test_config_from_env_local():
         assert not config.is_gae
 
 
+def test_config_allow_local_login():
+    with patch.dict(os.environ, {"ALLOW_LOCAL_LOGIN": "true"}, clear=True):
+        config = Config.from_env()
+        assert config.allow_local_login is True
+
+    with patch.dict(os.environ, {"ALLOW_LOCAL_LOGIN": "false"}, clear=True):
+        config = Config.from_env()
+        assert config.allow_local_login is False
+
+    with patch.dict(os.environ, {}, clear=True):
+        config = Config.from_env()
+        assert config.allow_local_login is False  # Default to False
+
+
 def test_config_from_env_gae_all_required():
     # Simulate GAE environment and all required variables present
     with patch.dict(os.environ, {}, clear=True):

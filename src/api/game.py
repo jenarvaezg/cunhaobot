@@ -1,5 +1,7 @@
 import logging
 import hashlib
+import hmac
+import time
 import zlib
 from typing import Annotated
 from litestar import Controller, Request, get, post
@@ -20,6 +22,30 @@ logger = logging.getLogger(__name__)
 
 class GameController(Controller):
     path = "/game"
+
+    def _generate_game_token(self, user_id: str | int) -> str:
+        timestamp = int(time.time())
+        payload = f"{user_id}:{timestamp}"
+        signature = hmac.new(
+            config.session_secret.encode(), payload.encode(), hashlib.sha256
+        ).hexdigest()
+        return f"{signature}:{timestamp}"
+
+    def _verify_game_token(self, user_id: str | int, token: str) -> bool:
+        try:
+            signature, timestamp_str = token.split(":")
+            timestamp = int(timestamp_str)
+            # Token valid for 2 hours
+            if time.time() - timestamp > 7200:
+                return False
+
+            payload = f"{user_id}:{timestamp}"
+            expected_signature = hmac.new(
+                config.session_secret.encode(), payload.encode(), hashlib.sha256
+            ).hexdigest()
+            return hmac.compare_digest(signature, expected_signature)
+        except (ValueError, AttributeError):
+            return False
 
     @get("/launch")
     async def launch_game(
@@ -105,7 +131,7 @@ class GameController(Controller):
                 "chat_id": chat_id,
                 "message_id": message_id,
                 "game_short_name": "palillo_cunhao",
-                "secret": config.session_secret,
+                "game_token": self._generate_game_token(user_id),
                 "is_web": False,
                 "greeting_audio_url": greeting_audio_url,
                 "game_over_audio_url": game_over_audio_url,
@@ -152,16 +178,11 @@ class GameController(Controller):
         inline_message_id = data.get("inline_message_id") or None
         chat_id = data.get("chat_id") or None
         message_id = data.get("message_id") or None
-        hash_received = data.get("hash")
+        token = data.get("token")
 
-        # Verify hash to prevent cheating
-        # hash = sha256(user_id + score + secret)
-        data_to_hash = f"{user_id}{score}{config.session_secret}"
-        expected_hash = hashlib.sha256(data_to_hash.encode()).hexdigest()
-
-        if hash_received != expected_hash:
-            logger.warning(f"Invalid score hash for user {user_id}")
-            raise HTTPException(status_code=403, detail="Invalid score verification")
+        if not self._verify_game_token(user_id, token):
+            logger.warning(f"Invalid game token for user {user_id}")
+            raise HTTPException(status_code=403, detail="Invalid game session")
 
         # Save score and update highscore in Telegram
         success = await game_service.set_score(

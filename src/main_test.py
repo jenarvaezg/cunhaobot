@@ -215,6 +215,7 @@ def test_auto_login_local_no_user_no_gae():
 
     with (
         patch("core.config.config.is_gae", False),
+        patch("core.config.config.allow_local_login", True),
         patch("core.config.config.owner_id", "local_owner_id"),
     ):
         auto_login_local(mock_request)
@@ -222,6 +223,19 @@ def test_auto_login_local_no_user_no_gae():
         assert (
             mock_request.set_session.call_args[0][0]["user"]["id"] == "local_owner_id"
         )
+
+
+def test_auto_login_local_disabled():
+    mock_request = MagicMock(spec=Request)
+    mock_request.session.get.return_value = None
+    mock_request.set_session = MagicMock()
+
+    with (
+        patch("core.config.config.is_gae", False),
+        patch("core.config.config.allow_local_login", False),
+    ):
+        auto_login_local(mock_request)
+        mock_request.set_session.assert_not_called()
 
 
 def test_main_entry_point():
