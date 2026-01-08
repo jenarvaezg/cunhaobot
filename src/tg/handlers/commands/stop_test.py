@@ -1,12 +1,14 @@
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import MagicMock, AsyncMock
 from tg.handlers.commands.stop import handle_stop
-from models.user import User
 from telegram import Chat
 
 
+from test_factories import UserFactory, PhraseFactory
+
+
 @pytest.mark.asyncio
-async def test_handle_stop():
+async def test_handle_stop(mock_container):
     update = MagicMock()
     update.to_dict.return_value = {"update_id": 1}
     update.effective_user.id = 123
@@ -21,19 +23,16 @@ async def test_handle_stop():
     update.effective_message.reply_text = AsyncMock()
     context = MagicMock()
 
-    mock_user = User(id=456, name="testuser")
-    mock_phrase = MagicMock()
-    mock_phrase.text = "cuñao"
+    mock_user = UserFactory.build(id=456, name="testuser")
+    mock_phrase = PhraseFactory.build(text="cuñao")
 
-    with patch("tg.handlers.commands.stop.services") as mock_services:
-        mock_services.user_repo.load = AsyncMock(return_value=mock_user)
-        mock_services.user_service.delete_user = AsyncMock()
-        mock_services.phrase_service.get_random = AsyncMock(return_value=mock_phrase)
-        mock_services.user_service.update_or_create_user = AsyncMock()
+    mock_container["user_repo"].load = AsyncMock(return_value=mock_user)
+    mock_container["phrase_service"].get_random.return_value = mock_phrase
 
-        await handle_stop(update, context)
-        mock_services.user_service.delete_user.assert_called_once_with(mock_user)
-        update.effective_message.reply_text.assert_called_once()
+    await handle_stop(update, context)
+
+    mock_container["user_service"].delete_user.assert_called_once_with(mock_user)
+    update.effective_message.reply_text.assert_called_once()
 
 
 @pytest.mark.asyncio

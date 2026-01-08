@@ -1,12 +1,14 @@
 import pytest
 from unittest.mock import MagicMock, patch, AsyncMock
 from tg.handlers.inline.inline_query.base import handle_inline_query
-from models.phrase import Phrase
+
+
+from test_factories import PhraseFactory
 
 
 class TestInlineQuery:
     @pytest.mark.asyncio
-    async def test_handle_inline_query_short(self):
+    async def test_handle_inline_query_short(self, mock_container):
         update = MagicMock()
         user = MagicMock()
         user.id = 123
@@ -24,19 +26,16 @@ class TestInlineQuery:
         update.inline_query.answer = AsyncMock()
         update.inline_query.from_user = user
 
-        with patch("tg.handlers.inline.inline_query.base.services") as mock_services:
-            mock_services.phrase_repo.load_all = AsyncMock(
-                return_value=[MagicMock(text="p1")]
-            )
-            mock_services.user_service.update_or_create_inline_user = AsyncMock()
-            mock_services.user_service.update_or_create_user = AsyncMock()
+        mock_container["phrase_repo"].load_all = AsyncMock(
+            return_value=[PhraseFactory.build(text="p1")]
+        )
 
-            await handle_inline_query(update, MagicMock())
-            update.inline_query.answer.assert_called_once()
-            mock_services.user_service.update_or_create_inline_user.assert_called_once()
+        await handle_inline_query(update, MagicMock())
+        update.inline_query.answer.assert_called_once()
+        mock_container["user_service"].update_or_create_inline_user.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_handle_inline_query_no_func(self):
+    async def test_handle_inline_query_no_func(self, mock_container):
         update = MagicMock()
         user = MagicMock()
         user.id = 123
@@ -53,19 +52,13 @@ class TestInlineQuery:
         update.inline_query.query = "!!"
         update.inline_query.answer = AsyncMock()
 
-        mock_phrase = Phrase(text="cuñao")
-        with (
-            patch(
-                "tg.handlers.inline.inline_query.base.get_query_mode",
-                return_value=("", ""),
-            ),
-            patch("tg.handlers.inline.inline_query.base.services") as mock_services,
-        ):
-            mock_services.user_service.update_or_create_user = AsyncMock()
-            mock_services.phrase_service.get_random = AsyncMock(
-                return_value=mock_phrase
-            )
+        mock_phrase = PhraseFactory.build(text="cuñao")
+        mock_container["phrase_service"].get_random.return_value = mock_phrase
 
+        with patch(
+            "tg.handlers.inline.inline_query.base.get_query_mode",
+            return_value=("", ""),
+        ):
             await handle_inline_query(update, MagicMock())
             update.inline_query.answer.assert_called_once()
             results = update.inline_query.answer.call_args[0][0]

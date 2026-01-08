@@ -28,7 +28,7 @@ class TestCallbackQuery:
         assert cb_query.admins == [admin]
 
     @pytest.mark.asyncio
-    async def test_handle_callback_query_not_admin(self):
+    async def test_handle_callback_query_not_admin(self, mock_container):
         update = MagicMock()
         update.effective_user.username = "testuser"
         update.effective_chat.type = "private"
@@ -43,18 +43,15 @@ class TestCallbackQuery:
         admin.user.id = 1
         context.bot.get_chat_administrators = AsyncMock(return_value=[admin])
 
-        with patch("tg.handlers.utils.callback_query.services") as mock_services:
-            mock_services.phrase_service.get_random = AsyncMock()
-            mock_services.phrase_service.get_random.return_value.text = "cuñao"
-            mock_services.user_service.update_or_create_user = AsyncMock()
+        mock_container["phrase_service"].get_random.return_value.text = "cuñao"
 
-            await handle_callback_query(update, context)
-            update.callback_query.answer.assert_called_with(
-                "Tener una silla en el consejo no te hace maestro cuñao, cuñao"
-            )
+        await handle_callback_query(update, context)
+        update.callback_query.answer.assert_called_with(
+            "Tener una silla en el consejo no te hace maestro cuñao, cuñao"
+        )
 
     @pytest.mark.asyncio
-    async def test_handle_callback_query_proposal_not_found(self):
+    async def test_handle_callback_query_proposal_not_found(self, mock_container):
         update = MagicMock()
         update.effective_user.username = "testuser"
         update.effective_chat.type = "private"
@@ -69,19 +66,16 @@ class TestCallbackQuery:
         admin.user.id = 1
         cb_query.admins = [admin]
 
-        with patch("tg.handlers.utils.callback_query.services") as mock_services:
-            mock_services.proposal_repo.load = AsyncMock(return_value=None)
-            mock_services.phrase_service.get_random = AsyncMock()
-            mock_services.phrase_service.get_random.return_value.text = "cuñao"
-            mock_services.user_service.update_or_create_user = AsyncMock()
+        mock_container["proposal_repo"].load = AsyncMock(return_value=None)
+        mock_container["phrase_service"].get_random.return_value.text = "cuñao"
 
-            await handle_callback_query(update, context)
-            update.callback_query.answer.assert_called_with(
-                "Esa propuesta ha muerto, cuñao"
-            )
+        await handle_callback_query(update, context)
+        update.callback_query.answer.assert_called_with(
+            "Esa propuesta ha muerto, cuñao"
+        )
 
     @pytest.mark.asyncio
-    async def test_handle_callback_query_vote_and_approve(self):
+    async def test_handle_callback_query_vote_and_approve(self, mock_container):
         update = MagicMock()
         update.effective_user.username = "testuser"
         update.effective_chat.type = "private"
@@ -99,36 +93,33 @@ class TestCallbackQuery:
 
         p = Proposal(id="123", text="test", from_chat_id=1)
 
-        with patch("tg.handlers.utils.callback_query.services") as mock_services:
-            mock_services.proposal_repo.load = AsyncMock(return_value=p)
-            mock_services.proposal_service.vote = AsyncMock()
-            mock_services.user_service.update_or_create_user = AsyncMock()
+        mock_container["proposal_repo"].load = AsyncMock(return_value=p)
+        # Mock save as well since it might be called
+        mock_container["proposal_repo"].save = AsyncMock()
 
-            with (
-                patch(
-                    "tg.handlers.utils.callback_query.approve_proposal",
-                    new_callable=AsyncMock,
-                ) as mock_approve,
-                patch(
-                    "tg.handlers.utils.callback_query.get_required_votes",
-                    return_value=1,
-                ),
-            ):
+        with (
+            patch(
+                "tg.handlers.utils.callback_query.approve_proposal",
+                new_callable=AsyncMock,
+            ) as mock_approve,
+            patch(
+                "tg.handlers.utils.callback_query.get_required_votes",
+                return_value=1,
+            ),
+        ):
 
-                async def side_effect(prop, user_id, pos):
-                    prop.liked_by.append(str(user_id))
+            async def side_effect(prop, user_id, pos):
+                prop.liked_by.append(str(user_id))
 
-                mock_services.proposal_service.vote.side_effect = side_effect
+            mock_container["proposal_service"].vote.side_effect = side_effect
 
-                await handle_callback_query(update, context)
+            await handle_callback_query(update, context)
 
-                mock_services.proposal_service.vote.assert_called_once()
-                mock_approve.assert_called_once_with(
-                    p, context.bot, update.callback_query
-                )
+            mock_container["proposal_service"].vote.assert_called_once()
+            mock_approve.assert_called_once_with(p, context.bot, update.callback_query)
 
     @pytest.mark.asyncio
-    async def test_handle_callback_query_vote_and_dismiss(self):
+    async def test_handle_callback_query_vote_and_dismiss(self, mock_container):
         update = MagicMock()
         update.effective_user.username = "testuser"
         update.effective_chat.type = "private"
@@ -145,89 +136,84 @@ class TestCallbackQuery:
 
         p = LongProposal(id="123", text="test")
 
-        with patch("tg.handlers.utils.callback_query.services") as mock_services:
-            mock_services.long_proposal_repo.load = AsyncMock(return_value=p)
-            mock_services.proposal_service.vote = AsyncMock()
-            mock_services.user_service.update_or_create_user = AsyncMock()
+        mock_container["long_proposal_repo"].load = AsyncMock(return_value=p)
+        mock_container["long_proposal_repo"].save = AsyncMock()
 
-            with (
-                patch(
-                    "tg.handlers.utils.callback_query.dismiss_proposal",
-                    new_callable=AsyncMock,
-                ) as mock_dismiss,
-                patch(
-                    "tg.handlers.utils.callback_query.get_required_votes",
-                    return_value=1,
-                ),
-            ):
+        with (
+            patch(
+                "tg.handlers.utils.callback_query.dismiss_proposal",
+                new_callable=AsyncMock,
+            ) as mock_dismiss,
+            patch(
+                "tg.handlers.utils.callback_query.get_required_votes",
+                return_value=1,
+            ),
+        ):
 
-                async def side_effect(prop, user_id, pos):
-                    prop.disliked_by.append(str(user_id))
+            async def side_effect(prop, user_id, pos):
+                prop.disliked_by.append(str(user_id))
 
-                mock_services.proposal_service.vote.side_effect = side_effect
+            mock_container["proposal_service"].vote.side_effect = side_effect
 
-                await handle_callback_query(update, context)
-                mock_dismiss.assert_called_once()
+            await handle_callback_query(update, context)
+            mock_dismiss.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_approve_proposal_web(self):
+    async def test_approve_proposal_web(self, mock_container):
         p = Proposal(id="123", text="test", from_chat_id=123)
         bot = MagicMock()
         bot.send_message = AsyncMock()
 
         cb_query.admins = []
 
-        with patch("tg.handlers.utils.callback_query.services") as mock_services:
-            mock_services.proposal_repo.save = AsyncMock()
-            mock_services.phrase_service.get_random = AsyncMock()
-            mock_services.phrase_service.get_random.return_value.text = "cuñao"
-            mock_services.phrase_service.create_from_proposal = AsyncMock()
-            mock_services.usage_service.log_usage = AsyncMock(return_value=[])
+        mock_container["phrase_service"].get_random.return_value.text = "cuñao"
+        mock_container["usage_service"].log_usage.return_value = []
+        mock_container["proposal_repo"].save = AsyncMock()
+        mock_container["long_proposal_repo"].save = AsyncMock()
 
-            with (
-                patch(
-                    "tg.handlers.utils.callback_query._ensure_admins",
-                    new_callable=AsyncMock,
-                ),
-                patch(
-                    "tg.handlers.utils.callback_query.get_vote_summary",
-                    return_value="summary",
-                ),
-            ):
-                await approve_proposal(p, bot)
+        with (
+            patch(
+                "tg.handlers.utils.callback_query._ensure_admins",
+                new_callable=AsyncMock,
+            ),
+            patch(
+                "tg.handlers.utils.callback_query.get_vote_summary",
+                return_value="summary",
+            ),
+        ):
+            await approve_proposal(p, bot)
 
-                assert bot.send_message.call_count == 2
-                mock_services.phrase_service.create_from_proposal.assert_called_once_with(
-                    p, bot
-                )
+            assert bot.send_message.call_count == 2
+            mock_container[
+                "phrase_service"
+            ].create_from_proposal.assert_called_once_with(p, bot)
 
     @pytest.mark.asyncio
-    async def test_dismiss_proposal_web(self):
+    async def test_dismiss_proposal_web(self, mock_container):
         p = Proposal(id="123", text="test", from_chat_id=123)
         bot = MagicMock()
         bot.send_message = AsyncMock()
 
-        with patch("tg.handlers.utils.callback_query.services") as mock_services:
-            mock_services.proposal_repo.save = AsyncMock()
-            mock_services.phrase_service.get_random = AsyncMock()
-            mock_services.phrase_service.get_random.return_value.text = "cuñao"
-            mock_services.usage_service.log_usage = AsyncMock(return_value=[])
+        mock_container["phrase_service"].get_random.return_value.text = "cuñao"
+        mock_container["usage_service"].log_usage.return_value = []
+        mock_container["proposal_repo"].save = AsyncMock()
+        mock_container["long_proposal_repo"].save = AsyncMock()
 
-            with (
-                patch(
-                    "tg.handlers.utils.callback_query._ensure_admins",
-                    new_callable=AsyncMock,
-                ),
-                patch(
-                    "tg.handlers.utils.callback_query.get_vote_summary",
-                    return_value="summary",
-                ),
-            ):
-                await dismiss_proposal(p, bot)
+        with (
+            patch(
+                "tg.handlers.utils.callback_query._ensure_admins",
+                new_callable=AsyncMock,
+            ),
+            patch(
+                "tg.handlers.utils.callback_query.get_vote_summary",
+                return_value="summary",
+            ),
+        ):
+            await dismiss_proposal(p, bot)
 
-                assert bot.send_message.call_count == 2
-                assert p.voting_ended is True
-                mock_services.proposal_repo.save.assert_called_once_with(p)
+            assert bot.send_message.call_count == 2
+            assert p.voting_ended is True
+            mock_container["proposal_repo"].save.assert_called_once_with(p)
 
     @pytest.mark.asyncio
     async def test_update_proposal_text_equal(self):
@@ -268,52 +254,49 @@ class TestCallbackQuery:
         assert cb_query.admins == []
 
     @pytest.mark.asyncio
-    async def test_approve_proposal_errors(self):
+    async def test_approve_proposal_errors(self, mock_container):
         p = Proposal(id="123", text="test", from_chat_id=123)
         bot = MagicMock()
         bot.send_message = AsyncMock(side_effect=Exception("Fail"))
 
-        with patch("tg.handlers.utils.callback_query.services") as mock_services:
-            mock_services.proposal_repo.save = AsyncMock()
-            mock_services.phrase_service.get_random = AsyncMock()
-            mock_services.phrase_service.get_random.return_value.text = "cuñao"
-            mock_services.phrase_service.create_from_proposal = AsyncMock()
-            mock_services.usage_service.log_usage = AsyncMock(return_value=[])
+        mock_container["phrase_service"].get_random.return_value.text = "cuñao"
+        mock_container["usage_service"].log_usage.return_value = []
+        mock_container["proposal_repo"].save = AsyncMock()
+        mock_container["long_proposal_repo"].save = AsyncMock()
 
-            with (
-                patch(
-                    "tg.handlers.utils.callback_query._ensure_admins",
-                    new_callable=AsyncMock,
-                ),
-                patch(
-                    "tg.handlers.utils.callback_query.get_vote_summary",
-                    return_value="summary",
-                ),
-            ):
-                await approve_proposal(p, bot)
-                assert bot.send_message.call_count == 2
+        with (
+            patch(
+                "tg.handlers.utils.callback_query._ensure_admins",
+                new_callable=AsyncMock,
+            ),
+            patch(
+                "tg.handlers.utils.callback_query.get_vote_summary",
+                return_value="summary",
+            ),
+        ):
+            await approve_proposal(p, bot)
+            assert bot.send_message.call_count == 2
 
     @pytest.mark.asyncio
-    async def test_dismiss_proposal_errors(self):
+    async def test_dismiss_proposal_errors(self, mock_container):
         p = Proposal(id="123", text="test", from_chat_id=123)
         bot = MagicMock()
         bot.send_message = AsyncMock(side_effect=Exception("Fail"))
 
-        with patch("tg.handlers.utils.callback_query.services") as mock_services:
-            mock_services.proposal_repo.save = AsyncMock()
-            mock_services.phrase_service.get_random = AsyncMock()
-            mock_services.phrase_service.get_random.return_value.text = "cuñao"
-            mock_services.usage_service.log_usage = AsyncMock(return_value=[])
+        mock_container["phrase_service"].get_random.return_value.text = "cuñao"
+        mock_container["usage_service"].log_usage.return_value = []
+        mock_container["proposal_repo"].save = AsyncMock()
+        mock_container["long_proposal_repo"].save = AsyncMock()
 
-            with (
-                patch(
-                    "tg.handlers.utils.callback_query._ensure_admins",
-                    new_callable=AsyncMock,
-                ),
-                patch(
-                    "tg.handlers.utils.callback_query.get_vote_summary",
-                    return_value="summary",
-                ),
-            ):
-                await dismiss_proposal(p, bot)
-                assert bot.send_message.call_count == 2
+        with (
+            patch(
+                "tg.handlers.utils.callback_query._ensure_admins",
+                new_callable=AsyncMock,
+            ),
+            patch(
+                "tg.handlers.utils.callback_query.get_vote_summary",
+                return_value="summary",
+            ),
+        ):
+            await dismiss_proposal(p, bot)
+            assert bot.send_message.call_count == 2

@@ -1,11 +1,11 @@
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
+from unittest.mock import MagicMock, AsyncMock
 from telegram import Update, Message, User, MessageEntity
 from tg.handlers.commands.gift import handle_gift_command
 
 
 @pytest.mark.asyncio
-async def test_handle_gift_command_text_mention():
+async def test_handle_gift_command_text_mention(mock_container):
     update = MagicMock(spec=Update)
     message = MagicMock(spec=Message)
     update.effective_message = message
@@ -54,7 +54,7 @@ async def test_handle_gift_command_text_mention():
 
 
 @pytest.mark.asyncio
-async def test_handle_gift_command_mention_success():
+async def test_handle_gift_command_mention_success(mock_container):
     update = MagicMock(spec=Update)
     message = MagicMock(spec=Message)
     update.effective_message = message
@@ -91,19 +91,19 @@ async def test_handle_gift_command_mention_success():
     message.reply_text = AsyncMock()
     context = MagicMock()
 
-    with patch("tg.handlers.commands.gift.services") as mock_services:
-        mock_services.user_repo.get_by_username = AsyncMock(return_value=db_user)
-        await handle_gift_command(update, context)
+    mock_container["user_repo"].get_by_username = AsyncMock(return_value=db_user)
 
-        mock_services.user_repo.get_by_username.assert_called_once_with("receiver")
-        message.reply_text.assert_called_once()
-        args, kwargs = message.reply_text.call_args
-        assert "¿Qué detalle quieres tener con DB Receiver?" in args[0]
-        assert "reply_markup" in kwargs
+    await handle_gift_command(update, context)
+
+    mock_container["user_repo"].get_by_username.assert_called_once_with("receiver")
+    message.reply_text.assert_called_once()
+    args, kwargs = message.reply_text.call_args
+    assert "¿Qué detalle quieres tener con DB Receiver?" in args[0]
+    assert "reply_markup" in kwargs
 
 
 @pytest.mark.asyncio
-async def test_handle_gift_command_mention_not_found():
+async def test_handle_gift_command_mention_not_found(mock_container):
     update = MagicMock(spec=Update)
     message = MagicMock(spec=Message)
     update.effective_message = message
@@ -134,11 +134,11 @@ async def test_handle_gift_command_mention_not_found():
     message.reply_text = AsyncMock()
     context = MagicMock()
 
-    with patch("tg.handlers.commands.gift.services") as mock_services:
-        mock_services.user_repo.get_by_username = AsyncMock(return_value=None)
-        await handle_gift_command(update, context)
+    mock_container["user_repo"].get_by_username = AsyncMock(return_value=None)
 
-        mock_services.user_repo.get_by_username.assert_called_once_with("unknown")
-        message.reply_text.assert_called_once_with(
-            "⚠️ No conozco a @unknown. Dile que hable conmigo primero."
-        )
+    await handle_gift_command(update, context)
+
+    mock_container["user_repo"].get_by_username.assert_called_once_with("unknown")
+    message.reply_text.assert_called_once_with(
+        "⚠️ No conozco a @unknown. Dile que hable conmigo primero."
+    )

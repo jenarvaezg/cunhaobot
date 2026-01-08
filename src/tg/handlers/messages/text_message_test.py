@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
+from unittest.mock import MagicMock, AsyncMock
 from telegram import ReactionTypeEmoji
 from tg.handlers.messages.text_message import handle_message
 
@@ -12,7 +12,7 @@ async def test_handle_message_empty():
 
 
 @pytest.mark.asyncio
-async def test_handle_message_mention_trigger():
+async def test_handle_message_mention_trigger(mock_container):
     update = MagicMock()
     user = MagicMock()
     user.id = 123
@@ -26,7 +26,6 @@ async def test_handle_message_mention_trigger():
 
     update.effective_user = user
     update.effective_chat = chat
-    update.effective_message.text = "Hola @TestBot"
     update.effective_message.text = "Hola @TestBot"
     update.effective_message.reply_text = AsyncMock()
     update.effective_message.set_reaction = AsyncMock()
@@ -40,33 +39,29 @@ async def test_handle_message_mention_trigger():
     context.bot.username = "TestBot"
     context.bot.id = 12345
 
-    with patch("tg.handlers.messages.text_message.services") as mock_services:
-        mock_chat = MagicMock()
-        mock_chat.is_premium = True
-        mock_services.chat_repo.load = AsyncMock(return_value=mock_chat)
-        mock_services.cunhao_agent.answer = AsyncMock(return_value="AI Response")
-        mock_services.usage_service.log_usage = AsyncMock(return_value=[])
-        mock_services.ai_service.analyze_sentiment_and_react = AsyncMock(
-            return_value="🍺"
-        )
-        mock_services.user_service.update_or_create_user = AsyncMock()
+    mock_chat = MagicMock()
+    mock_chat.is_premium = True
+    mock_container["chat_repo"].load = AsyncMock(return_value=mock_chat)
+    mock_container["cunhao_agent"].answer.return_value = "AI Response"
+    mock_container["usage_service"].log_usage.return_value = []
+    mock_container["ai_service"].analyze_sentiment_and_react.return_value = "🍺"
 
-        await handle_message(update, context)
+    await handle_message(update, context)
 
-        mock_services.cunhao_agent.answer.assert_called_once()
-        update.effective_message.reply_text.assert_called_once_with(
-            "AI Response", do_quote=True
-        )
-        mock_services.ai_service.analyze_sentiment_and_react.assert_called_once_with(
-            "Hola @TestBot"
-        )
-        update.effective_message.set_reaction.assert_called_once_with(
-            reaction=ReactionTypeEmoji("🍺")
-        )
+    mock_container["cunhao_agent"].answer.assert_called_once()
+    update.effective_message.reply_text.assert_called_once_with(
+        "AI Response", do_quote=True
+    )
+    mock_container["ai_service"].analyze_sentiment_and_react.assert_called_once_with(
+        "Hola @TestBot"
+    )
+    update.effective_message.set_reaction.assert_called_once_with(
+        reaction=ReactionTypeEmoji("🍺")
+    )
 
 
 @pytest.mark.asyncio
-async def test_handle_message_no_trigger_only_reaction():
+async def test_handle_message_no_trigger_only_reaction(mock_container):
     update = MagicMock()
     user = MagicMock()
     user.id = 123
@@ -80,7 +75,6 @@ async def test_handle_message_no_trigger_only_reaction():
 
     update.effective_user = user
     update.effective_chat = chat
-    update.effective_message.text = "Hola @TestBot"
     update.effective_message.text = "Solo un mensaje en el grupo"
     update.effective_message.reply_text = AsyncMock()
     update.effective_message.set_reaction = AsyncMock()
@@ -93,25 +87,21 @@ async def test_handle_message_no_trigger_only_reaction():
     context.bot.username = "TestBot"
     context.bot.id = 12345
 
-    with patch("tg.handlers.messages.text_message.services") as mock_services:
-        mock_chat = MagicMock()
-        mock_chat.is_premium = True
-        mock_services.chat_repo.load = AsyncMock(return_value=mock_chat)
-        mock_services.ai_service.analyze_sentiment_and_react = AsyncMock(
-            return_value="🇪🇸"
-        )
-        mock_services.user_service.update_or_create_user = AsyncMock()
+    mock_chat = MagicMock()
+    mock_chat.is_premium = True
+    mock_container["chat_repo"].load = AsyncMock(return_value=mock_chat)
+    mock_container["ai_service"].analyze_sentiment_and_react.return_value = "🇪🇸"
 
-        await handle_message(update, context)
+    await handle_message(update, context)
 
-        # Should NOT answer
-        mock_services.cunhao_agent.answer.assert_not_called()
-        update.effective_message.reply_text.assert_not_called()
+    # Should NOT answer
+    mock_container["cunhao_agent"].answer.assert_not_called()
+    update.effective_message.reply_text.assert_not_called()
 
-        # Should react
-        mock_services.ai_service.analyze_sentiment_and_react.assert_called_once_with(
-            "Solo un mensaje en el grupo"
-        )
-        update.effective_message.set_reaction.assert_called_once_with(
-            reaction=ReactionTypeEmoji("🇪🇸")
-        )
+    # Should react
+    mock_container["ai_service"].analyze_sentiment_and_react.assert_called_once_with(
+        "Solo un mensaje en el grupo"
+    )
+    update.effective_message.set_reaction.assert_called_once_with(
+        reaction=ReactionTypeEmoji("🇪🇸")
+    )

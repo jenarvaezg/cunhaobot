@@ -1,11 +1,14 @@
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import MagicMock, AsyncMock
 from tg.handlers.commands.about import handle_about
 from models.phrase import Phrase
 
 
+from unittest.mock import call
+
+
 @pytest.mark.asyncio
-async def test_handle_about():
+async def test_handle_about(mock_container):
     update = MagicMock()
     message = MagicMock()
     user = MagicMock()
@@ -26,10 +29,17 @@ async def test_handle_about():
     context = MagicMock()
 
     mock_phrase = Phrase(text="cuñao")
-    with patch("tg.handlers.commands.about.services") as mock_services:
-        mock_services.user_service.update_or_create_user = AsyncMock()
-        mock_services.usage_service.log_usage = AsyncMock(return_value=[])
-        mock_services.phrase_service.get_random = AsyncMock(return_value=mock_phrase)
 
-        await handle_about(update, context)
-        update.effective_message.reply_text.assert_called_once()
+    mock_container["usage_service"].log_usage.return_value = []
+    mock_container["phrase_service"].get_random.return_value = mock_phrase
+
+    await handle_about(update, context)
+
+    # Check that reply_text was called at least once with the about message
+    assert message.reply_text.call_count >= 1
+    # Check the specific call
+    expected_text = (
+        "Este bot ha sido creado por un cuñao muy aburrido.\n"
+        "Puedes ver el código fuente en GitHub: https://github.com/josesarmiento/cunhaobot"
+    )
+    assert call(expected_text, do_quote=True) in message.reply_text.call_args_list

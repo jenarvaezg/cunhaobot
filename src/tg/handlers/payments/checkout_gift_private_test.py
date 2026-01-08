@@ -6,7 +6,7 @@ from tg.handlers.payments.checkout import handle_successful_payment
 
 
 @pytest.mark.asyncio
-async def test_handle_successful_payment_gift_private_notification():
+async def test_handle_successful_payment_gift_private_notification(mock_container):
     update = MagicMock(spec=Update)
     message = MagicMock(spec=Message)
     update.effective_message = message
@@ -42,17 +42,16 @@ async def test_handle_successful_payment_gift_private_notification():
 
     context.bot.get_chat_member.side_effect = TelegramError("User not found")
 
+    mock_container["gift_repo"].save = AsyncMock()
+    mock_container["user_repo"].load = AsyncMock(return_value=receiver_user)
+    mock_container["usage_service"].log_usage.return_value = []
+
     with (
-        patch("tg.handlers.payments.checkout.services") as mock_services,
         patch(
             "tg.handlers.payments.checkout.notify_new_badges", new_callable=AsyncMock
         ),
         patch("builtins.open", new_callable=mock_open, read_data=b"image_data"),
     ):
-        mock_services.gift_repo.save = AsyncMock()
-        mock_services.user_repo.load = AsyncMock(return_value=receiver_user)
-        mock_services.usage_service.log_usage = AsyncMock(return_value=[])
-
         await handle_successful_payment(update, context)
 
         # Verify public message sent to Group (100)
@@ -67,7 +66,9 @@ async def test_handle_successful_payment_gift_private_notification():
 
 
 @pytest.mark.asyncio
-async def test_handle_successful_payment_gift_no_private_notification_if_present():
+async def test_handle_successful_payment_gift_no_private_notification_if_present(
+    mock_container,
+):
     update = MagicMock(spec=Update)
     message = MagicMock(spec=Message)
     update.effective_message = message
@@ -106,17 +107,16 @@ async def test_handle_successful_payment_gift_no_private_notification_if_present
     member.status = "member"
     context.bot.get_chat_member.return_value = member
 
+    mock_container["gift_repo"].save = AsyncMock()
+    mock_container["user_repo"].load = AsyncMock(return_value=receiver_user)
+    mock_container["usage_service"].log_usage.return_value = []
+
     with (
-        patch("tg.handlers.payments.checkout.services") as mock_services,
         patch(
             "tg.handlers.payments.checkout.notify_new_badges", new_callable=AsyncMock
         ),
         patch("builtins.open", new_callable=mock_open, read_data=b"image_data"),
     ):
-        mock_services.gift_repo.save = AsyncMock()
-        mock_services.user_repo.load = AsyncMock(return_value=receiver_user)
-        mock_services.usage_service.log_usage = AsyncMock(return_value=[])
-
         await handle_successful_payment(update, context)
 
         # Verify ONLY public message sent to Group (100)
