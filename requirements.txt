@@ -122,7 +122,7 @@ fastavro==1.12.1 ; sys_platform != 'emscripten'
     # via cohere
 fastmcp==2.14.2
     # via pydantic-ai-slim
-filelock==3.20.2
+filelock==3.20.3
     # via
     #   huggingface-hub
     #   virtualenv
