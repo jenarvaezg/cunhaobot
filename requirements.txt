@@ -435,7 +435,7 @@ pydantic==2.12.5
     #   pydantic-evals
     #   pydantic-graph
     #   pydantic-settings
-pydantic-ai==1.40.0
+pydantic-ai==1.56.0
     # via cunhaobot
 pydantic-ai-slim==1.40.0
     # via
