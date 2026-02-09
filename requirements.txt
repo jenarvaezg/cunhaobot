@@ -264,7 +264,7 @@ keyring==25.7.0
     # via py-key-value-aio
 levenshtein==0.27.3
     # via cunhaobot
-litestar==2.19.0
+litestar==2.20.0
     # via cunhaobot
 litestar-htmx==0.5.0
     # via litestar
