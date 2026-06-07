@@ -15,7 +15,7 @@ repos:
         args: [ "--no-hashes", "--format", "requirements-txt", "--output-file", "requirements.txt" ]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.10
+    rev: v0.15.16
     hooks:
       - id: ruff-check
         args: [ --fix ]
