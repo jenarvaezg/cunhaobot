@@ -135,3 +135,25 @@ async def test_check_badges_awards_pesao(badge_service, mock_usage_repo):
     assert "pesao" in user.badges
     assert len(user.last_usages) == 10
     badge_service.user_service.save_user.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_check_badges_awards_each_logro_once(badge_service, mock_usage_repo):
+    """User story 21: a Logro is awarded once. Re-evaluating a milestone a
+    Perfil already holds must not return it again nor duplicate it on the user.
+    These rules are exercised without any Telegram or Slack object."""
+    user = User(id="123", badges=[])
+    badge_service.user_service.get_user = AsyncMock(return_value=user)
+
+    mock_usage_repo.get_user_usage_count.return_value = 1
+    mock_usage_repo.get_user_action_count.return_value = 0
+    # Meets the Poeta milestone (>= 5 authored Apelativos).
+    badge_service.phrase_repo.get_user_phrase_count.return_value = 5
+
+    first = await badge_service.check_badges("123", "telegram")
+    assert any(b.id == "poeta" for b in first)
+
+    # Second evaluation with the milestone still met: no re-award, no duplicate.
+    second = await badge_service.check_badges("123", "telegram")
+    assert all(b.id != "poeta" for b in second)
+    assert user.badges.count("poeta") == 1
