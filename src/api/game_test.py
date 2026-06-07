@@ -15,17 +15,25 @@ def client():
 
 
 def test_game_launch(client):
-    response = client.get(
-        "/game/launch", params={"user_id": "123", "inline_message_id": "abc"}
-    )
+    with patch(
+        "services.game_service.GameService.generate_game_token",
+        return_value="service-token",
+        create=True,
+    ) as mock_generate_token:
+        response = client.get(
+            "/game/launch", params={"user_id": "123", "inline_message_id": "abc"}
+        )
+
     assert response.status_code == HTTP_200_OK
     assert "Paco's Tapas Runner" in response.text
     # Check for the USER_ID initialization in script tag
     assert 'const USER_ID = "123";' in response.text
+    assert 'const GAME_TOKEN = "service-token";' in response.text
+    mock_generate_token.assert_called_once_with("123")
 
 
 @pytest.mark.asyncio
-async def test_submit_score_success(client):
+async def test_submit_score_does_not_award_reputation_twice(client):
     import hmac
     import time
 
@@ -70,5 +78,40 @@ async def test_submit_score_success(client):
             chat_id=None,
             message_id=None,
         )
-        # points = int(500 / 100) = 5
-        mock_add_points.assert_called_once_with("123", 5)
+        mock_add_points.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_submit_score_uses_game_service_token_validation(client):
+    payload = {
+        "user_id": "123",
+        "score": 500,
+        "inline_message_id": "abc",
+        "token": "accepted-by-game-service",
+    }
+
+    with (
+        patch(
+            "services.game_service.GameService.verify_game_token",
+            return_value=True,
+            create=True,
+        ) as mock_verify_token,
+        patch(
+            "services.game_service.GameService.set_score", new_callable=AsyncMock
+        ) as mock_set_score,
+    ):
+        mock_set_score.return_value = True
+
+        response = client.post("/game/score", json=payload)
+
+        assert response.status_code == HTTP_201_CREATED
+        assert response.json() == {"status": "ok", "success": True}
+
+        mock_verify_token.assert_called_once_with("123", "accepted-by-game-service")
+        mock_set_score.assert_called_once_with(
+            user_id="123",
+            score=500,
+            inline_message_id="abc",
+            chat_id=None,
+            message_id=None,
+        )

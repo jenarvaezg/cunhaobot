@@ -24,6 +24,7 @@ from services import (
     TTSService,
     UsageService,
     BadgeService,
+    GameService,
 )
 from core.config import config
 from utils.ui import apelativo
@@ -612,6 +613,7 @@ class WebController(Controller):
         tts_service: Annotated[TTSService, Dependency()],
         phrase_service: Annotated[PhraseService, Dependency()],
         user_service: Annotated[UserService, Dependency()],
+        game_service: Annotated[GameService, Dependency()],
     ) -> Template:
         """Launches the game from the web interface."""
         import datetime
@@ -667,6 +669,7 @@ class WebController(Controller):
                 "user_id": user_id,
                 "inline_message_id": None,
                 "game_short_name": "palillo_cunhao",
+                "game_token": game_service.generate_game_token(user_id),
                 "secret": config.session_secret,
                 "is_web": True,
                 "greeting_audio_url": greeting_audio_url,

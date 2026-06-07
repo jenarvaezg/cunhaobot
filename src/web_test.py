@@ -403,10 +403,16 @@ def test_web_game_page(client):
             "services.tts_service.TTSService.get_audio_url",
             return_value="http://audio.url",
         ),
+        patch(
+            "services.game_service.GameService.generate_game_token",
+            return_value="web-token",
+        ) as mock_generate_token,
     ):
         rv = client.get("/game")
         assert rv.status_code == HTTP_200_OK
         assert "PACO'S TAPAS RUNNER" in rv.text
+        assert 'const GAME_TOKEN = "web-token";' in rv.text
+        mock_generate_token.assert_called_once_with("guest")
         # Check that daily_challenge_json is rendered as an object, not empty
         assert "const DAILY_CHALLENGE = {" in rv.text
         assert '"type":' in rv.text

@@ -101,6 +101,20 @@ The project uses the specialized Litestar HTMX plugin for web interactivity.
 *   To run the project locally, use the `./dev.sh` script. This requires Docker for the Datastore emulator.
 *   Ensure a `.env` file exists (based on `.env.example`) with the necessary environment variables.
 
+## Agent skills
+
+### Issue tracker
+
+Issues and PRDs are tracked in GitHub Issues for `jenarvaezg/cunhaobot` using `gh`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Use the default five-label triage vocabulary. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+This is a single-context repo: read root `CONTEXT.md` and relevant ADRs under `docs/adr/` when present. See `docs/agents/domain.md`.
+
 ## CI/CD & Deployment
 
 ### Automated Deployment

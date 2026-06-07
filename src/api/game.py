@@ -1,51 +1,47 @@
 import logging
-import hashlib
-import hmac
-import time
 import zlib
-from typing import Annotated
+from collections.abc import Mapping
+from typing import Annotated, cast
 from litestar import Controller, Request, get, post
 from litestar.response import Template
 from litestar.params import Dependency
 from litestar.exceptions import HTTPException
 
-from services.game_service import GameService
+from services.game_service import (
+    GamePlayerProfile,
+    GameService,
+    InvalidGameSessionError,
+)
 from services.user_service import UserService
 from services.tts_service import TTSService
 from services.phrase_service import PhraseService
-from core.config import config
 from utils.ui import apelativo
 from models.phrase import Phrase
 
 logger = logging.getLogger(__name__)
 
 
+def _player_profile_from_session(session_user: object) -> GamePlayerProfile | None:
+    if not isinstance(session_user, Mapping):
+        return None
+
+    session_data = cast(Mapping[str, object], session_user)
+    user_id = session_data.get("id")
+    if not isinstance(user_id, str | int):
+        return None
+
+    first_name = session_data.get("first_name")
+    username = session_data.get("username")
+    name = first_name if isinstance(first_name, str) and first_name else "Usuario Web"
+    return GamePlayerProfile(
+        user_id=user_id,
+        name=name,
+        username=username if isinstance(username, str) else None,
+    )
+
+
 class GameController(Controller):
     path = "/game"
-
-    def _generate_game_token(self, user_id: str | int) -> str:
-        timestamp = int(time.time())
-        payload = f"{user_id}:{timestamp}"
-        signature = hmac.new(
-            config.session_secret.encode(), payload.encode(), hashlib.sha256
-        ).hexdigest()
-        return f"{signature}:{timestamp}"
-
-    def _verify_game_token(self, user_id: str | int, token: str) -> bool:
-        try:
-            signature, timestamp_str = token.split(":")
-            timestamp = int(timestamp_str)
-            # Token valid for 2 hours
-            if time.time() - timestamp > 7200:
-                return False
-
-            payload = f"{user_id}:{timestamp}"
-            expected_signature = hmac.new(
-                config.session_secret.encode(), payload.encode(), hashlib.sha256
-            ).hexdigest()
-            return hmac.compare_digest(signature, expected_signature)
-        except (ValueError, AttributeError):
-            return False
 
     @get("/launch")
     async def launch_game(
@@ -54,6 +50,7 @@ class GameController(Controller):
         tts_service: Annotated[TTSService, Dependency()],
         phrase_service: Annotated[PhraseService, Dependency()],
         user_service: Annotated[UserService, Dependency()],
+        game_service: Annotated[GameService, Dependency()],
     ) -> Template:
         """Endpoint called by Telegram to launch the game."""
         # Validate telegram web app init data if possible, or use simplified launch
@@ -131,7 +128,7 @@ class GameController(Controller):
                 "chat_id": chat_id,
                 "message_id": message_id,
                 "game_short_name": "palillo_cunhao",
-                "game_token": self._generate_game_token(user_id),
+                "game_token": game_service.generate_game_token(user_id),
                 "is_web": False,
                 "greeting_audio_url": greeting_audio_url,
                 "game_over_audio_url": game_over_audio_url,
@@ -169,53 +166,36 @@ class GameController(Controller):
         self,
         request: Request,
         game_service: Annotated[GameService, Dependency()],
-        user_service: Annotated[UserService, Dependency()],
     ) -> dict[str, str | bool]:
         """Submit score from the game."""
         data = await request.json()
         user_id = data.get("user_id")
-        score = data.get("score", 0)
+        score = int(data.get("score", 0))
         inline_message_id = data.get("inline_message_id") or None
         chat_id = data.get("chat_id") or None
         message_id = data.get("message_id") or None
         token = data.get("token")
 
-        if not self._verify_game_token(user_id, token):
+        if not isinstance(user_id, str | int) or not isinstance(token, str):
             logger.warning(f"Invalid game token for user {user_id}")
             raise HTTPException(status_code=403, detail="Invalid game session")
 
-        # Save score and update highscore in Telegram
-        success = await game_service.set_score(
-            user_id=user_id,
-            score=score,
-            inline_message_id=inline_message_id,
-            chat_id=chat_id,
-            message_id=message_id,
-        )
-
-        # If it failed, maybe user is missing from DB (e.g. web play without prior bot interaction)
-        if not success and user_id != "guest":
-            user_session = request.session.get("user")
-            if user_session and str(user_session.get("id")) == str(user_id):
-                # Create skeleton user from session
-                await user_service.update_user_data(
-                    user_id=user_id,
-                    name=user_session.get("first_name", "Usuario Web"),
-                    username=user_session.get("username"),
-                )
-                # Retry
-                success = await game_service.set_score(
-                    user_id=user_id,
-                    score=score,
-                    inline_message_id=inline_message_id,
-                    chat_id=chat_id,
-                    message_id=message_id,
-                )
-
-        # Award points to user based on performance (1 point per 100 points in game)
-        if success and user_id != "guest":
-            points = int(score / 100)
-            if points > 0:
-                await user_service.add_points(user_id, points)
+        try:
+            success = await game_service.submit_score(
+                user_id=user_id,
+                score=score,
+                token=token,
+                inline_message_id=inline_message_id,
+                chat_id=chat_id,
+                message_id=message_id,
+                player_profile=_player_profile_from_session(
+                    request.session.get("user")
+                ),
+            )
+        except InvalidGameSessionError:
+            logger.warning(f"Invalid game token for user {user_id}")
+            raise HTTPException(
+                status_code=403, detail="Invalid game session"
+            ) from None
 
         return {"status": "ok", "success": success}
