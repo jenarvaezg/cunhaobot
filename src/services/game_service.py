@@ -28,18 +28,6 @@ class GameService:
         self.user_repo = user_repo
         self.badge_service = badge_service
 
-    def verify_score_hash(self, user_id: str, score: int, hash_val: str) -> bool:
-        """Verifies if the score has been tampered with."""
-        if hash_val.startswith("unsafe-"):
-            # Fallback for non-HTTPS environments (dev/tests)
-            return True
-
-        expected_hash = hashlib.sha256(
-            f"{user_id}{score}{config.session_secret}".encode()
-        ).hexdigest()
-
-        return hash_val == expected_hash
-
     def generate_game_token(self, user_id: str | int) -> str:
         timestamp = int(time.time())
         payload = f"{user_id}:{timestamp}"

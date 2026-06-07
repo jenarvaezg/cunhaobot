@@ -20,6 +20,11 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+# Upper bound on proposals reassigned per kind during account linking. A Perfil
+# authoring more than this is implausible; if it ever happens we log rather than
+# silently drop the overflow.
+_AUTHORSHIP_MIGRATION_LIMIT = 1000
+
 
 class UserService:
     def __init__(
@@ -380,22 +385,34 @@ class UserService:
         adding one entry below, not another loop in ``complete_link``.
         """
         source_key = str(source_id)
+        proposals = await self.proposal_repo.get_proposals(
+            user_id=source_key, limit=_AUTHORSHIP_MIGRATION_LIMIT
+        )
+        long_proposals = await self.long_proposal_repo.get_proposals(
+            user_id=source_key, limit=_AUTHORSHIP_MIGRATION_LIMIT
+        )
+        for kind, items in (
+            ("proposals", proposals),
+            ("long_proposals", long_proposals),
+        ):
+            if len(items) >= _AUTHORSHIP_MIGRATION_LIMIT:
+                logger.warning(
+                    "Authorship migration hit the %d-item cap for %s authored by %s; "
+                    "older items were not reassigned to %s.",
+                    _AUTHORSHIP_MIGRATION_LIMIT,
+                    kind,
+                    source_key,
+                    target_id,
+                )
+
         authored: list[tuple[Any, list[Any]]] = [
             (self.phrase_repo, await self.phrase_repo.get_phrases(user_id=source_key)),
             (
                 self.long_phrase_repo,
                 await self.long_phrase_repo.get_phrases(user_id=source_key),
             ),
-            (
-                self.proposal_repo,
-                await self.proposal_repo.get_proposals(user_id=source_key, limit=1000),
-            ),
-            (
-                self.long_proposal_repo,
-                await self.long_proposal_repo.get_proposals(
-                    user_id=source_key, limit=1000
-                ),
-            ),
+            (self.proposal_repo, proposals),
+            (self.long_proposal_repo, long_proposals),
         ]
 
         for repo, items in authored:
