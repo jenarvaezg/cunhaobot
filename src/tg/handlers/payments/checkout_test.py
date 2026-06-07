@@ -189,3 +189,74 @@ async def test_handle_successful_payment_failure_refund():
         )
         # Verify messages sent to stored chat_id
         assert context.bot.send_message.call_args_list[0].kwargs["chat_id"] == 999
+
+
+def _payment_update(payload: str):
+    update = MagicMock(spec=Update)
+    message = MagicMock(spec=Message)
+    update.effective_message = message
+    update.effective_user.id = 123
+    update.effective_user.name = "Pepe"
+    update.effective_user.username = "pepe"
+    message.chat.type = "private"
+    message.chat.title = "Test Chat"
+    message.chat.username = "testchat"
+    message.chat_id = 123
+
+    payment = MagicMock(spec=SuccessfulPayment)
+    payment.invoice_payload = payload
+    payment.telegram_payment_charge_id = "charge_id"
+    message.successful_payment = payment
+
+    user = MagicMock(spec=User)
+    user.id = 123
+    user.first_name = "Pepe"
+    message.from_user = user
+    return update, message
+
+
+@pytest.mark.asyncio
+async def test_handle_successful_payment_subscription_activation():
+    update, message = _payment_update("subs_month_-555")
+
+    context = MagicMock()
+    context.bot.send_message = AsyncMock()
+
+    with (
+        patch("tg.handlers.payments.checkout.services") as mock_services,
+        patch(
+            "tg.handlers.payments.checkout.notify_new_badges", new_callable=AsyncMock
+        ) as mock_notify,
+    ):
+        mock_services.chat_repo.load = AsyncMock(return_value=None)
+        mock_services.chat_repo.save = AsyncMock()
+        mock_services.usage_service.log_usage = AsyncMock(return_value=[])
+
+        await handle_successful_payment(update, context)
+
+        # A fresh Chat is created and persisted with Premium granted.
+        saved_chat = mock_services.chat_repo.save.call_args[0][0]
+        assert saved_chat.id == -555
+        assert saved_chat.is_premium is True
+        # Premium confirmation goes to the target Chat, not the payer's chat.
+        assert context.bot.send_message.call_args.kwargs["chat_id"] == -555
+        mock_notify.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_handle_successful_payment_invalid_payload():
+    update, message = _payment_update("gift:not-a-number:200:palillo")
+
+    context = MagicMock()
+    context.bot.send_message = AsyncMock()
+
+    with patch("tg.handlers.payments.checkout.services") as mock_services:
+        mock_services.gift_repo.save = AsyncMock()
+        mock_services.chat_repo.save = AsyncMock()
+
+        await handle_successful_payment(update, context)
+
+        # Malformed payloads are rejected without delivering any product.
+        mock_services.gift_repo.save.assert_not_called()
+        mock_services.chat_repo.save.assert_not_called()
+        context.bot.send_message.assert_called_once()
