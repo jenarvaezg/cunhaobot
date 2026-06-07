@@ -2,7 +2,6 @@ import logging
 from telegram import Update, ReactionTypeEmoji
 from telegram.ext import CallbackContext
 from core.container import services
-from models.usage import ActionType
 from tg.decorators import log_update
 from tg.utils.badges import notify_new_badges
 
@@ -44,7 +43,7 @@ async def handle_message(update: Update, context: CallbackContext) -> None:
             )
             return
 
-        # Use AI Agent
+        # Use shared Chat interaction behavior (AI answer + AI_ASK Uso).
         clean_text = message.text
         if is_mentioned and bot_username:
             # Basic cleanup of the mention handle
@@ -54,29 +53,30 @@ async def handle_message(update: Update, context: CallbackContext) -> None:
         # Indicate typing status
         await message.chat.send_action(action="typing")
 
-        response = await services.cunhao_agent.answer(clean_text)
-        new_badges = await services.usage_service.log_usage(
-            user_id=message.from_user.id if message.from_user else "unknown",
-            platform="telegram",
-            action=ActionType.AI_ASK,
+        user_id = message.from_user.id if message.from_user else "unknown"
+        reply = await services.chat_interaction_service.answer(
+            user_id=user_id, platform="telegram", text=clean_text
         )
-        await message.reply_text(response, do_quote=True)
-        await notify_new_badges(update, context, new_badges)
+        await message.reply_text(reply.text, do_quote=True)
+        await notify_new_badges(update, context, reply.new_badges)
 
     # Smart Reaction (runs for EVERY message) - ONLY PREMIUM
     if is_premium:
         try:
-            reaction_emoji = await services.ai_service.analyze_sentiment_and_react(
+            decision = await services.chat_interaction_service.decide_reaction(
                 message.text
             )
-            if reaction_emoji:
-                await message.set_reaction(reaction=ReactionTypeEmoji(reaction_emoji))
+            if decision.emoji:
+                await message.set_reaction(reaction=ReactionTypeEmoji(decision.emoji))
 
-                # Log usage for "Centro de Atención" badge
-                reaction_badges = await services.usage_service.log_usage(
-                    user_id=message.from_user.id if message.from_user else "unknown",
-                    platform="telegram",
-                    action=ActionType.REACTION_RECEIVED,
+                # A delivered reaction is a REACTION_RECEIVED Uso.
+                reaction_badges = (
+                    await services.chat_interaction_service.record_reaction_received(
+                        user_id=message.from_user.id
+                        if message.from_user
+                        else "unknown",
+                        platform="telegram",
+                    )
                 )
                 await notify_new_badges(update, context, reaction_badges)
         except Exception as e:

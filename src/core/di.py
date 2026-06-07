@@ -43,4 +43,7 @@ dependencies = {
     "game_service": Provide(lambda: services.game_service, sync_to_thread=False),
     "profile_service": Provide(lambda: services.profile_service, sync_to_thread=False),
     "cunhao_agent": Provide(lambda: services.cunhao_agent, sync_to_thread=False),
+    "chat_interaction_service": Provide(
+        lambda: services.chat_interaction_service, sync_to_thread=False
+    ),
 }

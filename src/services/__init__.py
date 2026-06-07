@@ -8,6 +8,7 @@ from services.usage_service import UsageService
 from services.badge_service import BadgeService
 from services.game_service import GameService
 from services.profile_service import ProfileService
+from services.chat_interaction_service import ChatInteractionService
 
 __all__ = [
     "PhraseService",
@@ -20,4 +21,5 @@ __all__ = [
     "BadgeService",
     "GameService",
     "ProfileService",
+    "ChatInteractionService",
 ]

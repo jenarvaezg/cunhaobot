@@ -28,6 +28,7 @@ from services import (
     CunhaoAgent,
     ProfileService,
     GameService,
+    ChatInteractionService,
 )
 
 if TYPE_CHECKING:
@@ -76,6 +77,7 @@ class Container:
         self._storage_service: StorageService | None = None
         self._profile_service: ProfileService | None = None
         self._game_service: GameService | None = None
+        self._chat_interaction_service: ChatInteractionService | None = None
 
     @property
     def badge_service(self) -> BadgeService:
@@ -171,6 +173,16 @@ class Container:
                 badge_service=self.badge_service,
             )
         return self._game_service
+
+    @property
+    def chat_interaction_service(self) -> ChatInteractionService:
+        if not self._chat_interaction_service:
+            self._chat_interaction_service = ChatInteractionService(
+                cunhao_agent=self.cunhao_agent,
+                ai_service=self.ai_service,
+                usage_service=self.usage_service,
+            )
+        return self._chat_interaction_service
 
     @property
     def profile_service(self) -> ProfileService:

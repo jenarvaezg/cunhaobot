@@ -533,29 +533,24 @@ def register_listeners(app: AsyncApp) -> None:
         event = body["event"]
         text = event.get("text", "")
 
-        response = await services.cunhao_agent.answer(text)
-        await services.usage_service.log_usage(
-            user_id=event.get("user"),
-            platform="slack",
-            action=ActionType.AI_ASK,
+        reply = await services.chat_interaction_service.answer(
+            user_id=event.get("user"), platform="slack", text=text
         )
-        await say(response, thread_ts=event.get("ts"))
+        await say(reply.text, thread_ts=event.get("ts"))
 
         try:
-            reaction_unicode = await services.ai_service.analyze_sentiment_and_react(
-                text
-            )
-            if reaction_unicode and reaction_unicode in EMOJI_MAP:
+            decision = await services.chat_interaction_service.decide_reaction(text)
+            if decision.emoji and decision.emoji in EMOJI_MAP:
                 await client.reactions_add(
-                    name=EMOJI_MAP[reaction_unicode],
+                    name=EMOJI_MAP[decision.emoji],
                     channel=event.get("channel"),
                     timestamp=event.get("ts"),
                 )
 
-                reaction_badges = await services.usage_service.log_usage(
-                    user_id=event.get("user"),
-                    platform="slack",
-                    action=ActionType.REACTION_RECEIVED,
+                reaction_badges = (
+                    await services.chat_interaction_service.record_reaction_received(
+                        user_id=event.get("user"), platform="slack"
+                    )
                 )
                 await notify_new_badges_slack(say, reaction_badges)
         except Exception as e:
@@ -578,30 +573,23 @@ def register_listeners(app: AsyncApp) -> None:
         is_mentioned = bot_user_id and f"<@{bot_user_id}>" in text
 
         if channel_type == "im" and "subtype" not in event:
-            response = await services.cunhao_agent.answer(text)
-            await services.usage_service.log_usage(
-                user_id=event.get("user"),
-                platform="slack",
-                action=ActionType.AI_ASK,
+            reply = await services.chat_interaction_service.answer(
+                user_id=event.get("user"), platform="slack", text=text
             )
-            await say(response)
+            await say(reply.text)
 
         if not is_mentioned:
             try:
-                reaction_unicode = (
-                    await services.ai_service.analyze_sentiment_and_react(text)
-                )
-                if reaction_unicode and reaction_unicode in EMOJI_MAP:
+                decision = await services.chat_interaction_service.decide_reaction(text)
+                if decision.emoji and decision.emoji in EMOJI_MAP:
                     await client.reactions_add(
-                        name=EMOJI_MAP[reaction_unicode],
+                        name=EMOJI_MAP[decision.emoji],
                         channel=event.get("channel"),
                         timestamp=event.get("ts"),
                     )
 
-                    reaction_badges = await services.usage_service.log_usage(
-                        user_id=event.get("user"),
-                        platform="slack",
-                        action=ActionType.REACTION_RECEIVED,
+                    reaction_badges = await services.chat_interaction_service.record_reaction_received(
+                        user_id=event.get("user"), platform="slack"
                     )
                     await notify_new_badges_slack(say, reaction_badges)
             except Exception as e:
