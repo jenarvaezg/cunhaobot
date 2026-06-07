@@ -22,9 +22,10 @@ class GeneratedPhrases(BaseModel):
 def get_phrase_generator_agent() -> Agent[None, GeneratedPhrases]:
     model = os.environ.get("GOOGLE_API_KEY")
     if not model or model == "dummy":
-        return Agent(TestModel(), output_type=GeneratedPhrases)
+        # pydantic-ai Agent overloads under-infer output_type
+        return Agent(TestModel(), output_type=GeneratedPhrases)  # ty: ignore[invalid-return-type]
 
-    return Agent(
+    return Agent(  # ty: ignore[invalid-return-type]
         "google-gla:gemini-2.5-flash",
         output_type=GeneratedPhrases,
         system_prompt=(
@@ -166,11 +167,13 @@ Set the scene in a typical Spanish bar with a wooden counter and beer tapas.
                 contents=prompt,
             )
 
-            if not response.candidates or not response.candidates[0].content.parts:
+            candidate = response.candidates[0] if response.candidates else None
+            content = candidate.content if candidate else None
+            if not content or not content.parts:
                 raise ValueError("No candidates or parts in AI response")
 
-            for part in response.candidates[0].content.parts:
-                if part.inline_data:
+            for part in content.parts:
+                if part.inline_data and part.inline_data.data:
                     return part.inline_data.data
                 # Fallback: check if it's in text (some versions might put base64 in text)
                 if part.text and len(part.text) > 1000:

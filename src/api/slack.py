@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Sequence
 from typing import Annotated, Any
 
 from litestar import Controller, Request, Response, get, post
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 async def to_bolt_request(request: Request) -> AsyncBoltRequest:
     body = await request.body()
-    headers = dict(request.headers)
+    headers: dict[str, str | Sequence[str]] = {k: v for k, v in request.headers.items()}
     if "cookie" not in headers and "Cookie" not in headers and request.cookies:
         # Reconstruct cookie header if Litestar consumed it
         headers["Cookie"] = "; ".join(f"{k}={v}" for k, v in request.cookies.items())
