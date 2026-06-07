@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import MagicMock, AsyncMock
 from telegram import ReactionTypeEmoji
 from tg.handlers.messages.text_message import handle_message
+from services.chat_interaction_service import AIReply, ReactionDecision
 
 
 @pytest.mark.asyncio
@@ -42,22 +43,24 @@ async def test_handle_message_mention_trigger(mock_container):
     mock_chat = MagicMock()
     mock_chat.is_premium = True
     mock_container["chat_repo"].load = AsyncMock(return_value=mock_chat)
-    mock_container["cunhao_agent"].answer.return_value = "AI Response"
-    mock_container["usage_service"].log_usage.return_value = []
-    mock_container["ai_service"].analyze_sentiment_and_react.return_value = "🍺"
+
+    cis = mock_container["chat_interaction_service"]
+    cis.answer.return_value = AIReply(text="AI Response", new_badges=[])
+    cis.decide_reaction.return_value = ReactionDecision(emoji="🍺")
+    cis.record_reaction_received.return_value = []
 
     await handle_message(update, context)
 
-    mock_container["cunhao_agent"].answer.assert_called_once()
+    # Mention strips the bot handle before asking the shared interaction module.
+    cis.answer.assert_awaited_once_with(user_id=123, platform="telegram", text="Hola")
     update.effective_message.reply_text.assert_called_once_with(
         "AI Response", do_quote=True
     )
-    mock_container["ai_service"].analyze_sentiment_and_react.assert_called_once_with(
-        "Hola @TestBot"
-    )
+    cis.decide_reaction.assert_awaited_once_with("Hola @TestBot")
     update.effective_message.set_reaction.assert_called_once_with(
         reaction=ReactionTypeEmoji("🍺")
     )
+    cis.record_reaction_received.assert_awaited_once()
 
 
 @pytest.mark.asyncio
@@ -90,18 +93,17 @@ async def test_handle_message_no_trigger_only_reaction(mock_container):
     mock_chat = MagicMock()
     mock_chat.is_premium = True
     mock_container["chat_repo"].load = AsyncMock(return_value=mock_chat)
-    mock_container["ai_service"].analyze_sentiment_and_react.return_value = "🇪🇸"
+
+    cis = mock_container["chat_interaction_service"]
+    cis.decide_reaction.return_value = ReactionDecision(emoji="🇪🇸")
+    cis.record_reaction_received.return_value = []
 
     await handle_message(update, context)
 
-    # Should NOT answer
-    mock_container["cunhao_agent"].answer.assert_not_called()
+    # No direct interaction: no AI answer, but a smart reaction still applies.
+    cis.answer.assert_not_called()
     update.effective_message.reply_text.assert_not_called()
-
-    # Should react
-    mock_container["ai_service"].analyze_sentiment_and_react.assert_called_once_with(
-        "Solo un mensaje en el grupo"
-    )
+    cis.decide_reaction.assert_awaited_once_with("Solo un mensaje en el grupo")
     update.effective_message.set_reaction.assert_called_once_with(
         reaction=ReactionTypeEmoji("🇪🇸")
     )

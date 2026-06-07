@@ -1,11 +1,26 @@
-import logging
 import hashlib
+import hmac
+import logging
+import time
 from datetime import datetime, timezone, timedelta
+from pydantic import BaseModel
 from infrastructure.protocols import UserRepository
+from models.user import User
 from services.badge_service import BadgeService
 from core.config import config
 
 logger = logging.getLogger(__name__)
+
+
+class InvalidGameSessionError(Exception):
+    """Raised when a game score is submitted outside a valid game session."""
+
+
+class GamePlayerProfile(BaseModel):
+    user_id: str | int
+    name: str = "Usuario Web"
+    username: str | None = None
+    platform: str = "telegram"
 
 
 class GameService:
@@ -13,17 +28,98 @@ class GameService:
         self.user_repo = user_repo
         self.badge_service = badge_service
 
-    def verify_score_hash(self, user_id: str, score: int, hash_val: str) -> bool:
-        """Verifies if the score has been tampered with."""
-        if hash_val.startswith("unsafe-"):
-            # Fallback for non-HTTPS environments (dev/tests)
-            return True
-
-        expected_hash = hashlib.sha256(
-            f"{user_id}{score}{config.session_secret}".encode()
+    def generate_game_token(self, user_id: str | int) -> str:
+        timestamp = int(time.time())
+        payload = f"{user_id}:{timestamp}"
+        signature = hmac.new(
+            config.session_secret.encode(), payload.encode(), hashlib.sha256
         ).hexdigest()
+        return f"{signature}:{timestamp}"
 
-        return hash_val == expected_hash
+    def verify_game_token(self, user_id: str | int, token: str) -> bool:
+        try:
+            signature, timestamp_str = token.split(":")
+            timestamp = int(timestamp_str)
+        except (ValueError, AttributeError):
+            return False
+
+        if time.time() - timestamp > 7200:
+            return False
+
+        payload = f"{user_id}:{timestamp}"
+        expected_signature = hmac.new(
+            config.session_secret.encode(), payload.encode(), hashlib.sha256
+        ).hexdigest()
+        return hmac.compare_digest(signature, expected_signature)
+
+    async def submit_score(
+        self,
+        user_id: str | int,
+        score: int,
+        token: str,
+        inline_message_id: str | None = None,
+        chat_id: str | int | None = None,
+        message_id: str | int | None = None,
+        player_profile: GamePlayerProfile | None = None,
+    ) -> bool:
+        if not self.verify_game_token(user_id, token):
+            raise InvalidGameSessionError
+
+        success = await self.set_score(
+            user_id=str(user_id),
+            score=score,
+            inline_message_id=inline_message_id,
+            chat_id=chat_id,
+            message_id=message_id,
+        )
+        if success or user_id == "guest":
+            return success
+
+        if player_profile is None or str(player_profile.user_id) != str(user_id):
+            return False
+
+        await self._ensure_player_profile(player_profile)
+        return await self.set_score(
+            user_id=str(user_id),
+            score=score,
+            inline_message_id=inline_message_id,
+            chat_id=chat_id,
+            message_id=message_id,
+        )
+
+    async def _ensure_player_profile(self, profile: GamePlayerProfile) -> None:
+        uid_to_load = profile.user_id
+        if isinstance(profile.user_id, str) and profile.user_id.lstrip("-").isdigit():
+            uid_to_load = int(profile.user_id)
+
+        user = await self.user_repo.load(uid_to_load)
+        if not user and isinstance(uid_to_load, int):
+            user = await self.user_repo.load(str(uid_to_load))
+
+        if not user:
+            await self.user_repo.save(
+                User(
+                    id=profile.user_id,
+                    name=profile.name,
+                    username=profile.username,
+                    platform=profile.platform,
+                )
+            )
+            return
+
+        changed = False
+        if user.name != profile.name:
+            user.name = profile.name
+            changed = True
+        if user.username != profile.username:
+            user.username = profile.username
+            changed = True
+        if user.platform != profile.platform and str(user.id) == str(profile.user_id):
+            user.platform = profile.platform
+            changed = True
+
+        if changed:
+            await self.user_repo.save(user)
 
     async def set_score(
         self,

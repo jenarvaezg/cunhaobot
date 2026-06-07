@@ -1,12 +1,10 @@
 import logging
 import secrets
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any
 from telegram import Update
 from models.user import User
 from models.chat import Chat
-from models.phrase import Phrase, LongPhrase
-from models.proposal import Proposal, LongProposal
 from models.link_request import LinkRequest
 
 if TYPE_CHECKING:
@@ -21,6 +19,11 @@ if TYPE_CHECKING:
     )
 
 logger = logging.getLogger(__name__)
+
+# Upper bound on proposals reassigned per kind during account linking. A Perfil
+# authoring more than this is implausible; if it ever happens we log rather than
+# silently drop the overflow.
+_AUTHORSHIP_MIGRATION_LIMIT = 1000
 
 
 class UserService:
@@ -358,32 +361,7 @@ class UserService:
 
         await self.save_user(target_user)
 
-        # Migrate Content Ownership
-        phrases = await self.phrase_repo.get_phrases(user_id=str(source_user.id))
-        for p in phrases:
-            p.user_id = target_user.id
-            await self.phrase_repo.save(cast(Phrase, p))
-
-        long_phrases = await self.long_phrase_repo.get_phrases(
-            user_id=str(source_user.id)
-        )
-        for lp in long_phrases:
-            lp.user_id = target_user.id
-            await self.long_phrase_repo.save(cast(LongPhrase, lp))
-
-        proposals = await self.proposal_repo.get_proposals(
-            user_id=str(source_user.id), limit=1000
-        )
-        for prop in proposals:
-            prop.user_id = target_user.id
-            await self.proposal_repo.save(cast(Proposal, prop))
-
-        long_proposals = await self.long_proposal_repo.get_proposals(
-            user_id=str(source_user.id), limit=1000
-        )
-        for lprop in long_proposals:
-            lprop.user_id = target_user.id
-            await self.long_proposal_repo.save(cast(LongProposal, lprop))
+        await self._migrate_authorship(source_user.id, target_user.id)
 
         # Instead of deleting, we make source_user an alias of target_user
         source_user.linked_to = target_user.id
@@ -395,3 +373,49 @@ class UserService:
         await self.link_request_repo.delete(token)
 
         return True
+
+    async def _migrate_authorship(
+        self, source_id: str | int, target_id: str | int
+    ) -> None:
+        """Reassign every authored thing from an absorbed Cuenta de plataforma
+        to the canonical Perfil.
+
+        This is the single seam for authorship migration: supporting a new
+        authored type (a future Pieza cuñadil kind or Propuesta variant) means
+        adding one entry below, not another loop in ``complete_link``.
+        """
+        source_key = str(source_id)
+        proposals = await self.proposal_repo.get_proposals(
+            user_id=source_key, limit=_AUTHORSHIP_MIGRATION_LIMIT
+        )
+        long_proposals = await self.long_proposal_repo.get_proposals(
+            user_id=source_key, limit=_AUTHORSHIP_MIGRATION_LIMIT
+        )
+        for kind, items in (
+            ("proposals", proposals),
+            ("long_proposals", long_proposals),
+        ):
+            if len(items) >= _AUTHORSHIP_MIGRATION_LIMIT:
+                logger.warning(
+                    "Authorship migration hit the %d-item cap for %s authored by %s; "
+                    "older items were not reassigned to %s.",
+                    _AUTHORSHIP_MIGRATION_LIMIT,
+                    kind,
+                    source_key,
+                    target_id,
+                )
+
+        authored: list[tuple[Any, list[Any]]] = [
+            (self.phrase_repo, await self.phrase_repo.get_phrases(user_id=source_key)),
+            (
+                self.long_phrase_repo,
+                await self.long_phrase_repo.get_phrases(user_id=source_key),
+            ),
+            (self.proposal_repo, proposals),
+            (self.long_proposal_repo, long_proposals),
+        ]
+
+        for repo, items in authored:
+            for item in items:
+                item.user_id = target_id
+                await repo.save(item)

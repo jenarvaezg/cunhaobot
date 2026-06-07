@@ -13,8 +13,13 @@ class TestProposalService:
         self.long_repo = AsyncMock()
         self.user_repo = AsyncMock()
         self.user_service = AsyncMock()
+        self.phrase_service = AsyncMock()
         return ProposalService(
-            self.repo, self.long_repo, self.user_repo, self.user_service
+            self.repo,
+            self.long_repo,
+            self.user_repo,
+            self.user_service,
+            self.phrase_service,
         )
 
     def test_create_from_update_validation(self, service):
@@ -222,3 +227,122 @@ class TestProposalService:
                 res = await service.reject("LongProposal", "1")
                 assert res is True
                 mock_dismiss.assert_called_once_with(p, mock_bot)
+
+
+class TestProposalIntake:
+    """Pieza cuñadil intake: a single service entry point owns the decision of
+    whether a Propuesta is empty, a duplicate (approved / active / rejected) or
+    accepted. The Apelativo vs Frase cuñadil split is hidden behind the proposal
+    type, so callers do not branch on parallel repositories."""
+
+    @pytest.fixture
+    def service(self):
+        self.repo = AsyncMock()
+        self.long_repo = AsyncMock()
+        self.user_repo = AsyncMock()
+        self.user_service = AsyncMock()
+        self.phrase_service = AsyncMock()
+        return ProposalService(
+            self.repo,
+            self.long_repo,
+            self.user_repo,
+            self.user_service,
+            self.phrase_service,
+        )
+
+    @pytest.mark.asyncio
+    async def test_submit_empty_proposal(self, service):
+        from services.proposal_service import IntakeStatus
+
+        proposal = Proposal(id="1", text="", user_id=10)
+        result = await service.submit(proposal)
+
+        assert result.status is IntakeStatus.EMPTY
+        self.repo.save.assert_not_called()
+        self.long_repo.save.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_submit_apelativo_accepted(self, service):
+        from models.phrase import Phrase
+        from services.proposal_service import IntakeStatus
+
+        # No similar approved phrase, no similar proposal.
+        self.phrase_service.find_most_similar.return_value = (Phrase(text="other"), 10)
+        service.find_most_similar_proposal = AsyncMock(return_value=(None, 0))
+
+        proposal = Proposal(id="1", text="cuñado", user_id=10)
+        result = await service.submit(proposal)
+
+        assert result.status is IntakeStatus.ACCEPTED
+        assert result.proposal is proposal
+        # Apelativo is saved through the short repo, not the long repo.
+        self.repo.save.assert_called_once_with(proposal)
+        self.long_repo.save.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_submit_frase_accepted_uses_long_repo(self, service):
+        from models.phrase import LongPhrase
+        from services.proposal_service import IntakeStatus
+
+        self.phrase_service.find_most_similar.return_value = (
+            LongPhrase(text="other"),
+            10,
+        )
+        service.find_most_similar_proposal = AsyncMock(return_value=(None, 0))
+
+        proposal = LongProposal(id="1", text="una frase larga cuñadil", user_id=10)
+        result = await service.submit(proposal)
+
+        assert result.status is IntakeStatus.ACCEPTED
+        # The Frase / Apelativo split is decided internally from the proposal type.
+        self.long_repo.save.assert_called_once_with(proposal)
+        self.repo.save.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_submit_duplicate_approved(self, service):
+        from models.phrase import Phrase
+        from services.proposal_service import IntakeStatus
+
+        self.phrase_service.find_most_similar.return_value = (
+            Phrase(text="cuñado"),
+            100,
+        )
+        service.find_most_similar_proposal = AsyncMock(return_value=(None, 0))
+
+        proposal = Proposal(id="1", text="cuñado", user_id=10)
+        result = await service.submit(proposal)
+
+        assert result.status is IntakeStatus.DUPLICATE_APPROVED
+        assert result.similar_text == "cuñado"
+        assert result.similarity == 100
+        self.repo.save.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_submit_duplicate_active_proposal(self, service):
+        from models.phrase import Phrase
+        from services.proposal_service import IntakeStatus
+
+        self.phrase_service.find_most_similar.return_value = (Phrase(text="x"), 10)
+        existing = Proposal(id="9", text="cuñado", voting_ended=False)
+        service.find_most_similar_proposal = AsyncMock(return_value=(existing, 95))
+
+        proposal = Proposal(id="1", text="cuñado", user_id=10)
+        result = await service.submit(proposal)
+
+        assert result.status is IntakeStatus.DUPLICATE_ACTIVE
+        self.repo.save.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_submit_duplicate_rejected_proposal(self, service):
+        from models.phrase import Phrase
+        from services.proposal_service import IntakeStatus
+
+        self.phrase_service.find_most_similar.return_value = (Phrase(text="x"), 10)
+        existing = Proposal(id="9", text="cuñado", voting_ended=True)
+        service.find_most_similar_proposal = AsyncMock(return_value=(existing, 95))
+
+        proposal = Proposal(id="1", text="cuñado", user_id=10)
+        result = await service.submit(proposal)
+
+        assert result.status is IntakeStatus.DUPLICATE_REJECTED
+        self.repo.save.assert_not_called()

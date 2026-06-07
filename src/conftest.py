@@ -72,6 +72,13 @@ def mock_container():
         patch(
             "core.container.Container.cunhao_agent", new_callable=PropertyMock
         ) as mock_cunhao_agent_prop,
+        patch(
+            "core.container.Container.profile_service", new_callable=PropertyMock
+        ) as mock_profile_service_prop,
+        patch(
+            "core.container.Container.chat_interaction_service",
+            new_callable=PropertyMock,
+        ) as mock_chat_interaction_service_prop,
         patch.object(services, "user_repo") as mock_user_repo,
         patch.object(services, "chat_repo") as mock_chat_repo,
         patch.object(services, "phrase_repo") as mock_phrase_repo,
@@ -106,6 +113,12 @@ def mock_container():
         mock_cunhao_agent = AsyncMock()
         mock_cunhao_agent_prop.return_value = mock_cunhao_agent
 
+        mock_profile_service = AsyncMock()
+        mock_profile_service_prop.return_value = mock_profile_service
+
+        mock_chat_interaction_service = AsyncMock()
+        mock_chat_interaction_service_prop.return_value = mock_chat_interaction_service
+
         yield {
             "user_service": mock_user_service,
             "usage_service": mock_usage_service,
@@ -115,6 +128,8 @@ def mock_container():
             "ai_service": mock_ai_service,
             "tts_service": mock_tts_service,
             "cunhao_agent": mock_cunhao_agent,
+            "profile_service": mock_profile_service,
+            "chat_interaction_service": mock_chat_interaction_service,
             "user_repo": mock_user_repo,
             "chat_repo": mock_chat_repo,
             "phrase_repo": mock_phrase_repo,

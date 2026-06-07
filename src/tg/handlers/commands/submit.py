@@ -5,19 +5,18 @@ from models.phrase import LongPhrase, Phrase
 from models.proposal import LongProposal, Proposal
 from core.container import services
 from models.usage import ActionType
+from services.proposal_service import IntakeStatus
 from tg.decorators import log_update
 from tg.markup.keyboards import build_vote_keyboard
 from tg.utils.badges import notify_new_badges
 from core.config import config
-
-SIMILARITY_DISCARD_THRESHOLD = 90
 
 
 async def _notify_proposal_to_curators(
     bot: Bot,
     proposal: Proposal | LongProposal,
     submitted_by: str,
-    most_similar: Phrase | LongPhrase,
+    most_similar_text: str,
     similarity_ratio: int,
 ) -> None:
     curators_reply_markup = InlineKeyboardMarkup(
@@ -34,7 +33,7 @@ async def _notify_proposal_to_curators(
     curators_message_text = (
         f"{submitted_by} dice que deberiamos añadir la siguiente {name} a la lista:"
         f"\n'*{proposal.text}*'"
-        f"\n\nLa mas parecida es: '*{most_similar.text}*' ({similarity_ratio}%)."
+        f"\n\nLa mas parecida es: '*{most_similar_text}*' ({similarity_ratio}%)."
     )
 
     await bot.send_message(
@@ -61,10 +60,14 @@ async def submit_handling(
         update, is_long=is_long, text=text
     )
 
-    # Determinar modelos y repositorios según el tipo
+    # Determinar nombre del tipo de frase para los mensajes
     name = LongPhrase.display_name if is_long else Phrase.display_name
 
-    if not proposal.text:
+    # The Pieza cuñadil intake module owns the decision; the handler only
+    # translates the outcome into a Telegram response.
+    result = await services.proposal_service.submit(proposal)
+
+    if result.status is IntakeStatus.EMPTY:
         random_phrase = (await services.phrase_service.get_random()).text
         return await update.effective_message.reply_text(
             f"¿Qué *{name}* quieres proponer, {random_phrase}?\n"
@@ -73,54 +76,31 @@ async def submit_handling(
             parse_mode=constants.ParseMode.MARKDOWN,
         )
 
-    # Fuzzy search phrases
-    (
-        most_similar_phrase,
-        phrase_similarity,
-    ) = await services.phrase_service.find_most_similar(proposal.text, long=is_long)
-
-    if phrase_similarity > SIMILARITY_DISCARD_THRESHOLD:
+    if result.status is IntakeStatus.DUPLICATE_APPROVED:
         p_random = (await services.phrase_service.get_random()).text
         msg = f"Esa ya la tengo aprobada y en la lista, {p_random}."
-        if phrase_similarity != 100:
-            msg += f"\nSe parece demasiado a: '*{most_similar_phrase.text}*'"
-
+        if result.similarity != 100:
+            msg += f"\nSe parece demasiado a: '*{result.similar_text}*'"
         return await update.effective_message.reply_text(
             msg, parse_mode=constants.ParseMode.MARKDOWN
         )
 
-    # Fuzzy search proposals
-    (
-        most_similar_proposal,
-        proposal_similarity,
-    ) = await services.proposal_service.find_most_similar_proposal(
-        proposal.text, is_long=is_long
-    )
-
-    if proposal_similarity > SIMILARITY_DISCARD_THRESHOLD and most_similar_proposal:
+    if result.status is IntakeStatus.DUPLICATE_REJECTED:
         p_random = (await services.phrase_service.get_random()).text
-        if most_similar_proposal.voting_ended:
-            # Proposal existed and voting ended. Since phrase check passed (didn't exist), it must be rejected.
-            return await update.effective_message.reply_text(
-                f"Esa propuesta ya pasó por el consejo y fue rechazada, lo siento {p_random}.",
-                parse_mode=constants.ParseMode.MARKDOWN,
-            )
-        else:
-            # Proposal exists and voting is active
-            return await update.effective_message.reply_text(
-                f"Esa frase ya ha sido propuesta y está siendo votada ahora mismo, ten paciencia {p_random}.",
-                parse_mode=constants.ParseMode.MARKDOWN,
-            )
+        return await update.effective_message.reply_text(
+            f"Esa propuesta ya pasó por el consejo y fue rechazada, lo siento {p_random}.",
+            parse_mode=constants.ParseMode.MARKDOWN,
+        )
 
-    if is_long:
-        if isinstance(proposal, LongProposal):
-            await services.long_proposal_repo.save(proposal)
-    else:
-        if isinstance(proposal, Proposal):
-            await services.proposal_repo.save(proposal)
+    if result.status is IntakeStatus.DUPLICATE_ACTIVE:
+        p_random = (await services.phrase_service.get_random()).text
+        return await update.effective_message.reply_text(
+            f"Esa frase ya ha sido propuesta y está siendo votada ahora mismo, ten paciencia {p_random}.",
+            parse_mode=constants.ParseMode.MARKDOWN,
+        )
 
     await _notify_proposal_to_curators(
-        bot, proposal, submitted_by, most_similar_phrase, phrase_similarity
+        bot, proposal, submitted_by, result.similar_text, result.similarity
     )
 
     # Log usage and check for badges

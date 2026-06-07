@@ -1,7 +1,39 @@
 import pytest
 from unittest.mock import MagicMock, AsyncMock, patch
 from datetime import datetime, timezone, timedelta
-from services.game_service import GameService
+from services.game_service import GamePlayerProfile, GameService
+from models.user import User
+
+
+class InMemoryUserRepository:
+    def __init__(self) -> None:
+        self.users: dict[str | int, User] = {}
+        self.saved: list[User] = []
+
+    async def save(self, entity: User) -> None:
+        self.users[entity.id] = entity
+        self.saved.append(entity)
+
+    async def delete(self, entity_id: str | int) -> None:
+        self.users.pop(entity_id, None)
+
+    async def load(self, entity_id: str | int) -> User | None:
+        return self.users.get(entity_id)
+
+    async def load_all(self, ignore_gdpr: bool = False) -> list[User]:
+        return list(self.users.values())
+
+    def clear_cache(self) -> None:
+        return None
+
+    async def load_raw(self, entity_id: str | int) -> User | None:
+        return await self.load(entity_id)
+
+    async def get_by_username(self, username: str) -> User | None:
+        return next(
+            (user for user in self.users.values() if user.username == username),
+            None,
+        )
 
 
 @pytest.mark.asyncio
@@ -68,3 +100,32 @@ async def test_process_score_streak():
     with patch("tg.get_initialized_tg_application", new_callable=AsyncMock):
         await service.set_score(user_id, 100)
         assert mock_user.game_streak == 6
+
+
+@pytest.mark.asyncio
+async def test_submit_score_creates_matching_web_profile_before_saving_score():
+    user_repo = InMemoryUserRepository()
+    badge_service = AsyncMock()
+    badge_service.check_badges.return_value = []
+    service = GameService(user_repo, badge_service)
+    token = service.generate_game_token("123")
+
+    with patch("tg.get_initialized_tg_application", new_callable=AsyncMock):
+        result = await service.submit_score(
+            user_id="123",
+            score=450,
+            token=token,
+            player_profile=GamePlayerProfile(
+                user_id="123",
+                name="Web Player",
+                username="web_player",
+            ),
+        )
+
+    assert result is True
+    stored_user = user_repo.users["123"]
+    assert stored_user.name == "Web Player"
+    assert stored_user.username == "web_player"
+    assert stored_user.points == 4
+    assert stored_user.game_stats == 1
+    assert stored_user.game_high_score == 450

@@ -1,6 +1,8 @@
 import asyncio
 import logging
+from dataclasses import dataclass
 from datetime import datetime, timedelta
+from enum import Enum
 from typing import TYPE_CHECKING
 from telegram import Update
 from telegram.error import BadRequest, TelegramError
@@ -15,8 +17,34 @@ from core.config import config
 
 if TYPE_CHECKING:
     from services.user_service import UserService
+    from services.phrase_service import PhraseService
 
 logger = logging.getLogger(__name__)
+
+# A Propuesta whose similarity to existing content is above this threshold is
+# treated as a duplicate rather than accepted into the Consejo voting flow.
+SIMILARITY_DISCARD_THRESHOLD = 90
+
+
+class IntakeStatus(Enum):
+    """Outcome of submitting a Propuesta for Consejo evaluation."""
+
+    EMPTY = "empty"
+    DUPLICATE_APPROVED = "duplicate_approved"
+    DUPLICATE_ACTIVE = "duplicate_active"
+    DUPLICATE_REJECTED = "duplicate_rejected"
+    ACCEPTED = "accepted"
+
+
+@dataclass(frozen=True)
+class IntakeResult:
+    """Result of Pieza cuñadil intake, carrying the decision plus any context a
+    caller needs to format a platform response (no platform objects involved)."""
+
+    status: IntakeStatus
+    proposal: Proposal | None = None
+    similar_text: str = ""
+    similarity: int = 0
 
 
 class ProposalService:
@@ -26,13 +54,72 @@ class ProposalService:
         long_repo: LongProposalRepository,
         user_repo: UserRepository,
         user_service: UserService,
+        phrase_service: PhraseService,
     ):
         self.repo = repo
         self.long_repo = long_repo
         self.user_repo = user_repo
         self.user_service = user_service
+        self.phrase_service = phrase_service
         self._curators_cache: dict[str, str] = {}
         self._last_update: datetime | None = None
+
+    async def submit(self, proposal: Proposal) -> IntakeResult:
+        """Run Pieza cuñadil intake for a Propuesta and decide its fate.
+
+        Owns the whole decision: empty text, duplicate against approved Pieza
+        cuñadil, duplicate against an active Propuesta, duplicate against a
+        rejected Propuesta, or acceptance into the Consejo voting flow. The
+        Apelativo vs Frase cuñadil split is derived from the proposal type so
+        callers never pick a repository.
+        """
+        is_long = isinstance(proposal, LongProposal)
+
+        if not proposal.text:
+            return IntakeResult(IntakeStatus.EMPTY)
+
+        (
+            most_similar_phrase,
+            phrase_similarity,
+        ) = await self.phrase_service.find_most_similar(proposal.text, long=is_long)
+        if phrase_similarity > SIMILARITY_DISCARD_THRESHOLD:
+            return IntakeResult(
+                IntakeStatus.DUPLICATE_APPROVED,
+                similar_text=most_similar_phrase.text,
+                similarity=phrase_similarity,
+            )
+
+        (
+            most_similar_proposal,
+            proposal_similarity,
+        ) = await self.find_most_similar_proposal(proposal.text, is_long=is_long)
+        if (
+            proposal_similarity > SIMILARITY_DISCARD_THRESHOLD
+            and most_similar_proposal is not None
+        ):
+            status = (
+                IntakeStatus.DUPLICATE_REJECTED
+                if most_similar_proposal.voting_ended
+                else IntakeStatus.DUPLICATE_ACTIVE
+            )
+            return IntakeResult(
+                status,
+                proposal=most_similar_proposal,
+                similar_text=most_similar_proposal.text,
+                similarity=proposal_similarity,
+            )
+
+        if isinstance(proposal, LongProposal):
+            await self.long_repo.save(proposal)
+        else:
+            await self.repo.save(proposal)
+
+        return IntakeResult(
+            IntakeStatus.ACCEPTED,
+            proposal=proposal,
+            similar_text=most_similar_phrase.text,
+            similarity=phrase_similarity,
+        )
 
     def create_from_update(
         self, update: Update, is_long: bool = False, text: str | None = None

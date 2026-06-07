@@ -42,20 +42,14 @@ async def handle_profile(update: Update, context: CallbackContext) -> None:
         )
         await notify_new_badges(update, context, new_badges)
 
-        stats = await services.usage_service.get_user_stats(user_id, platform)
-        all_badges_progress = await services.badge_service.get_all_badges_progress(
-            user_id, platform
-        )
+        # Same coherent Perfil summary the web profile uses.
+        summary = await services.profile_service.get_profile_summary(user)
 
-        earned_list: list[str] = []
-
-        for p in all_badges_progress:
-            badge = p.badge
-            if p.is_earned:
-                earned_list.append(
-                    f"{badge.icon} <b>{html.escape(badge.name)}</b>\n"
-                    f"<i>{html.escape(badge.description)}</i>"
-                )
+        earned_list: list[str] = [
+            f"{badge.icon} <b>{html.escape(badge.name)}</b>\n"
+            f"<i>{html.escape(badge.description)}</i>"
+            for badge in summary.earned_badges
+        ]
 
         badges_text = ""
         if earned_list:
@@ -69,8 +63,8 @@ async def handle_profile(update: Update, context: CallbackContext) -> None:
             f"🔗 <a href='{profile_url}'>Ver perfil en la web</a>\n\n"
             f"👤 <b>Perfil de {user_name}</b>\n"
             f"━━━━━━━━━━━━━━━\n"
-            f"🏆 <b>Puntos:</b> {user.points}\n"
-            f"📊 <b>Usos totales:</b> {stats['total_usages']}\n"
+            f"🏆 <b>Puntos:</b> {summary.points}\n"
+            f"📊 <b>Usos totales:</b> {summary.stats['total_usages']}\n"
             f"🎖️ <b>Logros conseguidos:</b> {badges_text}"
         )
 

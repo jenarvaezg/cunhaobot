@@ -58,18 +58,17 @@ async def test_handle_profile_success(mock_container):
         mock_container["user_service"].get_user.return_value = user
 
         mock_container["usage_service"].log_usage.return_value = []
-        mock_container["usage_service"].get_user_stats.return_value = {
-            "total_usages": 10
-        }
 
-        badge_progress = MagicMock()
-        badge_progress.is_earned = True
-        badge_progress.badge.name = "Madrugador"
-        badge_progress.badge.icon = "🌅"
-        badge_progress.badge.description = "Test"
-        mock_container["badge_service"].get_all_badges_progress.return_value = [
-            badge_progress
-        ]
+        # The handler consumes one coherent Perfil summary from ProfileService.
+        badge = MagicMock()
+        badge.name = "Madrugador"
+        badge.icon = "🌅"
+        badge.description = "Test"
+        summary = MagicMock()
+        summary.points = 500
+        summary.stats = {"total_usages": 10}
+        summary.earned_badges = [badge]
+        mock_container["profile_service"].get_profile_summary.return_value = summary
 
         mock_config.base_url = "http://test.com"
 

@@ -26,6 +26,9 @@ from services import (
     AIService,
     TTSService,
     CunhaoAgent,
+    ProfileService,
+    GameService,
+    ChatInteractionService,
 )
 
 if TYPE_CHECKING:
@@ -39,6 +42,7 @@ if TYPE_CHECKING:
         UsageRepository,
         GiftRepository,
         LinkRequestRepository,
+        PosterRequestRepository,
     )
 
 
@@ -59,7 +63,7 @@ class Container:
         self.usage_repo: UsageRepository = usage_repository
         self.gift_repo: GiftRepository = gift_repository
         self.link_request_repo: LinkRequestRepository = link_request_repository
-        self.poster_request_repo = poster_request_repository
+        self.poster_request_repo: PosterRequestRepository = poster_request_repository
 
         # Services (Lazily initialized singletons)
         self._badge_service: BadgeService | None = None
@@ -71,6 +75,9 @@ class Container:
         self._tts_service: TTSService | None = None
         self._cunhao_agent: CunhaoAgent | None = None
         self._storage_service: StorageService | None = None
+        self._profile_service: ProfileService | None = None
+        self._game_service: GameService | None = None
+        self._chat_interaction_service: ChatInteractionService | None = None
 
     @property
     def badge_service(self) -> BadgeService:
@@ -117,6 +124,7 @@ class Container:
                 long_repo=self.long_proposal_repo,
                 user_repo=self.user_repo,
                 user_service=self.user_service,
+                phrase_service=self.phrase_service,
             )
         return self._proposal_service
 
@@ -156,6 +164,38 @@ class Container:
         if not self._storage_service:
             self._storage_service = StorageService(bucket_name=config.bucket_name)
         return self._storage_service
+
+    @property
+    def game_service(self) -> GameService:
+        if not self._game_service:
+            self._game_service = GameService(
+                user_repo=self.user_repo,
+                badge_service=self.badge_service,
+            )
+        return self._game_service
+
+    @property
+    def chat_interaction_service(self) -> ChatInteractionService:
+        if not self._chat_interaction_service:
+            self._chat_interaction_service = ChatInteractionService(
+                cunhao_agent=self.cunhao_agent,
+                ai_service=self.ai_service,
+                usage_service=self.usage_service,
+            )
+        return self._chat_interaction_service
+
+    @property
+    def profile_service(self) -> ProfileService:
+        if not self._profile_service:
+            self._profile_service = ProfileService(
+                phrase_repo=self.phrase_repo,
+                long_phrase_repo=self.long_phrase_repo,
+                gift_repo=self.gift_repo,
+                poster_request_repo=self.poster_request_repo,
+                badge_service=self.badge_service,
+                usage_service=self.usage_service,
+            )
+        return self._profile_service
 
 
 # Global container instance

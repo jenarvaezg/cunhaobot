@@ -1,5 +1,4 @@
 import logging
-import asyncio
 import zlib
 from typing import Any, Annotated
 from litestar import Controller, Request, get, post
@@ -14,8 +13,6 @@ from infrastructure.protocols import (
     ProposalRepository,
     LongProposalRepository,
     UserRepository,
-    GiftRepository,
-    PosterRequestRepository,
 )
 from services import (
     PhraseService,
@@ -23,7 +20,8 @@ from services import (
     AIService,
     TTSService,
     UsageService,
-    BadgeService,
+    GameService,
+    ProfileService,
 )
 from core.config import config
 from utils.ui import apelativo
@@ -145,12 +143,7 @@ class WebController(Controller):
         request: Request,
         user_id: str,
         user_repo: Annotated[UserRepository, Dependency()],
-        phrase_repo: Annotated[PhraseRepository, Dependency()],
-        long_phrase_repo: Annotated[LongPhraseRepository, Dependency()],
-        gift_repo: Annotated[GiftRepository, Dependency()],
-        badge_service: Annotated[BadgeService, Dependency()],
-        usage_service: Annotated[UsageService, Dependency()],
-        poster_request_repo: Annotated[PosterRequestRepository, Dependency()],
+        profile_service: Annotated[ProfileService, Dependency()],
     ) -> Template | Response:
         from models.gift import GIFT_EMOJIS, GIFT_NAMES
 
@@ -174,46 +167,8 @@ class WebController(Controller):
                 headers={"Location": f"/user/{profile_user.id}/profile"},
             )
 
-        # Parallelize data fetching
-        stats_task = usage_service.get_user_stats(profile_user.id)
-        badges_task = badge_service.get_all_badges_progress(
-            profile_user.id, profile_user.platform, user=profile_user
-        )
-        phrases_task = phrase_repo.get_phrases(user_id=str(profile_user.id))
-        long_phrases_task = long_phrase_repo.get_phrases(user_id=str(profile_user.id))
-        posters_task = poster_request_repo.get_completed_by_user(profile_user.id)
-
-        try:
-            gifts_task = gift_repo.get_gifts_for_user(int(profile_user.id))
-        except ValueError:
-            # Handle non-numeric IDs (e.g. Slack)
-            async def _empty_gifts():
-                return []
-
-            gifts_task = _empty_gifts()
-
-        (
-            stats,
-            badges_progress,
-            user_phrases,
-            user_long_phrases,
-            user_posters,
-            user_gifts,
-        ) = await asyncio.gather(
-            stats_task,
-            badges_task,
-            phrases_task,
-            long_phrases_task,
-            posters_task,
-            gifts_task,
-        )
-
-        all_user_phrases = sorted(
-            user_phrases + user_long_phrases, key=lambda x: x.usages, reverse=True
-        )
-
-        # Calculate Level (simple formula)
-        level = 1 + int(profile_user.points / 100)
+        # One coherent Perfil summary, shared with the bot profile views.
+        summary = await profile_service.get_profile_summary(profile_user)
 
         # Mock fun stats for now (could be improved with more complex queries)
         fun_stats = {}
@@ -224,15 +179,15 @@ class WebController(Controller):
                 "user": request.session.get("user"),
                 "owner_id": config.owner_id,
                 "profile_user": profile_user,
-                "stats": stats,
-                "badges_progress": badges_progress,
-                "user_phrases": all_user_phrases,
-                "user_posters": user_posters,
-                "user_gifts": user_gifts,
+                "stats": summary.stats,
+                "badges_progress": summary.badges_progress,
+                "user_phrases": summary.pieces,
+                "user_posters": summary.posters,
+                "user_gifts": summary.gifts,
                 "gift_emojis": GIFT_EMOJIS,
                 "gift_names": GIFT_NAMES,
-                "phrases_count": len(all_user_phrases),
-                "level": level,
+                "phrases_count": summary.pieces_count,
+                "level": summary.level,
                 "fun_stats": fun_stats,
                 "request": request,
             },
@@ -612,6 +567,7 @@ class WebController(Controller):
         tts_service: Annotated[TTSService, Dependency()],
         phrase_service: Annotated[PhraseService, Dependency()],
         user_service: Annotated[UserService, Dependency()],
+        game_service: Annotated[GameService, Dependency()],
     ) -> Template:
         """Launches the game from the web interface."""
         import datetime
@@ -667,6 +623,7 @@ class WebController(Controller):
                 "user_id": user_id,
                 "inline_message_id": None,
                 "game_short_name": "palillo_cunhao",
+                "game_token": game_service.generate_game_token(user_id),
                 "secret": config.session_secret,
                 "is_web": True,
                 "greeting_audio_url": greeting_audio_url,
