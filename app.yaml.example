@@ -16,13 +16,6 @@ env_variables:
   TWITTER_ACCESS_TOKEN: "$TWITTER_ACCESS_TOKEN"
   TWITTER_ACCESS_SECRET: "$TWITTER_ACCESS_SECRET"
   GEMINI_API_KEY: "$GEMINI_API_KEY"
-liveness_check:
-  path: "/ping"
-  check_interval_sec: 30
-  timeout_sec: 4
-  failure_threshold: 2
-  success_threshold: 2
-
 automatic_scaling:
   max_instances: 1
   min_instances: 0
