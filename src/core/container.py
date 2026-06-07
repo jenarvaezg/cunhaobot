@@ -117,6 +117,7 @@ class Container:
                 long_repo=self.long_proposal_repo,
                 user_repo=self.user_repo,
                 user_service=self.user_service,
+                phrase_service=self.phrase_service,
             )
         return self._proposal_service
 

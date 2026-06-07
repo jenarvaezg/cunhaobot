@@ -94,12 +94,14 @@ def provide_proposal_service(
     long_proposal_repo: LongProposalRepository,
     user_repo: UserRepository,
     user_service: UserService,
+    phrase_service: PhraseService,
 ) -> ProposalService:
     return ProposalService(
         repo=proposal_repo,
         long_repo=long_proposal_repo,
         user_repo=user_repo,
         user_service=user_service,
+        phrase_service=phrase_service,
     )
 
 
