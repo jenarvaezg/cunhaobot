@@ -205,20 +205,17 @@ class BadgeService:
             from infrastructure.datastore.chat import chat_repository
             from infrastructure.datastore.link_request import link_request_repository
             from infrastructure.protocols import (
-                UserRepository,
                 ChatRepository,
-                PhraseRepository,
-                LongPhraseRepository,
                 ProposalRepository,
                 LongProposalRepository,
                 LinkRequestRepository,
             )
 
             self._user_service = UserService(
-                user_repo=cast(UserRepository, self.user_repo),
+                user_repo=self.user_repo,
                 chat_repo=cast(ChatRepository, chat_repository),
-                phrase_repo=cast(PhraseRepository, self.phrase_repo),
-                long_phrase_repo=cast(LongPhraseRepository, self.long_phrase_repo),
+                phrase_repo=self.phrase_repo,
+                long_phrase_repo=self.long_phrase_repo,
                 proposal_repo=cast(ProposalRepository, proposal_repository),
                 long_proposal_repo=cast(
                     LongProposalRepository, long_proposal_repository

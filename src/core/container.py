@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from core.config import config
 from utils.gcp import get_bucket
 
@@ -55,9 +55,15 @@ class Container:
     def __init__(self):
         # Repositories (already singletons in their modules, we just group them)
         self.phrase_repo: PhraseRepository = phrase_repository
-        self.long_phrase_repo: LongPhraseRepository = long_phrase_repository
+        # The long variants reuse PhraseDatastoreRepository/ProposalDatastoreRepository
+        # with a runtime model_class; the static type can't express that polymorphism.
+        self.long_phrase_repo: LongPhraseRepository = cast(
+            "LongPhraseRepository", long_phrase_repository
+        )
         self.proposal_repo: ProposalRepository = proposal_repository
-        self.long_proposal_repo: LongProposalRepository = long_proposal_repository
+        self.long_proposal_repo: LongProposalRepository = cast(
+            "LongProposalRepository", long_proposal_repository
+        )
         self.user_repo: UserRepository = user_repository
         self.chat_repo: ChatRepository = chat_repository
         self.usage_repo: UsageRepository = usage_repository

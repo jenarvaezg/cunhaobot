@@ -43,7 +43,7 @@ def log_update(f: F) -> F:
         await services.user_service.update_or_create_user(update)
 
         update_dict = cast(dict[str, object], remove_empty_from_dict(update.to_dict()))
-        update_dict["method"] = f.__name__
+        update_dict["method"] = getattr(f, "__name__", "unknown")
 
         logger.info(f"{update_dict}")
         return await cast(Callable[..., Any], f)(update, *args, **kwargs)
