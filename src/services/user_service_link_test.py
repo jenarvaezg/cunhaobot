@@ -199,3 +199,63 @@ async def test_complete_link_same_user(mock_repos):
 
     success = await service.complete_link(token, "u1", "telegram")
     assert success is False
+
+
+@pytest.mark.asyncio
+async def test_complete_link_migrates_all_authored_content(mock_repos):
+    """Linking must move authorship of every authored thing (Apelativo, Frase
+    cuñadil and both kinds of Propuesta) from the absorbed Cuenta de plataforma
+    to the canonical Perfil through a single migration seam."""
+    (
+        user_repo,
+        link_repo,
+        phrase_repo,
+        long_phrase_repo,
+        proposal_repo,
+        long_proposal_repo,
+        chat_repo,
+    ) = mock_repos
+    service = UserService(
+        user_repo=user_repo,
+        link_request_repo=link_repo,
+        chat_repo=chat_repo,
+        phrase_repo=phrase_repo,
+        long_phrase_repo=long_phrase_repo,
+        proposal_repo=proposal_repo,
+        long_proposal_repo=long_proposal_repo,
+    )
+
+    token = "ABCDEF"
+    source_user = User(id="source", platform="telegram")
+    target_user = User(id="target", platform="slack")
+    link_repo.load.return_value = LinkRequest(
+        token=token, source_user_id="source", source_platform="telegram"
+    )
+
+    def load_side_effect(uid, follow_link=True):
+        return {"source": source_user, "target": target_user}.get(uid)
+
+    user_repo.load.side_effect = load_side_effect
+    user_repo.load_raw.side_effect = lambda uid: load_side_effect(uid)
+
+    apelativo = MagicMock()
+    frase = MagicMock()
+    propuesta = MagicMock()
+    propuesta_larga = MagicMock()
+    phrase_repo.get_phrases.return_value = [apelativo]
+    long_phrase_repo.get_phrases.return_value = [frase]
+    proposal_repo.get_proposals.return_value = [propuesta]
+    long_proposal_repo.get_proposals.return_value = [propuesta_larga]
+
+    success = await service.complete_link(token, "target", "slack")
+
+    assert success is True
+    # Every authored thing now points at the canonical Perfil and was persisted.
+    assert apelativo.user_id == "target"
+    assert frase.user_id == "target"
+    assert propuesta.user_id == "target"
+    assert propuesta_larga.user_id == "target"
+    phrase_repo.save.assert_called_with(apelativo)
+    long_phrase_repo.save.assert_called_with(frase)
+    proposal_repo.save.assert_called_with(propuesta)
+    long_proposal_repo.save.assert_called_with(propuesta_larga)
