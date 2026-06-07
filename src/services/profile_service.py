@@ -107,6 +107,6 @@ class ProfileService:
         # Regalos are keyed by numeric id; Slack Perfiles have non-numeric ids.
         try:
             numeric_id = int(user.id)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return []
         return await self.gift_repo.get_gifts_for_user(numeric_id)

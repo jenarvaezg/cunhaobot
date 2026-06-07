@@ -40,7 +40,7 @@ class GameService:
         try:
             signature, timestamp_str = token.split(":")
             timestamp = int(timestamp_str)
-        except (ValueError, AttributeError):
+        except ValueError, AttributeError:
             return False
 
         if time.time() - timestamp > 7200:

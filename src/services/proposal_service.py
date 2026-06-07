@@ -209,7 +209,7 @@ class ProposalService:
                     )
                     if m.status in ["member", "administrator", "creator"]:
                         return uid
-                except (BadRequest, TelegramError, ValueError):
+                except BadRequest, TelegramError, ValueError:
                     pass
                 return None
 
