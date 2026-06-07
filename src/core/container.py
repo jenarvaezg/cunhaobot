@@ -27,6 +27,7 @@ from services import (
     TTSService,
     CunhaoAgent,
     ProfileService,
+    GameService,
 )
 
 if TYPE_CHECKING:
@@ -74,6 +75,7 @@ class Container:
         self._cunhao_agent: CunhaoAgent | None = None
         self._storage_service: StorageService | None = None
         self._profile_service: ProfileService | None = None
+        self._game_service: GameService | None = None
 
     @property
     def badge_service(self) -> BadgeService:
@@ -160,6 +162,15 @@ class Container:
         if not self._storage_service:
             self._storage_service = StorageService(bucket_name=config.bucket_name)
         return self._storage_service
+
+    @property
+    def game_service(self) -> GameService:
+        if not self._game_service:
+            self._game_service = GameService(
+                user_repo=self.user_repo,
+                badge_service=self.badge_service,
+            )
+        return self._game_service
 
     @property
     def profile_service(self) -> ProfileService:
