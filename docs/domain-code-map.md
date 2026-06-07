@@ -30,3 +30,18 @@ The glossary is authoritative for product language. Code identifiers remain Engl
 - Domain documentation uses Spanish product terms from `CONTEXT.md`.
 - Python code, tests, modules, functions, classes, and variables use English identifiers.
 - When changing code near a historical name, prefer clearer English names for new symbols while preserving compatibility with existing persisted data.
+
+## Deepened Module Interfaces
+
+These modules hide historical implementation details behind a small, stable interface. Callers cross the interface instead of reassembling behavior.
+
+| Domain concern | Deeper interface | What it hides |
+| --- | --- | --- |
+| **Partida** submission | `GameService.submit_score()` | Token validation, high-score/streak update, single Puntuación → Puntos de reputación conversion. |
+| **Pieza cuñadil** intake | `ProposalService.submit()` → `IntakeResult` | Empty/duplicate decision across approved Pieza cuñadil and pending/rejected Propuesta; Apelativo vs Frase cuñadil split (derived from proposal type). |
+| Paid fulfillment | `services.payment.parse_payment_payload()` → `GiftPayment` / `SubscriptionPayment` / `PosterPayment` | `startswith`/`split` parsing; routing to Regalo, Póster or Suscripción Premium. |
+| **Perfil** linking | `UserService.complete_link()` / `_migrate_authorship()` | Token lifecycle, canonical resolution, absorbed-account aliasing, one-seam authorship migration. |
+| **Logro** engine | `BadgeService.check_badges()` → `list[Badge]` | Milestone rules; platform notification stays in Telegram/Slack adapters. |
+| **Perfil** aggregation | `ProfileService.get_profile_summary()` → `ProfileSummary` | One coherent summary (Puntos, Logros, Pieza cuñadil, Regalos, Pósters) for web and bot. |
+| **Chat** interaction | `ChatInteractionService` (`answer`, `decide_reaction`, `record_reaction_received`) | Shared AI response, reaction decision and Uso logging across Telegram and Slack adapters. |
+| Composition | `core.container.Container` | Single composition root; `core.di` only exposes its singletons to Litestar. |
