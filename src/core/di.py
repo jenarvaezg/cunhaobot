@@ -24,6 +24,7 @@ from services import (
     BadgeService,
     UsageService,
     CunhaoAgent,
+    ProfileService,
 )
 
 from infrastructure.protocols import (
@@ -36,6 +37,7 @@ from infrastructure.protocols import (
     UsageRepository,
     GiftRepository,
     LinkRequestRepository,
+    PosterRequestRepository,
 )
 
 
@@ -130,6 +132,24 @@ def provide_game_service(
     return GameService(user_repo=user_repo, badge_service=badge_service)
 
 
+def provide_profile_service(
+    phrase_repo: PhraseRepository,
+    long_phrase_repo: LongPhraseRepository,
+    gift_repo: GiftRepository,
+    poster_request_repo: PosterRequestRepository,
+    badge_service: BadgeService,
+    usage_service: UsageService,
+) -> ProfileService:
+    return ProfileService(
+        phrase_repo=phrase_repo,
+        long_phrase_repo=long_phrase_repo,
+        gift_repo=gift_repo,
+        poster_request_repo=poster_request_repo,
+        badge_service=badge_service,
+        usage_service=usage_service,
+    )
+
+
 def provide_tts_service() -> TTSService:
     return TTSService(bucket=get_bucket())
 
@@ -163,5 +183,6 @@ dependencies = {
     "ai_service": Provide(provide_ai_service, sync_to_thread=False),
     "tts_service": Provide(provide_tts_service, sync_to_thread=False),
     "game_service": Provide(provide_game_service, sync_to_thread=False),
+    "profile_service": Provide(provide_profile_service, sync_to_thread=False),
     "cunhao_agent": Provide(provide_cunhao_agent, sync_to_thread=False),
 }
