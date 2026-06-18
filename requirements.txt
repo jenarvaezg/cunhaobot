@@ -86,7 +86,7 @@ colorama==0.4.6 ; sys_platform == 'win32'
     #   tqdm
 coverage==7.14.1
     # via pytest-cov
-cryptography==48.0.0
+cryptography==48.0.1
     # via
     #   authlib
     #   cunhaobot
