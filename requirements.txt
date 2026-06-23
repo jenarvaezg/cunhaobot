@@ -452,7 +452,7 @@ pydantic-graph==1.94.0
     # via pydantic-ai-slim
 pydantic-handlebars==0.2.1
     # via pydantic-ai-slim
-pydantic-settings==2.14.1
+pydantic-settings==2.14.2
     # via
     #   fastmcp-slim
     #   mcp
