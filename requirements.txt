@@ -438,7 +438,7 @@ pydantic==2.13.4
     #   xai-sdk
 pydantic-ai==1.94.0
     # via cunhaobot
-pydantic-ai-slim==1.94.0
+pydantic-ai-slim==1.102.0
     # via
     #   pydantic-ai
     #   pydantic-evals
