@@ -436,7 +436,7 @@ pydantic==2.13.4
     #   pydantic-handlebars
     #   pydantic-settings
     #   xai-sdk
-pydantic-ai==1.94.0
+pydantic-ai==1.102.0
     # via cunhaobot
 pydantic-ai-slim==1.94.0
     # via
