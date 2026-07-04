@@ -61,6 +61,9 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Generate requirements.txt for App Engine
+        run: uv export --no-hashes --format requirements-txt --output-file requirements.txt
+
       - name: Create app.yaml from template
         env:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
