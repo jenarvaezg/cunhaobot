@@ -510,7 +510,7 @@ typing-inspection==0.4.2
     #   pydantic-settings
 tzdata==2026.2 ; sys_platform == 'win32'
     # via faker
-urllib3==2.7.0
+urllib3==2.8.0
     # via
     #   cunhaobot
     #   requests
