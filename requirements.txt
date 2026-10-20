@@ -248,7 +248,7 @@ more-itertools==11.1.0
     #   jaraco-functools
 msgspec==0.21.1
     # via litestar
-multidict==6.7.1
+multidict==6.9.1
     # via
     #   aiohttp
     #   litestar
