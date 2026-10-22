@@ -302,7 +302,7 @@ packaging==26.2
     #   gunicorn
     #   opentelemetry-instrumentation
     #   pytest
-pillow==12.3.0
+pillow==13.0.0
     # via cunhaobot
 platformdirs==4.10.0
     # via
