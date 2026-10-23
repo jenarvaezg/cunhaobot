@@ -95,7 +95,7 @@ faker==40.28.1
     # via polyfactory
 fastmcp-slim==3.4.2
     # via pydantic-ai-slim
-filelock==3.29.5
+filelock==4.2.1
     # via
     #   python-discovery
     #   virtualenv
