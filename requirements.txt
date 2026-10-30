@@ -212,7 +212,7 @@ jiter==0.16.0
     # via
     #   anthropic
     #   openai
-joserfc==1.7.2
+joserfc==1.7.6
     # via authlib
 jsonschema==4.26.0
     # via mcp
