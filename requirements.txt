@@ -257,7 +257,7 @@ multipart==1.3.1
     # via litestar
 nodeenv==1.10.0
     # via pre-commit
-oauthlib==3.3.1
+oauthlib==4.0.1
     # via
     #   requests-oauthlib
     #   tweepy
